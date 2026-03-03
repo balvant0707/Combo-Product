@@ -104,6 +104,17 @@ export async function getAnalytics(shop, from, to) {
   );
   const avgBundleValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
   const activeBoxCount = activeBoxes.length;
+  const customerOrderCounts = {};
+
+  for (const order of orders) {
+    if (!order.customerId) continue;
+    customerOrderCounts[order.customerId] =
+      (customerOrderCounts[order.customerId] || 0) + 1;
+  }
+
+  const repeatBuyers = Object.values(customerOrderCounts).filter(
+    (count) => count > 1,
+  ).length;
 
   // Top products (from selectedProducts JSON arrays)
   const productCounts = {};
@@ -165,6 +176,7 @@ export async function getAnalytics(shop, from, to) {
     totalRevenue: parseFloat(totalRevenue.toFixed(2)),
     avgBundleValue: parseFloat(avgBundleValue.toFixed(2)),
     activeBoxCount,
+    repeatBuyers,
     topProducts,
     dailyTrend,
     boxPerformance,

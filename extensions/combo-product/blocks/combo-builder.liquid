@@ -1,9 +1,46 @@
+{% liquid
+  assign primary      = block.settings.primary_color    | default: '#2A7A4F'
+  assign heading_clr  = block.settings.heading_color    | default: primary
+  assign bg_clr       = block.settings.bg_color         | default: '#ffffff'
+  assign text_clr     = block.settings.text_color       | default: '#111827'
+  assign muted_clr    = block.settings.muted_color      | default: '#6b7280'
+  assign border_clr   = block.settings.border_color     | default: '#e5e7eb'
+
+  assign h_size       = block.settings.step_heading_size  | default: 26
+  assign title_size   = block.settings.product_title_size | default: 13
+  assign btn_size     = block.settings.btn_font_size      | default: 12
+  assign radius       = block.settings.card_radius        | default: 12
+  assign radius_sm    = radius | minus: 4
+  assign per_row      = block.settings.products_per_row   | default: '4'
+
+  assign h_weight = '800'
+  assign h_style  = 'normal'
+  if block.settings.heading_style == 'italic'
+    assign h_style = 'italic'
+  elsif block.settings.heading_style == 'bold'
+    assign h_weight = '800'
+  elsif block.settings.heading_style == 'bold-italic'
+    assign h_weight = '800'
+    assign h_style  = 'italic'
+  endif
+
+  assign font_stack = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+  if block.settings.font_family == 'serif'
+    assign font_stack = 'Georgia, "Times New Roman", serif'
+  elsif block.settings.font_family == 'mono'
+    assign font_stack = '"SF Mono", "Fira Code", "Courier New", monospace'
+  elsif block.settings.font_family == 'rounded'
+    assign font_stack = '"Nunito", "Quicksand", "Segoe UI", Roboto, sans-serif'
+  endif
+%}
+
 <div
   id="combo-builder-widget-{{ block.id }}"
   class="combo-builder-root"
   data-shop="{{ shop.permanent_domain }}"
   data-block-id="{{ block.id }}"
-  data-layout="{{ block.settings.layout }}"
+  data-cb-instance="{{ block.id }}"
+  data-layout="{{ block.settings.layout | default: 'grid' }}"
   data-heading="{{ block.settings.heading_text | escape }}"
   data-currency="{{ cart.currency.iso_code }}"
   data-currency-symbol="{{ cart.currency.symbol }}"
@@ -11,20 +48,50 @@
 >
   <div class="combo-builder-loading">
     <div class="combo-builder-spinner"></div>
-    <span>Loading combo builder...</span>
+    <span>Loading combo builder…</span>
   </div>
 </div>
 
-{{ 'combo-builder.css' | asset_url | stylesheet_tag }}
+{{- 'combo-builder.css' | asset_url | stylesheet_tag -}}
+
+{%- comment -%} ── Dynamic theme injection — scoped to this block instance ── {%- endcomment -%}
+<style>
+  [data-cb-instance="{{ block.id }}"] {
+    --cb-primary:            {{ primary }};
+    --cb-primary-hover:      color-mix(in srgb, {{ primary }} 80%, #000);
+    --cb-primary-light:      color-mix(in srgb, {{ primary }} 13%, #fff);
+    --cb-primary-glow:       color-mix(in srgb, {{ primary }} 24%, transparent);
+    --cb-bg:                 {{ bg_clr }};
+    --cb-text:               {{ text_clr }};
+    --cb-text-muted:         {{ muted_clr }};
+    --cb-border:             {{ border_clr }};
+    --cb-font:               {{ font_stack }};
+    --cb-step-heading-size:  {{ h_size }}px;
+    --cb-step-heading-weight:{{ h_weight }};
+    --cb-step-heading-style: {{ h_style }};
+    --cb-product-title-size: {{ title_size }}px;
+    --cb-btn-font-size:      {{ btn_size }}px;
+    --cb-radius:             {{ radius }}px;
+    --cb-radius-sm:          {{ radius_sm }}px;
+    --cb-products-per-row:   {{ per_row }};
+  }
+  [data-cb-instance="{{ block.id }}"] .cb-step-heading {
+    color: {{ heading_clr }};
+  }
+  [data-cb-instance="{{ block.id }}"] .cb-product-grid {
+    grid-template-columns: repeat({{ per_row }}, 1fr);
+  }
+</style>
+
 <script>
   window.__COMBO_BUILDER__ = window.__COMBO_BUILDER__ || [];
   window.__COMBO_BUILDER__.push({
-    mountId: 'combo-builder-widget-{{ block.id }}',
-    shop: '{{ shop.permanent_domain }}',
-    currency: '{{ cart.currency.iso_code }}',
+    mountId:        'combo-builder-widget-{{ block.id }}',
+    shop:           '{{ shop.permanent_domain }}',
+    currency:       '{{ cart.currency.iso_code }}',
     currencySymbol: '{{ cart.currency.symbol }}',
-    layout: '{{ block.settings.layout | default: "grid" }}',
-    apiBase: '/apps/combo-builder'
+    layout:         '{{ block.settings.layout | default: "grid" }}',
+    apiBase:        '/apps/combo-builder'
   });
 </script>
 <script defer src="{{ 'combo-builder.js' | asset_url }}"></script>
@@ -35,6 +102,10 @@
   "target": "section",
   "settings": [
     {
+      "type": "header",
+      "content": "Content"
+    },
+    {
       "type": "text",
       "id": "heading_text",
       "label": "Widget Heading",
@@ -43,12 +114,141 @@
     {
       "type": "select",
       "id": "layout",
-      "label": "Product Grid Layout",
+      "label": "Product Layout",
       "options": [
         { "value": "grid", "label": "Grid" },
         { "value": "list", "label": "List" }
       ],
       "default": "grid"
+    },
+
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "primary_color",
+      "label": "Primary / Brand Color",
+      "default": "#2A7A4F",
+      "info": "Used for buttons, borders, highlights and the active slot glow."
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Step Heading Color",
+      "default": "#2A7A4F",
+      "info": "Color of the Step 1 / Step 2 headings. Defaults to Primary Color."
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Widget Background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Body Text Color",
+      "default": "#111827"
+    },
+    {
+      "type": "color",
+      "id": "muted_color",
+      "label": "Muted / Secondary Text",
+      "default": "#6b7280"
+    },
+    {
+      "type": "color",
+      "id": "border_color",
+      "label": "Card Border Color",
+      "default": "#e5e7eb"
+    },
+
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "select",
+      "id": "font_family",
+      "label": "Font Family",
+      "options": [
+        { "value": "system",  "label": "System (Sans-serif)" },
+        { "value": "serif",   "label": "Serif" },
+        { "value": "rounded", "label": "Rounded / Friendly" },
+        { "value": "mono",    "label": "Monospace" }
+      ],
+      "default": "system"
+    },
+    {
+      "type": "select",
+      "id": "heading_style",
+      "label": "Step Heading Style",
+      "options": [
+        { "value": "normal",      "label": "Normal" },
+        { "value": "italic",      "label": "Italic" },
+        { "value": "bold",        "label": "Bold" },
+        { "value": "bold-italic", "label": "Bold Italic (default)" }
+      ],
+      "default": "bold-italic"
+    },
+    {
+      "type": "range",
+      "id": "step_heading_size",
+      "label": "Step Heading Size",
+      "min": 16,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "default": 26
+    },
+    {
+      "type": "range",
+      "id": "product_title_size",
+      "label": "Product Title Size",
+      "min": 11,
+      "max": 18,
+      "step": 1,
+      "unit": "px",
+      "default": 13
+    },
+    {
+      "type": "range",
+      "id": "btn_font_size",
+      "label": "Button Font Size",
+      "min": 10,
+      "max": 16,
+      "step": 1,
+      "unit": "px",
+      "default": 12
+    },
+
+    {
+      "type": "header",
+      "content": "Layout & Shape"
+    },
+    {
+      "type": "range",
+      "id": "card_radius",
+      "label": "Card Border Radius",
+      "min": 0,
+      "max": 24,
+      "step": 2,
+      "unit": "px",
+      "default": 12,
+      "info": "Corner roundness of box cards and product cards."
+    },
+    {
+      "type": "select",
+      "id": "products_per_row",
+      "label": "Products Per Row (Desktop)",
+      "options": [
+        { "value": "3", "label": "3 columns" },
+        { "value": "4", "label": "4 columns (default)" },
+        { "value": "5", "label": "5 columns" }
+      ],
+      "default": "4"
     }
   ]
 }

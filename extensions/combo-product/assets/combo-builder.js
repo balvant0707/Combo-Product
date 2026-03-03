@@ -11,15 +11,74 @@
 
   function formatPrice(amount, currencySymbol) {
     return currencySymbol + Number(amount).toLocaleString('en-IN', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     });
   }
 
+  // ─── Sticky Footer singleton ──────────────────────────────────────────────────
+  var _stickyEl = null;
+  var _stickyBtn = null;
+
+  function removeStickyFooter() {
+    if (_stickyEl && _stickyEl.parentNode) {
+      _stickyEl.parentNode.removeChild(_stickyEl);
+      document.body.style.paddingBottom = '';
+    }
+    _stickyEl = null;
+    _stickyBtn = null;
+  }
+
+  function createStickyFooter(box, ctx, onCartClick) {
+    removeStickyFooter();
+
+    var footer = document.createElement('div');
+    footer.className = 'cb-sticky-footer';
+
+    // Inherit the widget's CSS custom properties so the sticky footer
+    // picks up the same dynamic theme set in combo-builder.liquid
+    if (ctx.rootEl) {
+      var blockId = ctx.rootEl.getAttribute('data-cb-instance') || ctx.rootEl.getAttribute('data-block-id');
+      if (blockId) footer.setAttribute('data-cb-instance', blockId);
+    }
+
+    // Left: icon + box name
+    var left = document.createElement('div');
+    left.className = 'cb-sticky-left';
+    var icon = document.createElement('span');
+    icon.className = 'cb-sticky-icon';
+    icon.textContent = box.isGiftBox ? '🎁' : '🛍️';
+    left.appendChild(icon);
+    var nameEl = document.createElement('div');
+    nameEl.className = 'cb-sticky-name';
+    nameEl.textContent = box.displayTitle;
+    left.appendChild(nameEl);
+    footer.appendChild(left);
+
+    // Center: total price
+    var center = document.createElement('div');
+    center.className = 'cb-sticky-total';
+    center.innerHTML = 'Total <span class="cb-sticky-price">' + formatPrice(box.bundlePrice, ctx.currencySymbol) + '/-</span>';
+    footer.appendChild(center);
+
+    // Right: ADD TO CART button
+    var btn = document.createElement('button');
+    btn.className = 'cb-sticky-btn';
+    btn.type = 'button';
+    btn.disabled = true;
+    btn.textContent = 'ADD TO CART';
+    btn.addEventListener('click', onCartClick);
+    footer.appendChild(btn);
+
+    document.body.appendChild(footer);
+    document.body.style.paddingBottom = '72px';
+
+    _stickyEl = footer;
+    _stickyBtn = btn;
+    return btn;
+  }
+
   // ─── Main Widget Init ─────────────────────────────────────────────────────────
-  // Supports two mount modes:
-  //   1. App Block:  <div id="combo-builder-widget-{blockId}"> via __COMBO_BUILDER__ queue
-  //   2. Legacy div: <div id="combo-builder-widget" data-page="all" data-box-ids="1,2">
 
   function initWidget(config) {
     var root = document.getElementById(config.mountId);
@@ -28,10 +87,8 @@
     var shop = root.dataset.shop || config.shop;
     var currencySymbol = root.dataset.currencySymbol || config.currencySymbol || '\u20B9';
     var layout = root.dataset.layout || config.layout || 'grid';
-    var heading = root.dataset.heading || config.heading || 'Build Your Own Box!';
     var apiBase = root.dataset.apiBase || config.apiBase || DEFAULT_API_BASE;
 
-    // Optional box ID filter (for data-box-ids="1,3,5" or config.boxIds)
     var boxIdsFilter = null;
     var rawBoxIds = root.dataset.boxIds || config.boxIds || null;
     if (rawBoxIds) {
@@ -39,92 +96,53 @@
     }
 
     if (!shop) {
-      console.warn('[ComboBuilder] No shop specified — widget cannot load.');
       root.innerHTML = '';
       return;
     }
 
     fetchBoxes(shop, apiBase, function (err, boxes, settings) {
-      if (err || !boxes || boxes.length === 0) {
-        root.innerHTML = '';
-        return;
-      }
-
-      // Apply box ID filter if specified
+      if (err || !boxes || boxes.length === 0) { root.innerHTML = ''; return; }
       if (boxIdsFilter && boxIdsFilter.length > 0) {
         boxes = boxes.filter(function (b) { return boxIdsFilter.indexOf(b.id) !== -1; });
       }
+      if (boxes.length === 0) { root.innerHTML = ''; return; }
 
-      if (boxes.length === 0) {
-        root.innerHTML = '';
-        return;
-      }
-
-      // Settings can override heading if not explicitly set via data attribute
       var resolvedHeading = root.dataset.heading || config.heading || (settings && settings.widgetHeadingText) || 'Build Your Own Box!';
-      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, heading: resolvedHeading, apiBase: apiBase, settings: settings || {} });
+      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root });
     });
   }
-
-  // ─── Legacy Div Init ─────────────────────────────────────────────────────────
-  // Handles: <div id="combo-builder-widget" data-page="all" data-box-ids="1,2">
 
   function initLegacyWidget(el) {
     var shop = el.dataset.shop || (window.Shopify && window.Shopify.shop) || null;
-    var apiBase = el.dataset.apiBase || DEFAULT_API_BASE;
-    var currencySymbol = el.dataset.currencySymbol || (window.Shopify && window.Shopify.currency && window.Shopify.currency.symbol) || '\u20B9';
-    var layout = el.dataset.layout || 'grid';
-    var heading = el.dataset.heading || 'Build Your Own Box!';
-    var boxIds = el.dataset.boxIds || null;
-
     initWidget({
       mountId: el.id,
       shop: shop,
-      apiBase: apiBase,
-      currencySymbol: currencySymbol,
-      layout: layout,
-      heading: heading,
-      boxIds: boxIds,
+      apiBase: el.dataset.apiBase || DEFAULT_API_BASE,
+      currencySymbol: el.dataset.currencySymbol || (window.Shopify && window.Shopify.currency && window.Shopify.currency.symbol) || '\u20B9',
+      layout: el.dataset.layout || 'grid',
+      heading: el.dataset.heading || 'Build Your Own Box!',
+      boxIds: el.dataset.boxIds || null,
     });
   }
 
-  // ─── API Calls ────────────────────────────────────────────────────────────────
+  // ─── API ──────────────────────────────────────────────────────────────────────
 
   function fetchBoxes(shop, apiBase, cb) {
-    var url = apiBase + '/api/storefront/boxes?shop=' + encodeURIComponent(shop);
-    fetch(url)
-      .then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      })
+    fetch(apiBase + '/api/storefront/boxes?shop=' + encodeURIComponent(shop))
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (data) {
-        // Support both legacy array response and new { boxes, settings } format
-        if (data && Array.isArray(data.boxes)) {
-          cb(null, data.boxes, data.settings || {});
-        } else if (Array.isArray(data)) {
-          cb(null, data, {});
-        } else {
-          cb(null, [], {});
-        }
+        if (data && Array.isArray(data.boxes)) cb(null, data.boxes, data.settings || {});
+        else if (Array.isArray(data)) cb(null, data, {});
+        else cb(null, [], {});
       })
-      .catch(function (e) {
-        console.error('[ComboBuilder] Failed to fetch boxes:', e);
-        cb(e, null, {});
-      });
+      .catch(function (e) { cb(e, null, {}); });
   }
 
   function fetchProducts(boxId, shop, apiBase, cb) {
-    var url = apiBase + '/api/storefront/boxes/' + boxId + '/products?shop=' + encodeURIComponent(shop);
-    fetch(url)
-      .then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      })
+    fetch(apiBase + '/api/storefront/boxes/' + boxId + '/products?shop=' + encodeURIComponent(shop))
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (data) { cb(null, data); })
-      .catch(function (e) {
-        console.error('[ComboBuilder] Failed to fetch products:', e);
-        cb(e, null);
-      });
+      .catch(function (e) { cb(e, null); });
   }
 
   // ─── Render Widget ────────────────────────────────────────────────────────────
@@ -136,20 +154,19 @@
     var wrapper = document.createElement('div');
     wrapper.className = 'cb-wrapper';
 
-    if (ctx.heading) {
-      var h = document.createElement('h2');
-      h.className = 'cb-heading';
-      h.textContent = ctx.heading;
-      wrapper.appendChild(h);
-    }
+    // Step 1 Heading
+    var step1Head = document.createElement('h2');
+    step1Head.className = 'cb-step-heading';
+    step1Head.textContent = 'Step 1: Select your box';
+    wrapper.appendChild(step1Head);
 
+    // Box grid
     var boxGrid = document.createElement('div');
     boxGrid.className = 'cb-box-grid';
-    ctx.boxes.forEach(function (box) {
-      boxGrid.appendChild(createBoxCard(box, ctx));
-    });
+    ctx.boxes.forEach(function (box) { boxGrid.appendChild(createBoxCard(box, ctx)); });
     wrapper.appendChild(boxGrid);
 
+    // Builder area (hidden until a box is picked)
     var builderArea = document.createElement('div');
     builderArea.className = 'cb-builder-area';
     builderArea.style.display = 'none';
@@ -163,11 +180,10 @@
   function createBoxCard(box, ctx) {
     var card = document.createElement('div');
     card.className = 'cb-box-card';
-    card.setAttribute('data-box-id', box.id);
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
-    card.setAttribute('aria-label', 'Select ' + box.displayTitle + ' — ' + formatPrice(box.bundlePrice, ctx.currencySymbol));
 
+    // Banner image
     var banner = document.createElement('div');
     banner.className = 'cb-box-banner';
     if (box.bannerImageUrl) {
@@ -175,46 +191,39 @@
       banner.style.backgroundSize = 'cover';
       banner.style.backgroundPosition = 'center';
     }
-    var badge = document.createElement('span');
-    badge.className = 'cb-box-badge';
-    badge.textContent = box.itemCount + ' items';
-    banner.appendChild(badge);
     card.appendChild(banner);
 
+    // Checkmark badge (shown when selected)
+    var check = document.createElement('div');
+    check.className = 'cb-box-check';
+    check.innerHTML = '&#10003;';
+    card.appendChild(check);
+
+    // Body text
     var body = document.createElement('div');
     body.className = 'cb-box-body';
 
-    var title = document.createElement('div');
-    title.className = 'cb-box-title';
-    title.textContent = box.displayTitle;
-    body.appendChild(title);
+    var buyText = document.createElement('div');
+    buyText.className = 'cb-box-buy-text';
+    buyText.textContent = 'Buy ' + box.itemCount + ' products';
+    body.appendChild(buyText);
+
+    var priceText = document.createElement('div');
+    priceText.className = 'cb-box-price-text';
+    priceText.textContent = '@ ' + formatPrice(box.bundlePrice, ctx.currencySymbol);
+    body.appendChild(priceText);
 
     if (box.isGiftBox) {
       var giftTag = document.createElement('span');
       giftTag.className = 'cb-gift-tag';
-      giftTag.textContent = 'Gift Box';
+      giftTag.textContent = '🎁 Gift Box';
       body.appendChild(giftTag);
     }
-
-    var price = document.createElement('div');
-    price.className = 'cb-box-price';
-    price.textContent = formatPrice(box.bundlePrice, ctx.currencySymbol);
-    body.appendChild(price);
-
-    var btn = document.createElement('button');
-    btn.className = 'cb-box-cta-btn';
-    btn.type = 'button';
-    btn.textContent = (ctx.settings && ctx.settings.ctaButtonLabel) || 'BUILD YOUR OWN BOX';
-    body.appendChild(btn);
 
     card.appendChild(body);
 
     function onSelect() {
-      // Deselect all other cards
-      var allCards = document.querySelectorAll('.cb-box-card');
-      for (var i = 0; i < allCards.length; i++) {
-        allCards[i].classList.remove('cb-box-card--active');
-      }
+      document.querySelectorAll('.cb-box-card').forEach(function (c) { c.classList.remove('cb-box-card--active'); });
       card.classList.add('cb-box-card--active');
       openBuilder(box, ctx);
     }
@@ -227,17 +236,16 @@
     return card;
   }
 
-  // ─── Builder Area ─────────────────────────────────────────────────────────────
+  // ─── Open Builder ─────────────────────────────────────────────────────────────
 
   function openBuilder(box, ctx) {
-    // Find the builder area relative to the closest .cb-wrapper ancestor
     var wrapper = document.querySelector('.cb-wrapper');
     if (!wrapper) return;
     var builderArea = wrapper.querySelector('.cb-builder-area');
     if (!builderArea) return;
 
     builderArea.style.display = 'block';
-    builderArea.innerHTML = '<div class="cb-section-loading">Loading products...</div>';
+    builderArea.innerHTML = '<div class="cb-section-loading"><div class="combo-builder-spinner"></div> Loading products…</div>';
 
     fetchProducts(box.id, ctx.shop, ctx.apiBase, function (err, products) {
       if (err || !products || products.length === 0) {
@@ -249,6 +257,8 @@
     });
   }
 
+  // ─── Render Builder ───────────────────────────────────────────────────────────
+
   function renderBuilder(container, box, products, ctx) {
     container.innerHTML = '';
 
@@ -257,50 +267,88 @@
     for (var s = 0; s < box.itemCount; s++) { slots.push(null); }
     var activeSlotIndex = 0;
 
-    // ── Slot Row ──
-    var slotSection = document.createElement('div');
-    slotSection.className = 'cb-slot-section';
+    // ── Step 2 Heading ──
+    var step2Head = document.createElement('h2');
+    step2Head.className = 'cb-step-heading';
+    step2Head.textContent = 'Step 2: Select your products';
+    container.appendChild(step2Head);
 
-    var slotLabel = document.createElement('div');
-    slotLabel.className = 'cb-slot-label';
-    slotLabel.textContent = 'Your Selections (' + box.itemCount + ' items)';
-    slotSection.appendChild(slotLabel);
+    // ── Slot Steps Row ──
+    var slotWrapper = document.createElement('div');
+    slotWrapper.className = 'cb-slot-wrapper';
 
-    var slotRow = document.createElement('div');
-    slotRow.className = 'cb-slot-row';
+    var slotSteps = document.createElement('div');
+    slotSteps.className = 'cb-slot-steps';
+
+    // Inline ADD TO CART button (at end of slot row)
+    var inlineCartBtn = document.createElement('button');
+    inlineCartBtn.className = 'cb-inline-cart-btn';
+    inlineCartBtn.type = 'button';
+    inlineCartBtn.disabled = true;
+    inlineCartBtn.textContent = 'ADD TO CART';
 
     function renderSlots() {
-      slotRow.innerHTML = '';
+      slotSteps.innerHTML = '';
       slots.forEach(function (slotProduct, idx) {
-        var slot = document.createElement('div');
-        slot.className = 'cb-slot';
+        // Connector line between slots
+        if (idx > 0) {
+          var connector = document.createElement('div');
+          connector.className = 'cb-slot-connector';
+          slotSteps.appendChild(connector);
+        }
+
+        var step = document.createElement('div');
+        step.className = 'cb-slot-step';
 
         if (slotProduct) {
-          slot.classList.add('cb-slot--filled');
-          slot.title = 'Click to change: ' + slotProduct.productTitle;
+          step.classList.add('cb-slot-step--filled');
+        } else if (idx === activeSlotIndex) {
+          step.classList.add('cb-slot-step--active');
+        }
 
-          if (slotProduct.productImageUrl) {
-            var img = document.createElement('img');
-            img.src = slotProduct.productImageUrl;
-            img.alt = slotProduct.productTitle || '';
-            img.className = 'cb-slot-img';
-            slot.appendChild(img);
-          } else {
-            var phEl = document.createElement('div');
-            phEl.className = 'cb-slot-placeholder-img';
-            phEl.textContent = (slotProduct.productTitle || '?').charAt(0).toUpperCase();
-            slot.appendChild(phEl);
-          }
+        // Number / thumbnail inside the step box
+        var numEl = document.createElement('div');
+        numEl.className = 'cb-slot-step-num';
+        if (slotProduct && slotProduct.productImageUrl) {
+          var thumb = document.createElement('img');
+          thumb.src = slotProduct.productImageUrl;
+          thumb.alt = slotProduct.productTitle || '';
+          thumb.className = 'cb-slot-step-thumb';
+          numEl.appendChild(thumb);
+        } else {
+          numEl.textContent = idx + 1;
+        }
+        step.appendChild(numEl);
 
-          var slotName = document.createElement('div');
-          slotName.className = 'cb-slot-name';
-          slotName.textContent = slotProduct.productTitle || '';
-          slot.appendChild(slotName);
+        // Label below step box
+        var labelEl = document.createElement('div');
+        labelEl.className = 'cb-slot-step-label';
+        var smallText = document.createElement('span');
+        smallText.className = 'cb-slot-step-small';
+        smallText.textContent = 'Select your';
+        labelEl.appendChild(smallText);
 
+        var itemLink = document.createElement('div');
+        itemLink.className = 'cb-slot-step-item';
+        if (slotProduct) {
+          var shortTitle = slotProduct.productTitle || ('Item ' + (idx + 1));
+          itemLink.textContent = shortTitle.length > 14 ? shortTitle.slice(0, 13) + '…' : shortTitle;
+          itemLink.classList.add('cb-slot-step-item--filled');
+          // Click to change slot
+          ;(function (i) {
+            step.style.cursor = 'pointer';
+            step.addEventListener('click', function () {
+              activeSlotIndex = i;
+              renderSlots();
+              renderProductGrid();
+            });
+          })(idx);
+
+          // Remove (×) button
           var removeBtn = document.createElement('button');
           removeBtn.className = 'cb-slot-remove';
           removeBtn.type = 'button';
-          removeBtn.setAttribute('aria-label', 'Remove ' + (slotProduct.productTitle || 'item'));
+          removeBtn.setAttribute('aria-label', 'Remove');
           removeBtn.innerHTML = '&times;';
           ;(function (i) {
             removeBtn.addEventListener('click', function (e) {
@@ -312,38 +360,31 @@
               updateCartButton();
             });
           })(idx);
-          slot.appendChild(removeBtn);
-
-          ;(function (i) {
-            slot.addEventListener('click', function () {
-              activeSlotIndex = i;
-              renderSlots();
-            });
-          })(idx);
-
-        } else if (idx === activeSlotIndex) {
-          slot.classList.add('cb-slot--active');
-          var activeLabel = document.createElement('div');
-          activeLabel.className = 'cb-slot-active-label';
-          activeLabel.textContent = 'Pick a product';
-          slot.appendChild(activeLabel);
+          step.appendChild(removeBtn);
         } else {
-          slot.classList.add('cb-slot--idle');
-          var numLabel = document.createElement('div');
-          numLabel.className = 'cb-slot-num';
-          numLabel.textContent = idx + 1;
-          slot.appendChild(numLabel);
+          itemLink.textContent = 'Item ' + (idx + 1);
         }
+        labelEl.appendChild(itemLink);
+        step.appendChild(labelEl);
 
-        slotRow.appendChild(slot);
+        slotSteps.appendChild(step);
       });
     }
 
     renderSlots();
-    slotSection.appendChild(slotRow);
-    container.appendChild(slotSection);
 
-    // ── Gift Message ── (hidden until all slots are filled)
+    slotWrapper.appendChild(slotSteps);
+
+    // Arrow separator
+    var arrow = document.createElement('div');
+    arrow.className = 'cb-slot-arrow';
+    arrow.innerHTML = '&#8594;';
+    slotWrapper.appendChild(arrow);
+
+    slotWrapper.appendChild(inlineCartBtn);
+    container.appendChild(slotWrapper);
+
+    // ── Gift Message ──
     var giftInput = null;
     var giftSection = null;
     if (box.giftMessageEnabled) {
@@ -355,14 +396,14 @@
       giftLabel.textContent = 'Gift Message (optional)';
       giftInput = document.createElement('textarea');
       giftInput.className = 'cb-gift-input';
-      giftInput.placeholder = 'Write a personal message for your gift recipient...';
+      giftInput.placeholder = 'Write a personal message…';
       giftInput.rows = 2;
       giftSection.appendChild(giftLabel);
       giftSection.appendChild(giftInput);
       container.appendChild(giftSection);
     }
 
-    // ── Product Grid ──
+    // ── Product Section ──
     var productSection = document.createElement('div');
     productSection.className = 'cb-product-section';
 
@@ -372,7 +413,43 @@
 
     var productGrid = document.createElement('div');
     productGrid.className = ctx.layout === 'list' ? 'cb-product-list' : 'cb-product-grid';
+    productSection.appendChild(productGrid);
+    container.appendChild(productSection);
 
+    // ── Update cart button state ──
+    function updateCartButton() {
+      var filled = slots.filter(Boolean).length;
+      var remaining = box.itemCount - filled;
+      var allFilled = remaining === 0;
+      var addLabel = (ctx.settings && ctx.settings.addToCartLabel) || 'ADD TO CART';
+
+      // Inline button
+      inlineCartBtn.disabled = !allFilled;
+      if (allFilled) {
+        inlineCartBtn.classList.add('cb-inline-cart-btn--ready');
+        inlineCartBtn.textContent = addLabel;
+      } else {
+        inlineCartBtn.classList.remove('cb-inline-cart-btn--ready');
+        inlineCartBtn.textContent = 'ADD TO CART';
+      }
+
+      // Sticky footer button
+      if (_stickyBtn) {
+        _stickyBtn.disabled = !allFilled;
+        if (allFilled) {
+          _stickyBtn.classList.add('cb-sticky-btn--ready');
+          _stickyBtn.textContent = addLabel;
+        } else {
+          _stickyBtn.classList.remove('cb-sticky-btn--ready');
+          _stickyBtn.textContent = 'ADD TO CART';
+        }
+      }
+
+      // Gift message visibility
+      if (giftSection) giftSection.style.display = allFilled ? 'block' : 'none';
+    }
+
+    // ── Product Grid ──
     function renderProductGrid() {
       productLabel.textContent = 'Choose a product for slot ' + (activeSlotIndex + 1);
       productGrid.innerHTML = '';
@@ -383,21 +460,19 @@
       }
 
       products.forEach(function (product) {
-        var card = document.createElement('div');
-        card.className = 'cb-product-card';
-        card.setAttribute('role', 'button');
-        card.setAttribute('tabindex', '0');
-        card.setAttribute('aria-label', product.productTitle || product.productId);
-
-        var currentSlotProduct = slots[activeSlotIndex];
-        var isCurrentSlot = currentSlotProduct && currentSlotProduct.productId === product.productId;
+        var isCurrentSlot = slots[activeSlotIndex] && slots[activeSlotIndex].productId === product.productId;
         var isUsed = !box.allowDuplicates && usedIds.indexOf(product.productId) !== -1 && !isCurrentSlot;
 
+        var card = document.createElement('div');
+        card.className = 'cb-product-card';
         if (isUsed) {
           card.classList.add('cb-product-card--used');
           card.setAttribute('aria-disabled', 'true');
         }
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', isUsed ? '-1' : '0');
 
+        // Image wrap
         var imgWrap = document.createElement('div');
         imgWrap.className = 'cb-product-img-wrap';
         if (product.productImageUrl) {
@@ -413,24 +488,64 @@
           ph.textContent = (product.productTitle || '?').charAt(0).toUpperCase();
           imgWrap.appendChild(ph);
         }
+
+        // "Used" overlay when added
+        if (isUsed) {
+          var usedOverlay = document.createElement('div');
+          usedOverlay.className = 'cb-product-used-overlay';
+          usedOverlay.innerHTML = '<span>&#10003;</span>';
+          imgWrap.appendChild(usedOverlay);
+        }
+
         card.appendChild(imgWrap);
+
+        // Product info area
+        var infoEl = document.createElement('div');
+        infoEl.className = 'cb-product-info';
 
         var titleEl = document.createElement('div');
         titleEl.className = 'cb-product-title';
         titleEl.textContent = product.productTitle || product.productId;
-        card.appendChild(titleEl);
+        infoEl.appendChild(titleEl);
+
+        // Learn link
+        if (product.productHandle && !product.isCollection) {
+          var learnRow = document.createElement('div');
+          learnRow.className = 'cb-product-learn-row';
+          var learnLink = document.createElement('a');
+          learnLink.href = '/products/' + product.productHandle;
+          learnLink.target = '_blank';
+          learnLink.className = 'cb-product-learn-link';
+          learnLink.innerHTML = '&#9432; Learn';
+          learnLink.addEventListener('click', function (e) { e.stopPropagation(); });
+          learnRow.appendChild(learnLink);
+          infoEl.appendChild(learnRow);
+        }
+
+        card.appendChild(infoEl);
+
+        // ADD TO BOX button
+        var addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        if (isUsed) {
+          addBtn.className = 'cb-add-btn cb-add-btn--used';
+          addBtn.innerHTML = '&#10003; Added';
+          addBtn.disabled = true;
+        } else {
+          addBtn.className = 'cb-add-btn';
+          addBtn.innerHTML = '+ ADD TO BOX';
+        }
+
+        card.appendChild(addBtn);
 
         if (!isUsed) {
-          ;(function (p) {
+          ;(function (p, aBtn) {
             function onProductClick() {
-              // Fill active slot with this product
               slots[activeSlotIndex] = p;
 
-              // Flash animation
-              card.classList.add('cb-product-card--selected');
-              setTimeout(function () { card.classList.remove('cb-product-card--selected'); }, 300);
+              aBtn.innerHTML = '&#10003; Added';
+              aBtn.classList.add('cb-add-btn--added');
 
-              // Advance to next empty slot
               var next = -1;
               for (var i = activeSlotIndex + 1; i < slots.length; i++) {
                 if (!slots[i]) { next = i; break; }
@@ -447,11 +562,12 @@
               updateCartButton();
             }
 
+            aBtn.addEventListener('click', function (e) { e.stopPropagation(); onProductClick(); });
             card.addEventListener('click', onProductClick);
             card.addEventListener('keydown', function (e) {
               if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onProductClick(); }
             });
-          })(product);
+          })(product, addBtn);
         }
 
         productGrid.appendChild(card);
@@ -459,83 +575,59 @@
     }
 
     renderProductGrid();
-    productSection.appendChild(productGrid);
-    container.appendChild(productSection);
-
-    // ── Cart Section ──
-    var cartSection = document.createElement('div');
-    cartSection.className = 'cb-cart-section';
-
-    var progressText = document.createElement('div');
-    progressText.className = 'cb-progress-text';
-
-    var cartBtn = document.createElement('button');
-    cartBtn.className = 'cb-cart-btn';
-    cartBtn.type = 'button';
-    cartBtn.disabled = true;
-    cartBtn.setAttribute('title', 'Please select all items to continue');
-
-    function updateCartButton() {
-      var filled = slots.filter(Boolean).length;
-      var remaining = box.itemCount - filled;
-      var addToCartLabel = (ctx.settings && ctx.settings.addToCartLabel) || 'ADD TO CART';
-
-      if (remaining > 0) {
-        cartBtn.disabled = true;
-        cartBtn.classList.remove('cb-cart-btn--ready');
-        cartBtn.textContent = remaining + ' more item' + (remaining !== 1 ? 's' : '') + ' needed';
-        progressText.textContent = filled + ' / ' + box.itemCount + ' selected';
-        cartBtn.setAttribute('title', 'Please select all items to continue');
-        // Hide gift message section when not all slots filled
-        if (giftSection) giftSection.style.display = 'none';
-      } else {
-        cartBtn.disabled = false;
-        cartBtn.classList.add('cb-cart-btn--ready');
-        cartBtn.textContent = addToCartLabel + ' — ' + formatPrice(box.bundlePrice, ctx.currencySymbol);
-        progressText.textContent = 'All ' + box.itemCount + ' items selected!';
-        cartBtn.removeAttribute('title');
-        // Reveal gift message section when all slots filled
-        if (giftSection) giftSection.style.display = 'block';
-      }
-    }
-
     updateCartButton();
 
-    cartBtn.addEventListener('click', function () {
+    // ── Cart Action ──
+    function doAddToCart() {
       if (slots.filter(Boolean).length < box.itemCount) {
-        // Flash empty slots red to signal which ones need filling
-        var slotEls = slotRow.querySelectorAll('.cb-slot');
-        slots.forEach(function (slotProduct, idx) {
-          if (!slotProduct && slotEls[idx]) {
-            slotEls[idx].classList.add('cb-slot--error');
-            setTimeout(function () { slotEls[idx].classList.remove('cb-slot--error'); }, 600);
+        // Flash empty slots
+        var stepEls = slotSteps.querySelectorAll('.cb-slot-step');
+        slots.forEach(function (p, idx) {
+          if (!p && stepEls[idx * 2]) {
+            stepEls[idx * 2].classList.add('cb-slot-step--error');
+            setTimeout(function () { stepEls[idx * 2].classList.remove('cb-slot-step--error'); }, 700);
           }
         });
         return;
       }
-      addToCart(box, slots, sessionId, giftInput ? giftInput.value : null, ctx, cartBtn);
-    });
+      addToCart(box, slots, sessionId, giftInput ? giftInput.value : null, inlineCartBtn, _stickyBtn);
+    }
 
-    cartSection.appendChild(progressText);
-    cartSection.appendChild(cartBtn);
-    container.appendChild(cartSection);
+    inlineCartBtn.addEventListener('click', doAddToCart);
+
+    // Create sticky footer
+    createStickyFooter(box, ctx, doAddToCart);
+    updateCartButton();
   }
 
   // ─── Add to Cart ──────────────────────────────────────────────────────────────
 
-  function addToCart(box, slots, sessionId, giftMessage, ctx, btn) {
-    btn.disabled = true;
-    btn.classList.remove('cb-cart-btn--ready');
-    btn.classList.add('cb-cart-btn--loading');
-    btn.textContent = 'Adding...';
+  function addToCart(box, slots, sessionId, giftMessage, inlineBtn, stickyBtn) {
+    function setBtns(state, text) {
+      [inlineBtn, stickyBtn].forEach(function (btn) {
+        if (!btn) return;
+        btn.disabled = state !== 'ready';
+        btn.className = btn === stickyBtn ? 'cb-sticky-btn' : 'cb-inline-cart-btn';
+        if (state === 'loading') {
+          btn.classList.add(btn === stickyBtn ? 'cb-sticky-btn--loading' : 'cb-inline-cart-btn--loading');
+        } else if (state === 'success') {
+          btn.classList.add(btn === stickyBtn ? 'cb-sticky-btn--success' : 'cb-inline-cart-btn--success');
+        } else if (state === 'error') {
+          btn.classList.add(btn === stickyBtn ? 'cb-sticky-btn--error' : 'cb-inline-cart-btn--error');
+          btn.disabled = false;
+        } else if (state === 'ready') {
+          btn.classList.add(btn === stickyBtn ? 'cb-sticky-btn--ready' : 'cb-inline-cart-btn--ready');
+        }
+        btn.textContent = text;
+      });
+    }
+
+    setBtns('loading', 'Adding…');
 
     var items = [];
-
-    // Each selected product at price ₹0 with bundle metadata
     slots.forEach(function (product, idx) {
       var variantId = getFirstVariantId(product);
       if (!variantId) return;
-
       var props = {
         '_combo_box_id': String(box.id),
         '_combo_session_id': sessionId,
@@ -543,11 +635,9 @@
       };
       props['_item_' + (idx + 1)] = product.productId;
       if (giftMessage) props['Gift Message'] = giftMessage;
-
       items.push({ id: variantId, quantity: 1, properties: props });
     });
 
-    // Hidden bundle price product
     if (box.shopifyVariantId) {
       items.push({
         id: box.shopifyVariantId,
@@ -562,17 +652,8 @@
     }
 
     if (items.length === 0) {
-      console.error('[ComboBuilder] No valid variant IDs found for selected products.');
-      btn.disabled = false;
-      btn.classList.remove('cb-cart-btn--loading');
-      btn.classList.add('cb-cart-btn--error');
-      btn.textContent = 'Error — Try Again';
-      setTimeout(function () {
-        btn.classList.remove('cb-cart-btn--error');
-        btn.classList.add('cb-cart-btn--ready');
-        btn.disabled = false;
-        btn.textContent = 'ADD TO CART — ' + formatPrice(box.bundlePrice, ctx.currencySymbol);
-      }, 2000);
+      setBtns('error', 'Error — Try Again');
+      setTimeout(function () { setBtns('ready', 'ADD TO CART'); }, 2500);
       return;
     }
 
@@ -586,28 +667,15 @@
         return r.json();
       })
       .then(function () {
-        btn.classList.remove('cb-cart-btn--loading');
-        btn.classList.add('cb-cart-btn--success');
-        btn.textContent = 'Added to Cart!';
-
-        // Notify theme mini-cart
+        setBtns('success', 'Added to Cart! ✓');
         document.dispatchEvent(new CustomEvent('cart:refresh', { bubbles: true }));
         document.dispatchEvent(new CustomEvent('cart:updated', { bubbles: true }));
-
         setTimeout(function () { window.location.href = '/cart'; }, 1200);
       })
       .catch(function (err) {
         console.error('[ComboBuilder] Add to cart error:', err);
-        btn.disabled = false;
-        btn.classList.remove('cb-cart-btn--loading');
-        btn.classList.add('cb-cart-btn--error');
-        btn.textContent = 'Error — Try Again';
-        setTimeout(function () {
-          btn.classList.remove('cb-cart-btn--error');
-          btn.classList.add('cb-cart-btn--ready');
-          btn.disabled = false;
-          btn.textContent = 'ADD TO CART — ' + formatPrice(box.bundlePrice, ctx.currencySymbol);
-        }, 2500);
+        setBtns('error', 'Error — Try Again');
+        setTimeout(function () { setBtns('ready', 'ADD TO CART'); }, 2500);
       });
   }
 
@@ -616,7 +684,6 @@
     if (product.variantIds && Array.isArray(product.variantIds) && product.variantIds.length > 0) {
       return product.variantIds[0];
     }
-    console.warn('[ComboBuilder] No variant ID stored for product:', product.productId, '— assign variants in the box configuration.');
     return null;
   }
 
@@ -624,40 +691,27 @@
 
   function bootstrap() {
     var widgetCount = 0;
-
-    // 1. Process __COMBO_BUILDER__ queue (app block approach)
     var queue = window.__COMBO_BUILDER__;
     if (Array.isArray(queue)) {
       queue.forEach(function (config) {
         try { initWidget(config); widgetCount++; } catch (e) { console.error('[ComboBuilder]', e); }
       });
     }
-
-    // Override push so future configs are handled immediately
     window.__COMBO_BUILDER__ = {
       push: function (config) {
         try { initWidget(config); } catch (e) { console.error('[ComboBuilder]', e); }
       },
     };
 
-    // 2. Legacy div support (Section 8.2/8.3 of docs)
-    //    <div id="combo-builder-widget" data-page="all" data-box-ids="1,3">
     var legacyEl = document.getElementById('combo-builder-widget');
-    if (legacyEl) {
-      try { initLegacyWidget(legacyEl); widgetCount++; } catch (e) { console.error('[ComboBuilder]', e); }
-    }
+    if (legacyEl) { try { initLegacyWidget(legacyEl); widgetCount++; } catch (e) { console.error('[ComboBuilder]', e); } }
 
-    // Also pick up any numbered legacy widgets: combo-builder-widget-1, -2, etc.
     var legacyEls = document.querySelectorAll('[id^="combo-builder-widget-legacy"]');
     for (var i = 0; i < legacyEls.length; i++) {
       try { initLegacyWidget(legacyEls[i]); widgetCount++; } catch (e) { console.error('[ComboBuilder]', e); }
     }
 
-    // Dispatch ready event so themes/other scripts can react
-    document.dispatchEvent(new CustomEvent('comboBuildReady', {
-      bubbles: true,
-      detail: { widgetCount: widgetCount },
-    }));
+    document.dispatchEvent(new CustomEvent('comboBuildReady', { bubbles: true, detail: { widgetCount: widgetCount } }));
   }
 
   if (document.readyState === 'loading') {

@@ -8,6 +8,11 @@ embedded = true
 [build]
 automatically_update_urls_on_dev = true
 
+[app_proxy]
+url = "https://combo-products.vercel.app"
+subpath = "combo-builder"
+prefix = "apps"
+
 [webhooks]
 api_version = "2026-04"
 
@@ -19,9 +24,9 @@ api_version = "2026-04"
   topics = [ "app/scopes_update" ]
   uri = "/webhooks/app/scopes_update"
 
+
 [access_scopes]
-# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_metaobject_definitions,write_metaobjects,write_products"
+scopes = "write_products,read_products,read_orders,read_inventory"
 
 [auth]
 redirect_urls = [
@@ -29,27 +34,3 @@ redirect_urls = [
   "https://combo-products.vercel.app/shopify/callback",
   "https://combo-products.vercel.app/api/auth/callback"
 ]
-
-[product.metafields.app.demo_info]
-type = "single_line_text_field"
-name = "Demo Source Info"
-description = "Tracks products created by the Shopify app template for development"
-
-  [product.metafields.app.demo_info.access]
-  admin = "merchant_read_write"
-
-[metaobjects.app.example]
-name = "Example"
-description = "An example metaobject definition created by this template"
-
-  [metaobjects.app.example.access]
-  admin = "merchant_read_write"
-
-[metaobjects.app.example.fields.title]
-name = "Title"
-type = "single_line_text_field"
-required = true
-
-[metaobjects.app.example.fields.description]
-name = "Description"
-type = "multi_line_text_field"

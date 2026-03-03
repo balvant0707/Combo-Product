@@ -1,0 +1,55 @@
+<div
+  id="combo-builder-widget-{{ block.id }}"
+  class="combo-builder-root"
+  data-shop="{{ shop.permanent_domain }}"
+  data-block-id="{{ block.id }}"
+  data-layout="{{ block.settings.layout }}"
+  data-heading="{{ block.settings.heading_text | escape }}"
+  data-currency="{{ cart.currency.iso_code }}"
+  data-currency-symbol="{{ cart.currency.symbol }}"
+  data-api-base="/apps/combo-builder"
+>
+  <div class="combo-builder-loading">
+    <div class="combo-builder-spinner"></div>
+    <span>Loading combo builder...</span>
+  </div>
+</div>
+
+{{ 'combo-builder.css' | asset_url | stylesheet_tag }}
+<script>
+  window.__COMBO_BUILDER__ = window.__COMBO_BUILDER__ || [];
+  window.__COMBO_BUILDER__.push({
+    mountId: 'combo-builder-widget-{{ block.id }}',
+    shop: '{{ shop.permanent_domain }}',
+    currency: '{{ cart.currency.iso_code }}',
+    currencySymbol: '{{ cart.currency.symbol }}',
+    layout: '{{ block.settings.layout | default: "grid" }}',
+    apiBase: '/apps/combo-builder'
+  });
+</script>
+<script defer src="{{ 'combo-builder.js' | asset_url }}"></script>
+
+{% schema %}
+{
+  "name": "Combo Builder",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading_text",
+      "label": "Widget Heading",
+      "default": "Build Your Own Box!"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "Product Grid Layout",
+      "options": [
+        { "value": "grid", "label": "Grid" },
+        { "value": "list", "label": "List" }
+      ],
+      "default": "grid"
+    }
+  ]
+}
+{% endschema %}

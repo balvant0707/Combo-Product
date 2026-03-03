@@ -1,10 +1,20 @@
 {
-  "ratings": {
-    "stars": {
-      "label": "Ratings"
-    },
-    "home": {
-      "recommendationText": "Recommended Product!"
-    }
+  "combo_builder": {
+    "heading": "Build Your Own Box!",
+    "loading": "Loading combo builder...",
+    "build_this_box": "Build This Box",
+    "your_selections": "Your Selections",
+    "pick_product": "Pick a product",
+    "choose_product_for_slot": "Choose a product for slot",
+    "gift_message_label": "Gift Message (optional)",
+    "gift_message_placeholder": "Add a personal message...",
+    "add_to_cart": "Add to Cart",
+    "adding": "Adding...",
+    "added_to_cart": "Added to Cart!",
+    "items_needed": "items needed",
+    "item_needed": "item needed",
+    "all_selected": "All items selected!",
+    "items_selected": "items selected",
+    "error_try_again": "Error — Try Again"
   }
 }

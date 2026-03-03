@@ -58,3 +58,83 @@ model shop {
   uninstalledAt           DateTime?
   announcementEmailSentAt DateTime?
 }
+
+model ComboBox {
+  id                 Int               @id @default(autoincrement())
+  shop               String
+  boxName            String            @db.VarChar(255)
+  displayTitle       String            @db.VarChar(255)
+  itemCount          Int               @default(1)
+  bundlePrice        Decimal           @db.Decimal(10, 2)
+  isGiftBox          Boolean           @default(false)
+  allowDuplicates    Boolean           @default(false)
+  bannerImageUrl     String?           @db.VarChar(500)
+  sortOrder          Int               @default(0)
+  isActive           Boolean           @default(true)
+  giftMessageEnabled Boolean           @default(false)
+  shopifyProductId   String?           @db.VarChar(255)
+  shopifyVariantId   String?           @db.VarChar(255)
+  deletedAt          DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  products           ComboBoxProduct[]
+  orders             BundleOrder[]
+
+  @@index([shop])
+  @@map("combo_box")
+}
+
+model ComboBoxProduct {
+  id              Int      @id @default(autoincrement())
+  boxId           Int
+  productId       String   @db.VarChar(255)
+  productTitle    String?  @db.VarChar(255)
+  productImageUrl String?  @db.VarChar(500)
+  productHandle   String?  @db.VarChar(255)
+  isCollection    Boolean  @default(false)
+  variantIds      Json?
+  createdAt       DateTime @default(now())
+  box             ComboBox @relation(fields: [boxId], references: [id], onDelete: Cascade)
+
+  @@index([boxId])
+  @@map("combo_box_product")
+}
+
+model BundleOrder {
+  id               Int      @id @default(autoincrement())
+  shop             String
+  orderId          String   @db.VarChar(255)
+  boxId            Int
+  selectedProducts Json
+  bundlePrice      Decimal  @db.Decimal(10, 2)
+  giftMessage      String?  @db.Text
+  orderDate        DateTime
+  customerId       String?  @db.VarChar(255)
+  createdAt        DateTime @default(now())
+  box              ComboBox @relation(fields: [boxId], references: [id])
+
+  @@index([shop])
+  @@index([boxId])
+  @@map("bundle_order")
+}
+
+model AppSettings {
+  id                 Int      @id @default(autoincrement())
+  shop               String   @unique
+  widgetHeadingText  String?  @db.VarChar(255)
+  ctaButtonLabel     String?  @db.VarChar(100)
+  addToCartLabel     String?  @db.VarChar(100)
+  buttonColor        String?  @default("#2A7A4F") @db.VarChar(20)
+  activeSlotColor    String?  @default("#2A7A4F") @db.VarChar(20)
+  showSavingsBadge   Boolean  @default(false)
+  allowDuplicates    Boolean  @default(false)
+  showProductPrices  Boolean  @default(false)
+  forceShowOos       Boolean  @default(false)
+  giftMessageField   Boolean  @default(false)
+  analyticsTracking  Boolean  @default(true)
+  emailNotifications Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("app_settings")
+}

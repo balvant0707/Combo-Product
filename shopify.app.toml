@@ -2,7 +2,7 @@
 
 client_id = "1b140d390cfb4675876a63a4cc03aab7"
 name = "Combo Product"
-application_url = "https://example.com"
+application_url = "https://combo-products.vercel.app"
 embedded = true
 
 [build]
@@ -25,7 +25,12 @@ api_version = "2026-04"
 scopes = "write_metaobject_definitions,write_metaobjects,write_products"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+[auth]
+redirect_urls = [
+  "https://combo-products.vercel.app/auth/callback",
+  "https://combo-products.vercel.app/shopify/callback",
+  "https://combo-products.vercel.app/api/auth/callback"
+]
 
 [product.metafields.app.demo_info]
 type = "single_line_text_field"

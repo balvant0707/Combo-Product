@@ -63,7 +63,9 @@
       '--cb-border-dashed:' + t.border + ';' +
       '--cb-idle-num:' + t.idleNum + ';' +
     '}';
-    document.head.appendChild(style);
+    // Append to body so this rule comes after the liquid block's <style> in
+    // document order, winning the CSS cascade at equal specificity.
+    document.body.appendChild(style);
   }
 
   // ─── Sticky Footer singleton ──────────────────────────────────────────────────
@@ -217,13 +219,17 @@
     ctx.boxes.forEach(function (box) { boxGrid.appendChild(createBoxCard(box, ctx)); });
     wrapper.appendChild(boxGrid);
 
-    // Builder area (hidden until a box is picked)
+    // Builder area
     var builderArea = document.createElement('div');
     builderArea.className = 'cb-builder-area';
     builderArea.style.display = 'none';
     wrapper.appendChild(builderArea);
 
     root.appendChild(wrapper);
+
+    // Auto-select the first box so products show immediately on load
+    var firstCard = boxGrid.firstElementChild;
+    if (firstCard) firstCard.click();
   }
 
   // ─── Box Card ─────────────────────────────────────────────────────────────────

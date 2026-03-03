@@ -66,8 +66,7 @@ function RevenueBarChart({ data }) {
 
         {/* Bars */}
         {data.map((d, i) => {
-          const barH =
-            d.revenue > 0 ? Math.max(2, (d.revenue / maxRevenue) * H) : 0;
+          const barH = Math.max(2, (d.revenue / maxRevenue) * H);
           const x = MARGIN_LEFT + i * (barWidth + BAR_GAP);
           const y = H - barH;
           const cx = x + barWidth / 2;

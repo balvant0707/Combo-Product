@@ -81,13 +81,19 @@ export async function getAnalytics(shop, from, to) {
   const fromDate = from ? new Date(from) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const toDate = to ? new Date(to) : new Date();
 
-  const [orders, activeBoxes] = await Promise.all([
+  // Previous period: same duration, immediately before current period
+  const periodMs = toDate.getTime() - fromDate.getTime();
+  const prevFromDate = new Date(fromDate.getTime() - periodMs);
+  const prevToDate = new Date(fromDate.getTime());
+
+  const [orders, prevOrders, activeBoxes] = await Promise.all([
     db.bundleOrder.findMany({
-      where: {
-        shop,
-        orderDate: { gte: fromDate, lte: toDate },
-      },
+      where: { shop, orderDate: { gte: fromDate, lte: toDate } },
       include: { box: { select: { displayTitle: true, itemCount: true } } },
+      orderBy: { orderDate: "asc" },
+    }),
+    db.bundleOrder.findMany({
+      where: { shop, orderDate: { gte: prevFromDate, lte: prevToDate } },
       orderBy: { orderDate: "asc" },
     }),
     db.comboBox.findMany({
@@ -98,19 +104,27 @@ export async function getAnalytics(shop, from, to) {
   ]);
 
   const totalOrders = orders.length;
-  const totalRevenue = orders.reduce(
-    (sum, o) => sum + parseFloat(o.bundlePrice),
-    0,
-  );
+  const totalRevenue = orders.reduce((sum, o) => sum + parseFloat(o.bundlePrice), 0);
   const avgBundleValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
   const activeBoxCount = activeBoxes.length;
+
+  const prevTotalOrders = prevOrders.length;
+  const prevTotalRevenue = prevOrders.reduce((sum, o) => sum + parseFloat(o.bundlePrice), 0);
+
+  // Period-over-period change (null = no previous data to compare)
+  const revenueChange =
+    prevTotalRevenue > 0
+      ? ((totalRevenue - prevTotalRevenue) / prevTotalRevenue) * 100
+      : totalRevenue > 0 ? 100 : null;
+  const ordersChange =
+    prevTotalOrders > 0
+      ? ((totalOrders - prevTotalOrders) / prevTotalOrders) * 100
+      : totalOrders > 0 ? 100 : null;
 
   // Top products (from selectedProducts JSON arrays)
   const productCounts = {};
   for (const order of orders) {
-    const products = Array.isArray(order.selectedProducts)
-      ? order.selectedProducts
-      : [];
+    const products = Array.isArray(order.selectedProducts) ? order.selectedProducts : [];
     for (const pid of products) {
       productCounts[pid] = (productCounts[pid] || 0) + 1;
     }
@@ -120,55 +134,60 @@ export async function getAnalytics(shop, from, to) {
     .slice(0, 10)
     .map(([productId, count]) => ({ productId, count }));
 
-  // Daily trend (always include every day in range, even if zero orders).
+  // Daily trend — every day in range including zeros
   const dailyTrend = buildDailySkeleton(fromDate, toDate);
   const dailyMap = Object.fromEntries(dailyTrend.map((d) => [d.date, d]));
   for (const order of orders) {
     const day = toDateKey(order.orderDate);
-    if (!dailyMap[day]) continue;
-    dailyMap[day].revenue += parseFloat(order.bundlePrice);
-    dailyMap[day].orders += 1;
+    if (dailyMap[day]) {
+      dailyMap[day].revenue += parseFloat(order.bundlePrice);
+      dailyMap[day].orders += 1;
+    }
+  }
+
+  // Previous period daily trend (same number of days, shifted back)
+  const prevDailyTrend = buildDailySkeleton(prevFromDate, prevToDate);
+  const prevDailyMap = Object.fromEntries(prevDailyTrend.map((d) => [d.date, d]));
+  for (const order of prevOrders) {
+    const day = toDateKey(order.orderDate);
+    if (prevDailyMap[day]) {
+      prevDailyMap[day].revenue += parseFloat(order.bundlePrice);
+      prevDailyMap[day].orders += 1;
+    }
   }
 
   // Box type performance
   const boxPerf = Object.fromEntries(
     activeBoxes.map((box) => [
       box.id,
-      {
-        boxId: box.id,
-        boxTitle: box.displayTitle || "Untitled Box",
-        revenue: 0,
-        orders: 0,
-      },
+      { boxId: box.id, boxTitle: box.displayTitle || "Untitled Box", revenue: 0, orders: 0 },
     ]),
   );
-
   for (const order of orders) {
     const key = order.boxId;
     if (!boxPerf[key]) {
-      boxPerf[key] = {
-        boxId: order.boxId,
-        boxTitle: order.box?.displayTitle || "Unknown",
-        revenue: 0,
-        orders: 0,
-      };
+      boxPerf[key] = { boxId: order.boxId, boxTitle: order.box?.displayTitle || "Unknown", revenue: 0, orders: 0 };
     }
     boxPerf[key].revenue += parseFloat(order.bundlePrice);
     boxPerf[key].orders += 1;
   }
-  const boxPerformance = Object.values(boxPerf).sort(
-    (a, b) => b.revenue - a.revenue,
-  );
+  const boxPerformance = Object.values(boxPerf).sort((a, b) => b.revenue - a.revenue);
 
   return {
     totalOrders,
     totalRevenue: parseFloat(totalRevenue.toFixed(2)),
     avgBundleValue: parseFloat(avgBundleValue.toFixed(2)),
     activeBoxCount,
+    prevTotalOrders,
+    prevTotalRevenue: parseFloat(prevTotalRevenue.toFixed(2)),
+    revenueChange,
+    ordersChange,
     topProducts,
     dailyTrend,
+    prevDailyTrend,
     boxPerformance,
     period: { from: fromDate.toISOString(), to: toDate.toISOString() },
+    prevPeriod: { from: prevFromDate.toISOString(), to: prevToDate.toISOString() },
   };
 }
 

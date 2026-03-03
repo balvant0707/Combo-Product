@@ -1,5 +1,20 @@
 import { PrismaClient } from "@prisma/client";
 
+const rawDatabaseUrl = process.env.DATABASE_URL?.trim();
+const normalizedDatabaseUrl = rawDatabaseUrl?.replace(/^"(.*)"$/, "$1");
+
+if (!normalizedDatabaseUrl) {
+  throw new Error("[DB Init] DATABASE_URL is missing");
+}
+
+if (!/^mysqls?:\/\//i.test(normalizedDatabaseUrl)) {
+  throw new Error(
+    `[DB Init] DATABASE_URL must start with mysql:// or mysqls:// (received: ${normalizedDatabaseUrl.slice(0, 30)})`,
+  );
+}
+
+process.env.DATABASE_URL = normalizedDatabaseUrl;
+
 if (process.env.NODE_ENV !== "production") {
   if (!global.prismaGlobal) {
     global.prismaGlobal = new PrismaClient();
@@ -7,6 +22,13 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 const prisma = global.prismaGlobal ?? new PrismaClient();
+const prismaProvider = prisma?._engineConfig?.activeProvider;
+
+if (prismaProvider && prismaProvider !== "mysql") {
+  throw new Error(
+    `[DB Init] Prisma client provider is '${prismaProvider}', expected 'mysql'. Run 'npx prisma generate' during deployment.`,
+  );
+}
 
 const ENSURE_SESSION_TABLE_SQL = `
 CREATE TABLE IF NOT EXISTS \`session\` (

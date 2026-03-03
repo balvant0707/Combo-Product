@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useLoaderData, useNavigate, useFetcher, Form, useActionData, useNavigation } from "react-router";
 import { redirect } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
@@ -111,6 +111,119 @@ const errorStyle = {
   marginTop: "4px",
 };
 
+// ─── Price Chart ────────────────────────────────────────────────────────────
+
+function PriceChart({ estimatedTotal, bundlePrice, numItemCount }) {
+  if (estimatedTotal <= 0 || bundlePrice <= 0) return null;
+
+  const pct = Math.min(100, (bundlePrice / estimatedTotal) * 100);
+  const savings = estimatedTotal - bundlePrice;
+  const savingsPct = (savings / estimatedTotal) * 100;
+  const isOverpriced = bundlePrice > estimatedTotal;
+
+  function fmt(v) {
+    return "₹" + v.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  return (
+    <div
+      style={{
+        gridColumn: "1 / -1",
+        background: "#fafaf8",
+        border: "1px solid #e5e1d8",
+        borderRadius: "8px",
+        padding: "16px",
+        marginTop: "4px",
+      }}
+    >
+      <div
+        style={{
+          fontSize: "11px",
+          fontWeight: "600",
+          color: "#7a7670",
+          textTransform: "uppercase",
+          letterSpacing: "0.8px",
+          fontFamily: "monospace",
+          marginBottom: "14px",
+        }}
+      >
+        Price Preview — {numItemCount} item{numItemCount !== 1 ? "s" : ""}
+      </div>
+
+      {/* Market value row */}
+      <div style={{ marginBottom: "10px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
+          <span style={{ fontSize: "11px", color: "#7a7670" }}>Avg Market Value</span>
+          <span style={{ fontSize: "11px", fontWeight: "600", fontFamily: "monospace", color: "#374151" }}>
+            {fmt(estimatedTotal)}
+          </span>
+        </div>
+        <div style={{ background: "#e5e1d8", borderRadius: "4px", height: "10px" }}>
+          <div style={{ width: "100%", background: "#d1d5db", height: "100%", borderRadius: "4px" }} />
+        </div>
+      </div>
+
+      {/* Bundle price row */}
+      <div style={{ marginBottom: "12px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
+          <span style={{ fontSize: "11px", color: "#7a7670" }}>Bundle Price</span>
+          <span style={{ fontSize: "11px", fontWeight: "700", fontFamily: "monospace", color: isOverpriced ? "#e11d48" : "#2A7A4F" }}>
+            {fmt(bundlePrice)}
+          </span>
+        </div>
+        <div style={{ background: "#e5e1d8", borderRadius: "4px", height: "10px" }}>
+          <div
+            style={{
+              width: `${isOverpriced ? 100 : pct}%`,
+              background: isOverpriced ? "#e11d48" : "#2A7A4F",
+              height: "100%",
+              borderRadius: "4px",
+              minWidth: "6px",
+              transition: "width 0.3s ease",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Savings / warning */}
+      <div
+        style={{
+          paddingTop: "10px",
+          borderTop: "1px solid #e5e1d8",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        {isOverpriced ? (
+          <span style={{ fontSize: "12px", color: "#e11d48", fontWeight: "500" }}>
+            ⚠ Bundle price is higher than market value
+          </span>
+        ) : savings > 0 ? (
+          <>
+            <span style={{ fontSize: "12px", color: "#059669", fontWeight: "500" }}>Customer saves</span>
+            <span
+              style={{
+                fontSize: "13px",
+                fontWeight: "700",
+                color: "#059669",
+                fontFamily: "monospace",
+                background: "#d1fae5",
+                padding: "2px 10px",
+                borderRadius: "20px",
+              }}
+            >
+              {fmt(savings)} ({savingsPct.toFixed(0)}% off)
+            </span>
+          </>
+        ) : (
+          <span style={{ fontSize: "12px", color: "#7a7670" }}>Bundle price equals market value — no discount</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function CreateBoxPage() {
   const { products } = useLoaderData();
   const actionData = useActionData();
@@ -128,9 +241,37 @@ export default function CreateBoxPage() {
     isActive: true,
   });
 
+  // Controlled itemCount for use in price calculations
+  const [itemCount, setItemCount] = useState("4");
+
+  // Pricing mode state
+  const [priceMode, setPriceMode] = useState("manual");
+  const [manualPrice, setManualPrice] = useState("");
+  const [discountType, setDiscountType] = useState("percent");
+  const [discountValue, setDiscountValue] = useState("10");
+
   const errors = actionData?.errors || {};
   const displayProducts = searchFetcher.data?.products || products;
 
+  // ── Price computations ──
+  const numItemCount = Math.max(1, parseInt(itemCount) || 1);
+  const avgProductPrice =
+    selectedProducts.length > 0
+      ? selectedProducts.reduce((s, p) => s + (parseFloat(p.price) || 0), 0) / selectedProducts.length
+      : 0;
+  const estimatedTotal = avgProductPrice * numItemCount;
+
+  const dynamicPrice = useMemo(() => {
+    if (estimatedTotal <= 0) return 0;
+    const val = parseFloat(discountValue) || 0;
+    if (discountType === "percent") return Math.max(0, estimatedTotal * (1 - val / 100));
+    if (discountType === "fixed") return Math.max(0, estimatedTotal - val);
+    return estimatedTotal;
+  }, [estimatedTotal, discountType, discountValue]);
+
+  const bundlePrice = priceMode === "manual" ? parseFloat(manualPrice) || 0 : dynamicPrice;
+
+  // ── Handlers ──
   function handleSearchChange(e) {
     const val = e.target.value;
     setProductSearch(val);
@@ -145,14 +286,18 @@ export default function CreateBoxPage() {
     setSelectedProducts((prev) => {
       const exists = prev.find((p) => p.id === product.id);
       if (exists) return prev.filter((p) => p.id !== product.id);
-      return [...prev, {
-        id: product.id,
-        productId: product.id,
-        productTitle: product.title,
-        productImageUrl: product.imageUrl,
-        productHandle: product.handle,
-        variantIds: product.variantId ? [product.variantId] : [],
-      }];
+      return [
+        ...prev,
+        {
+          id: product.id,
+          productId: product.id,
+          productTitle: product.title,
+          productImageUrl: product.imageUrl,
+          productHandle: product.handle,
+          variantIds: product.variantId ? [product.variantId] : [],
+          price: parseFloat(product.price) || 0,
+        },
+      ];
     });
   }
 
@@ -188,45 +333,208 @@ export default function CreateBoxPage() {
 
       <s-section>
         <Form method="POST">
-          {/* Hidden inputs for booleans and products */}
+          {/* Hidden inputs for final computed values */}
+          <input type="hidden" name="bundlePrice" value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
+          <input type="hidden" name="itemCount" value={itemCount} />
           <input type="hidden" name="eligibleProducts" value={JSON.stringify(selectedProducts)} />
           <input type="hidden" name="isGiftBox" value={String(options.isGiftBox)} />
           <input type="hidden" name="allowDuplicates" value={String(options.allowDuplicates)} />
           <input type="hidden" name="giftMessageEnabled" value={String(options.giftMessageEnabled)} />
           <input type="hidden" name="isActive" value={String(options.isActive)} />
 
-          {/* Basic Information */}
+          {/* ── Basic Information ── */}
           <div style={{ marginBottom: "28px" }}>
             <div style={sectionHeadingStyle}>Basic Information</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+
               <div>
                 <label style={labelStyle}>Box Internal Name *</label>
-                <input type="text" name="boxName" placeholder="e.g. Box of 4 Bestsellers" style={{ ...fieldStyle, borderColor: errors.boxName ? "#e11d48" : "#c9c6be" }} />
+                <input
+                  type="text"
+                  name="boxName"
+                  placeholder="e.g. Box of 4 Bestsellers"
+                  style={{ ...fieldStyle, borderColor: errors.boxName ? "#e11d48" : "#c9c6be" }}
+                />
                 {errors.boxName && <div style={errorStyle}>{errors.boxName}</div>}
               </div>
+
               <div>
                 <label style={labelStyle}>Display Title (Storefront) *</label>
-                <input type="text" name="displayTitle" placeholder="Shown to customers" style={{ ...fieldStyle, borderColor: errors.displayTitle ? "#e11d48" : "#c9c6be" }} />
+                <input
+                  type="text"
+                  name="displayTitle"
+                  placeholder="Shown to customers"
+                  style={{ ...fieldStyle, borderColor: errors.displayTitle ? "#e11d48" : "#c9c6be" }}
+                />
                 {errors.displayTitle && <div style={errorStyle}>{errors.displayTitle}</div>}
               </div>
+
+              {/* Number of Items — controlled for price calc */}
               <div>
                 <label style={labelStyle}>Number of Items *</label>
-                <input type="number" name="itemCount" placeholder="e.g. 4" min="1" max="20" defaultValue="4" style={{ ...fieldStyle, borderColor: errors.itemCount ? "#e11d48" : "#c9c6be" }} />
+                <input
+                  type="number"
+                  placeholder="e.g. 4"
+                  min="1"
+                  max="20"
+                  value={itemCount}
+                  onChange={(e) => setItemCount(e.target.value)}
+                  style={{ ...fieldStyle, borderColor: errors.itemCount ? "#e11d48" : "#c9c6be" }}
+                />
                 {errors.itemCount && <div style={errorStyle}>{errors.itemCount}</div>}
               </div>
+
+              {/* ── Bundle Price with Manual / Dynamic toggle ── */}
               <div>
                 <label style={labelStyle}>Bundle Price (₹) *</label>
-                <input type="number" name="bundlePrice" placeholder="e.g. 1200" min="0" step="0.01" style={{ ...fieldStyle, borderColor: errors.bundlePrice ? "#e11d48" : "#c9c6be" }} />
+
+                {/* Mode toggle */}
+                <div
+                  style={{
+                    display: "flex",
+                    border: "1px solid #e5e1d8",
+                    borderRadius: "6px",
+                    overflow: "hidden",
+                    marginBottom: "10px",
+                  }}
+                >
+                  {["manual", "dynamic"].map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setPriceMode(mode)}
+                      style={{
+                        flex: 1,
+                        padding: "7px 0",
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        border: "none",
+                        cursor: "pointer",
+                        background: priceMode === mode ? "#2A7A4F" : "#fff",
+                        color: priceMode === mode ? "#fff" : "#374151",
+                        transition: "background 0.15s",
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {mode === "manual" ? "Manual Price" : "Dynamic Price"}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Manual input */}
+                {priceMode === "manual" && (
+                  <input
+                    type="number"
+                    placeholder="e.g. 1200"
+                    min="0"
+                    step="0.01"
+                    value={manualPrice}
+                    onChange={(e) => setManualPrice(e.target.value)}
+                    style={{ ...fieldStyle, borderColor: errors.bundlePrice ? "#e11d48" : "#c9c6be" }}
+                  />
+                )}
+
+                {/* Dynamic price calculator */}
+                {priceMode === "dynamic" && (
+                  <div
+                    style={{
+                      border: "1px solid #e5e1d8",
+                      borderRadius: "6px",
+                      padding: "12px",
+                      background: "#fafaf8",
+                    }}
+                  >
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
+                      <div>
+                        <label style={{ ...labelStyle, fontSize: "11px" }}>Discount Type</label>
+                        <select
+                          value={discountType}
+                          onChange={(e) => setDiscountType(e.target.value)}
+                          style={{ ...fieldStyle, fontSize: "12px" }}
+                        >
+                          <option value="percent">% Off Total</option>
+                          <option value="fixed">₹ Fixed Discount</option>
+                          <option value="none">No Discount (Full Price)</option>
+                        </select>
+                      </div>
+                      {discountType !== "none" && (
+                        <div>
+                          <label style={{ ...labelStyle, fontSize: "11px" }}>
+                            {discountType === "percent" ? "Discount %" : "Discount Amount (₹)"}
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            step={discountType === "percent" ? "1" : "0.01"}
+                            max={discountType === "percent" ? "99" : undefined}
+                            value={discountValue}
+                            onChange={(e) => setDiscountValue(e.target.value)}
+                            style={{ ...fieldStyle, fontSize: "12px" }}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Computed price display */}
+                    <div
+                      style={{
+                        background: dynamicPrice > 0 ? "#f0fdf4" : "#f9fafb",
+                        borderRadius: "6px",
+                        padding: "10px 14px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        border: "1px solid " + (dynamicPrice > 0 ? "#bbf7d0" : "#e5e1d8"),
+                      }}
+                    >
+                      <span style={{ fontSize: "12px", color: "#374151", fontWeight: "500" }}>
+                        Calculated Price
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "18px",
+                          fontWeight: "700",
+                          color: dynamicPrice > 0 ? "#15803d" : "#9ca3af",
+                          fontFamily: "monospace",
+                        }}
+                      >
+                        {dynamicPrice > 0
+                          ? "₹" + dynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                          : "Select products first"}
+                      </span>
+                    </div>
+
+                    {selectedProducts.length === 0 && (
+                      <div style={{ fontSize: "11px", color: "#7a7670", marginTop: "8px", textAlign: "center" }}>
+                        Select eligible products below to calculate price
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {errors.bundlePrice && <div style={errorStyle}>{errors.bundlePrice}</div>}
               </div>
+
+              {/* Price chart — full-width row, shown when products selected */}
+              <PriceChart
+                estimatedTotal={estimatedTotal}
+                bundlePrice={bundlePrice}
+                numItemCount={numItemCount}
+              />
+
               <div style={{ gridColumn: "1 / -1" }}>
                 <label style={labelStyle}>Banner Image URL (optional)</label>
-                <input type="url" name="bannerImageUrl" placeholder="https://... (600×300px recommended)" style={fieldStyle} />
+                <input
+                  type="url"
+                  name="bannerImageUrl"
+                  placeholder="https://... (600×300px recommended)"
+                  style={fieldStyle}
+                />
               </div>
             </div>
           </div>
 
-          {/* Options */}
+          {/* ── Options ── */}
           <div style={{ marginBottom: "28px" }}>
             <div style={sectionHeadingStyle}>Options</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
@@ -236,7 +544,19 @@ export default function CreateBoxPage() {
                 { key: "giftMessageEnabled", label: "Gift Message Field", desc: "Show text area for gift message" },
                 { key: "isActive", label: "Active (visible on storefront)", desc: "Uncheck to save as draft" },
               ].map((opt) => (
-                <label key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px", border: "1px solid #e5e1d8", borderRadius: "8px", background: options[opt.key] ? "#f0fdf4" : "#fff" }}>
+                <label
+                  key={opt.key}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "10px",
+                    cursor: "pointer",
+                    padding: "12px",
+                    border: "1px solid #e5e1d8",
+                    borderRadius: "8px",
+                    background: options[opt.key] ? "#f0fdf4" : "#fff",
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={options[opt.key]}
@@ -252,12 +572,23 @@ export default function CreateBoxPage() {
             </div>
           </div>
 
-          {/* Eligible Products */}
+          {/* ── Eligible Products ── */}
           <div style={{ marginBottom: "28px" }}>
             <div style={sectionHeadingStyle}>
               Eligible Products
               {selectedProducts.length > 0 && (
-                <span style={{ marginLeft: "8px", background: "#2A7A4F", color: "#fff", borderRadius: "20px", padding: "2px 8px", fontSize: "10px", fontWeight: "600", fontFamily: "monospace" }}>
+                <span
+                  style={{
+                    marginLeft: "8px",
+                    background: "#2A7A4F",
+                    color: "#fff",
+                    borderRadius: "20px",
+                    padding: "2px 8px",
+                    fontSize: "10px",
+                    fontWeight: "600",
+                    fontFamily: "monospace",
+                  }}
+                >
                   {selectedProducts.length} selected
                 </span>
               )}
@@ -299,7 +630,15 @@ export default function CreateBoxPage() {
               {displayProducts.map((product) => (
                 <label
                   key={product.id}
-                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 14px", borderBottom: "1px solid #f0ede4", cursor: "pointer", background: isSelected(product.id) ? "#f0fdf4" : "#fff" }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "10px 14px",
+                    borderBottom: "1px solid #f0ede4",
+                    cursor: "pointer",
+                    background: isSelected(product.id) ? "#f0fdf4" : "#fff",
+                  }}
                 >
                   <input
                     type="checkbox"
@@ -308,12 +647,21 @@ export default function CreateBoxPage() {
                     style={{ width: "14px", height: "14px", flexShrink: 0, accentColor: "#2A7A4F" }}
                   />
                   {product.imageUrl && (
-                    <img src={product.imageUrl} alt={product.title} style={{ width: "36px", height: "36px", objectFit: "cover", borderRadius: "4px", flexShrink: 0 }} />
+                    <img
+                      src={product.imageUrl}
+                      alt={product.title}
+                      style={{ width: "36px", height: "36px", objectFit: "cover", borderRadius: "4px", flexShrink: 0 }}
+                    />
                   )}
-                  <div>
+                  <div style={{ flex: 1 }}>
                     <div style={{ fontSize: "13px", fontWeight: "600", color: "#1a1814" }}>{product.title}</div>
                     <div style={{ fontSize: "11px", color: "#7a7670", fontFamily: "monospace" }}>{product.handle}</div>
                   </div>
+                  {product.price && parseFloat(product.price) > 0 && (
+                    <div style={{ fontSize: "12px", fontWeight: "600", color: "#374151", fontFamily: "monospace", flexShrink: 0 }}>
+                      ₹{parseFloat(product.price).toLocaleString("en-IN")}
+                    </div>
+                  )}
                 </label>
               ))}
               {displayProducts.length === 0 && (
@@ -324,7 +672,7 @@ export default function CreateBoxPage() {
             </div>
           </div>
 
-          {/* Actions */}
+          {/* ── Actions ── */}
           <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", paddingTop: "16px", borderTop: "1px solid #e5e1d8" }}>
             <button
               type="button"

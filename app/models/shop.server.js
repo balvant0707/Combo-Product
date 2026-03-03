@@ -37,6 +37,12 @@ function normalizeScope(scope) {
 }
 
 export async function upsertSessionFromAuth(session) {
+  console.info("[DB Sync] upsertSessionFromAuth", {
+    shop: session.shop,
+    sessionId: session.id,
+    isOnline: session.isOnline,
+  });
+
   const associatedUser = session.onlineAccessInfo?.associated_user;
 
   await db.session.upsert({
@@ -82,6 +88,11 @@ export async function upsertSessionFromAuth(session) {
 }
 
 export async function upsertShopFromAdmin(session, admin) {
+  console.info("[DB Sync] upsertShopFromAdmin", {
+    shop: session.shop,
+    sessionId: session.id,
+  });
+
   const response = await admin.graphql(SHOP_DETAILS_QUERY);
   const body = await response.json();
   const details = body?.data?.shop;
@@ -126,6 +137,8 @@ export async function upsertShopFromAdmin(session, admin) {
 }
 
 export async function markShopUninstalled(shop) {
+  console.info("[DB Sync] markShopUninstalled", { shop });
+
   await db.shop.upsert({
     where: { shop },
     create: {
@@ -145,6 +158,11 @@ export async function markShopUninstalled(shop) {
 }
 
 export async function updateShopScope(shop, scope) {
+  console.info("[DB Sync] updateShopScope", {
+    shop,
+    scope: normalizeScope(scope),
+  });
+
   await db.session.updateMany({
     where: { shop },
     data: { scope: normalizeScope(scope) },

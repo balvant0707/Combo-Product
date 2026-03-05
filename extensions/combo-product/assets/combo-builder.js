@@ -175,7 +175,21 @@
       // Apply dynamic max-width from admin settings
       if (settings && settings.widgetMaxWidth != null) {
         var mw = parseInt(settings.widgetMaxWidth, 10);
-        root.style.setProperty('--cb-max-width', mw === 0 ? '100%' : mw + 'px');
+        if (mw === 0) {
+          // Full width: break out of any theme container using viewport units
+          root.style.width = '100vw';
+          root.style.maxWidth = '100vw';
+          root.style.marginLeft = 'calc(50% - 50vw)';
+          root.style.marginRight = 'calc(50% - 50vw)';
+          root.style.setProperty('--cb-max-width', '100%');
+        } else {
+          // Specific width: center with max-width on the root itself
+          root.style.width = '100%';
+          root.style.maxWidth = mw + 'px';
+          root.style.marginLeft = 'auto';
+          root.style.marginRight = 'auto';
+          root.style.setProperty('--cb-max-width', mw + 'px');
+        }
       }
 
       renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root });

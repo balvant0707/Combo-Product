@@ -28,6 +28,7 @@ export const action = async ({ request }) => {
     analyticsTracking: formData.get("analyticsTracking"),
     emailNotifications: formData.get("emailNotifications"),
     presetTheme: formData.get("presetTheme"),
+    widgetMaxWidth: formData.get("widgetMaxWidth"),
   };
 
   await upsertSettings(session.shop, data);

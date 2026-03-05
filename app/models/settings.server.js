@@ -3,7 +3,7 @@ import db from "../db.server";
 const DEFAULTS = {
   widgetHeadingText: "Pick your favorite products and build your own box!",
   ctaButtonLabel: "BUILD YOUR OWN BOX",
-  addToCartLabel: "ADD TO CART",
+  addToCartLabel: "UPDATE BOX",
   buttonColor: "#2A7A4F",
   activeSlotColor: "#2A7A4F",
   showSavingsBadge: false,

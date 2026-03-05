@@ -16,6 +16,14 @@
     });
   }
 
+  function resolveAddToCartLabel(settings) {
+    var label = settings && settings.addToCartLabel != null
+      ? String(settings.addToCartLabel).trim()
+      : '';
+    if (!label || label.toUpperCase() === 'ADD TO CART') return 'UPDATE BOX';
+    return label;
+  }
+
   // ─── Preset Theme Palettes ────────────────────────────────────────────────────
 
   var PRESET_THEMES = {
@@ -123,12 +131,12 @@
     footer.appendChild(center);
     _stickySavingsEl = savingsRow;
 
-    // Right: ADD TO CART button
+    // Right: action button
     var btn = document.createElement('button');
     btn.className = 'cb-sticky-btn';
     btn.type = 'button';
     btn.disabled = true;
-    btn.textContent = 'ADD TO CART';
+    btn.textContent = resolveAddToCartLabel(ctx.settings);
     btn.addEventListener('click', onCartClick);
     footer.appendChild(btn);
 
@@ -370,12 +378,12 @@
     var slotSteps = document.createElement('div');
     slotSteps.className = 'cb-slot-steps';
 
-    // Inline ADD TO CART button (at end of slot row)
+    // Inline action button (at end of slot row)
     var inlineCartBtn = document.createElement('button');
     inlineCartBtn.className = 'cb-inline-cart-btn';
     inlineCartBtn.type = 'button';
     inlineCartBtn.disabled = true;
-    inlineCartBtn.textContent = 'ADD TO CART';
+    inlineCartBtn.textContent = resolveAddToCartLabel(ctx.settings);
 
     function renderSlots() {
       slotSteps.innerHTML = '';
@@ -511,7 +519,7 @@
       var filled = slots.filter(Boolean).length;
       var remaining = box.itemCount - filled;
       var allFilled = remaining === 0;
-      var addLabel = (ctx.settings && ctx.settings.addToCartLabel) || 'ADD TO CART';
+      var addLabel = resolveAddToCartLabel(ctx.settings);
 
       // Inline button
       inlineCartBtn.disabled = !allFilled;
@@ -520,7 +528,7 @@
         inlineCartBtn.textContent = addLabel;
       } else {
         inlineCartBtn.classList.remove('cb-inline-cart-btn--ready');
-        inlineCartBtn.textContent = 'ADD TO CART';
+        inlineCartBtn.textContent = addLabel;
       }
 
       // Sticky footer button
@@ -531,7 +539,7 @@
           _stickyBtn.textContent = addLabel;
         } else {
           _stickyBtn.classList.remove('cb-sticky-btn--ready');
-          _stickyBtn.textContent = 'ADD TO CART';
+          _stickyBtn.textContent = addLabel;
         }
       }
 
@@ -738,7 +746,15 @@
         });
         return;
       }
-      addToCart(box, slots, sessionId, giftInput ? giftInput.value : null, inlineCartBtn, _stickyBtn);
+      addToCart(
+        box,
+        slots,
+        sessionId,
+        giftInput ? giftInput.value : null,
+        inlineCartBtn,
+        _stickyBtn,
+        resolveAddToCartLabel(ctx.settings)
+      );
     }
 
     inlineCartBtn.addEventListener('click', doAddToCart);
@@ -750,7 +766,9 @@
 
   // ─── Add to Cart ──────────────────────────────────────────────────────────────
 
-  function addToCart(box, slots, sessionId, giftMessage, inlineBtn, stickyBtn) {
+  function addToCart(box, slots, sessionId, giftMessage, inlineBtn, stickyBtn, readyLabel) {
+    var resolvedReadyLabel = readyLabel || 'UPDATE BOX';
+
     function setBtns(state, text) {
       [inlineBtn, stickyBtn].forEach(function (btn) {
         if (!btn) return;
@@ -801,7 +819,7 @@
 
     if (items.length === 0) {
       setBtns('error', 'Error — Try Again');
-      setTimeout(function () { setBtns('ready', 'ADD TO CART'); }, 2500);
+      setTimeout(function () { setBtns('ready', resolvedReadyLabel); }, 2500);
       return;
     }
 
@@ -823,7 +841,7 @@
       .catch(function (err) {
         console.error('[ComboBuilder] Add to cart error:', err);
         setBtns('error', 'Error — Try Again');
-        setTimeout(function () { setBtns('ready', 'ADD TO CART'); }, 2500);
+        setTimeout(function () { setBtns('ready', resolvedReadyLabel); }, 2500);
       });
   }
 

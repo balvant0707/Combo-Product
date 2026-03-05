@@ -94,6 +94,7 @@ model ComboBoxProduct {
   productTitle    String?  @db.VarChar(255)
   productImageUrl String?  @db.VarChar(500)
   productHandle   String?  @db.VarChar(255)
+  productPrice    Decimal? @db.Decimal(10, 2)
   isCollection    Boolean  @default(false)
   variantIds      Json?
   createdAt       DateTime @default(now())
@@ -137,6 +138,7 @@ model AppSettings {
   analyticsTracking  Boolean  @default(true)
   emailNotifications Boolean  @default(false)
   presetTheme        String?  @default("custom") @db.VarChar(50)
+  widgetMaxWidth     Int?     @default(1140)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 

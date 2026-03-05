@@ -43,6 +43,7 @@ export const loader = async ({ request, params }) => {
     productTitle: p.productTitle,
     productImageUrl: p.productImageUrl,
     productHandle: p.productHandle,
+    productPrice: p.productPrice != null ? parseFloat(p.productPrice) : null,
     isCollection: p.isCollection,
     variantIds: p.variantIds,
   }));

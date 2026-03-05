@@ -161,6 +161,13 @@
 
       var resolvedHeading = root.dataset.heading || config.heading || (settings && settings.widgetHeadingText) || 'Build Your Own Box!';
       if (settings && settings.presetTheme) applyPresetTheme(root, settings.presetTheme);
+
+      // Apply dynamic max-width from admin settings
+      if (settings && settings.widgetMaxWidth != null) {
+        var mw = parseInt(settings.widgetMaxWidth, 10);
+        root.style.setProperty('--cb-max-width', mw === 0 ? '100%' : mw + 'px');
+      }
+
       renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root });
     });
   }
@@ -565,18 +572,32 @@
         titleEl.textContent = product.productTitle || product.productId;
         infoEl.appendChild(titleEl);
 
-        // Learn link
-        if (product.productHandle && !product.isCollection) {
-          var learnRow = document.createElement('div');
-          learnRow.className = 'cb-product-learn-row';
-          var learnLink = document.createElement('a');
-          learnLink.href = '/products/' + product.productHandle;
-          learnLink.target = '_blank';
-          learnLink.className = 'cb-product-learn-link';
-          learnLink.innerHTML = '&#9432; Learn';
-          learnLink.addEventListener('click', function (e) { e.stopPropagation(); });
-          learnRow.appendChild(learnLink);
-          infoEl.appendChild(learnRow);
+        // Price + Learn row
+        var showPrices = ctx.settings && ctx.settings.showProductPrices;
+        var hasPrice = product.productPrice != null && product.productPrice > 0;
+
+        if (hasPrice || (product.productHandle && !product.isCollection)) {
+          var metaRow = document.createElement('div');
+          metaRow.className = 'cb-product-meta-row';
+
+          if (hasPrice && showPrices) {
+            var priceEl = document.createElement('span');
+            priceEl.className = 'cb-product-price';
+            priceEl.textContent = formatPrice(product.productPrice, ctx.currencySymbol);
+            metaRow.appendChild(priceEl);
+          }
+
+          if (product.productHandle && !product.isCollection) {
+            var learnLink = document.createElement('a');
+            learnLink.href = '/products/' + product.productHandle;
+            learnLink.target = '_blank';
+            learnLink.className = 'cb-product-learn-link';
+            learnLink.innerHTML = '&#9432; Learn';
+            learnLink.addEventListener('click', function (e) { e.stopPropagation(); });
+            metaRow.appendChild(learnLink);
+          }
+
+          infoEl.appendChild(metaRow);
         }
 
         card.appendChild(infoEl);

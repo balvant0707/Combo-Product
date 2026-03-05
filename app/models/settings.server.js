@@ -14,6 +14,7 @@ const DEFAULTS = {
   analyticsTracking: true,
   emailNotifications: false,
   presetTheme: "custom",
+  widgetMaxWidth: 1140,
 };
 
 export async function getSettings(shop) {
@@ -37,6 +38,7 @@ export async function upsertSettings(shop, data) {
     analyticsTracking: parseBool(data.analyticsTracking, DEFAULTS.analyticsTracking),
     emailNotifications: parseBool(data.emailNotifications, DEFAULTS.emailNotifications),
     presetTheme: data.presetTheme ?? DEFAULTS.presetTheme,
+    widgetMaxWidth: data.widgetMaxWidth != null ? parseInt(data.widgetMaxWidth) || DEFAULTS.widgetMaxWidth : DEFAULTS.widgetMaxWidth,
   };
 
   return db.appSettings.upsert({

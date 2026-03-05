@@ -165,6 +165,7 @@ export async function createBox(shop, data, admin) {
       productTitle: p.productTitle || p.title || null,
       productImageUrl: p.productImageUrl || p.imageUrl || null,
       productHandle: p.productHandle || p.handle || null,
+      productPrice: p.price != null && parseFloat(p.price) > 0 ? parseFloat(p.price) : null,
     }));
     if (productRows.length > 0) {
       await db.comboBoxProduct.createMany({ data: productRows });
@@ -269,6 +270,7 @@ export async function updateBox(id, shop, data, admin) {
       productTitle: p.productTitle || p.title || null,
       productImageUrl: p.productImageUrl || p.imageUrl || null,
       productHandle: p.productHandle || p.handle || null,
+      productPrice: p.price != null && parseFloat(p.price) > 0 ? parseFloat(p.price) : null,
     }));
     if (productRows.length > 0) {
       await db.comboBoxProduct.createMany({ data: productRows });

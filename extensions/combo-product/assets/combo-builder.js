@@ -834,6 +834,38 @@
 
     setBtns('loading', 'Adding…');
 
+    function buildFallbackItems() {
+      var fallbackItems = [];
+      slots.forEach(function (product, idx) {
+        var variantId = getFirstVariantId(product);
+        if (!variantId) return;
+        var props = {
+          '_combo_box_id': String(box.id),
+          '_combo_session_id': sessionId,
+          'Bundle': box.displayTitle,
+        };
+        props['_item_' + (idx + 1)] = product.productId;
+        if (giftMessage) props['Gift Message'] = giftMessage;
+        fallbackItems.push({ id: variantId, quantity: 1, properties: props });
+      });
+      return fallbackItems;
+    }
+
+    function postCartItems(items) {
+      return fetch('/cart/add.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ items: items }),
+      }).then(function (r) {
+        if (!r.ok) return r.json().then(function (d) {
+          console.error('[ComboBuilder] Cart 422 details:', d);
+          throw new Error(d.description || d.message || 'Cart error');
+        });
+        return r.json();
+      });
+    }
+
+    var fallbackItems = buildFallbackItems();
     var items = [];
 
     if (box.shopifyVariantId) {
@@ -852,18 +884,7 @@
       items.push({ id: box.shopifyVariantId, quantity: 1, properties: bundleProps });
     } else {
       // FALLBACK: No bundle product — add individual products directly.
-      slots.forEach(function (product, idx) {
-        var variantId = getFirstVariantId(product);
-        if (!variantId) return;
-        var props = {
-          '_combo_box_id': String(box.id),
-          '_combo_session_id': sessionId,
-          'Bundle': box.displayTitle,
-        };
-        props['_item_' + (idx + 1)] = product.productId;
-        if (giftMessage) props['Gift Message'] = giftMessage;
-        items.push({ id: variantId, quantity: 1, properties: props });
-      });
+      items = fallbackItems.slice();
     }
 
     if (items.length === 0) {
@@ -872,17 +893,14 @@
       return;
     }
 
-    fetch('/cart/add.js', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ items: items }),
-    })
-      .then(function (r) {
-        if (!r.ok) return r.json().then(function (d) {
-          console.error('[ComboBuilder] Cart 422 details:', d);
-          throw new Error(d.description || d.message || 'Cart error');
-        });
-        return r.json();
+    postCartItems(items)
+      .catch(function (err) {
+        if (!box.shopifyVariantId || fallbackItems.length === 0) {
+          throw err;
+        }
+        // If bundle line item fails, fallback to adding selected products so checkout continues.
+        console.warn('[ComboBuilder] Bundle variant add failed, falling back to selected items:', err);
+        return postCartItems(fallbackItems);
       })
       .then(function () {
         setBtns('success', 'Added to Cart! ✓');

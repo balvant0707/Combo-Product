@@ -22,6 +22,21 @@ const CREATE_BUNDLE_PRODUCT_MUTATION = `#graphql
   }
 `;
 
+const GET_PRODUCT_DEFAULT_VARIANT_QUERY = `#graphql
+  query GetProductDefaultVariant($id: ID!) {
+    product(id: $id) {
+      id
+      variants(first: 1) {
+        edges {
+          node {
+            id
+          }
+        }
+      }
+    }
+  }
+`;
+
 const GET_PUBLICATIONS_QUERY = `#graphql
   query GetPublications {
     publications(first: 20) {
@@ -130,6 +145,34 @@ function formatUserErrors(userErrors) {
     .join("; ");
 }
 
+async function resolveDefaultVariantId(admin, shopifyProductId) {
+  if (!shopifyProductId) return null;
+
+  try {
+    const resp = await admin.graphql(GET_PRODUCT_DEFAULT_VARIANT_QUERY, {
+      variables: { id: shopifyProductId },
+    });
+    const json = await resp.json();
+
+    const topLevelErrors = extractGraphqlMessages(json);
+    if (topLevelErrors.length > 0) {
+      console.error(
+        "[resolveDefaultVariantId] GraphQL errors:",
+        topLevelErrors,
+      );
+      return null;
+    }
+
+    return (
+      json?.data?.product?.variants?.edges?.[0]?.node?.id ||
+      null
+    );
+  } catch (e) {
+    console.error("[resolveDefaultVariantId] error:", e);
+    return null;
+  }
+}
+
 async function createShopifyBundleProduct(admin, title, bundlePrice) {
   // Step 1: Create product
   const resp = await admin.graphql(CREATE_BUNDLE_PRODUCT_MUTATION, {
@@ -163,7 +206,15 @@ async function createShopifyBundleProduct(admin, title, bundlePrice) {
   }
 
   const shopifyProductId = product.id;
-  const shopifyVariantId = product.variants?.edges?.[0]?.node?.id || null;
+  let shopifyVariantId = product.variants?.edges?.[0]?.node?.id || null;
+  if (!shopifyVariantId) {
+    shopifyVariantId = await resolveDefaultVariantId(admin, shopifyProductId);
+  }
+  if (!shopifyVariantId) {
+    throw new Error(
+      "Shopify product created but default variant was not resolved",
+    );
+  }
 
   // Step 2: Update default variant price
   if (shopifyVariantId && bundlePrice > 0) {
@@ -367,7 +418,33 @@ export async function updateBox(id, shop, data, admin) {
     parseFloat(bundlePrice) !== parseFloat(existing.bundlePrice);
 
   // Ensure bundle product is ACTIVE (may be DRAFT from old boxes) and update price if changed
+  let resolvedVariantId = existing.shopifyVariantId;
+
   if (existing.shopifyProductId && admin) {
+    if (!resolvedVariantId) {
+      resolvedVariantId = await resolveDefaultVariantId(
+        admin,
+        existing.shopifyProductId,
+      );
+      if (resolvedVariantId) {
+        try {
+          await db.comboBox.update({
+            where: { id: existing.id },
+            data: { shopifyVariantId: resolvedVariantId },
+          });
+          console.log(
+            "[updateBox] Repaired missing shopifyVariantId for box",
+            existing.id,
+          );
+        } catch (e) {
+          console.error(
+            "[updateBox] Failed to persist repaired shopifyVariantId",
+            e,
+          );
+        }
+      }
+    }
+
     try {
       await admin.graphql(ACTIVATE_BUNDLE_PRODUCT_MUTATION, {
         variables: { product: { id: existing.shopifyProductId, status: "ACTIVE" } },
@@ -375,13 +452,13 @@ export async function updateBox(id, shop, data, admin) {
     } catch (e) {
       console.error("[updateBox] Failed to activate Shopify product", e);
     }
-    if (priceChanged && existing.shopifyVariantId) {
+    if (priceChanged && resolvedVariantId) {
       try {
         await admin.graphql(UPDATE_BUNDLE_PRODUCT_PRICE_MUTATION, {
           variables: {
             productId: existing.shopifyProductId,
             variants: [
-              { id: existing.shopifyVariantId, price: String(bundlePrice) },
+              { id: resolvedVariantId, price: String(bundlePrice) },
             ],
           },
         });
@@ -560,6 +637,48 @@ export async function repairMissingShopifyProducts(shop, admin) {
       console.error("[repairMissingShopifyProducts] Failed for box", box.id, e);
     }
   }));
+}
+
+export async function repairMissingShopifyVariantIds(shop, admin) {
+  const boxes = await db.comboBox.findMany({
+    where: {
+      shop,
+      deletedAt: null,
+      shopifyProductId: { not: null },
+      shopifyVariantId: null,
+    },
+    select: { id: true, shopifyProductId: true },
+  });
+  if (boxes.length === 0) return;
+
+  await Promise.all(
+    boxes.map(async (box) => {
+      try {
+        const shopifyVariantId = await resolveDefaultVariantId(
+          admin,
+          box.shopifyProductId,
+        );
+        if (shopifyVariantId) {
+          await db.comboBox.update({
+            where: { id: box.id },
+            data: { shopifyVariantId },
+          });
+          console.log("[repairMissingShopifyVariantIds] Repaired box", box.id);
+        } else {
+          console.warn(
+            "[repairMissingShopifyVariantIds] Variant not found for box",
+            box.id,
+          );
+        }
+      } catch (e) {
+        console.error(
+          "[repairMissingShopifyVariantIds] Failed for box",
+          box.id,
+          e,
+        );
+      }
+    }),
+  );
 }
 
 export async function getActiveBoxCount(shop) {

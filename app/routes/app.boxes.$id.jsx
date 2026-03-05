@@ -100,7 +100,7 @@ export const action = async ({ request, params }) => {
   const intent = formData.get("_action");
 
   if (intent === "delete") {
-    await deleteBox(params.id, shop);
+    await deleteBox(params.id, shop, admin);
     throw redirect("/app/boxes");
   }
 

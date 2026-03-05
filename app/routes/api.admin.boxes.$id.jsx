@@ -13,7 +13,7 @@ export const action = async ({ request, params }) => {
   const id = parseInt(params.id);
 
   if (request.method === "DELETE") {
-    await deleteBox(id, session.shop);
+    await deleteBox(id, session.shop, admin);
     return Response.json({ success: true });
   }
 

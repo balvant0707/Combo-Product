@@ -27,7 +27,7 @@ export const loader = async ({ request }) => {
 };
 
 export const action = async ({ request }) => {
-  const { session } = await authenticate.admin(request);
+  const { session, admin } = await authenticate.admin(request);
   const shop = session.shop;
   const formData = await request.formData();
   const intent = formData.get("_action");
@@ -41,7 +41,7 @@ export const action = async ({ request }) => {
 
   if (intent === "delete") {
     const id = formData.get("id");
-    await deleteBox(id, shop);
+    await deleteBox(id, shop, admin);
     return { ok: true };
   }
 

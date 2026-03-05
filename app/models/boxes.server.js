@@ -37,6 +37,18 @@ const UPDATE_BUNDLE_PRODUCT_PRICE_MUTATION = `#graphql
   }
 `;
 
+const DELETE_BUNDLE_PRODUCT_MUTATION = `#graphql
+  mutation productDelete($input: ProductDeleteInput!) {
+    productDelete(input: $input) {
+      deletedProductId
+      userErrors {
+        field
+        message
+      }
+    }
+  }
+`;
+
 function getBannerImageDataUri(box) {
   if (!box?.bannerImageData || !box?.bannerImageMimeType) return null;
   const base64 = Buffer.from(box.bannerImageData).toString("base64");
@@ -283,11 +295,22 @@ export async function updateBox(id, shop, data, admin) {
   });
 }
 
-export async function deleteBox(id, shop) {
+export async function deleteBox(id, shop, admin = null) {
   const existing = await db.comboBox.findFirst({
     where: { id: parseInt(id), shop, deletedAt: null },
   });
   if (!existing) throw new Error("Box not found");
+
+  // Delete the associated Shopify bundle product
+  if (admin && existing.shopifyProductId) {
+    try {
+      await admin.graphql(DELETE_BUNDLE_PRODUCT_MUTATION, {
+        variables: { input: { id: existing.shopifyProductId } },
+      });
+    } catch (e) {
+      console.error("[deleteBox] Failed to delete Shopify product", e);
+    }
+  }
 
   return db.comboBox.update({
     where: { id: parseInt(id) },

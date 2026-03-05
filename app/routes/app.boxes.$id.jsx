@@ -146,24 +146,28 @@ export const action = async ({ request, params }) => {
 
 const fieldStyle = {
   width: "100%",
-  padding: "8px 12px",
-  border: "1px solid #c9c6be",
-  borderRadius: "6px",
+  padding: "9px 12px",
+  border: "1.5px solid #e5e7eb",
+  borderRadius: "8px",
   fontSize: "13px",
-  color: "#1a1814",
+  color: "#111827",
   background: "#fff",
   boxSizing: "border-box",
+  outline: "none",
+  transition: "border-color 0.15s",
 };
 
 const labelStyle = {
   display: "block",
-  fontSize: "13px",
-  fontWeight: "500",
-  color: "#1a1814",
+  fontSize: "12px",
+  fontWeight: "600",
+  color: "#374151",
   marginBottom: "6px",
+  textTransform: "uppercase",
+  letterSpacing: "0.5px",
 };
 
-const errorStyle = { color: "#e11d48", fontSize: "11px", marginTop: "4px" };
+const errorStyle = { color: "#dc2626", fontSize: "11px", marginTop: "5px", display: "flex", alignItems: "center", gap: "4px" };
 
 // ─── Price Chart ─────────────────────────────────────────────────────────────
 
@@ -355,14 +359,16 @@ export default function EditBoxPage() {
 
   const sectionHeadingStyle = {
     fontSize: "12px",
-    fontWeight: "600",
-    color: "#7a7670",
+    fontWeight: "700",
+    color: "#6b7280",
     textTransform: "uppercase",
     letterSpacing: "0.8px",
-    fontFamily: "monospace",
-    marginBottom: "14px",
-    paddingBottom: "8px",
-    borderBottom: "1px solid #e5e1d8",
+    marginBottom: "16px",
+    paddingBottom: "10px",
+    borderBottom: "1.5px solid #f3f4f6",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
   };
 
   return (
@@ -372,7 +378,8 @@ export default function EditBoxPage() {
       </s-button>
 
       {errors._global && (
-        <div style={{ background: "#fff5f5", border: "1px solid #fca5a5", borderRadius: "8px", padding: "12px 16px", marginBottom: "16px", color: "#991b1b", fontSize: "13px" }}>
+        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", padding: "12px 16px", marginBottom: "16px", color: "#991b1b", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ fontSize: "16px" }}>⚠</span>
           {errors._global}
         </div>
       )}
@@ -389,8 +396,10 @@ export default function EditBoxPage() {
           <input type="hidden" name="isActive" value={String(options.isActive)} />
 
           {/* ── Basic Information ── */}
-          <div style={{ marginBottom: "28px" }}>
-            <div style={sectionHeadingStyle}>Basic Information</div>
+          <div style={{ marginBottom: "32px" }}>
+            <div style={sectionHeadingStyle}>
+              <span style={{ fontSize: "16px" }}>📋</span> Basic Information
+            </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
 
               <div>
@@ -399,7 +408,7 @@ export default function EditBoxPage() {
                   type="text"
                   name="boxName"
                   defaultValue={box.boxName}
-                  style={{ ...fieldStyle, borderColor: errors.boxName ? "#e11d48" : "#c9c6be" }}
+                  style={{ ...fieldStyle, borderColor: errors.boxName ? "#dc2626" : "#e5e7eb" }}
                 />
                 {errors.boxName && <div style={errorStyle}>{errors.boxName}</div>}
               </div>
@@ -410,7 +419,7 @@ export default function EditBoxPage() {
                   type="text"
                   name="displayTitle"
                   defaultValue={box.displayTitle}
-                  style={{ ...fieldStyle, borderColor: errors.displayTitle ? "#e11d48" : "#c9c6be" }}
+                  style={{ ...fieldStyle, borderColor: errors.displayTitle ? "#dc2626" : "#e5e7eb" }}
                 />
                 {errors.displayTitle && <div style={errorStyle}>{errors.displayTitle}</div>}
               </div>
@@ -596,28 +605,42 @@ export default function EditBoxPage() {
           </div>
 
           {/* ── Options ── */}
-          <div style={{ marginBottom: "28px" }}>
-            <div style={sectionHeadingStyle}>Options</div>
+          <div style={{ marginBottom: "32px" }}>
+            <div style={sectionHeadingStyle}>
+              <span style={{ fontSize: "16px" }}>⚙️</span> Options
+            </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
               {[
-                { key: "isGiftBox", label: "Gift Box Mode", desc: "Enables gift packaging option" },
-                { key: "allowDuplicates", label: "Allow Duplicate Products", desc: "Same product in multiple slots" },
-                { key: "giftMessageEnabled", label: "Gift Message Field", desc: "Show text area for gift message" },
-                { key: "isActive", label: "Active (visible on storefront)", desc: "Uncheck to hide from customers" },
+                { key: "isGiftBox", label: "Gift Box Mode", desc: "Enables gift packaging option", icon: "🎁" },
+                { key: "allowDuplicates", label: "Allow Duplicate Products", desc: "Same product in multiple slots", icon: "🔁" },
+                { key: "giftMessageEnabled", label: "Gift Message Field", desc: "Show text area for gift message", icon: "✉️" },
+                { key: "isActive", label: "Active (visible on storefront)", desc: "Uncheck to hide from customers", icon: "✅" },
               ].map((opt) => (
                 <label
                   key={opt.key}
-                  style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px", border: "1px solid #e5e1d8", borderRadius: "8px", background: options[opt.key] ? "#f0fdf4" : "#fff" }}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "12px",
+                    cursor: "pointer",
+                    padding: "14px",
+                    border: options[opt.key] ? "1.5px solid #86efac" : "1.5px solid #e5e7eb",
+                    borderRadius: "10px",
+                    background: options[opt.key] ? "#f0fdf4" : "#fff",
+                    transition: "border-color 0.15s, background 0.15s",
+                  }}
                 >
                   <input
                     type="checkbox"
                     checked={options[opt.key]}
                     onChange={() => toggleOption(opt.key)}
-                    style={{ marginTop: "2px", width: "15px", height: "15px", accentColor: "#2A7A4F", flexShrink: 0 }}
+                    style={{ marginTop: "3px", width: "15px", height: "15px", accentColor: "#2A7A4F", flexShrink: 0 }}
                   />
                   <div>
-                    <div style={{ fontSize: "13px", fontWeight: "600", color: "#1a1814" }}>{opt.label}</div>
-                    <div style={{ fontSize: "11px", color: "#7a7670", marginTop: "2px" }}>{opt.desc}</div>
+                    <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span>{opt.icon}</span> {opt.label}
+                    </div>
+                    <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "3px" }}>{opt.desc}</div>
                   </div>
                 </label>
               ))}
@@ -625,12 +648,14 @@ export default function EditBoxPage() {
           </div>
 
           {/* ── Eligible Products ── */}
-          <div style={{ marginBottom: "28px" }}>
+          <div style={{ marginBottom: "32px" }}>
             <div style={sectionHeadingStyle}>
-              Eligible Products
-              <span style={{ marginLeft: "8px", background: "#2A7A4F", color: "#fff", borderRadius: "20px", padding: "2px 8px", fontSize: "10px", fontWeight: "600", fontFamily: "monospace" }}>
-                {selectedProducts.length} selected
-              </span>
+              <span style={{ fontSize: "16px" }}>🛍️</span> Eligible Products
+              {selectedProducts.length > 0 && (
+                <span style={{ marginLeft: "4px", background: "#2A7A4F", color: "#fff", borderRadius: "20px", padding: "2px 8px", fontSize: "10px", fontWeight: "600" }}>
+                  {selectedProducts.length} selected
+                </span>
+              )}
             </div>
             {errors.eligibleProducts && (
               <div style={{ color: "#e11d48", fontSize: "12px", marginBottom: "8px", padding: "8px 12px", background: "#fff5f5", borderRadius: "6px" }}>
@@ -662,11 +687,11 @@ export default function EditBoxPage() {
                 </div>
               </div>
             )}
-            <div style={{ maxHeight: "280px", overflowY: "auto", border: "1px solid #e5e1d8", borderRadius: "6px" }}>
+            <div style={{ maxHeight: "300px", overflowY: "auto", border: "1.5px solid #e5e7eb", borderRadius: "10px", overflow: "hidden" }}>
               {displayProducts.map((product) => (
                 <label
                   key={product.id}
-                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 14px", borderBottom: "1px solid #f0ede4", cursor: "pointer", background: isSelected(product.id) ? "#f0fdf4" : "#fff" }}
+                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 14px", borderBottom: "1px solid #f3f4f6", cursor: "pointer", background: isSelected(product.id) ? "#f0fdf4" : "#fff", transition: "background 0.1s" }}
                 >
                   <input
                     type="checkbox"
@@ -701,7 +726,15 @@ export default function EditBoxPage() {
           </div>
 
           {/* ── Actions ── */}
-          <div style={{ display: "flex", gap: "12px", justifyContent: "space-between", paddingTop: "16px", borderTop: "1px solid #e5e1d8" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              justifyContent: "space-between",
+              paddingTop: "20px",
+              borderTop: "1.5px solid #f3f4f6",
+            }}
+          >
             <button
               type="submit"
               name="_action"
@@ -709,15 +742,39 @@ export default function EditBoxPage() {
               onClick={(e) => {
                 if (!window.confirm(`Delete "${box.boxName}"? This cannot be undone.`)) e.preventDefault();
               }}
-              style={{ background: "transparent", border: "1px solid #fca5a5", borderRadius: "6px", padding: "10px 20px", fontSize: "13px", cursor: "pointer", color: "#e11d48" }}
+              style={{
+                background: "#fff5f5",
+                border: "1.5px solid #fecaca",
+                borderRadius: "8px",
+                padding: "10px 20px",
+                fontSize: "13px",
+                fontWeight: "500",
+                cursor: "pointer",
+                color: "#dc2626",
+                transition: "background 0.12s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#fee2e2")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "#fff5f5")}
             >
               Delete Box
             </button>
-            <div style={{ display: "flex", gap: "12px" }}>
+            <div style={{ display: "flex", gap: "10px" }}>
               <button
                 type="button"
                 onClick={() => navigate("/app/boxes")}
-                style={{ background: "transparent", border: "1px solid #c9c6be", borderRadius: "6px", padding: "10px 20px", fontSize: "13px", cursor: "pointer", color: "#374151" }}
+                style={{
+                  background: "#fff",
+                  border: "1.5px solid #e5e7eb",
+                  borderRadius: "8px",
+                  padding: "10px 22px",
+                  fontSize: "13px",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                  color: "#374151",
+                  transition: "background 0.12s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#f9fafb")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
               >
                 Cancel
               </button>
@@ -726,7 +783,19 @@ export default function EditBoxPage() {
                 name="_action"
                 value="save"
                 disabled={isSaving}
-                style={{ background: isSaving ? "#9ca3af" : "#2A7A4F", border: "none", borderRadius: "6px", padding: "10px 24px", fontSize: "13px", cursor: isSaving ? "not-allowed" : "pointer", color: "#fff", fontWeight: "600" }}
+                style={{
+                  background: isSaving ? "#9ca3af" : "#2A7A4F",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "10px 28px",
+                  fontSize: "13px",
+                  fontWeight: "700",
+                  cursor: isSaving ? "not-allowed" : "pointer",
+                  color: "#fff",
+                  letterSpacing: "0.3px",
+                  boxShadow: isSaving ? "none" : "0 2px 8px rgba(42,122,79,0.3)",
+                  transition: "background 0.15s, box-shadow 0.15s",
+                }}
               >
                 {isSaving ? "Saving..." : "Save Changes"}
               </button>

@@ -77,7 +77,7 @@ export default function ManageBoxesPage() {
 
   function onDragStart(e, id) {
     dragSrcId = id;
-    e.currentTarget.style.opacity = "0.5";
+    e.currentTarget.style.opacity = "0.45";
   }
 
   function onDragEnd(e) {
@@ -86,7 +86,7 @@ export default function ManageBoxesPage() {
 
   function onDragOver(e) {
     e.preventDefault();
-    e.currentTarget.style.background = "#f0ede4";
+    e.currentTarget.style.background = "#f0fdf4";
   }
 
   function onDragLeave(e) {
@@ -131,9 +131,34 @@ export default function ManageBoxesPage() {
 
       <s-section>
         {displayBoxes.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "48px 0", color: "#7a7670" }}>
-            <div style={{ fontSize: "40px", marginBottom: "12px" }}>📦</div>
-            <p style={{ marginBottom: "16px" }}>No combo boxes yet.</p>
+          <div
+            style={{
+              textAlign: "center",
+              padding: "64px 0",
+              color: "#9ca3af",
+            }}
+          >
+            <div
+              style={{
+                width: "64px",
+                height: "64px",
+                borderRadius: "16px",
+                background: "rgba(42,122,79,0.08)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "30px",
+                margin: "0 auto 16px",
+              }}
+            >
+              📦
+            </div>
+            <p style={{ fontSize: "15px", fontWeight: "600", color: "#374151", margin: "0 0 6px" }}>
+              No combo boxes yet
+            </p>
+            <p style={{ fontSize: "13px", margin: "0 0 20px", color: "#9ca3af" }}>
+              Create your first box to let customers build custom combos.
+            </p>
             <s-button onClick={() => navigate("/app/boxes/new")}>
               Create your first box
             </s-button>
@@ -144,21 +169,20 @@ export default function ManageBoxesPage() {
               style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}
             >
               <thead>
-                <tr style={{ background: "#f7f8fc" }}>
-                  {["", "Box Name", "Items", "Price", "Gift Box", "Orders", "Status", "Actions"].map(
+                <tr style={{ background: "#f9fafb" }}>
+                  {["", "Box Name", "Items", "Price", "Gift", "Orders", "Status", "Actions"].map(
                     (h) => (
                       <th
                         key={h}
                         style={{
                           textAlign: "left",
-                          padding: "10px 14px",
-                          borderBottom: "1px solid #e5e1d8",
-                          color: "#7a7670",
-                          fontFamily: "monospace",
-                          fontSize: "11px",
+                          padding: "10px 16px",
+                          borderBottom: "1.5px solid #e5e7eb",
+                          color: "#6b7280",
+                          fontSize: "10px",
                           textTransform: "uppercase",
-                          letterSpacing: "1px",
-                          fontWeight: "400",
+                          letterSpacing: "0.8px",
+                          fontWeight: "600",
                           whiteSpace: "nowrap",
                         }}
                       >
@@ -169,7 +193,7 @@ export default function ManageBoxesPage() {
                 </tr>
               </thead>
               <tbody>
-                {displayBoxes.map((box) => (
+                {displayBoxes.map((box, idx) => (
                   <tr
                     key={box.id}
                     data-box-id={box.id}
@@ -179,66 +203,156 @@ export default function ManageBoxesPage() {
                     onDragOver={onDragOver}
                     onDragLeave={onDragLeave}
                     onDrop={(e) => onDrop(e, box.id)}
-                    style={{ transition: "background 0.1s", cursor: "default" }}
+                    style={{
+                      background: idx % 2 === 0 ? "#fff" : "#fafafa",
+                      transition: "background 0.12s",
+                      cursor: "default",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#f8faff")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = idx % 2 === 0 ? "#fff" : "#fafafa")}
                   >
+                    {/* Drag handle */}
                     <td
                       style={{
-                        padding: "12px 14px",
-                        borderBottom: "1px solid #f0ede4",
-                        color: "#9ca3af",
+                        padding: "14px 8px 14px 16px",
+                        borderBottom: "1px solid #f3f4f6",
+                        color: "#d1d5db",
                         cursor: "grab",
-                        fontSize: "16px",
+                        fontSize: "18px",
+                        lineHeight: 1,
+                        userSelect: "none",
                       }}
+                      title="Drag to reorder"
                     >
                       ⠿
                     </td>
-                    <td style={{ padding: "12px 14px", borderBottom: "1px solid #f0ede4", fontWeight: "600", color: "#1a1814" }}>
-                      {box.boxName}
+
+                    {/* Box name + subtitle */}
+                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                      <div style={{ fontWeight: "700", color: "#111827", marginBottom: "2px" }}>
+                        {box.boxName}
+                      </div>
+                      {box.displayTitle !== box.boxName && (
+                        <div style={{ fontSize: "11px", color: "#9ca3af" }}>
+                          {box.displayTitle}
+                        </div>
+                      )}
                     </td>
-                    <td style={{ padding: "12px 14px", borderBottom: "1px solid #f0ede4", color: "#374151" }}>
-                      {box.itemCount}
-                    </td>
-                    <td style={{ padding: "12px 14px", borderBottom: "1px solid #f0ede4", color: "#374151" }}>
-                      ₹{Number(box.bundlePrice).toLocaleString("en-IN")}
-                    </td>
-                    <td style={{ padding: "12px 14px", borderBottom: "1px solid #f0ede4", color: box.isGiftBox ? "#059669" : "#9ca3af" }}>
-                      {box.isGiftBox ? "Yes" : "No"}
-                    </td>
-                    <td style={{ padding: "12px 14px", borderBottom: "1px solid #f0ede4", color: "#374151", fontFamily: "monospace" }}>
-                      {box.orderCount}
-                    </td>
-                    <td style={{ padding: "12px 14px", borderBottom: "1px solid #f0ede4" }}>
+
+                    {/* Items */}
+                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
                       <span
+                        style={{
+                          display: "inline-block",
+                          background: "#f3f4f6",
+                          borderRadius: "6px",
+                          padding: "2px 8px",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          color: "#374151",
+                          fontFamily: "monospace",
+                        }}
+                      >
+                        {box.itemCount}
+                      </span>
+                    </td>
+
+                    {/* Price */}
+                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                      <span style={{ fontFamily: "monospace", fontWeight: "700", color: "#2A7A4F" }}>
+                        &#8377;{Number(box.bundlePrice).toLocaleString("en-IN")}
+                      </span>
+                    </td>
+
+                    {/* Gift */}
+                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                      {box.isGiftBox ? (
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            fontSize: "11px",
+                            fontWeight: "600",
+                            color: "#7c3aed",
+                            background: "rgba(124,58,237,0.08)",
+                            padding: "2px 8px",
+                            borderRadius: "20px",
+                          }}
+                        >
+                          Yes
+                        </span>
+                      ) : (
+                        <span style={{ color: "#d1d5db", fontSize: "12px" }}>—</span>
+                      )}
+                    </td>
+
+                    {/* Orders */}
+                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                      <span style={{ fontFamily: "monospace", fontWeight: "600", color: box.orderCount > 0 ? "#111827" : "#d1d5db" }}>
+                        {box.orderCount > 0 ? box.orderCount : "—"}
+                      </span>
+                    </td>
+
+                    {/* Status toggle */}
+                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                      <button
                         onClick={() => handleToggleStatus(box.id, box.isActive)}
+                        title={box.isActive ? "Click to deactivate" : "Click to activate"}
                         style={{
                           display: "inline-flex",
                           alignItems: "center",
                           gap: "5px",
-                          padding: "3px 10px",
+                          padding: "4px 10px",
                           borderRadius: "20px",
                           fontSize: "11px",
-                          fontFamily: "monospace",
+                          fontWeight: "600",
                           cursor: "pointer",
-                          background: box.isActive ? "rgba(5,150,105,.1)" : "rgba(120,120,140,.1)",
+                          border: "none",
+                          background: box.isActive ? "rgba(5,150,105,0.1)" : "rgba(156,163,175,0.15)",
                           color: box.isActive ? "#059669" : "#6b7280",
-                          border: box.isActive ? "1px solid rgba(5,150,105,.2)" : "1px solid #e5e1d8",
+                          transition: "opacity 0.12s",
                         }}
+                        onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.75")}
+                        onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
                       >
-                        {box.isActive ? "● Active" : "○ Inactive"}
-                      </span>
+                        <span
+                          style={{
+                            width: "6px",
+                            height: "6px",
+                            borderRadius: "50%",
+                            background: box.isActive ? "#059669" : "#9ca3af",
+                            display: "inline-block",
+                            flexShrink: 0,
+                          }}
+                        />
+                        {box.isActive ? "Active" : "Inactive"}
+                      </button>
                     </td>
-                    <td style={{ padding: "12px 14px", borderBottom: "1px solid #f0ede4" }}>
-                      <div style={{ display: "flex", gap: "8px" }}>
+
+                    {/* Actions */}
+                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                      <div style={{ display: "flex", gap: "6px" }}>
                         <button
                           onClick={() => navigate(`/app/boxes/${box.id}`)}
                           style={{
-                            background: "transparent",
-                            border: "1px solid #e5e1d8",
-                            borderRadius: "5px",
-                            padding: "4px 12px",
+                            background: "#f9fafb",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: "6px",
+                            padding: "5px 14px",
                             fontSize: "12px",
+                            fontWeight: "500",
                             cursor: "pointer",
                             color: "#374151",
+                            transition: "background 0.12s, border-color 0.12s",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "#f3f4f6";
+                            e.currentTarget.style.borderColor = "#d1d5db";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "#f9fafb";
+                            e.currentTarget.style.borderColor = "#e5e7eb";
                           }}
                         >
                           Edit
@@ -246,14 +360,18 @@ export default function ManageBoxesPage() {
                         <button
                           onClick={() => handleDelete(box.id, box.boxName)}
                           style={{
-                            background: "transparent",
-                            border: "1px solid #fca5a5",
-                            borderRadius: "5px",
-                            padding: "4px 12px",
+                            background: "#fff5f5",
+                            border: "1px solid #fecaca",
+                            borderRadius: "6px",
+                            padding: "5px 14px",
                             fontSize: "12px",
+                            fontWeight: "500",
                             cursor: "pointer",
-                            color: "#e11d48",
+                            color: "#dc2626",
+                            transition: "background 0.12s",
                           }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "#fee2e2")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "#fff5f5")}
                         >
                           Delete
                         </button>

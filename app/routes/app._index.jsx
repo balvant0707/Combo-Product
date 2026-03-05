@@ -35,20 +35,115 @@ export const loader = async ({ request }) => {
   };
 };
 
+const STAT_CARDS = (activeBoxCount, bundlesSold, bundleRevenue) => [
+  {
+    label: "Active Boxes",
+    value: activeBoxCount,
+    icon: "📦",
+    accent: "#2A7A4F",
+    bg: "rgba(42,122,79,0.07)",
+    sub: "Live combo box types",
+  },
+  {
+    label: "Bundles Sold",
+    value: bundlesSold,
+    icon: "🛒",
+    accent: "#3b82f6",
+    bg: "rgba(59,130,246,0.07)",
+    sub: "Last 30 days",
+  },
+  {
+    label: "Bundle Revenue",
+    value: `\u20B9${Number(bundleRevenue).toLocaleString("en-IN")}`,
+    icon: "\u{1F4B0}",
+    accent: "#8b5cf6",
+    bg: "rgba(139,92,246,0.07)",
+    sub: "Last 30 days",
+  },
+  {
+    label: "Conversion Rate",
+    value: "\u2014",
+    icon: "\u{1F4C8}",
+    accent: "#f59e0b",
+    bg: "rgba(245,158,11,0.07)",
+    sub: "Coming soon",
+  },
+];
+
+function StatCard({ label, value, icon, accent, bg, sub }) {
+  return (
+    <div
+      style={{
+        background: "#fff",
+        border: "1px solid #e5e7eb",
+        borderRadius: "12px",
+        padding: "20px 22px 18px",
+        position: "relative",
+        overflow: "hidden",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "3px",
+          background: accent,
+          borderRadius: "12px 12px 0 0",
+        }}
+      />
+      <div
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "38px",
+          height: "38px",
+          borderRadius: "10px",
+          background: bg,
+          fontSize: "18px",
+          marginBottom: "14px",
+        }}
+      >
+        {icon}
+      </div>
+      <div
+        style={{
+          fontSize: "11px",
+          color: "#6b7280",
+          textTransform: "uppercase",
+          letterSpacing: "0.8px",
+          fontWeight: "600",
+          marginBottom: "6px",
+        }}
+      >
+        {label}
+      </div>
+      <div
+        style={{
+          fontSize: "30px",
+          fontWeight: "800",
+          color: "#111827",
+          lineHeight: 1,
+          letterSpacing: "-0.5px",
+          marginBottom: "8px",
+        }}
+      >
+        {value}
+      </div>
+      <div style={{ fontSize: "11px", color: "#9ca3af" }}>{sub}</div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const { activeBoxCount, bundlesSold, bundleRevenue, recentOrders } =
     useLoaderData();
   const navigate = useNavigate();
 
-  const stats = [
-    { label: "Active Boxes", value: activeBoxCount },
-    { label: "Bundles Sold (30d)", value: bundlesSold },
-    {
-      label: "Bundle Revenue (30d)",
-      value: `\u20B9${Number(bundleRevenue).toLocaleString("en-IN")}`,
-    },
-    { label: "Conversion Rate", value: "\u2014" },
-  ];
+  const stats = STAT_CARDS(activeBoxCount, bundlesSold, bundleRevenue);
 
   return (
     <s-page heading="Dashboard">
@@ -59,56 +154,39 @@ export default function DashboardPage() {
         + Create Box
       </s-button>
 
+      {/* Stat cards */}
       <s-section>
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(4, 1fr)",
             gap: "16px",
-            marginBottom: "8px",
           }}
         >
           {stats.map((stat, i) => (
-            <div
-              key={i}
-              style={{
-                background: "#ffffff",
-                border: "1px solid #e5e1d8",
-                borderRadius: "8px",
-                padding: "20px",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "28px",
-                  fontWeight: "700",
-                  color: "#1a1814",
-                  marginBottom: "4px",
-                }}
-              >
-                {stat.value}
-              </div>
-              <div
-                style={{
-                  fontSize: "11px",
-                  color: "#7a7670",
-                  fontFamily: "monospace",
-                  textTransform: "uppercase",
-                  letterSpacing: "1px",
-                }}
-              >
-                {stat.label}
-              </div>
-            </div>
+            <StatCard key={i} {...stat} />
           ))}
         </div>
       </s-section>
 
+      {/* Recent orders */}
       <s-section heading="Recent Bundle Orders">
         {recentOrders.length === 0 ? (
-          <s-paragraph>
-            No bundle orders yet. Create a box and add the Combo Builder block to your theme to start receiving orders.
-          </s-paragraph>
+          <div
+            style={{
+              textAlign: "center",
+              padding: "48px 0",
+              color: "#9ca3af",
+            }}
+          >
+            <div style={{ fontSize: "36px", marginBottom: "12px" }}>🛒</div>
+            <p style={{ fontSize: "14px", margin: "0 0 4px", color: "#6b7280", fontWeight: "600" }}>
+              No bundle orders yet
+            </p>
+            <p style={{ fontSize: "13px", margin: 0, color: "#9ca3af" }}>
+              Add the Combo Builder block to your theme to start receiving orders.
+            </p>
+          </div>
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table
@@ -119,21 +197,21 @@ export default function DashboardPage() {
               }}
             >
               <thead>
-                <tr style={{ background: "#f7f8fc" }}>
+                <tr style={{ background: "#f9fafb" }}>
                   {["Order #", "Box Type", "Items", "Amount", "Date"].map(
                     (h) => (
                       <th
                         key={h}
                         style={{
                           textAlign: "left",
-                          padding: "10px 14px",
-                          borderBottom: "1px solid #e5e1d8",
-                          color: "#7a7670",
-                          fontFamily: "monospace",
-                          fontSize: "11px",
+                          padding: "10px 16px",
+                          borderBottom: "1.5px solid #e5e7eb",
+                          color: "#6b7280",
+                          fontSize: "10px",
                           textTransform: "uppercase",
-                          letterSpacing: "1px",
-                          fontWeight: "400",
+                          letterSpacing: "0.8px",
+                          fontWeight: "600",
+                          whiteSpace: "nowrap",
                         }}
                       >
                         {h}
@@ -143,21 +221,46 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {recentOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td style={{ padding: "12px 14px", borderBottom: "1px solid #f0ede4", color: "#374151" }}>
-                      #{order.orderId}
+                {recentOrders.map((order, idx) => (
+                  <tr
+                    key={order.id}
+                    style={{
+                      background: idx % 2 === 0 ? "#fff" : "#fafafa",
+                      transition: "background 0.12s",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#f0fdf4")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = idx % 2 === 0 ? "#fff" : "#fafafa")}
+                  >
+                    <td style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                      <span style={{ fontFamily: "monospace", fontWeight: "600", color: "#111827" }}>
+                        #{order.orderId}
+                      </span>
                     </td>
-                    <td style={{ padding: "12px 14px", borderBottom: "1px solid #f0ede4", color: "#374151" }}>
+                    <td style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", color: "#374151", fontWeight: "500" }}>
                       {order.boxTitle}
                     </td>
-                    <td style={{ padding: "12px 14px", borderBottom: "1px solid #f0ede4", color: "#374151" }}>
-                      {order.itemCount}
+                    <td style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          background: "#f3f4f6",
+                          borderRadius: "6px",
+                          padding: "2px 8px",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          color: "#374151",
+                          fontFamily: "monospace",
+                        }}
+                      >
+                        {order.itemCount}
+                      </span>
                     </td>
-                    <td style={{ padding: "12px 14px", borderBottom: "1px solid #f0ede4", color: "#374151" }}>
-                      \u20B9{Number(order.bundlePrice).toLocaleString("en-IN")}
+                    <td style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                      <span style={{ fontFamily: "monospace", fontWeight: "700", color: "#2A7A4F" }}>
+                        \u20B9{Number(order.bundlePrice).toLocaleString("en-IN")}
+                      </span>
                     </td>
-                    <td style={{ padding: "12px 14px", borderBottom: "1px solid #f0ede4", color: "#7a7670" }}>
+                    <td style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", color: "#9ca3af", fontSize: "12px", fontFamily: "monospace" }}>
                       {new Date(order.orderDate).toLocaleDateString("en-IN")}
                     </td>
                   </tr>
@@ -168,34 +271,80 @@ export default function DashboardPage() {
         )}
       </s-section>
 
+      {/* Quick Actions */}
       <s-section slot="aside" heading="Quick Actions">
-        <s-unordered-list>
-          <s-list-item>
-            <s-link href="/app/boxes/new">Create a new combo box</s-link>
-          </s-list-item>
-          <s-list-item>
-            <s-link href="/app/boxes">Manage existing boxes</s-link>
-          </s-list-item>
-          <s-list-item>
-            <s-link href="/app/analytics">View analytics</s-link>
-          </s-list-item>
-          <s-list-item>
-            <s-link href="/app/settings">Configure widget settings</s-link>
-          </s-list-item>
-        </s-unordered-list>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {[
+            { icon: "➕", label: "Create a new combo box", href: "/app/boxes/new" },
+            { icon: "📋", label: "Manage existing boxes", href: "/app/boxes" },
+            { icon: "📊", label: "View analytics", href: "/app/analytics" },
+            { icon: "⚙️", label: "Widget settings", href: "/app/settings" },
+          ].map((action) => (
+            <a
+              key={action.href}
+              href={action.href}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "10px 12px",
+                background: "#f9fafb",
+                border: "1px solid #e5e7eb",
+                borderRadius: "8px",
+                textDecoration: "none",
+                color: "#111827",
+                fontSize: "13px",
+                fontWeight: "500",
+                transition: "background 0.12s, border-color 0.12s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#f0fdf4";
+                e.currentTarget.style.borderColor = "#86efac";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#f9fafb";
+                e.currentTarget.style.borderColor = "#e5e7eb";
+              }}
+            >
+              <span style={{ fontSize: "16px" }}>{action.icon}</span>
+              {action.label}
+            </a>
+          ))}
+        </div>
       </s-section>
 
+      {/* Getting Started */}
       <s-section slot="aside" heading="Getting Started">
-        <s-paragraph>
-          <strong>1.</strong>{" "}
-          <s-link href="/app/boxes/new">Create a combo box</s-link> and add eligible products.
-        </s-paragraph>
-        <s-paragraph>
-          <strong>2.</strong> Add the <strong>Combo Builder</strong> block to your theme via the Theme Editor.
-        </s-paragraph>
-        <s-paragraph>
-          <strong>3.</strong> Customers build their own box on the storefront and add it to cart at the bundle price.
-        </s-paragraph>
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          {[
+            { step: "1", text: "Create a combo box and add eligible products." },
+            { step: "2", text: "Add the Combo Builder block to your theme via the Theme Editor." },
+            { step: "3", text: "Customers build their own box and add it to cart at the bundle price." },
+          ].map((item) => (
+            <div key={item.step} style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+              <div
+                style={{
+                  flexShrink: 0,
+                  width: "24px",
+                  height: "24px",
+                  borderRadius: "50%",
+                  background: "#2A7A4F",
+                  color: "#fff",
+                  fontSize: "11px",
+                  fontWeight: "700",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {item.step}
+              </div>
+              <p style={{ margin: 0, fontSize: "13px", color: "#374151", lineHeight: 1.5 }}>
+                {item.text}
+              </p>
+            </div>
+          ))}
+        </div>
       </s-section>
     </s-page>
   );

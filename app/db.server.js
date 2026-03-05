@@ -13,12 +13,50 @@ if (!/^mysqls?:\/\//i.test(normalizedDatabaseUrl)) {
   );
 }
 
-// In serverless (Vercel), append connection_limit=1 so each function instance
-// only holds 1 DB connection — prevents pool exhaustion under concurrent load.
+// In serverless, apply sane Prisma pool defaults unless already set in DATABASE_URL:
+// connection_limit=5 and pool_timeout=30 (seconds).
 const isServerless = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
-const dbUrl = isServerless
-  ? normalizedDatabaseUrl + (normalizedDatabaseUrl.includes('?') ? '&' : '?') + 'connection_limit=1&pool_timeout=20'
-  : normalizedDatabaseUrl;
+
+function asPositiveInt(value) {
+  const parsed = Number.parseInt(String(value), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function applyPrismaPoolParams(databaseUrl, serverless) {
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(databaseUrl);
+  } catch {
+    // Fallback to the original URL if parsing fails unexpectedly.
+    return databaseUrl;
+  }
+
+  const defaultConnectionLimit = serverless ? 5 : null;
+  const defaultPoolTimeout = serverless ? 30 : null;
+
+  const configuredConnectionLimit = asPositiveInt(
+    process.env.PRISMA_CONNECTION_LIMIT,
+  );
+  const configuredPoolTimeout = asPositiveInt(process.env.PRISMA_POOL_TIMEOUT);
+
+  if (!parsedUrl.searchParams.has("connection_limit")) {
+    const connectionLimit = configuredConnectionLimit ?? defaultConnectionLimit;
+    if (connectionLimit) {
+      parsedUrl.searchParams.set("connection_limit", String(connectionLimit));
+    }
+  }
+
+  if (!parsedUrl.searchParams.has("pool_timeout")) {
+    const poolTimeout = configuredPoolTimeout ?? defaultPoolTimeout;
+    if (poolTimeout) {
+      parsedUrl.searchParams.set("pool_timeout", String(poolTimeout));
+    }
+  }
+
+  return parsedUrl.toString();
+}
+
+const dbUrl = applyPrismaPoolParams(normalizedDatabaseUrl, isServerless);
 
 process.env.DATABASE_URL = dbUrl;
 
@@ -187,3 +225,4 @@ export function ensureAppTables() {
 }
 
 export default prisma;
+

@@ -8,9 +8,16 @@ import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prism
 import prisma, { ensureAppTables } from "./db.server";
 import { upsertSessionFromAuth, upsertShopFromAdmin } from "./models/shop.server";
 
-ensureAppTables().catch((error) => {
-  console.error("[DB Init] Failed to ensure app tables", error);
-});
+const shouldEnsureAppTables =
+  process.env.ENSURE_APP_TABLES === "true" ||
+  (process.env.NODE_ENV !== "production" &&
+    process.env.ENSURE_APP_TABLES !== "false");
+
+if (shouldEnsureAppTables) {
+  ensureAppTables().catch((error) => {
+    console.error("[DB Init] Failed to ensure app tables", error);
+  });
+}
 
 const prismaSessionStorage = new PrismaSessionStorage(prisma, {
   connectionRetries: 10,

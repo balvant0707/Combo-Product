@@ -1,35 +1,28 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
-// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
-// enough when changing adapters.
-// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
-
 datasource db {
-  provider          = "mysql"
-  url               = env("DATABASE_URL")
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 model Session {
-  id            String    @id
-  shop          String
-  state         String
-  isOnline      Boolean   @default(false)
-  scope         String?   @db.Text
-  expires       DateTime?
-  accessToken   String    @db.Text
-  userId        BigInt?
-  firstName     String?   @db.Text
-  lastName      String?   @db.Text
-  email         String?   @db.Text
-  accountOwner  Boolean   @default(false)
-  locale        String?   @db.Text
-  collaborator  Boolean?  @default(false)
-  emailVerified Boolean?  @default(false)
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?   @db.Text
+  expires             DateTime?
+  accessToken         String    @db.Text
+  userId              BigInt?
+  firstName           String?   @db.Text
+  lastName            String?   @db.Text
+  email               String?   @db.Text
+  accountOwner        Boolean   @default(false)
+  locale              String?   @db.Text
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
   refreshToken        String?   @db.Text
   refreshTokenExpires DateTime?
 
@@ -60,28 +53,28 @@ model shop {
 }
 
 model ComboBox {
-  id                 Int               @id @default(autoincrement())
-  shop               String
-  boxName            String            @db.VarChar(255)
-  displayTitle       String            @db.VarChar(255)
-  itemCount          Int               @default(1)
-  bundlePrice        Decimal           @db.Decimal(10, 2)
-  isGiftBox          Boolean           @default(false)
-  allowDuplicates    Boolean           @default(false)
-  bannerImageUrl     String?           @db.VarChar(500)
-  bannerImageData    Bytes?            @db.MediumBlob
-  bannerImageMimeType String?          @db.VarChar(100)
-  bannerImageFileName String?          @db.VarChar(255)
-  sortOrder          Int               @default(0)
-  isActive           Boolean           @default(true)
-  giftMessageEnabled Boolean           @default(false)
-  shopifyProductId   String?           @db.VarChar(255)
-  shopifyVariantId   String?           @db.VarChar(255)
-  deletedAt          DateTime?
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
-  products           ComboBoxProduct[]
-  orders             BundleOrder[]
+  id                  Int               @id @default(autoincrement())
+  shop                String
+  boxName             String            @db.VarChar(255)
+  displayTitle        String            @db.VarChar(255)
+  itemCount           Int               @default(1)
+  bundlePrice         Decimal           @db.Decimal(10, 2)
+  isGiftBox           Boolean           @default(false)
+  allowDuplicates     Boolean           @default(false)
+  bannerImageUrl      String?           @db.VarChar(500)
+  sortOrder           Int               @default(0)
+  isActive            Boolean           @default(true)
+  giftMessageEnabled  Boolean           @default(false)
+  shopifyProductId    String?           @db.VarChar(255)
+  shopifyVariantId    String?           @db.VarChar(255)
+  deletedAt           DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  bannerImageData     Bytes?            @db.MediumBlob
+  bannerImageFileName String?           @db.VarChar(255)
+  bannerImageMimeType String?           @db.VarChar(100)
+  orders              BundleOrder[]
+  products            ComboBoxProduct[]
 
   @@index([shop])
   @@map("combo_box")
@@ -94,10 +87,10 @@ model ComboBoxProduct {
   productTitle    String?  @db.VarChar(255)
   productImageUrl String?  @db.VarChar(500)
   productHandle   String?  @db.VarChar(255)
-  productPrice    Decimal? @db.Decimal(10, 2)
   isCollection    Boolean  @default(false)
-  variantIds      Json?
+  variantIds      String?  @db.LongText
   createdAt       DateTime @default(now())
+  productPrice    Decimal? @db.Decimal(10, 2)
   box             ComboBox @relation(fields: [boxId], references: [id], onDelete: Cascade)
 
   @@index([boxId])
@@ -109,7 +102,7 @@ model BundleOrder {
   shop             String
   orderId          String   @db.VarChar(255)
   boxId            Int
-  selectedProducts Json
+  selectedProducts String   @db.LongText
   bundlePrice      Decimal  @db.Decimal(10, 2)
   giftMessage      String?  @db.Text
   orderDate        DateTime
@@ -137,10 +130,10 @@ model AppSettings {
   giftMessageField   Boolean  @default(false)
   analyticsTracking  Boolean  @default(true)
   emailNotifications Boolean  @default(false)
-  presetTheme        String?  @default("custom") @db.VarChar(50)
-  widgetMaxWidth     Int?     @default(1140)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+  presetTheme        String?  @default("custom") @db.VarChar(50)
+  widgetMaxWidth     Int?     @default(1140)
 
   @@map("app_settings")
 }

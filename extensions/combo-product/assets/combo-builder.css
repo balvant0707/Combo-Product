@@ -137,6 +137,32 @@
   background: var(--cb-primary-light);
   background-size: cover;
   background-position: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Gradient overlay + title text on banner */
+.cb-box-banner-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.38) 100%);
+}
+
+.cb-box-banner-title {
+  font-size: 38px;
+  font-weight: 900;
+  font-style: italic;
+  color: #fff;
+  text-shadow: 0 3px 12px rgba(0,0,0,0.35);
+  text-align: center;
+  line-height: 1.1;
+  padding: 0 14px;
+  letter-spacing: -0.5px;
+  font-family: var(--cb-font);
+  word-break: break-word;
 }
 
 /* Selected checkmark */
@@ -162,25 +188,26 @@
 }
 
 .cb-box-body {
-  padding: 18px 16px 16px;
+  padding: 16px 16px 18px;
   text-align: center;
   background: var(--cb-bg);
 }
 
 .cb-box-buy-text {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--cb-text);
-  margin-bottom: 3px;
+  color: var(--cb-text-muted);
+  margin-bottom: 4px;
   font-family: var(--cb-font);
 }
 
 .cb-box-price-text {
-  font-size: 17px;
+  font-size: 22px;
   font-weight: 800;
-  color: var(--cb-primary);
+  color: var(--cb-text);
   font-family: var(--cb-font);
-  letter-spacing: -0.3px;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
 }
 
 .cb-gift-tag {
@@ -191,9 +218,37 @@
   background: var(--cb-primary-light);
   padding: 3px 10px;
   border-radius: 20px;
-  margin-top: 8px;
+  margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+/* CTA button inside each box card */
+.cb-box-cta-btn {
+  display: block;
+  width: 100%;
+  padding: 11px 0;
+  margin-top: 12px;
+  border: none;
+  background: var(--cb-primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: var(--cb-radius-sm);
+  transition: background var(--cb-transition), transform var(--cb-transition);
+  font-family: var(--cb-font);
+}
+
+.cb-box-cta-btn:hover {
+  background: var(--cb-primary-hover);
+  transform: translateY(-1px);
+}
+
+.cb-box-card--active .cb-box-cta-btn {
+  background: var(--cb-primary-hover);
 }
 
 /* ── Builder Area ─────────────────────────────────────── */
@@ -504,12 +559,12 @@
 .cb-product-section { padding-top: 8px; }
 
 .cb-product-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--cb-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 16px;
+  font-size: 20px;
+  font-weight: 800;
+  font-style: italic;
+  color: var(--cb-primary);
+  letter-spacing: -0.3px;
+  margin-bottom: 18px;
   font-family: var(--cb-font);
 }
 
@@ -908,6 +963,7 @@
   .cb-step-heading { font-size: calc(var(--cb-step-heading-size) * 0.82); }
   .cb-box-card { width: 220px; }
   .cb-box-banner { height: 160px; }
+  .cb-box-banner-title { font-size: 30px; }
   .cb-product-grid { grid-template-columns: repeat(2, 1fr); }
   .cb-slot-steps { gap: 44px; }
   .cb-slot-steps::before { top: 37px; left: 30px; right: 30px; }
@@ -925,7 +981,9 @@
   .cb-wrapper { padding: 20px 12px 36px; }
   .cb-box-card { width: 160px; }
   .cb-box-banner { height: 130px; }
-  .cb-box-buy-text, .cb-box-price-text { font-size: 13px; }
+  .cb-box-banner-title { font-size: 24px; }
+  .cb-box-buy-text { font-size: 12px; }
+  .cb-box-price-text { font-size: 18px; }
   .cb-product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .cb-slot-wrapper { justify-content: flex-start; padding-bottom: 24px; }
   .cb-slot-steps { gap: 26px; padding-top: 6px; }

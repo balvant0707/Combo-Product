@@ -279,7 +279,7 @@
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
 
-    // Banner image
+    // Banner image with overlay title
     var banner = document.createElement('div');
     banner.className = 'cb-box-banner';
     var bannerSrc = box.bannerImageUrl ||
@@ -289,6 +289,16 @@
       banner.style.backgroundSize = 'cover';
       banner.style.backgroundPosition = 'center';
     }
+
+    // Overlay: big title text on top of the banner
+    var overlay = document.createElement('div');
+    overlay.className = 'cb-box-banner-overlay';
+    var bannerTitle = document.createElement('div');
+    bannerTitle.className = 'cb-box-banner-title';
+    bannerTitle.textContent = box.displayTitle || ((box.isGiftBox ? 'Gift ' : 'Buy ') + box.itemCount);
+    overlay.appendChild(bannerTitle);
+    banner.appendChild(overlay);
+
     card.appendChild(banner);
 
     // Checkmark badge (shown when selected)
@@ -303,20 +313,27 @@
 
     var buyText = document.createElement('div');
     buyText.className = 'cb-box-buy-text';
-    buyText.textContent = 'Buy ' + box.itemCount + ' products';
+    buyText.textContent = box.boxName || ('Buy ' + box.itemCount + ' products');
     body.appendChild(buyText);
 
     var priceText = document.createElement('div');
     priceText.className = 'cb-box-price-text';
-    priceText.textContent = '@ ' + formatPrice(box.bundlePrice, ctx.currencySymbol);
+    priceText.textContent = formatPrice(box.bundlePrice, ctx.currencySymbol);
     body.appendChild(priceText);
 
     if (box.isGiftBox) {
       var giftTag = document.createElement('span');
       giftTag.className = 'cb-gift-tag';
-      giftTag.textContent = '🎁 Gift Box';
+      giftTag.textContent = 'Gift Box';
       body.appendChild(giftTag);
     }
+
+    // CTA button
+    var ctaBtn = document.createElement('button');
+    ctaBtn.className = 'cb-box-cta-btn';
+    ctaBtn.type = 'button';
+    ctaBtn.textContent = (ctx.settings && ctx.settings.ctaButtonLabel) || 'BUILD YOUR BOX';
+    body.appendChild(ctaBtn);
 
     card.appendChild(body);
 
@@ -455,8 +472,14 @@
           ;(function (i) {
             removeBtn.addEventListener('click', function (e) {
               e.stopPropagation();
-              slots[i] = null;
-              activeSlotIndex = i;
+              // Shift remaining products left to fill the gap
+              for (var j = i; j < slots.length - 1; j++) {
+                slots[j] = slots[j + 1];
+              }
+              slots[slots.length - 1] = null;
+              // Active slot becomes the first empty slot
+              activeSlotIndex = slots.indexOf(null);
+              if (activeSlotIndex === -1) activeSlotIndex = slots.length - 1;
               renderSlots();
               renderProductGrid();
               updateCartButton();
@@ -579,7 +602,7 @@
 
     // ── Product Grid ──
     function renderProductGrid() {
-      productLabel.textContent = 'Choose a product for slot ' + (activeSlotIndex + 1);
+      productLabel.textContent = 'Choose your Item ' + (activeSlotIndex + 1);
       productGrid.innerHTML = '';
 
       var usedIds = [];
@@ -812,20 +835,10 @@
     setBtns('loading', 'Adding…');
 
     var items = [];
-    slots.forEach(function (product, idx) {
-      var variantId = getFirstVariantId(product);
-      if (!variantId) return;
-      var props = {
-        '_combo_box_id': String(box.id),
-        '_combo_session_id': sessionId,
-        'Bundle': box.displayTitle,
-      };
-      props['_item_' + (idx + 1)] = product.productId;
-      if (giftMessage) props['Gift Message'] = giftMessage;
-      items.push({ id: variantId, quantity: 1, properties: props });
-    });
 
     if (box.shopifyVariantId) {
+      // PRIMARY: Add only the bundle pricing product with selected products as properties.
+      // This ensures cart total = bundle price (not sum of individual prices).
       var bundleProps = {
         '_bundle_price_item': 'true',
         '_combo_session_id': sessionId,
@@ -835,7 +848,22 @@
       slots.forEach(function (p, idx) {
         if (p) bundleProps['Item ' + (idx + 1)] = p.productTitle || ('Item ' + (idx + 1));
       });
+      if (giftMessage) bundleProps['Gift Message'] = giftMessage;
       items.push({ id: box.shopifyVariantId, quantity: 1, properties: bundleProps });
+    } else {
+      // FALLBACK: No bundle product — add individual products directly.
+      slots.forEach(function (product, idx) {
+        var variantId = getFirstVariantId(product);
+        if (!variantId) return;
+        var props = {
+          '_combo_box_id': String(box.id),
+          '_combo_session_id': sessionId,
+          'Bundle': box.displayTitle,
+        };
+        props['_item_' + (idx + 1)] = product.productId;
+        if (giftMessage) props['Gift Message'] = giftMessage;
+        items.push({ id: variantId, quantity: 1, properties: props });
+      });
     }
 
     if (items.length === 0) {
@@ -850,7 +878,10 @@
       body: JSON.stringify({ items: items }),
     })
       .then(function (r) {
-        if (!r.ok) return r.json().then(function (d) { throw new Error(d.description || 'Cart error'); });
+        if (!r.ok) return r.json().then(function (d) {
+          console.error('[ComboBuilder] Cart 422 details:', d);
+          throw new Error(d.description || d.message || 'Cart error');
+        });
         return r.json();
       })
       .then(function () {

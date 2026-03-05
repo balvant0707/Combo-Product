@@ -115,7 +115,11 @@ export const action = async ({ request }) => {
     await createBox(session.shop, data, admin);
   } catch (e) {
     console.error("[app.boxes.new] createBox error:", e);
-    return { errors: { _global: "Failed to create box. Please try again." } };
+    const message =
+      e instanceof Error && e.message
+        ? e.message
+        : "Failed to create box. Please try again.";
+    return { errors: { _global: message } };
   }
 
   throw redirect("/app/boxes");
@@ -787,4 +791,3 @@ export default function CreateBoxPage() {
 export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
-

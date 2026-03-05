@@ -35,9 +35,9 @@
   --cb-btn-font-size:        12px;
 
   /* ── Shape ── */
-  --cb-radius:        12px;
-  --cb-radius-sm:     8px;
-  --cb-radius-xs:     6px;
+  --cb-radius:        4px;
+  --cb-radius-sm:     4px;
+  --cb-radius-xs:     4px;
 
   /* ── Shadow ── */
   --cb-shadow:        0 2px 8px rgba(0,0,0,0.07);
@@ -103,7 +103,6 @@
 .cb-box-card {
   width: 260px;
   background: var(--cb-bg);
-  border: 2px solid var(--cb-border);
   border-radius: var(--cb-radius);
   overflow: hidden;
   cursor: pointer;

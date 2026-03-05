@@ -22,6 +22,33 @@ const CREATE_BUNDLE_PRODUCT_MUTATION = `#graphql
   }
 `;
 
+const GET_PUBLICATIONS_QUERY = `#graphql
+  query GetPublications {
+    publications(first: 20) {
+      edges {
+        node {
+          id
+          name
+          catalog {
+            title
+          }
+        }
+      }
+    }
+  }
+`;
+
+const PUBLISH_TO_CHANNEL_MUTATION = `#graphql
+  mutation publishablePublish($id: ID!, $input: [PublicationInput!]!) {
+    publishablePublish(id: $id, input: $input) {
+      publishable {
+        publishedOnPublication
+      }
+      userErrors { field message }
+    }
+  }
+`;
+
 const UPDATE_BUNDLE_PRODUCT_PRICE_MUTATION = `#graphql
   mutation productVariantsBulkUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
     productVariantsBulkUpdate(productId: $productId, variants: $variants) {
@@ -57,6 +84,145 @@ const DELETE_BUNDLE_PRODUCT_MUTATION = `#graphql
     }
   }
 `;
+
+// Cache the Online Store publication ID within a warm serverless container.
+let _cachedPubId = null;
+
+async function getOnlineStorePublicationId(admin) {
+  if (_cachedPubId) return _cachedPubId;
+  try {
+    const r = await admin.graphql(GET_PUBLICATIONS_QUERY);
+    const j = await r.json();
+    const edges = j?.data?.publications?.edges || [];
+    const os = edges.find((e) => {
+      const publicationName = e?.node?.name || e?.node?.catalog?.title;
+      return (
+        typeof publicationName === "string" &&
+        publicationName.toLowerCase() === "online store"
+      );
+    });
+    _cachedPubId = os?.node?.id || null;
+    return _cachedPubId;
+  } catch (e) {
+    console.error("[getOnlineStorePublicationId] error:", e);
+    return null;
+  }
+}
+
+function extractGraphqlMessages(payload) {
+  const topLevelErrors = Array.isArray(payload?.errors)
+    ? payload.errors
+        .map((error) => error?.message)
+        .filter((message) => typeof message === "string" && message.length > 0)
+    : [];
+  return topLevelErrors;
+}
+
+function formatUserErrors(userErrors) {
+  return (userErrors || [])
+    .map((err) => {
+      const field = Array.isArray(err?.field)
+        ? err.field.join(".")
+        : err?.field || "unknown";
+      const message = err?.message || "Unknown error";
+      return `${field}: ${message}`;
+    })
+    .join("; ");
+}
+
+async function createShopifyBundleProduct(admin, title, bundlePrice) {
+  // Step 1: Create product
+  const resp = await admin.graphql(CREATE_BUNDLE_PRODUCT_MUTATION, {
+    variables: {
+      product: {
+        title,
+        status: "ACTIVE",
+        vendor: "ComboBuilder",
+        tags: ["combo-builder-internal"],
+      },
+    },
+  });
+  const json = await resp.json();
+  const topLevelErrors = extractGraphqlMessages(json);
+  if (topLevelErrors.length > 0) {
+    throw new Error(
+      `Shopify productCreate failed: ${topLevelErrors.join(" | ")}`,
+    );
+  }
+
+  const userErrors = json?.data?.productCreate?.userErrors || [];
+  if (userErrors.length > 0) {
+    throw new Error(
+      `Shopify productCreate userErrors: ${formatUserErrors(userErrors)}`,
+    );
+  }
+
+  const product = json?.data?.productCreate?.product;
+  if (!product) {
+    throw new Error("Shopify productCreate returned no product");
+  }
+
+  const shopifyProductId = product.id;
+  const shopifyVariantId = product.variants?.edges?.[0]?.node?.id || null;
+
+  // Step 2: Update default variant price
+  if (shopifyVariantId && bundlePrice > 0) {
+    try {
+      const priceResp = await admin.graphql(UPDATE_BUNDLE_PRODUCT_PRICE_MUTATION, {
+        variables: {
+          productId: shopifyProductId,
+          variants: [{ id: shopifyVariantId, price: String(bundlePrice) }],
+        },
+      });
+      const priceJson = await priceResp.json();
+      const priceTopLevelErrors = extractGraphqlMessages(priceJson);
+      const priceUserErrors =
+        priceJson?.data?.productVariantsBulkUpdate?.userErrors || [];
+
+      if (priceTopLevelErrors.length > 0 || priceUserErrors.length > 0) {
+        console.error(
+          "[createShopifyBundleProduct] productVariantsBulkUpdate errors:",
+          {
+            errors: priceTopLevelErrors,
+            userErrors: priceUserErrors,
+          },
+        );
+      }
+    } catch (e) {
+      console.error("[createShopifyBundleProduct] productVariantsBulkUpdate error:", e);
+    }
+  }
+
+  // Step 3: Publish to Online Store so /cart/add.js accepts it
+  const pubId = await getOnlineStorePublicationId(admin);
+  if (pubId) {
+    try {
+      const publishResp = await admin.graphql(PUBLISH_TO_CHANNEL_MUTATION, {
+        variables: { id: shopifyProductId, input: [{ publicationId: pubId }] },
+      });
+      const publishJson = await publishResp.json();
+      const publishTopLevelErrors = extractGraphqlMessages(publishJson);
+      const publishUserErrors =
+        publishJson?.data?.publishablePublish?.userErrors || [];
+
+      if (publishTopLevelErrors.length > 0 || publishUserErrors.length > 0) {
+        console.error(
+          "[createShopifyBundleProduct] publishablePublish errors:",
+          {
+            errors: publishTopLevelErrors,
+            userErrors: publishUserErrors,
+          },
+        );
+      }
+    } catch (e) {
+      console.error("[createShopifyBundleProduct] publish error:", e);
+    }
+  } else {
+    console.warn("[createShopifyBundleProduct] Could not find Online Store publication ID — product may not be purchasable via storefront");
+  }
+
+  return { shopifyProductId, shopifyVariantId };
+}
 
 function getBannerImageDataUri(box) {
   if (!box?.bannerImageData || !box?.bannerImageMimeType) return null;
@@ -120,35 +286,20 @@ export async function createBox(shop, data, admin) {
 
   if (admin) {
     try {
-      // Step 1: Create the product (API 2025-01+ removed variants from ProductCreateInput)
-      const resp = await admin.graphql(CREATE_BUNDLE_PRODUCT_MUTATION, {
-        variables: {
-          product: {
-            title: `[Bundle] ${data.displayTitle}`,
-            status: "ACTIVE",
-            vendor: "ComboBuilder",
-            tags: ["combo-builder-internal", "hidden"],
-          },
-        },
-      });
-      const json = await resp.json();
-      const product = json?.data?.productCreate?.product;
-      if (product) {
-        shopifyProductId = product.id;
-        shopifyVariantId = product.variants?.edges?.[0]?.node?.id || null;
-
-        // Step 2: Update the auto-created default variant price
-        if (shopifyVariantId && bundlePrice > 0) {
-          await admin.graphql(UPDATE_BUNDLE_PRODUCT_PRICE_MUTATION, {
-            variables: {
-              productId: shopifyProductId,
-              variants: [{ id: shopifyVariantId, price: String(bundlePrice) }],
-            },
-          });
-        }
-      }
+      const result = await createShopifyBundleProduct(
+        admin,
+        `[Bundle] ${data.displayTitle}`,
+        bundlePrice,
+      );
+      shopifyProductId = result.shopifyProductId;
+      shopifyVariantId = result.shopifyVariantId;
     } catch (e) {
       console.error("[createBox] Failed to create Shopify product", e);
+      const message =
+        e instanceof Error && e.message
+          ? e.message
+          : "Failed to create Shopify product in admin";
+      throw new Error(message);
     }
   }
 
@@ -380,6 +531,33 @@ export async function activateAllBundleProducts(shop, admin) {
       });
     } catch (e) {
       console.error("[activateAllBundleProducts] Failed for box", box.id, e);
+    }
+  }));
+}
+
+export async function repairMissingShopifyProducts(shop, admin) {
+  const boxes = await db.comboBox.findMany({
+    where: { shop, deletedAt: null, shopifyProductId: null },
+    select: { id: true, displayTitle: true, bundlePrice: true },
+  });
+  if (boxes.length === 0) return;
+
+  await Promise.all(boxes.map(async (box) => {
+    try {
+      const { shopifyProductId, shopifyVariantId } = await createShopifyBundleProduct(
+        admin,
+        `[Bundle] ${box.displayTitle}`,
+        parseFloat(box.bundlePrice),
+      );
+      if (shopifyProductId) {
+        await db.comboBox.update({
+          where: { id: box.id },
+          data: { shopifyProductId, shopifyVariantId },
+        });
+        console.log("[repairMissingShopifyProducts] Repaired box", box.id);
+      }
+    } catch (e) {
+      console.error("[repairMissingShopifyProducts] Failed for box", box.id, e);
     }
   }));
 }

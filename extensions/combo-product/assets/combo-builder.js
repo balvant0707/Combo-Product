@@ -990,13 +990,24 @@
         'Bundle': box.displayTitle,
       };
       if (box.bannerImageUrl) bundleProps['_combo_box_image'] = box.bannerImageUrl;
+      var totalMrp = 0;
       slots.forEach(function (p, idx) {
         if (p) {
           var label = p.productTitle || ('Item ' + (idx + 1));
           if (p.selectedVariantTitle) label += ' (' + p.selectedVariantTitle + ')';
           bundleProps['Item ' + (idx + 1)] = label;
+          if (p.productPrice != null && parseFloat(p.productPrice) > 0) {
+            totalMrp += parseFloat(p.productPrice);
+          }
         }
       });
+      var bundlePrice = parseFloat(box.bundlePrice);
+      if (totalMrp > bundlePrice) {
+        var savingsAmt = totalMrp - bundlePrice;
+        var savingsPct = Math.round((savingsAmt / totalMrp) * 100);
+        bundleProps['MRP'] = formatPrice(totalMrp, ctx.currencySymbol);
+        bundleProps['You Save'] = formatPrice(savingsAmt, ctx.currencySymbol) + ' (' + savingsPct + '% OFF)';
+      }
       if (giftMessage) bundleProps['Gift Message'] = giftMessage;
       items.push({ id: box.shopifyVariantId, quantity: 1, properties: bundleProps });
     } else {
@@ -1023,10 +1034,42 @@
         setBtns('success', 'Added to Cart! ✓');
         document.dispatchEvent(new CustomEvent('cart:refresh', { bubbles: true }));
         document.dispatchEvent(new CustomEvent('cart:updated', { bubbles: true }));
-        var drawerOpened = tryOpenThemeCartDrawer();
-        if (!drawerOpened) {
-          setTimeout(function () { window.location.href = '/cart'; }, 1200);
-        }
+
+        // Fetch fresh cart HTML via Shopify sections API so the drawer shows the new item
+        fetch('/?sections=cart-drawer,cart-icon-bubble,cart-notification-button,cart-notification')
+          .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('sections')); })
+          .then(function (sections) {
+            var parser = new DOMParser();
+            Object.keys(sections).forEach(function (key) {
+              var doc = parser.parseFromString(sections[key], 'text/html');
+
+              // Update <cart-drawer> web component inner HTML (Dawn theme)
+              var drawerExist = document.querySelector('cart-drawer');
+              var drawerFresh = doc.querySelector('cart-drawer');
+              if (drawerExist && drawerFresh) drawerExist.innerHTML = drawerFresh.innerHTML;
+
+              // Update <cart-notification> (Dawn)
+              var notifExist = document.querySelector('cart-notification');
+              var notifFresh = doc.querySelector('cart-notification');
+              if (notifExist && notifFresh) notifExist.innerHTML = notifFresh.innerHTML;
+
+              // Update cart count badge
+              var countFresh = doc.querySelector('.cart-count-bubble');
+              if (countFresh) {
+                document.querySelectorAll('.cart-count-bubble').forEach(function (el) {
+                  el.innerHTML = countFresh.innerHTML;
+                });
+              }
+            });
+
+            var opened = tryOpenThemeCartDrawer();
+            if (!opened) setTimeout(function () { window.location.href = '/cart'; }, 800);
+          })
+          .catch(function () {
+            // Sections API unavailable — fall back to direct drawer open / redirect
+            var opened = tryOpenThemeCartDrawer();
+            if (!opened) setTimeout(function () { window.location.href = '/cart'; }, 1200);
+          });
       })
       .catch(function (err) {
         console.error('[ComboBuilder] Add to cart error:', err);

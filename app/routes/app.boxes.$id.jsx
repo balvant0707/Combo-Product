@@ -551,12 +551,12 @@ const searchFetcher = useFetcher();
                         border: "1px solid " + (dynamicPrice > 0 ? "#bbf7d0" : "#e5e7eb"),
                       }}
                     >
-                      <span style={{ fontSize: "12px", color: "#374151", fontWeight: "500" }}>Calculated Price</span>
+                      {/* <span style={{ fontSize: "12px", color: "#374151", fontWeight: "500" }}>Calculated Price</span>
                       <span style={{ fontSize: "17px", fontWeight: "700", color: dynamicPrice > 0 ? "#15803d" : "#9ca3af", fontFamily: "monospace" }}>
                         {dynamicPrice > 0
                           ? "₹" + dynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                           : "Select products first"}
-                      </span>
+                      </span> */}
                     </div>
                     {selectedProducts.filter((p) => p.price > 0).length === 0 && (
                       <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "8px", textAlign: "center" }}>

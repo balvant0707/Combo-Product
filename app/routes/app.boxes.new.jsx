@@ -495,12 +495,12 @@ const searchFetcher = useFetcher();
                     alignItems: "center",
                     border: "1px solid " + (estimatedTotal > 0 ? "#bbf7d0" : "#e5e7eb"),
                   }}>
-                    <span style={{ fontSize: "12px", color: "#374151", fontWeight: "500" }}>Calculated Price</span>
+                    {/* <span style={{ fontSize: "12px", color: "#374151", fontWeight: "500" }}>Calculated Price</span>
                     <span style={{ fontSize: "17px", fontWeight: "700", color: estimatedTotal > 0 ? "#15803d" : "#9ca3af", fontFamily: "monospace" }}>
                       {estimatedTotal > 0
                         ? "₹" + estimatedTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                         : "Select products first"}
-                    </span>
+                    </span> */}
                   </div>
                 )}
 

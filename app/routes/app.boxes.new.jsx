@@ -717,45 +717,6 @@ export default function CreateBoxPage() {
             </button>
           </div>
 
-          {/* ── Bottom Actions ── */}
-          <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", paddingTop: "18px", borderTop: "1.5px solid #f3f4f6" }}>
-            <button
-              type="button"
-              onClick={() => navigate("/app/boxes")}
-              style={{
-                background: "#fff",
-                border: "1.5px solid #d1d5db",
-                borderRadius: "5px",
-                padding: "9px 20px",
-                fontSize: "13px",
-                fontWeight: "500",
-                cursor: "pointer",
-                color: "#374151",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#f9fafb")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSaving}
-              style={{
-                background: isSaving ? "#9ca3af" : "#2A7A4F",
-                border: "none",
-                borderRadius: "5px",
-                padding: "9px 26px",
-                fontSize: "13px",
-                fontWeight: "700",
-                cursor: isSaving ? "not-allowed" : "pointer",
-                color: "#fff",
-                letterSpacing: "0.3px",
-                boxShadow: isSaving ? "none" : "0 1px 6px rgba(42,122,79,0.35)",
-              }}
-            >
-              {isSaving ? "Saving..." : "Save & Publish"}
-            </button>
-          </div>
         </Form>
       </s-section>
 

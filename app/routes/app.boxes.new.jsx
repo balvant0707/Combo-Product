@@ -484,26 +484,6 @@ const searchFetcher = useFetcher();
                     style={{ ...fieldStyle, borderColor: errors.bundlePrice ? "#e11d48" : "#d1d5db" }}
                   />
                 )}
-
-                {priceMode === "dynamic" && (
-                  <div style={{
-                    background: estimatedTotal > 0 ? "#f0fdf4" : "#f3f4f6",
-                    borderRadius: "5px",
-                    padding: "10px 14px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    border: "1px solid " + (estimatedTotal > 0 ? "#bbf7d0" : "#e5e7eb"),
-                  }}>
-                    {/* <span style={{ fontSize: "12px", color: "#374151", fontWeight: "500" }}>Calculated Price</span>
-                    <span style={{ fontSize: "17px", fontWeight: "700", color: estimatedTotal > 0 ? "#15803d" : "#9ca3af", fontFamily: "monospace" }}>
-                      {estimatedTotal > 0
-                        ? "₹" + estimatedTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                        : "Select products first"}
-                    </span> */}
-                  </div>
-                )}
-
                 {errors.bundlePrice && <div style={errorStyle}>{errors.bundlePrice}</div>}
               </div>
 

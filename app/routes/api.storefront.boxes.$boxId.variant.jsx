@@ -1,5 +1,6 @@
 import db from "../db.server";
 import { unauthenticated } from "../shopify.server";
+import { createShopifyBundleProduct } from "../models/boxes.server";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +12,7 @@ const GET_PRODUCT_DEFAULT_VARIANT_QUERY = `#graphql
   query GetProductDefaultVariant($id: ID!) {
     product(id: $id) {
       id
+      status
       variants(first: 1) {
         edges {
           node {
@@ -22,10 +24,70 @@ const GET_PRODUCT_DEFAULT_VARIANT_QUERY = `#graphql
   }
 `;
 
+const ACTIVATE_PRODUCT_MUTATION = `#graphql
+  mutation productUpdate($product: ProductUpdateInput!) {
+    productUpdate(product: $product) {
+      product { id status }
+      userErrors { field message }
+    }
+  }
+`;
+
+const GET_PUBLICATIONS_QUERY = `#graphql
+  query GetPublications {
+    publications(first: 20) {
+      edges {
+        node {
+          id
+          catalog { title }
+        }
+      }
+    }
+  }
+`;
+
+const PUBLISH_PRODUCT_MUTATION = `#graphql
+  mutation publishablePublish($id: ID!, $input: [PublicationInput!]!) {
+    publishablePublish(id: $id, input: $input) {
+      publishable { ... on Product { id } }
+      userErrors { field message }
+    }
+  }
+`;
+
 function toNumericShopifyId(gid) {
   if (!gid) return null;
   const raw = String(gid);
   return raw.includes("/") ? raw.split("/").pop() : raw;
+}
+
+async function ensureProductPublished(admin, productId) {
+  // Activate
+  try {
+    await admin.graphql(ACTIVATE_PRODUCT_MUTATION, {
+      variables: { product: { id: productId, status: "ACTIVE" } },
+    });
+  } catch (e) {
+    console.warn("[variant-repair] activate error:", e);
+  }
+
+  // Publish to Online Store
+  try {
+    const pubResp = await admin.graphql(GET_PUBLICATIONS_QUERY);
+    const pubJson = await pubResp.json();
+    const edges = pubJson?.data?.publications?.edges || [];
+    const os = edges.find((e) => {
+      const title = e?.node?.catalog?.title || "";
+      return title.toLowerCase() === "online store";
+    });
+    if (os?.node?.id) {
+      await admin.graphql(PUBLISH_PRODUCT_MUTATION, {
+        variables: { id: productId, input: [{ publicationId: os.node.id }] },
+      });
+    }
+  } catch (e) {
+    console.warn("[variant-repair] publish error:", e);
+  }
 }
 
 export const loader = async ({ request, params }) => {
@@ -52,31 +114,83 @@ export const loader = async ({ request, params }) => {
 
   const box = await db.comboBox.findFirst({
     where: { id: boxId, shop, isActive: true, deletedAt: null },
-    select: { id: true, shopifyProductId: true, shopifyVariantId: true },
+    select: {
+      id: true,
+      boxName: true,
+      displayTitle: true,
+      bundlePrice: true,
+      shopifyProductId: true,
+      shopifyVariantId: true,
+    },
   });
 
-  if (!box || !box.shopifyProductId) {
+  if (!box) {
     return Response.json(
-      { error: "Combo product not linked" },
+      { error: "Combo box not found" },
       { status: 404, headers: CORS_HEADERS },
     );
   }
 
   try {
     const { admin } = await unauthenticated.admin(shop);
+
+    // Case 1: no Shopify product linked at all — create one
+    if (!box.shopifyProductId) {
+      const title = `[Bundle] ${box.boxName || box.displayTitle}`;
+      const { shopifyProductId, shopifyVariantId } =
+        await createShopifyBundleProduct(
+          admin,
+          title,
+          parseFloat(box.bundlePrice) || 0,
+        );
+      await db.comboBox.update({
+        where: { id: box.id },
+        data: { shopifyProductId, shopifyVariantId },
+      });
+      console.log("[variant-repair] Created missing product for box", box.id);
+      return Response.json(
+        {
+          shopifyProductId: toNumericShopifyId(shopifyProductId),
+          shopifyVariantId: toNumericShopifyId(shopifyVariantId),
+        },
+        { headers: CORS_HEADERS },
+      );
+    }
+
+    // Case 2: product linked — check if it still exists in Shopify
     const resp = await admin.graphql(GET_PRODUCT_DEFAULT_VARIANT_QUERY, {
       variables: { id: box.shopifyProductId },
     });
     const json = await resp.json();
+    const productData = json?.data?.product;
     const freshVariantId =
-      json?.data?.product?.variants?.edges?.[0]?.node?.id || null;
+      productData?.variants?.edges?.[0]?.node?.id || null;
 
-    if (!freshVariantId) {
+    // Case 2a: product was deleted from Shopify — recreate it
+    if (!productData || !freshVariantId) {
+      const title = `[Bundle] ${box.boxName || box.displayTitle}`;
+      const { shopifyProductId, shopifyVariantId } =
+        await createShopifyBundleProduct(
+          admin,
+          title,
+          parseFloat(box.bundlePrice) || 0,
+        );
+      await db.comboBox.update({
+        where: { id: box.id },
+        data: { shopifyProductId, shopifyVariantId },
+      });
+      console.log("[variant-repair] Recreated deleted product for box", box.id);
       return Response.json(
-        { error: "Variant not found for combo product" },
-        { status: 404, headers: CORS_HEADERS },
+        {
+          shopifyProductId: toNumericShopifyId(shopifyProductId),
+          shopifyVariantId: toNumericShopifyId(shopifyVariantId),
+        },
+        { headers: CORS_HEADERS },
       );
     }
+
+    // Case 2b: product exists — ensure it's ACTIVE and published so cart accepts it
+    await ensureProductPublished(admin, productData.id);
 
     if (freshVariantId !== box.shopifyVariantId) {
       await db.comboBox.update({

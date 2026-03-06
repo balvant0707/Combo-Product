@@ -60,6 +60,7 @@ model ComboBox {
   displayTitle        String            @db.VarChar(255)
   itemCount           Int               @default(1)
   bundlePrice         Decimal           @db.Decimal(10, 2)
+  bundlePriceType     String            @default("manual") @db.VarChar(10)
   isGiftBox           Boolean           @default(false)
   allowDuplicates     Boolean           @default(false)
   bannerImageUrl      String?           @db.VarChar(500)

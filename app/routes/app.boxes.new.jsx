@@ -87,16 +87,15 @@ export const action = async ({ request }) => {
     eligibleProducts = JSON.parse(formData.get("eligibleProducts") || "[]");
   } catch {}
   const errors = {};
-  const bannerImage = await parseBannerImage(formData, errors);
 
   const data = {
     boxName: formData.get("boxName"),
     displayTitle: formData.get("displayTitle"),
     itemCount: formData.get("itemCount"),
     bundlePrice: formData.get("bundlePrice"),
+    bundlePriceType: formData.get("bundlePriceType"),
     isGiftBox: formData.get("isGiftBox") === "true",
     allowDuplicates: formData.get("allowDuplicates") === "true",
-    bannerImage,
     isActive: formData.get("isActive") !== "false",
     giftMessageEnabled: formData.get("giftMessageEnabled") === "true",
     eligibleProducts,
@@ -105,8 +104,11 @@ export const action = async ({ request }) => {
   if (!data.displayTitle?.trim()) errors.displayTitle = "Display title is required";
   if (!data.itemCount || parseInt(data.itemCount) < 1 || parseInt(data.itemCount) > 20)
     errors.itemCount = "Item count must be between 1 and 20";
-  if (!data.bundlePrice || parseFloat(data.bundlePrice) <= 0)
-    errors.bundlePrice = "Bundle price must be greater than 0";
+  if (!data.bundlePrice || parseFloat(data.bundlePrice) <= 0) {
+    errors.bundlePrice = data.bundlePriceType === "dynamic"
+      ? "Select products above so the dynamic price can be calculated"
+      : "Bundle price must be greater than 0";
+  }
   if (eligibleProducts.length === 0)
     errors.eligibleProducts = "Select at least one eligible product";
 
@@ -400,8 +402,9 @@ const searchFetcher = useFetcher();
       )}
 
       <s-section>
-        <Form id="create-box-form" method="POST" encType="multipart/form-data">
+        <Form id="create-box-form" method="POST">
           <input type="hidden" name="bundlePrice" value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
+          <input type="hidden" name="bundlePriceType" value={priceMode} />
           <input type="hidden" name="itemCount" value={itemCount} />
           <input type="hidden" name="eligibleProducts" value={JSON.stringify(selectedProducts)} />
           <input type="hidden" name="isGiftBox" value={String(options.isGiftBox)} />
@@ -555,20 +558,6 @@ const searchFetcher = useFetcher();
               </div>
 
               <PriceChart estimatedTotal={estimatedTotal} bundlePrice={bundlePrice} numItemCount={numItemCount} />
-
-              <div style={{ gridColumn: "1 / -1" }}>
-                <label style={labelStyle}>Banner Image (optional)</label>
-                <input
-                  type="file"
-                  name="bannerImage"
-                  accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-                  style={{ ...fieldStyle, padding: "7px 12px" }}
-                />
-                <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>
-                  JPG, PNG, WEBP, GIF, or AVIF — max 5MB
-                </div>
-                {errors.bannerImage && <div style={errorStyle}>{errors.bannerImage}</div>}
-              </div>
             </div>
           </div>
 

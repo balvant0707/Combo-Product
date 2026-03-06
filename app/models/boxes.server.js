@@ -43,7 +43,6 @@ const GET_PUBLICATIONS_QUERY = `#graphql
       edges {
         node {
           id
-          name
           catalog {
             title
           }
@@ -56,9 +55,7 @@ const GET_PUBLICATIONS_QUERY = `#graphql
 const PUBLISH_TO_CHANNEL_MUTATION = `#graphql
   mutation publishablePublish($id: ID!, $input: [PublicationInput!]!) {
     publishablePublish(id: $id, input: $input) {
-      publishable {
-        publishedOnPublication
-      }
+      publishable { ... on Product { id } }
       userErrors { field message }
     }
   }
@@ -110,11 +107,8 @@ async function getOnlineStorePublicationId(admin) {
     const j = await r.json();
     const edges = j?.data?.publications?.edges || [];
     const os = edges.find((e) => {
-      const publicationName = e?.node?.name || e?.node?.catalog?.title;
-      return (
-        typeof publicationName === "string" &&
-        publicationName.toLowerCase() === "online store"
-      );
+      const title = e?.node?.catalog?.title || "";
+      return title.toLowerCase() === "online store";
     });
     _cachedPubId = os?.node?.id || null;
     return _cachedPubId;
@@ -173,7 +167,7 @@ async function resolveDefaultVariantId(admin, shopifyProductId) {
   }
 }
 
-async function createShopifyBundleProduct(admin, title, bundlePrice) {
+export async function createShopifyBundleProduct(admin, title, bundlePrice) {
   // Step 1: Create product
   const resp = await admin.graphql(CREATE_BUNDLE_PRODUCT_MUTATION, {
     variables: {
@@ -377,6 +371,7 @@ export async function createBox(shop, data, admin) {
       isActive: data.isActive !== "false" && data.isActive !== false,
       giftMessageEnabled:
         data.giftMessageEnabled === "true" || data.giftMessageEnabled === true,
+      bundlePriceType: data.bundlePriceType === "dynamic" ? "dynamic" : "manual",
       shopifyProductId,
       shopifyVariantId,
     },
@@ -525,6 +520,10 @@ export async function updateBox(id, shop, data, admin) {
           ? data.giftMessageEnabled === "true" ||
             data.giftMessageEnabled === true
           : existing.giftMessageEnabled,
+      bundlePriceType:
+        data.bundlePriceType !== undefined
+          ? data.bundlePriceType === "dynamic" ? "dynamic" : "manual"
+          : existing.bundlePriceType,
     },
   });
 

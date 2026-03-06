@@ -120,6 +120,7 @@ export const action = async ({ request, params }) => {
     displayTitle: formData.get("displayTitle"),
     itemCount: formData.get("itemCount"),
     bundlePrice: formData.get("bundlePrice"),
+    bundlePriceType: formData.get("bundlePriceType"),
     isGiftBox: formData.get("isGiftBox") === "true",
     allowDuplicates: formData.get("allowDuplicates") === "true",
     bannerImage,
@@ -293,7 +294,7 @@ const searchFetcher = useFetcher();
   });
 
   const [itemCount, setItemCount] = useState(String(box.itemCount));
-  const [priceMode, setPriceMode] = useState("manual");
+  const [priceMode, setPriceMode] = useState(box.bundlePriceType || "manual");
   const [manualPrice, setManualPrice] = useState(String(box.bundlePrice));
   const [discountType, setDiscountType] = useState("percent");
   const [discountValue, setDiscountValue] = useState("10");
@@ -410,6 +411,7 @@ const searchFetcher = useFetcher();
         <Form id="edit-box-form" method="POST" encType="multipart/form-data">
           <input type="hidden" name="_action" value="save" />
           <input type="hidden" name="bundlePrice" value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
+          <input type="hidden" name="bundlePriceType" value={priceMode} />
           <input type="hidden" name="itemCount" value={itemCount} />
           <input type="hidden" name="eligibleProducts" value={JSON.stringify(selectedProducts)} />
           <input type="hidden" name="isGiftBox" value={String(options.isGiftBox)} />

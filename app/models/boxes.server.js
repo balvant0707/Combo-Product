@@ -43,6 +43,7 @@ const GET_PUBLICATIONS_QUERY = `#graphql
       edges {
         node {
           id
+          name
           catalog {
             title
           }
@@ -106,11 +107,16 @@ async function getOnlineStorePublicationId(admin) {
     const r = await admin.graphql(GET_PUBLICATIONS_QUERY);
     const j = await r.json();
     const edges = j?.data?.publications?.edges || [];
-    // Prefer exact "online store" match; fall back to first catalog-based publication
+    // Online Store publication has name "Online Store" and catalog: null
+    // Must NOT filter by catalog != null — that excludes Online Store
     const os =
+      edges.find((e) => (e?.node?.name || "").toLowerCase() === "online store") ||
       edges.find((e) => (e?.node?.catalog?.title || "").toLowerCase() === "online store") ||
-      edges.find((e) => e?.node?.catalog != null);
+      edges[0]; // last resort: first publication
     _cachedPubId = os?.node?.id || null;
+    if (!_cachedPubId) {
+      console.warn("[getOnlineStorePublicationId] No publications found — product will not be purchasable via storefront");
+    }
     return _cachedPubId;
   } catch (e) {
     console.error("[getOnlineStorePublicationId] error:", e);

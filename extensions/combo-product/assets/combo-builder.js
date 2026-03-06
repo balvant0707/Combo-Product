@@ -959,6 +959,7 @@
     setBtns('loading', 'Adding…');
 
     function postCartItems(items) {
+      console.log('[ComboBuilder] postCartItems — sending variant id:', items[0] && items[0].id, '| full item:', JSON.stringify(items[0]));
       return fetch('/cart/add.js', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -1178,12 +1179,17 @@
     function ensurePublishedThenCart() {
       return resolveBundleVariantId()
         .then(function (variantId) {
+          console.log('[ComboBuilder] resolveBundleVariantId resolved:', variantId);
           items[0].id = variantId;
           if (items[0].properties) {
             items[0].properties['_combo_shopify_variant_id'] = String(variantId);
           }
         })
-        .catch(function () { /* ignore repair errors — proceed with current variant */ })
+        .catch(function (e) {
+          console.warn('[ComboBuilder] resolveBundleVariantId failed (using stored id):', e && e.message, '| stored shopifyVariantId:', box.shopifyVariantId, '| box.shopifyProductId:', box.shopifyProductId);
+        })
+        // Brief pause so Shopify can propagate the publish/activate from the variant endpoint
+        .then(function () { return new Promise(function (r) { setTimeout(r, 800); }); })
         .then(function () { return postCartItems(items); });
     }
 

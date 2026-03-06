@@ -239,7 +239,7 @@
   data-heading="{{ block.settings.heading_text | escape }}"
   data-currency="{{ cart.currency.iso_code }}"
   data-currency-symbol="{{ cart.currency.symbol }}"
-  data-api-base="/apps/combo-builder"
+  data-api-base="https://combo-products.vercel.app"
 >
   <div class="combo-builder-loading">
     <div class="combo-builder-spinner"></div>
@@ -291,7 +291,7 @@
     currency:       '{{ cart.currency.iso_code }}',
     currencySymbol: '{{ cart.currency.symbol }}',
     layout:         '{{ block.settings.layout | default: "grid" }}',
-    apiBase:        '/apps/combo-builder'
+    apiBase:        'https://combo-products.vercel.app'
   });
 </script>
 <script defer src="{{ 'combo-builder.js' | asset_url }}"></script>

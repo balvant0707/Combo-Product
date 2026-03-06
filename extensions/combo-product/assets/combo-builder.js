@@ -956,59 +956,6 @@
 
     setBtns('loading', 'Adding…');
 
-    function buildFallbackItems() {
-      var selectedLabels = [];
-      var totalMrp = 0;
-      var bundlePrice = parseFloat(box.bundlePrice) || 0;
-
-      slots.forEach(function (p, idx) {
-        if (!p) return;
-        var label = p.productTitle || ('Item ' + (idx + 1));
-        if (p.selectedVariantTitle) label += ' (' + p.selectedVariantTitle + ')';
-        selectedLabels[idx] = label;
-        if (p.productPrice != null && parseFloat(p.productPrice) > 0) {
-          totalMrp += parseFloat(p.productPrice);
-        }
-      });
-
-      var fallbackItems = [];
-      slots.forEach(function (product, idx) {
-        var variantId = getFirstVariantId(product);
-        if (!variantId) return;
-        var props = {
-          '_combo_box_id': String(box.id),
-          '_combo_session_id': sessionId,
-          'Bundle': box.displayTitle,
-          'Combo Price': formatPrice(bundlePrice, resolvedCurrencySymbol),
-        };
-        if (box.bannerImageUrl) props['_combo_box_image'] = box.bannerImageUrl;
-
-        selectedLabels.forEach(function (label, labelIdx) {
-          if (label) props['Item ' + (labelIdx + 1)] = label;
-        });
-
-        if (totalMrp > 0) {
-          props['_combo_selected_total'] = totalMrp.toFixed(2);
-          props['_combo_bundle_price'] = bundlePrice.toFixed(2);
-          props['Selected Items Total'] = formatPrice(totalMrp, resolvedCurrencySymbol);
-          props['MRP'] = formatPrice(totalMrp, resolvedCurrencySymbol);
-        }
-
-        if (totalMrp > bundlePrice && totalMrp > 0) {
-          var savingsAmt = totalMrp - bundlePrice;
-          var savingsPct = Math.round((savingsAmt / totalMrp) * 100);
-          props['_combo_savings_amount'] = savingsAmt.toFixed(2);
-          props['_combo_discount_pct'] = String(savingsPct);
-          props['You Save'] = formatPrice(savingsAmt, resolvedCurrencySymbol) + ' (' + savingsPct + '% OFF)';
-          props['Discount'] = savingsPct + '% OFF';
-        }
-
-        if (giftMessage) props['Gift Message'] = giftMessage;
-        fallbackItems.push({ id: variantId, quantity: 1, properties: props });
-      });
-      return fallbackItems;
-    }
-
     function postCartItems(items) {
       return fetch('/cart/add.js', {
         method: 'POST',
@@ -1103,7 +1050,6 @@
       });
     }
 
-    var fallbackItems = buildFallbackItems();
     var items = [];
 
     if (box.shopifyVariantId) {
@@ -1114,9 +1060,13 @@
         '_bundle_price_item': 'true',
         '_combo_session_id': sessionId,
         '_combo_box_id': String(box.id),
+        '_combo_shopify_variant_id': String(box.shopifyVariantId),
         'Bundle': box.displayTitle,
         'Combo Price': formatPrice(bundlePrice, resolvedCurrencySymbol),
       };
+      if (box.shopifyProductId) {
+        bundleProps['_combo_shopify_product_id'] = String(box.shopifyProductId);
+      }
       if (box.bannerImageUrl) bundleProps['_combo_box_image'] = box.bannerImageUrl;
       var totalMrp = 0;
       slots.forEach(function (p, idx) {
@@ -1149,25 +1099,13 @@
       if (giftMessage) bundleProps['Gift Message'] = giftMessage;
       items.push({ id: box.shopifyVariantId, quantity: 1, properties: bundleProps });
     } else {
-      // FALLBACK: No bundle product — add individual products directly.
-      items = fallbackItems.slice();
-    }
-
-    if (items.length === 0) {
-      setBtns('error', 'Error — Try Again');
+      // Hard-stop: combo must always price through the bundle variant.
+      setBtns('error', 'Combo product not linked');
       setTimeout(function () { setBtns('ready', resolvedReadyLabel); }, 2500);
       return;
     }
 
     postCartItems(items)
-      .catch(function (err) {
-        if (!box.shopifyVariantId || fallbackItems.length === 0) {
-          throw err;
-        }
-        // If bundle line item fails, fallback to adding selected products so checkout continues.
-        console.warn('[ComboBuilder] Bundle variant add failed, falling back to selected items:', err);
-        return postCartItems(fallbackItems);
-      })
       .then(function (cartResponse) {
         setBtns('success', 'Added to Cart! ✓');
 
@@ -1185,15 +1123,6 @@
         setBtns('error', 'Error — Try Again');
         setTimeout(function () { setBtns('ready', resolvedReadyLabel); }, 2500);
       });
-  }
-
-  function getFirstVariantId(product) {
-    if (!product) return null;
-    if (product.selectedVariantId) return product.selectedVariantId;
-    if (product.variantIds && Array.isArray(product.variantIds) && product.variantIds.length > 0) {
-      return product.variantIds[0];
-    }
-    return null;
   }
 
   function tryOpenThemeCartDrawer() {

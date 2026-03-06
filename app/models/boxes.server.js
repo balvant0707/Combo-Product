@@ -98,6 +98,28 @@ const DELETE_BUNDLE_PRODUCT_MUTATION = `#graphql
   }
 `;
 
+const STAGED_UPLOADS_CREATE_MUTATION = `#graphql
+  mutation stagedUploadsCreate($input: [StagedUploadInput!]!) {
+    stagedUploadsCreate(input: $input) {
+      stagedTargets {
+        url
+        resourceUrl
+        parameters { name value }
+      }
+      userErrors { field message }
+    }
+  }
+`;
+
+const PRODUCT_CREATE_MEDIA_MUTATION = `#graphql
+  mutation productCreateMedia($productId: ID!, $media: [CreateMediaInput!]!) {
+    productCreateMedia(productId: $productId, media: $media) {
+      media { status }
+      mediaUserErrors { field message }
+    }
+  }
+`;
+
 // Cache the Online Store publication ID within a warm serverless container.
 let _cachedPubId = null;
 
@@ -121,6 +143,62 @@ async function getOnlineStorePublicationId(admin) {
   } catch (e) {
     console.error("[getOnlineStorePublicationId] error:", e);
     return null;
+  }
+}
+
+// imageSource: a URL string, or { bytes: Buffer, mimeType, fileName }
+async function addImageToProduct(admin, productId, imageSource) {
+  let imageUrl = null;
+
+  if (typeof imageSource === "string" && imageSource.startsWith("http")) {
+    imageUrl = imageSource;
+  } else if (imageSource?.bytes) {
+    // Binary upload — use staged upload to get a Shopify-hosted URL
+    try {
+      const byteLength = Buffer.byteLength(imageSource.bytes);
+      const stageResp = await admin.graphql(STAGED_UPLOADS_CREATE_MUTATION, {
+        variables: {
+          input: [{
+            filename: imageSource.fileName || "banner.jpg",
+            mimeType: imageSource.mimeType || "image/jpeg",
+            httpMethod: "POST",
+            resource: "IMAGE",
+            fileSize: String(byteLength),
+          }],
+        },
+      });
+      const stageJson = await stageResp.json();
+      const target = stageJson?.data?.stagedUploadsCreate?.stagedTargets?.[0];
+      if (!target) throw new Error("No staged target returned");
+
+      const form = new FormData();
+      for (const p of target.parameters) form.append(p.name, p.value);
+      form.append(
+        "file",
+        new Blob([imageSource.bytes], { type: imageSource.mimeType || "image/jpeg" }),
+        imageSource.fileName || "banner.jpg",
+      );
+
+      const uploadResp = await fetch(target.url, { method: "POST", body: form });
+      if (!uploadResp.ok) throw new Error(`Staged upload HTTP ${uploadResp.status}`);
+      imageUrl = target.resourceUrl;
+    } catch (e) {
+      console.warn("[addImageToProduct] staged upload failed:", e.message);
+      return;
+    }
+  }
+
+  if (!imageUrl) return;
+
+  try {
+    await admin.graphql(PRODUCT_CREATE_MEDIA_MUTATION, {
+      variables: {
+        productId,
+        media: [{ originalSource: imageUrl, mediaContentType: "IMAGE" }],
+      },
+    });
+  } catch (e) {
+    console.warn("[addImageToProduct] productCreateMedia failed:", e.message);
   }
 }
 
@@ -173,7 +251,7 @@ async function resolveDefaultVariantId(admin, shopifyProductId) {
   }
 }
 
-export async function createShopifyBundleProduct(admin, title, bundlePrice) {
+export async function createShopifyBundleProduct(admin, title, bundlePrice, imageSource = null) {
   // Step 1: Create product
   const resp = await admin.graphql(CREATE_BUNDLE_PRODUCT_MUTATION, {
     variables: {
@@ -244,7 +322,12 @@ export async function createShopifyBundleProduct(admin, title, bundlePrice) {
     }
   }
 
-  // Step 3: Publish to Online Store so /cart/add.js accepts it
+  // Step 3: Attach banner image if provided
+  if (imageSource) {
+    await addImageToProduct(admin, shopifyProductId, imageSource);
+  }
+
+  // Step 4: Publish to Online Store so /cart/add.js accepts it
   const pubId = await getOnlineStorePublicationId(admin);
   if (pubId) {
     try {
@@ -330,7 +413,7 @@ export async function getBoxWithProducts(id, shop) {
 export async function createBox(shop, data, admin) {
   const itemCount = parseInt(data.itemCount) || 1;
   const bundlePrice = parseFloat(data.bundlePrice) || 0;
-  const bundleProductTitle = `[Bundle] ${data.boxName || data.displayTitle}`;
+  const bundleProductTitle = data.boxName || data.displayTitle;
 
   // Create hidden Shopify product for bundle pricing
   let shopifyProductId = null;
@@ -338,10 +421,16 @@ export async function createBox(shop, data, admin) {
 
   if (admin) {
     try {
+      const imageSource =
+        data.bannerImageUrl ||
+        (data.bannerImage?.bytes
+          ? { bytes: data.bannerImage.bytes, mimeType: data.bannerImage.mimeType, fileName: data.bannerImage.fileName }
+          : null);
       const result = await createShopifyBundleProduct(
         admin,
         bundleProductTitle,
         bundlePrice,
+        imageSource,
       );
       shopifyProductId = result.shopifyProductId;
       shopifyVariantId = result.shopifyVariantId;
@@ -421,7 +510,7 @@ export async function updateBox(id, shop, data, admin) {
 
   // Ensure bundle product is ACTIVE (may be DRAFT from old boxes) and update price if changed
   let resolvedVariantId = existing.shopifyVariantId;
-  const desiredBundleTitle = `[Bundle] ${data.boxName ?? existing.boxName ?? data.displayTitle ?? existing.displayTitle}`;
+  const desiredBundleTitle = data.boxName ?? existing.boxName ?? data.displayTitle ?? existing.displayTitle;
 
   if (existing.shopifyProductId && admin) {
     if (!resolvedVariantId) {
@@ -636,7 +725,7 @@ export async function repairMissingShopifyProducts(shop, admin) {
     try {
       const { shopifyProductId, shopifyVariantId } = await createShopifyBundleProduct(
         admin,
-        `[Bundle] ${box.boxName || box.displayTitle}`,
+        box.boxName || box.displayTitle,
         parseFloat(box.bundlePrice),
       );
       if (shopifyProductId) {

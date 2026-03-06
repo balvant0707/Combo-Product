@@ -135,7 +135,7 @@ export const loader = async ({ request, params }) => {
 
     // Case 1: no Shopify product linked at all — create one
     if (!box.shopifyProductId) {
-      const title = `[Bundle] ${box.boxName || box.displayTitle}`;
+      const title = box.boxName || box.displayTitle;
       const { shopifyProductId, shopifyVariantId } =
         await createShopifyBundleProduct(
           admin,
@@ -167,7 +167,7 @@ export const loader = async ({ request, params }) => {
 
     // Case 2a: product was deleted from Shopify — recreate it
     if (!productData || !freshVariantId) {
-      const title = `[Bundle] ${box.boxName || box.displayTitle}`;
+      const title = box.boxName || box.displayTitle;
       const { shopifyProductId, shopifyVariantId } =
         await createShopifyBundleProduct(
           admin,

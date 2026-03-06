@@ -149,7 +149,7 @@ const fieldStyle = {
   width: "100%",
   padding: "9px 12px",
   border: "1.5px solid #e5e7eb",
-  borderRadius: "8px",
+  borderRadius: "5px",
   fontSize: "13px",
   color: "#111827",
   background: "#fff",
@@ -160,12 +160,12 @@ const fieldStyle = {
 
 const labelStyle = {
   display: "block",
-  fontSize: "12px",
-  fontWeight: "600",
-  color: "#374151",
+  fontSize: "11px",
+  fontWeight: "700",
+  color: "#4b5563",
   marginBottom: "6px",
   textTransform: "uppercase",
-  letterSpacing: "0.5px",
+  letterSpacing: "0.6px",
 };
 
 const errorStyle = { color: "#dc2626", fontSize: "11px", marginTop: "5px", display: "flex", alignItems: "center", gap: "4px" };
@@ -190,7 +190,7 @@ function PriceChart({ estimatedTotal, bundlePrice, numItemCount }) {
         gridColumn: "1 / -1",
         background: "#fafaf8",
         border: "1px solid #e5e1d8",
-        borderRadius: "8px",
+        borderRadius: "5px",
         padding: "16px",
         marginTop: "4px",
       }}
@@ -250,7 +250,7 @@ function PriceChart({ estimatedTotal, bundlePrice, numItemCount }) {
         ) : savings > 0 ? (
           <>
             <span style={{ fontSize: "12px", color: "#059669", fontWeight: "500" }}>Customer saves</span>
-            <span style={{ fontSize: "13px", fontWeight: "700", color: "#059669", fontFamily: "monospace", background: "#d1fae5", padding: "2px 10px", borderRadius: "20px" }}>
+            <span style={{ fontSize: "13px", fontWeight: "700", color: "#059669", fontFamily: "monospace", background: "#d1fae5", padding: "2px 10px", borderRadius: "4px" }}>
               {fmt(savings)} ({savingsPct.toFixed(0)}% off)
             </span>
           </>
@@ -279,11 +279,12 @@ export default function EditBoxPage() {
     productImageUrl: p.productImageUrl,
     productHandle: p.productHandle,
     variantIds: p.variantIds || [],
-    price: 0, // prices not stored in DB; will be enriched when user interacts
+    price: 0,
   }));
 
   const [selectedProducts, setSelectedProducts] = useState(initialSelected);
   const [productSearch, setProductSearch] = useState("");
+  const [showPicker, setShowPicker] = useState(false);
   const [options, setOptions] = useState({
     isGiftBox: box.isGiftBox,
     allowDuplicates: box.allowDuplicates,
@@ -291,10 +292,7 @@ export default function EditBoxPage() {
     isActive: box.isActive,
   });
 
-  // Controlled itemCount for price calculations
   const [itemCount, setItemCount] = useState(String(box.itemCount));
-
-  // Pricing mode — starts as manual with existing price pre-filled
   const [priceMode, setPriceMode] = useState("manual");
   const [manualPrice, setManualPrice] = useState(String(box.bundlePrice));
   const [discountType, setDiscountType] = useState("percent");
@@ -306,7 +304,6 @@ export default function EditBoxPage() {
       ? products.filter((p) => p.title.toLowerCase().includes(productSearch.toLowerCase()))
       : products);
 
-  // ── Price computations ──
   const numItemCount = Math.max(1, parseInt(itemCount) || 1);
   const avgProductPrice =
     selectedProducts.length > 0
@@ -324,12 +321,13 @@ export default function EditBoxPage() {
 
   const bundlePrice = priceMode === "manual" ? parseFloat(manualPrice) || 0 : dynamicPrice;
 
-  // ── Handlers ──
   function handleSearchChange(e) {
     const val = e.target.value;
     setProductSearch(val);
     if (val.length > 1) {
       searchFetcher.load(`/app/boxes/${box.id}?q=${encodeURIComponent(val)}`);
+    } else if (val.length === 0) {
+      searchFetcher.load(`/app/boxes/${box.id}`);
     }
   }
 
@@ -358,8 +356,19 @@ export default function EditBoxPage() {
 
   const isSelected = (id) => selectedProducts.some((p) => p.id === id);
 
+  function openPicker() {
+    setProductSearch("");
+    searchFetcher.load(`/app/boxes/${box.id}`);
+    setShowPicker(true);
+  }
+
+  function closePicker() {
+    setShowPicker(false);
+    setProductSearch("");
+  }
+
   const sectionHeadingStyle = {
-    fontSize: "12px",
+    fontSize: "11px",
     fontWeight: "700",
     color: "#6b7280",
     textTransform: "uppercase",
@@ -374,20 +383,56 @@ export default function EditBoxPage() {
 
   return (
     <s-page heading={`Edit: ${box.boxName}`}>
-      <s-button slot="primary-action" variant="tertiary" onClick={() => navigate("/app/boxes")}>
-        Cancel
-      </s-button>
+      {/* Header actions — Cancel + Save */}
+      <div slot="primary-action" style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+        <button
+          type="button"
+          onClick={() => navigate("/app/boxes")}
+          style={{
+            background: "#fff",
+            border: "1.5px solid #d1d5db",
+            borderRadius: "5px",
+            padding: "8px 18px",
+            fontSize: "13px",
+            fontWeight: "500",
+            cursor: "pointer",
+            color: "#374151",
+          }}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          form="edit-box-form"
+          name="_action"
+          value="save"
+          disabled={isSaving}
+          style={{
+            background: isSaving ? "#9ca3af" : "#2A7A4F",
+            border: "none",
+            borderRadius: "5px",
+            padding: "8px 20px",
+            fontSize: "13px",
+            fontWeight: "700",
+            cursor: isSaving ? "not-allowed" : "pointer",
+            color: "#fff",
+            letterSpacing: "0.3px",
+            boxShadow: isSaving ? "none" : "0 1px 6px rgba(42,122,79,0.35)",
+          }}
+        >
+          {isSaving ? "Saving..." : "Save Changes"}
+        </button>
+      </div>
 
       {errors._global && (
-        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", padding: "12px 16px", marginBottom: "16px", color: "#991b1b", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
+        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "5px", padding: "12px 16px", marginBottom: "16px", color: "#991b1b", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
           <span style={{ fontSize: "16px" }}>⚠</span>
           {errors._global}
         </div>
       )}
 
       <s-section>
-        <Form method="POST" encType="multipart/form-data">
-          {/* Hidden inputs for computed / boolean values */}
+        <Form id="edit-box-form" method="POST" encType="multipart/form-data">
           <input type="hidden" name="bundlePrice" value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
           <input type="hidden" name="itemCount" value={itemCount} />
           <input type="hidden" name="eligibleProducts" value={JSON.stringify(selectedProducts)} />
@@ -397,11 +442,11 @@ export default function EditBoxPage() {
           <input type="hidden" name="isActive" value={String(options.isActive)} />
 
           {/* ── Basic Information ── */}
-          <div style={{ marginBottom: "32px" }}>
+          <div style={{ marginBottom: "28px" }}>
             <div style={sectionHeadingStyle}>
-              <span style={{ fontSize: "16px" }}>📋</span> Basic Information
+              <span style={{ fontSize: "15px" }}>📋</span> Basic Information
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
 
               <div>
                 <label style={labelStyle}>Box Internal Name *</label>
@@ -409,7 +454,7 @@ export default function EditBoxPage() {
                   type="text"
                   name="boxName"
                   defaultValue={box.boxName}
-                  style={{ ...fieldStyle, borderColor: errors.boxName ? "#dc2626" : "#e5e7eb" }}
+                  style={{ ...fieldStyle, borderColor: errors.boxName ? "#e11d48" : "#d1d5db" }}
                 />
                 {errors.boxName && <div style={errorStyle}>{errors.boxName}</div>}
               </div>
@@ -420,12 +465,11 @@ export default function EditBoxPage() {
                   type="text"
                   name="displayTitle"
                   defaultValue={box.displayTitle}
-                  style={{ ...fieldStyle, borderColor: errors.displayTitle ? "#dc2626" : "#e5e7eb" }}
+                  style={{ ...fieldStyle, borderColor: errors.displayTitle ? "#e11d48" : "#d1d5db" }}
                 />
                 {errors.displayTitle && <div style={errorStyle}>{errors.displayTitle}</div>}
               </div>
 
-              {/* Controlled itemCount */}
               <div>
                 <label style={labelStyle}>Number of Items *</label>
                 <input
@@ -435,20 +479,19 @@ export default function EditBoxPage() {
                   max="20"
                   value={itemCount}
                   onChange={(e) => setItemCount(e.target.value)}
-                  style={{ ...fieldStyle, borderColor: errors.itemCount ? "#e11d48" : "#c9c6be" }}
+                  style={{ ...fieldStyle, borderColor: errors.itemCount ? "#e11d48" : "#d1d5db" }}
                 />
                 {errors.itemCount && <div style={errorStyle}>{errors.itemCount}</div>}
               </div>
 
-              {/* ── Bundle Price with Manual / Dynamic toggle ── */}
+              {/* Bundle Price */}
               <div>
                 <label style={labelStyle}>Bundle Price (₹) *</label>
-
                 <div
                   style={{
                     display: "flex",
-                    border: "1px solid #e5e1d8",
-                    borderRadius: "6px",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "5px",
                     overflow: "hidden",
                     marginBottom: "10px",
                   }}
@@ -465,18 +508,16 @@ export default function EditBoxPage() {
                         fontWeight: "600",
                         border: "none",
                         cursor: "pointer",
-                        background: priceMode === mode ? "#2A7A4F" : "#fff",
+                        background: priceMode === mode ? "#2A7A4F" : "#f9fafb",
                         color: priceMode === mode ? "#fff" : "#374151",
                         transition: "background 0.15s",
-                        textTransform: "capitalize",
                       }}
                     >
-                      {mode === "manual" ? "Manual Price" : "Dynamic Price"}
+                      {mode === "manual" ? "Manual" : "Dynamic"}
                     </button>
                   ))}
                 </div>
 
-                {/* Manual input */}
                 {priceMode === "manual" && (
                   <input
                     type="number"
@@ -485,23 +526,15 @@ export default function EditBoxPage() {
                     step="0.01"
                     value={manualPrice}
                     onChange={(e) => setManualPrice(e.target.value)}
-                    style={{ ...fieldStyle, borderColor: errors.bundlePrice ? "#e11d48" : "#c9c6be" }}
+                    style={{ ...fieldStyle, borderColor: errors.bundlePrice ? "#e11d48" : "#d1d5db" }}
                   />
                 )}
 
-                {/* Dynamic price calculator */}
                 {priceMode === "dynamic" && (
-                  <div
-                    style={{
-                      border: "1px solid #e5e1d8",
-                      borderRadius: "6px",
-                      padding: "12px",
-                      background: "#fafaf8",
-                    }}
-                  >
+                  <div style={{ border: "1px solid #d1d5db", borderRadius: "5px", padding: "12px", background: "#f9fafb" }}>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
                       <div>
-                        <label style={{ ...labelStyle, fontSize: "11px" }}>Discount Type</label>
+                        <label style={{ ...labelStyle, fontSize: "10px" }}>Discount Type</label>
                         <select
                           value={discountType}
                           onChange={(e) => setDiscountType(e.target.value)}
@@ -509,13 +542,13 @@ export default function EditBoxPage() {
                         >
                           <option value="percent">% Off Total</option>
                           <option value="fixed">₹ Fixed Discount</option>
-                          <option value="none">No Discount (Full Price)</option>
+                          <option value="none">No Discount</option>
                         </select>
                       </div>
                       {discountType !== "none" && (
                         <div>
-                          <label style={{ ...labelStyle, fontSize: "11px" }}>
-                            {discountType === "percent" ? "Discount %" : "Discount Amount (₹)"}
+                          <label style={{ ...labelStyle, fontSize: "10px" }}>
+                            {discountType === "percent" ? "Discount %" : "Amount (₹)"}
                           </label>
                           <input
                             type="number"
@@ -529,38 +562,27 @@ export default function EditBoxPage() {
                         </div>
                       )}
                     </div>
-
                     <div
                       style={{
-                        background: dynamicPrice > 0 ? "#f0fdf4" : "#f9fafb",
-                        borderRadius: "6px",
+                        background: dynamicPrice > 0 ? "#f0fdf4" : "#f3f4f6",
+                        borderRadius: "4px",
                         padding: "10px 14px",
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
-                        border: "1px solid " + (dynamicPrice > 0 ? "#bbf7d0" : "#e5e1d8"),
+                        border: "1px solid " + (dynamicPrice > 0 ? "#bbf7d0" : "#e5e7eb"),
                       }}
                     >
-                      <span style={{ fontSize: "12px", color: "#374151", fontWeight: "500" }}>
-                        Calculated Price
-                      </span>
-                      <span
-                        style={{
-                          fontSize: "18px",
-                          fontWeight: "700",
-                          color: dynamicPrice > 0 ? "#15803d" : "#9ca3af",
-                          fontFamily: "monospace",
-                        }}
-                      >
+                      <span style={{ fontSize: "12px", color: "#374151", fontWeight: "500" }}>Calculated Price</span>
+                      <span style={{ fontSize: "17px", fontWeight: "700", color: dynamicPrice > 0 ? "#15803d" : "#9ca3af", fontFamily: "monospace" }}>
                         {dynamicPrice > 0
                           ? "₹" + dynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                           : "Select products first"}
                       </span>
                     </div>
-
                     {selectedProducts.filter((p) => p.price > 0).length === 0 && (
-                      <div style={{ fontSize: "11px", color: "#7a7670", marginTop: "8px", textAlign: "center" }}>
-                        Re-select products from the list below to load their prices
+                      <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "8px", textAlign: "center" }}>
+                        Re-select products from the picker to load their prices
                       </div>
                     )}
                   </div>
@@ -569,12 +591,7 @@ export default function EditBoxPage() {
                 {errors.bundlePrice && <div style={errorStyle}>{errors.bundlePrice}</div>}
               </div>
 
-              {/* Price chart */}
-              <PriceChart
-                estimatedTotal={estimatedTotal}
-                bundlePrice={bundlePrice}
-                numItemCount={numItemCount}
-              />
+              <PriceChart estimatedTotal={estimatedTotal} bundlePrice={bundlePrice} numItemCount={numItemCount} />
 
               <div style={{ gridColumn: "1 / -1" }}>
                 <label style={labelStyle}>Banner Image (optional)</label>
@@ -582,23 +599,23 @@ export default function EditBoxPage() {
                   type="file"
                   name="bannerImage"
                   accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-                  style={fieldStyle}
+                  style={{ ...fieldStyle, padding: "7px 12px" }}
                 />
                 {box.bannerImageSrc && (
                   <div style={{ marginTop: "10px" }}>
                     <img
                       src={box.bannerImageSrc}
                       alt="Current banner"
-                      style={{ width: "100%", maxWidth: "360px", borderRadius: "8px", border: "1px solid #e5e1d8" }}
+                      style={{ width: "100%", maxWidth: "360px", borderRadius: "5px", border: "1px solid #e5e7eb" }}
                     />
                   </div>
                 )}
-                <label style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "#7a7670", marginTop: "8px" }}>
-                  <input type="checkbox" name="removeBannerImage" value="true" />
+                <label style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#6b7280", marginTop: "8px" }}>
+                  <input type="checkbox" name="removeBannerImage" value="true" style={{ accentColor: "#dc2626" }} />
                   Remove current image
                 </label>
-                <div style={{ fontSize: "11px", color: "#7a7670", marginTop: "6px" }}>
-                  Upload JPG, PNG, WEBP, GIF, or AVIF (max 5MB)
+                <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>
+                  JPG, PNG, WEBP, GIF, or AVIF — max 5MB
                 </div>
                 {errors.bannerImage && <div style={errorStyle}>{errors.bannerImage}</div>}
               </div>
@@ -606,28 +623,28 @@ export default function EditBoxPage() {
           </div>
 
           {/* ── Options ── */}
-          <div style={{ marginBottom: "32px" }}>
+          <div style={{ marginBottom: "28px" }}>
             <div style={sectionHeadingStyle}>
-              <span style={{ fontSize: "16px" }}>⚙️</span> Options
+              <span style={{ fontSize: "15px" }}>⚙️</span> Options
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
               {[
                 { key: "isGiftBox", label: "Gift Box Mode", desc: "Enables gift packaging option", icon: "🎁" },
-                { key: "allowDuplicates", label: "Allow Duplicate Products", desc: "Same product in multiple slots", icon: "🔁" },
+                { key: "allowDuplicates", label: "Allow Duplicates", desc: "Same product in multiple slots", icon: "🔁" },
                 { key: "giftMessageEnabled", label: "Gift Message Field", desc: "Show text area for gift message", icon: "✉️" },
-                { key: "isActive", label: "Active (visible on storefront)", desc: "Uncheck to hide from customers", icon: "✅" },
+                { key: "isActive", label: "Active on Storefront", desc: "Uncheck to hide from customers", icon: "✅" },
               ].map((opt) => (
                 <label
                   key={opt.key}
                   style={{
                     display: "flex",
                     alignItems: "flex-start",
-                    gap: "12px",
+                    gap: "10px",
                     cursor: "pointer",
-                    padding: "14px",
+                    padding: "12px 14px",
                     border: options[opt.key] ? "1.5px solid #86efac" : "1.5px solid #e5e7eb",
-                    borderRadius: "10px",
-                    background: options[opt.key] ? "#f0fdf4" : "#fff",
+                    borderRadius: "6px",
+                    background: options[opt.key] ? "#f0fdf4" : "#fafafa",
                     transition: "border-color 0.15s, background 0.15s",
                   }}
                 >
@@ -635,13 +652,13 @@ export default function EditBoxPage() {
                     type="checkbox"
                     checked={options[opt.key]}
                     onChange={() => toggleOption(opt.key)}
-                    style={{ marginTop: "3px", width: "15px", height: "15px", accentColor: "#2A7A4F", flexShrink: 0 }}
+                    style={{ marginTop: "3px", width: "14px", height: "14px", accentColor: "#2A7A4F", flexShrink: 0 }}
                   />
                   <div>
-                    <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", display: "flex", alignItems: "center", gap: "5px" }}>
                       <span>{opt.icon}</span> {opt.label}
                     </div>
-                    <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "3px" }}>{opt.desc}</div>
+                    <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>{opt.desc}</div>
                   </div>
                 </label>
               ))}
@@ -649,93 +666,85 @@ export default function EditBoxPage() {
           </div>
 
           {/* ── Eligible Products ── */}
-          <div style={{ marginBottom: "32px" }}>
+          <div style={{ marginBottom: "28px" }}>
             <div style={sectionHeadingStyle}>
-              <span style={{ fontSize: "16px" }}>🛍️</span> Eligible Products
+              <span style={{ fontSize: "15px" }}>🛍️</span> Eligible Products
               {selectedProducts.length > 0 && (
-                <span style={{ marginLeft: "4px", background: "#2A7A4F", color: "#fff", borderRadius: "20px", padding: "2px 8px", fontSize: "10px", fontWeight: "600" }}>
+                <span style={{ marginLeft: "6px", background: "#2A7A4F", color: "#fff", borderRadius: "4px", padding: "2px 8px", fontSize: "10px", fontWeight: "700", fontFamily: "monospace" }}>
                   {selectedProducts.length} selected
                 </span>
               )}
             </div>
+
             {errors.eligibleProducts && (
-              <div style={{ color: "#e11d48", fontSize: "12px", marginBottom: "8px", padding: "8px 12px", background: "#fff5f5", borderRadius: "6px" }}>
+              <div style={{ color: "#e11d48", fontSize: "12px", marginBottom: "10px", padding: "8px 12px", background: "#fff5f5", borderRadius: "4px", border: "1px solid #fecaca" }}>
                 {errors.eligibleProducts}
               </div>
             )}
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={productSearch}
-              onChange={handleSearchChange}
-              style={{ ...fieldStyle, marginBottom: "10px" }}
-            />
+
+            {/* Selected product chips */}
             {selectedProducts.length > 0 && (
-              <div style={{ marginBottom: "10px", padding: "10px 14px", background: "#f0fdf4", borderRadius: "6px", border: "1px solid #bbf7d0" }}>
-                <div style={{ fontSize: "11px", fontWeight: "600", color: "#15803d", marginBottom: "6px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                  Selected
+              <div style={{ marginBottom: "12px", padding: "12px 14px", background: "#f0fdf4", borderRadius: "5px", border: "1px solid #bbf7d0" }}>
+                <div style={{ fontSize: "10px", fontWeight: "700", color: "#15803d", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.6px" }}>
+                  Selected Products
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                   {selectedProducts.map((p) => (
                     <span
                       key={p.id}
                       onClick={() => toggleProduct(p)}
-                      style={{ background: "#2A7A4F", color: "#fff", borderRadius: "20px", padding: "3px 10px", fontSize: "11px", cursor: "pointer" }}
+                      style={{
+                        background: "#2A7A4F",
+                        color: "#fff",
+                        borderRadius: "4px",
+                        padding: "4px 10px",
+                        fontSize: "12px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "5px",
+                        fontWeight: "500",
+                      }}
                     >
-                      {p.productTitle} ✕
+                      {p.productTitle}
+                      <span style={{ opacity: 0.75, fontSize: "10px" }}>✕</span>
                     </span>
                   ))}
                 </div>
               </div>
             )}
-            <div style={{ maxHeight: "300px", overflowY: "auto", border: "1.5px solid #e5e7eb", borderRadius: "10px" }}>
-              {displayProducts.map((product) => (
-                <label
-                  key={product.id}
-                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 14px", borderBottom: "1px solid #f3f4f6", cursor: "pointer", background: isSelected(product.id) ? "#f0fdf4" : "#fff", transition: "background 0.1s" }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={isSelected(product.id)}
-                    onChange={() => toggleProduct(product)}
-                    style={{ width: "14px", height: "14px", flexShrink: 0, accentColor: "#2A7A4F" }}
-                  />
-                  {product.imageUrl && (
-                    <img
-                      src={product.imageUrl}
-                      alt={product.title}
-                      style={{ width: "36px", height: "36px", objectFit: "cover", borderRadius: "4px", flexShrink: 0 }}
-                    />
-                  )}
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: "13px", fontWeight: "600", color: "#1a1814" }}>{product.title}</div>
-                    <div style={{ fontSize: "11px", color: "#7a7670", fontFamily: "monospace" }}>{product.handle}</div>
-                  </div>
-                  {product.price && parseFloat(product.price) > 0 && (
-                    <div style={{ fontSize: "12px", fontWeight: "600", color: "#374151", fontFamily: "monospace", flexShrink: 0 }}>
-                      ₹{parseFloat(product.price).toLocaleString("en-IN")}
-                    </div>
-                  )}
-                </label>
-              ))}
-              {displayProducts.length === 0 && (
-                <div style={{ padding: "24px", textAlign: "center", color: "#7a7670", fontSize: "13px" }}>
-                  No products found
-                </div>
-              )}
-            </div>
+
+            {/* Open picker button */}
+            <button
+              type="button"
+              onClick={openPicker}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "10px 18px",
+                background: "#fff",
+                border: "1.5px dashed #d1d5db",
+                borderRadius: "5px",
+                fontSize: "13px",
+                fontWeight: "600",
+                color: "#2A7A4F",
+                cursor: "pointer",
+                width: "100%",
+                justifyContent: "center",
+                transition: "border-color 0.15s, background 0.15s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#2A7A4F"; e.currentTarget.style.background = "#f0fdf4"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#d1d5db"; e.currentTarget.style.background = "#fff"; }}
+            >
+              <span style={{ fontSize: "16px" }}>+</span>
+              {selectedProducts.length > 0 ? "Edit Product Selection" : "Select Eligible Products"}
+            </button>
           </div>
 
-          {/* ── Actions ── */}
-          <div
-            style={{
-              display: "flex",
-              gap: "10px",
-              justifyContent: "space-between",
-              paddingTop: "20px",
-              borderTop: "1.5px solid #f3f4f6",
-            }}
-          >
+          {/* ── Bottom Actions ── */}
+          <div style={{ display: "flex", gap: "8px", justifyContent: "space-between", paddingTop: "18px", borderTop: "1.5px solid #f3f4f6" }}>
+            {/* Delete — danger zone left side */}
             <button
               type="submit"
               name="_action"
@@ -746,33 +755,33 @@ export default function EditBoxPage() {
               style={{
                 background: "#fff5f5",
                 border: "1.5px solid #fecaca",
-                borderRadius: "8px",
-                padding: "10px 20px",
+                borderRadius: "5px",
+                padding: "9px 18px",
                 fontSize: "13px",
                 fontWeight: "500",
                 cursor: "pointer",
                 color: "#dc2626",
-                transition: "background 0.12s",
               }}
               onMouseEnter={(e) => (e.currentTarget.style.background = "#fee2e2")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "#fff5f5")}
             >
               Delete Box
             </button>
-            <div style={{ display: "flex", gap: "10px" }}>
+
+            {/* Cancel + Save right side */}
+            <div style={{ display: "flex", gap: "8px" }}>
               <button
                 type="button"
                 onClick={() => navigate("/app/boxes")}
                 style={{
                   background: "#fff",
-                  border: "1.5px solid #e5e7eb",
-                  borderRadius: "8px",
-                  padding: "10px 22px",
+                  border: "1.5px solid #d1d5db",
+                  borderRadius: "5px",
+                  padding: "9px 20px",
                   fontSize: "13px",
                   fontWeight: "500",
                   cursor: "pointer",
                   color: "#374151",
-                  transition: "background 0.12s",
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = "#f9fafb")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
@@ -787,15 +796,14 @@ export default function EditBoxPage() {
                 style={{
                   background: isSaving ? "#9ca3af" : "#2A7A4F",
                   border: "none",
-                  borderRadius: "8px",
-                  padding: "10px 28px",
+                  borderRadius: "5px",
+                  padding: "9px 26px",
                   fontSize: "13px",
                   fontWeight: "700",
                   cursor: isSaving ? "not-allowed" : "pointer",
                   color: "#fff",
                   letterSpacing: "0.3px",
-                  boxShadow: isSaving ? "none" : "0 2px 8px rgba(42,122,79,0.3)",
-                  transition: "background 0.15s, box-shadow 0.15s",
+                  boxShadow: isSaving ? "none" : "0 1px 6px rgba(42,122,79,0.35)",
                 }}
               >
                 {isSaving ? "Saving..." : "Save Changes"}
@@ -804,6 +812,205 @@ export default function EditBoxPage() {
           </div>
         </Form>
       </s-section>
+
+      {/* ── Product Picker Modal ── */}
+      {showPicker && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(17,24,39,0.55)",
+            backdropFilter: "blur(3px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px",
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) closePicker(); }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: "8px",
+              width: "100%",
+              maxWidth: "560px",
+              maxHeight: "85vh",
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.1)",
+              overflow: "hidden",
+            }}
+          >
+            {/* Modal header */}
+            <div
+              style={{
+                padding: "16px 20px",
+                borderBottom: "1px solid #f3f4f6",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                background: "#fafafa",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>Select Products</div>
+                <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>
+                  {selectedProducts.length} product{selectedProducts.length !== 1 ? "s" : ""} selected
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={closePicker}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "18px",
+                  color: "#9ca3af",
+                  padding: "4px 8px",
+                  borderRadius: "4px",
+                  lineHeight: 1,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#f3f4f6"; e.currentTarget.style.color = "#374151"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "#9ca3af"; }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Search */}
+            <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={productSearch}
+                onChange={handleSearchChange}
+                autoFocus
+                style={{ ...fieldStyle, borderColor: "#d1d5db", paddingLeft: "14px", fontSize: "13px" }}
+              />
+            </div>
+
+            {/* Product list */}
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              {displayProducts.length === 0 ? (
+                <div style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>
+                  No products found
+                </div>
+              ) : (
+                displayProducts.map((product, idx) => {
+                  const selected = isSelected(product.id);
+                  return (
+                    <label
+                      key={product.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "10px 16px",
+                        borderBottom: idx < displayProducts.length - 1 ? "1px solid #f3f4f6" : "none",
+                        cursor: "pointer",
+                        background: selected ? "#f0fdf4" : "#fff",
+                        transition: "background 0.1s",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={() => toggleProduct(product)}
+                        style={{ width: "15px", height: "15px", flexShrink: 0, accentColor: "#2A7A4F" }}
+                      />
+                      {product.imageUrl ? (
+                        <img
+                          src={product.imageUrl}
+                          alt={product.title}
+                          style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "4px", flexShrink: 0, border: "1px solid #e5e7eb" }}
+                        />
+                      ) : (
+                        <div style={{ width: "40px", height: "40px", borderRadius: "4px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", border: "1px solid #e5e7eb" }}>
+                          📦
+                        </div>
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {product.title}
+                        </div>
+                        <div style={{ fontSize: "11px", color: "#9ca3af", fontFamily: "monospace" }}>{product.handle}</div>
+                      </div>
+                      {product.price && parseFloat(product.price) > 0 && (
+                        <div style={{ fontSize: "13px", fontWeight: "700", color: "#374151", fontFamily: "monospace", flexShrink: 0 }}>
+                          ₹{parseFloat(product.price).toLocaleString("en-IN")}
+                        </div>
+                      )}
+                      {selected && (
+                        <span style={{ width: "18px", height: "18px", background: "#2A7A4F", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <span style={{ color: "#fff", fontSize: "10px", fontWeight: "700" }}>✓</span>
+                        </span>
+                      )}
+                    </label>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Modal footer */}
+            <div
+              style={{
+                padding: "14px 16px",
+                borderTop: "1px solid #f3f4f6",
+                background: "#fafafa",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "10px",
+              }}
+            >
+              <span style={{ fontSize: "12px", color: "#6b7280" }}>
+                {selectedProducts.length > 0
+                  ? `${selectedProducts.length} product${selectedProducts.length !== 1 ? "s" : ""} selected`
+                  : "No products selected"}
+              </span>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  type="button"
+                  onClick={closePicker}
+                  style={{
+                    background: "#fff",
+                    border: "1.5px solid #d1d5db",
+                    borderRadius: "5px",
+                    padding: "8px 16px",
+                    fontSize: "13px",
+                    fontWeight: "500",
+                    cursor: "pointer",
+                    color: "#374151",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#f9fafb")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={closePicker}
+                  style={{
+                    background: "#2A7A4F",
+                    border: "none",
+                    borderRadius: "5px",
+                    padding: "8px 20px",
+                    fontSize: "13px",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                    color: "#fff",
+                    boxShadow: "0 1px 6px rgba(42,122,79,0.35)",
+                  }}
+                >
+                  Done{selectedProducts.length > 0 ? ` (${selectedProducts.length})` : ""}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </s-page>
   );
 }

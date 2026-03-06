@@ -25,6 +25,7 @@ export const loader = async ({ request }) => {
       displayTitle: b.displayTitle,
       itemCount: b.itemCount,
       bundlePrice: parseFloat(b.bundlePrice),
+      bundlePriceType: b.bundlePriceType || "manual",
       isGiftBox: b.isGiftBox,
       isActive: b.isActive,
       sortOrder: b.sortOrder,
@@ -267,7 +268,7 @@ export default function ManageBoxesPage() {
                     {/* Price */}
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
                       <span style={{ fontFamily: "monospace", fontWeight: "700", color: "#2A7A4F" }}>
-                        &#8377;{Number(box.bundlePrice).toLocaleString("en-IN")}
+                        &#8377;{Number(box.bundlePriceType === "dynamic" ? 0 : box.bundlePrice).toLocaleString("en-IN")}
                       </span>
                     </td>
 

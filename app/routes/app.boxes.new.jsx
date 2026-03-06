@@ -162,123 +162,10 @@ const errorStyle = {
   gap: "4px",
 };
 
-// ─── Price Chart ────────────────────────────────────────────────────────────
-
-function PriceChart({ estimatedTotal, bundlePrice, numItemCount }) {
-  if (estimatedTotal <= 0 || bundlePrice <= 0) return null;
-
-  const pct = Math.min(100, (bundlePrice / estimatedTotal) * 100);
-  const savings = estimatedTotal - bundlePrice;
-  const savingsPct = (savings / estimatedTotal) * 100;
-  const isOverpriced = bundlePrice > estimatedTotal;
-
-  function fmt(v) {
-    return "₹" + v.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-
-  return (
-    <div
-      style={{
-        gridColumn: "1 / -1",
-        background: "#fafaf8",
-        border: "1px solid #e5e1d8",
-        borderRadius: "5px",
-        padding: "16px",
-        marginTop: "4px",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "11px",
-          fontWeight: "600",
-          color: "#7a7670",
-          textTransform: "uppercase",
-          letterSpacing: "0.8px",
-          fontFamily: "monospace",
-          marginBottom: "14px",
-        }}
-      >
-        Price Preview — {numItemCount} item{numItemCount !== 1 ? "s" : ""}
-      </div>
-
-      {/* Market value row */}
-      <div style={{ marginBottom: "10px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
-          <span style={{ fontSize: "11px", color: "#7a7670" }}>Avg Market Value</span>
-          <span style={{ fontSize: "11px", fontWeight: "600", fontFamily: "monospace", color: "#374151" }}>
-            {fmt(estimatedTotal)}
-          </span>
-        </div>
-        <div style={{ background: "#e5e1d8", borderRadius: "4px", height: "10px" }}>
-          <div style={{ width: "100%", background: "#d1d5db", height: "100%", borderRadius: "4px" }} />
-        </div>
-      </div>
-
-      {/* Bundle price row */}
-      <div style={{ marginBottom: "12px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
-          <span style={{ fontSize: "11px", color: "#7a7670" }}>Bundle Price</span>
-          <span style={{ fontSize: "11px", fontWeight: "700", fontFamily: "monospace", color: isOverpriced ? "#e11d48" : "#2A7A4F" }}>
-            {fmt(bundlePrice)}
-          </span>
-        </div>
-        <div style={{ background: "#e5e1d8", borderRadius: "4px", height: "10px" }}>
-          <div
-            style={{
-              width: `${isOverpriced ? 100 : pct}%`,
-              background: isOverpriced ? "#e11d48" : "#2A7A4F",
-              height: "100%",
-              borderRadius: "4px",
-              minWidth: "6px",
-              transition: "width 0.3s ease",
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Savings / warning */}
-      <div
-        style={{
-          paddingTop: "10px",
-          borderTop: "1px solid #e5e1d8",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        {isOverpriced ? (
-          <span style={{ fontSize: "12px", color: "#e11d48", fontWeight: "500" }}>
-            ⚠ Bundle price is higher than market value
-          </span>
-        ) : savings > 0 ? (
-          <>
-            <span style={{ fontSize: "12px", color: "#059669", fontWeight: "500" }}>Customer saves</span>
-            <span
-              style={{
-                fontSize: "13px",
-                fontWeight: "700",
-                color: "#059669",
-                fontFamily: "monospace",
-                background: "#d1fae5",
-                padding: "2px 10px",
-                borderRadius: "4px",
-              }}
-            >
-              {fmt(savings)} ({savingsPct.toFixed(0)}% off)
-            </span>
-          </>
-        ) : (
-          <span style={{ fontSize: "12px", color: "#7a7670" }}>Bundle price equals market value — no discount</span>
-        )}
-      </div>
-    </div>
-  );
-}
-
 export default function CreateBoxPage() {
   const { products } = useLoaderData();
   const actionData = useActionData();
-const searchFetcher = useFetcher();
+  const searchFetcher = useFetcher();
   const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
 
@@ -486,8 +373,6 @@ const searchFetcher = useFetcher();
                 )}
                 {errors.bundlePrice && <div style={errorStyle}>{errors.bundlePrice}</div>}
               </div>
-
-              <PriceChart estimatedTotal={estimatedTotal} bundlePrice={bundlePrice} numItemCount={numItemCount} />
 
               <div style={{ gridColumn: "1 / -1" }}>
                 <label style={labelStyle}>Banner Image (optional)</label>
@@ -838,3 +723,4 @@ const searchFetcher = useFetcher();
 export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
+

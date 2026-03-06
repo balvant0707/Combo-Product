@@ -1222,7 +1222,6 @@
     setBtns('loading', 'Adding…');
 
     function postCartItems(items) {
-      console.log('[ComboBuilder] postCartItems — sending variant id:', items[0] && items[0].id, '| full item:', JSON.stringify(items[0]));
       return fetch('/cart/add.js', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -1237,6 +1236,86 @@
           throw new Error(d.description || d.message || 'Cart error');
         });
         return r.json();
+      });
+    }
+
+    function fetchCartState() {
+      return fetch('/cart.js', {
+        headers: { 'Accept': 'application/json' },
+      }).then(function (r) {
+        if (!r.ok) throw new Error('Failed to load cart');
+        return r.json();
+      });
+    }
+
+    function postCartChange(payload) {
+      var body = {
+        line: payload.line,
+        quantity: payload.quantity,
+        sections: sectionIds,
+        sections_url: window.location.pathname + window.location.search,
+      };
+      if (payload.properties) body.properties = payload.properties;
+
+      return fetch('/cart/change.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(body),
+      }).then(function (r) {
+        if (!r.ok) return r.json().then(function (d) {
+          throw new Error((d && (d.description || d.message || d.error)) || 'Cart change error');
+        });
+        return r.json();
+      });
+    }
+
+    function findExistingComboLine(cart, comboBoxId) {
+      if (!cart || !Array.isArray(cart.items)) return null;
+      var targetBoxId = String(comboBoxId);
+
+      for (var i = 0; i < cart.items.length; i++) {
+        var item = cart.items[i] || {};
+        var props = item.properties || {};
+        var bundleFlag = String(props._bundle_price_item || '').toLowerCase();
+        var itemBoxId = String(props._combo_box_id || '');
+        if ((bundleFlag === 'true' || bundleFlag === '1') && itemBoxId === targetBoxId) {
+          return { line: i + 1, item: item };
+        }
+      }
+      return null;
+    }
+
+    function normalizeVariantId(rawId) {
+      if (rawId == null) return null;
+      var id = String(rawId);
+      return id.indexOf('/') !== -1 ? id.split('/').pop() : id;
+    }
+
+    function upsertComboLine(item) {
+      return fetchCartState().then(function (cart) {
+        var existing = findExistingComboLine(cart, box.id);
+        if (!existing) {
+          return postCartItems([item]);
+        }
+
+        var existingVariantId = normalizeVariantId(
+          existing.item && (existing.item.id != null ? existing.item.id : existing.item.variant_id)
+        );
+        var targetVariantId = normalizeVariantId(item.id);
+
+        // If variant changed, replace old line item so the cart uses the current combo variant.
+        if (existingVariantId && targetVariantId && existingVariantId !== targetVariantId) {
+          return postCartChange({ line: existing.line, quantity: 0 }).then(function () {
+            return postCartItems([item]);
+          });
+        }
+
+        // Same combo box exists in cart: overwrite its properties instead of adding duplicate.
+        return postCartChange({
+          line: existing.line,
+          quantity: 1,
+          properties: item.properties || {},
+        });
       });
     }
 
@@ -1426,7 +1505,7 @@
         });
         return r.json();
       }).then(function () {
-        return postCartItems(items);
+        return upsertComboLine(items[0]);
       });
     }
 
@@ -1447,7 +1526,7 @@
         })
         // Brief pause so Shopify can propagate the publish/activate from the variant endpoint
         .then(function () { return new Promise(function (r) { setTimeout(r, 800); }); })
-        .then(function () { return postCartItems(items); });
+        .then(function () { return upsertComboLine(items[0]); });
     }
 
     var cartPromise = isDynamic ? updateDynamicPriceThenCart() : ensurePublishedThenCart();
@@ -1466,7 +1545,7 @@
           // 1500ms delay so Shopify can propagate the publication change
           return new Promise(function (resolve) { setTimeout(resolve, 1500); })
             .then(function () {
-              return isDynamic ? updateDynamicPriceThenCart() : postCartItems(items);
+              return isDynamic ? updateDynamicPriceThenCart() : upsertComboLine(items[0]);
             });
         });
       })

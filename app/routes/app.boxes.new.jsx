@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useLoaderData, useFetcher, Form, useActionData, useNavigation } from "react-router";
 import { redirect } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
@@ -87,15 +87,16 @@ export const action = async ({ request }) => {
     eligibleProducts = JSON.parse(formData.get("eligibleProducts") || "[]");
   } catch {}
   const errors = {};
+  const bannerImage = await parseBannerImage(formData, errors);
 
   const data = {
     boxName: formData.get("boxName"),
     displayTitle: formData.get("displayTitle"),
     itemCount: formData.get("itemCount"),
     bundlePrice: formData.get("bundlePrice"),
-    bundlePriceType: formData.get("bundlePriceType"),
     isGiftBox: formData.get("isGiftBox") === "true",
     allowDuplicates: formData.get("allowDuplicates") === "true",
+    bannerImage,
     isActive: formData.get("isActive") !== "false",
     giftMessageEnabled: formData.get("giftMessageEnabled") === "true",
     eligibleProducts,
@@ -104,11 +105,8 @@ export const action = async ({ request }) => {
   if (!data.displayTitle?.trim()) errors.displayTitle = "Display title is required";
   if (!data.itemCount || parseInt(data.itemCount) < 1 || parseInt(data.itemCount) > 20)
     errors.itemCount = "Item count must be between 1 and 20";
-  if (!data.bundlePrice || parseFloat(data.bundlePrice) <= 0) {
-    errors.bundlePrice = data.bundlePriceType === "dynamic"
-      ? "Select products above so the dynamic price can be calculated"
-      : "Bundle price must be greater than 0";
-  }
+  if (!data.bundlePrice || parseFloat(data.bundlePrice) <= 0)
+    errors.bundlePrice = "Bundle price must be greater than 0";
   if (eligibleProducts.length === 0)
     errors.eligibleProducts = "Select at least one eligible product";
 
@@ -291,10 +289,7 @@ const searchFetcher = useFetcher();
   });
 
   const [itemCount, setItemCount] = useState("4");
-  const [priceMode, setPriceMode] = useState("manual");
   const [manualPrice, setManualPrice] = useState("");
-  const [discountType, setDiscountType] = useState("percent");
-  const [discountValue, setDiscountValue] = useState("10");
 
   const errors = actionData?.errors || {};
   const displayProducts = searchFetcher.data?.products || products;
@@ -306,15 +301,7 @@ const searchFetcher = useFetcher();
       : 0;
   const estimatedTotal = avgProductPrice * numItemCount;
 
-  const dynamicPrice = useMemo(() => {
-    if (estimatedTotal <= 0) return 0;
-    const val = parseFloat(discountValue) || 0;
-    if (discountType === "percent") return Math.max(0, estimatedTotal * (1 - val / 100));
-    if (discountType === "fixed") return Math.max(0, estimatedTotal - val);
-    return estimatedTotal;
-  }, [estimatedTotal, discountType, discountValue]);
-
-  const bundlePrice = priceMode === "manual" ? parseFloat(manualPrice) || 0 : dynamicPrice;
+  const bundlePrice = parseFloat(manualPrice) || 0;
 
   function handleSearchChange(e) {
     const val = e.target.value;
@@ -402,9 +389,8 @@ const searchFetcher = useFetcher();
       )}
 
       <s-section>
-        <Form id="create-box-form" method="POST">
+        <Form id="create-box-form" method="POST" encType="multipart/form-data">
           <input type="hidden" name="bundlePrice" value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
-          <input type="hidden" name="bundlePriceType" value={priceMode} />
           <input type="hidden" name="itemCount" value={itemCount} />
           <input type="hidden" name="eligibleProducts" value={JSON.stringify(selectedProducts)} />
           <input type="hidden" name="isGiftBox" value={String(options.isGiftBox)} />
@@ -458,106 +444,33 @@ const searchFetcher = useFetcher();
               {/* Bundle Price */}
               <div>
                 <label style={labelStyle}>Bundle Price (₹) *</label>
-                <div
-                  style={{
-                    display: "flex",
-                    border: "1px solid #d1d5db",
-                    borderRadius: "5px",
-                    overflow: "hidden",
-                    marginBottom: "10px",
-                  }}
-                >
-                  {["manual", "dynamic"].map((mode) => (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => setPriceMode(mode)}
-                      style={{
-                        flex: 1,
-                        padding: "7px 0",
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        border: "none",
-                        cursor: "pointer",
-                        background: priceMode === mode ? "#2A7A4F" : "#f9fafb",
-                        color: priceMode === mode ? "#fff" : "#374151",
-                        transition: "background 0.15s",
-                      }}
-                    >
-                      {mode === "manual" ? "Manual" : "Dynamic"}
-                    </button>
-                  ))}
-                </div>
-
-                {priceMode === "manual" && (
-                  <input
-                    type="number"
-                    placeholder="e.g. 1200"
-                    min="0"
-                    step="0.01"
-                    value={manualPrice}
-                    onChange={(e) => setManualPrice(e.target.value)}
-                    style={{ ...fieldStyle, borderColor: errors.bundlePrice ? "#e11d48" : "#d1d5db" }}
-                  />
-                )}
-
-                {priceMode === "dynamic" && (
-                  <div style={{ border: "1px solid #d1d5db", borderRadius: "5px", padding: "12px", background: "#f9fafb" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
-                      <div>
-                        <label style={{ ...labelStyle, fontSize: "10px" }}>Discount Type</label>
-                        <select
-                          value={discountType}
-                          onChange={(e) => setDiscountType(e.target.value)}
-                          style={{ ...fieldStyle, fontSize: "12px" }}
-                        >
-                          <option value="percent">% Off Total</option>
-                          <option value="fixed">₹ Fixed Discount</option>
-                          <option value="none">No Discount</option>
-                        </select>
-                      </div>
-                      {discountType !== "none" && (
-                        <div>
-                          <label style={{ ...labelStyle, fontSize: "10px" }}>
-                            {discountType === "percent" ? "Discount %" : "Amount (₹)"}
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            step={discountType === "percent" ? "1" : "0.01"}
-                            max={discountType === "percent" ? "99" : undefined}
-                            value={discountValue}
-                            onChange={(e) => setDiscountValue(e.target.value)}
-                            style={{ ...fieldStyle, fontSize: "12px" }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <div
-                      style={{
-                        background: dynamicPrice > 0 ? "#f0fdf4" : "#f3f4f6",
-                        borderRadius: "4px",
-                        padding: "10px 14px",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        border: "1px solid " + (dynamicPrice > 0 ? "#bbf7d0" : "#e5e7eb"),
-                      }}
-                    >
-                      <span style={{ fontSize: "12px", color: "#374151", fontWeight: "500" }}>Calculated Price</span>
-                      <span style={{ fontSize: "17px", fontWeight: "700", color: dynamicPrice > 0 ? "#15803d" : "#9ca3af", fontFamily: "monospace" }}>
-                        {dynamicPrice > 0
-                          ? "₹" + dynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                          : "Select products first"}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
+                <input
+                  type="number"
+                  placeholder="e.g. 1200"
+                  min="0"
+                  step="0.01"
+                  value={manualPrice}
+                  onChange={(e) => setManualPrice(e.target.value)}
+                  style={{ ...fieldStyle, borderColor: errors.bundlePrice ? "#e11d48" : "#d1d5db" }}
+                />
                 {errors.bundlePrice && <div style={errorStyle}>{errors.bundlePrice}</div>}
               </div>
 
               <PriceChart estimatedTotal={estimatedTotal} bundlePrice={bundlePrice} numItemCount={numItemCount} />
+
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={labelStyle}>Banner Image (optional)</label>
+                <input
+                  type="file"
+                  name="bannerImage"
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                  style={{ ...fieldStyle, padding: "7px 12px" }}
+                />
+                <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>
+                  JPG, PNG, WEBP, GIF, or AVIF — max 5MB
+                </div>
+                {errors.bannerImage && <div style={errorStyle}>{errors.bannerImage}</div>}
+              </div>
             </div>
           </div>
 

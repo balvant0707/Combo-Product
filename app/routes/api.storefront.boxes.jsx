@@ -41,6 +41,7 @@ export const loader = async ({ request }) => {
       giftMessageEnabled: box.giftMessageEnabled,
       shopifyProductId: box.shopifyProductId ? box.shopifyProductId.split('/').pop() : null,
       shopifyVariantId: box.shopifyVariantId ? box.shopifyVariantId.split('/').pop() : null,
+      bundlePriceType: box.bundlePriceType || "manual",
       sortOrder: box.sortOrder,
     };
   });

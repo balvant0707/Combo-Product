@@ -1080,44 +1080,52 @@
     }
 
     var items = [];
+    var isDynamic = String(box.bundlePriceType || 'manual') === 'dynamic';
 
     if (box.shopifyVariantId) {
-      // PRIMARY: Add only the bundle pricing product with selected products as properties.
-      // This ensures cart total = bundle price (not sum of individual prices).
-      var bundlePrice = parseFloat(box.bundlePrice) || 0;
+      var totalMrp = 0;
+      slots.forEach(function (p) {
+        if (p && p.productPrice != null && parseFloat(p.productPrice) > 0) {
+          totalMrp += parseFloat(p.productPrice);
+        }
+      });
+
+      // For dynamic mode, the effective cart price = sum of selected product prices.
+      // For manual mode, it is the fixed bundlePrice set by the merchant.
+      var effectivePrice = isDynamic ? totalMrp : (parseFloat(box.bundlePrice) || 0);
+
       var bundleProps = {
         '_bundle_price_item': 'true',
         '_combo_session_id': sessionId,
         '_combo_box_id': String(box.id),
         '_combo_shopify_variant_id': String(box.shopifyVariantId),
         'Bundle': box.displayTitle,
-        'Combo Price': formatPrice(bundlePrice, resolvedCurrencySymbol),
+        'Combo Price': formatPrice(effectivePrice, resolvedCurrencySymbol),
+        '_combo_price_type': isDynamic ? 'dynamic' : 'manual',
       };
       if (box.shopifyProductId) {
         bundleProps['_combo_shopify_product_id'] = String(box.shopifyProductId);
       }
       if (box.bannerImageUrl) bundleProps['_combo_box_image'] = box.bannerImageUrl;
-      var totalMrp = 0;
+
       slots.forEach(function (p, idx) {
         if (p) {
           var label = p.productTitle || ('Item ' + (idx + 1));
           if (p.selectedVariantTitle) label += ' (' + p.selectedVariantTitle + ')';
           bundleProps['Item ' + (idx + 1)] = label;
-          if (p.productPrice != null && parseFloat(p.productPrice) > 0) {
-            totalMrp += parseFloat(p.productPrice);
-          }
         }
       });
 
       if (totalMrp > 0) {
         bundleProps['_combo_selected_total'] = totalMrp.toFixed(2);
-        bundleProps['_combo_bundle_price'] = bundlePrice.toFixed(2);
+        bundleProps['_combo_bundle_price'] = effectivePrice.toFixed(2);
         bundleProps['Selected Items Total'] = formatPrice(totalMrp, resolvedCurrencySymbol);
         bundleProps['MRP'] = formatPrice(totalMrp, resolvedCurrencySymbol);
       }
 
-      if (totalMrp > bundlePrice && totalMrp > 0) {
-        var savingsAmt = totalMrp - bundlePrice;
+      // Show savings only for manual mode (dynamic price = MRP, no discount)
+      if (!isDynamic && totalMrp > effectivePrice && totalMrp > 0) {
+        var savingsAmt = totalMrp - effectivePrice;
         var savingsPct = Math.round((savingsAmt / totalMrp) * 100);
         bundleProps['_combo_savings_amount'] = savingsAmt.toFixed(2);
         bundleProps['_combo_discount_pct'] = String(savingsPct);
@@ -1128,23 +1136,60 @@
       if (giftMessage) bundleProps['Gift Message'] = giftMessage;
       items.push({ id: box.shopifyVariantId, quantity: 1, properties: bundleProps });
     } else {
-      // Hard-stop: combo must always price through the bundle variant.
       setBtns('error', 'Combo product not linked');
       setTimeout(function () { setBtns('ready', resolvedReadyLabel); }, 2500);
       return;
     }
 
-    postCartItems(items)
+    // For dynamic pricing: update the Shopify variant price to match selected products total,
+    // then add to cart so the cart reflects the correct price.
+    function updateDynamicPriceThenCart() {
+      var dynamicTotal = 0;
+      slots.forEach(function (p) {
+        if (p && p.productPrice != null && parseFloat(p.productPrice) > 0) {
+          dynamicTotal += parseFloat(p.productPrice);
+        }
+      });
+      if (dynamicTotal <= 0) {
+        return Promise.reject(new Error('No product prices available for dynamic pricing'));
+      }
+
+      var updateUrl = resolvedApiBase +
+        '/api/storefront/boxes/' + encodeURIComponent(String(box.id)) +
+        '/update-price?shop=' + encodeURIComponent(shop);
+
+      return fetch(updateUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ price: dynamicTotal }),
+      }).then(function (r) {
+        if (!r.ok) return r.json().then(function (d) {
+          throw new Error(d.error || 'Price update failed');
+        });
+        return r.json();
+      }).then(function () {
+        return postCartItems(items);
+      });
+    }
+
+    var cartPromise = isDynamic ? updateDynamicPriceThenCart() : postCartItems(items);
+
+    cartPromise
       .catch(function (err) {
         var msg = err && err.message ? String(err.message).toLowerCase() : '';
         if (msg.indexOf('cannot find variant') === -1) throw err;
 
+        // Repair: fetch fresh variant ID (endpoint also re-activates + re-publishes product)
         return resolveBundleVariantId().then(function (variantId) {
           items[0].id = variantId;
           if (items[0].properties) {
             items[0].properties['_combo_shopify_variant_id'] = String(variantId);
           }
-          return postCartItems(items);
+          // 600ms delay so Shopify can propagate the publication change
+          return new Promise(function (resolve) { setTimeout(resolve, 600); })
+            .then(function () {
+              return isDynamic ? updateDynamicPriceThenCart() : postCartItems(items);
+            });
         });
       })
       .then(function (cartResponse) {

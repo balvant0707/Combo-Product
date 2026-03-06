@@ -935,6 +935,7 @@
   function addToCart(box, slots, sessionId, giftMessage, inlineBtn, stickyBtn, readyLabel, currencySymbol, apiBase, shop) {
     var resolvedReadyLabel = readyLabel || 'Add To Cart';
     var resolvedCurrencySymbol = currencySymbol || '\u20B9';
+    var resolvedApiBase = String(apiBase || DEFAULT_API_BASE || '').replace(/\/+$/, '');
     var sectionIds = ['cart-drawer', 'cart-icon-bubble', 'cart-notification-button', 'cart-notification'];
 
     function setBtns(state, text) {
@@ -978,7 +979,6 @@
     }
 
     function resolveBundleVariantId() {
-      var resolvedApiBase = String(apiBase || DEFAULT_API_BASE || '').replace(/\/+$/, '');
       if (!box || !box.id || !shop || !box.shopifyProductId || !resolvedApiBase) {
         return Promise.reject(new Error('Cannot resolve combo variant'));
       }

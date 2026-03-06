@@ -1,21 +1,3 @@
 {
-  "version": 2,
-  "buildCommand": "prisma generate && react-router build",
-  "outputDirectory": "build/client",
-  "functions": {
-    "api/index.js": {
-      "includeFiles": "build/server/**",
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  },
-  "routes": [
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/api/index"
-    }
-  ]
+  "buildCommand": "prisma generate && react-router build"
 }

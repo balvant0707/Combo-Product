@@ -177,6 +177,7 @@
   var _stickyEl = null;
   var _stickyBtn = null;
   var _stickySavingsEl = null;
+  var _stickyTotalEl = null;
 
   function removeStickyFooter() {
     if (_stickyEl && _stickyEl.parentNode) {
@@ -186,6 +187,7 @@
     _stickyEl = null;
     _stickyBtn = null;
     _stickySavingsEl = null;
+    _stickyTotalEl = null;
   }
 
   function createStickyFooter(box, ctx, onCartClick) {
@@ -541,7 +543,7 @@
         labelEl.className = 'cb-slot-step-label';
         var smallText = document.createElement('span');
         smallText.className = 'cb-slot-step-small';
-        smallText.textContent = 'Select your';
+        smallText.textContent = slotProduct ? 'Selected' : 'Select your';
         labelEl.appendChild(smallText);
 
         var itemLink = document.createElement('div');

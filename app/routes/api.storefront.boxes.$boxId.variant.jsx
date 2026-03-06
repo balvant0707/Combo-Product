@@ -62,7 +62,7 @@ function toNumericShopifyId(gid) {
 }
 
 async function ensureProductPublished(admin, productId) {
-  // Activate
+  // Step 1: set ACTIVE
   try {
     await admin.graphql(ACTIVATE_PRODUCT_MUTATION, {
       variables: { product: { id: productId, status: "ACTIVE" } },
@@ -71,18 +71,19 @@ async function ensureProductPublished(admin, productId) {
     console.warn("[variant-repair] activate error:", e);
   }
 
-  // Publish to Online Store
+  // Step 2: publish to every sales-channel publication (all entries that have a catalog).
+  // Matching by catalog title is fragile; publishing to all catalog-based channels is safe.
   try {
     const pubResp = await admin.graphql(GET_PUBLICATIONS_QUERY);
     const pubJson = await pubResp.json();
     const edges = pubJson?.data?.publications?.edges || [];
-    const os = edges.find((e) => {
-      const title = e?.node?.catalog?.title || "";
-      return title.toLowerCase() === "online store";
-    });
-    if (os?.node?.id) {
+    const salesChannelIds = edges
+      .filter((e) => e?.node?.catalog != null)
+      .map((e) => ({ publicationId: e.node.id }));
+
+    if (salesChannelIds.length > 0) {
       await admin.graphql(PUBLISH_PRODUCT_MUTATION, {
-        variables: { id: productId, input: [{ publicationId: os.node.id }] },
+        variables: { id: productId, input: salesChannelIds },
       });
     }
   } catch (e) {

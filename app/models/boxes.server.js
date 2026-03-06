@@ -106,10 +106,10 @@ async function getOnlineStorePublicationId(admin) {
     const r = await admin.graphql(GET_PUBLICATIONS_QUERY);
     const j = await r.json();
     const edges = j?.data?.publications?.edges || [];
-    const os = edges.find((e) => {
-      const title = e?.node?.catalog?.title || "";
-      return title.toLowerCase() === "online store";
-    });
+    // Prefer exact "online store" match; fall back to first catalog-based publication
+    const os =
+      edges.find((e) => (e?.node?.catalog?.title || "").toLowerCase() === "online store") ||
+      edges.find((e) => e?.node?.catalog != null);
     _cachedPubId = os?.node?.id || null;
     return _cachedPubId;
   } catch (e) {

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useLoaderData, useFetcher, Form, useActionData, useNavigation } from "react-router";
 import { redirect } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
@@ -295,8 +295,6 @@ const searchFetcher = useFetcher();
   const [itemCount, setItemCount] = useState("4");
   const [priceMode, setPriceMode] = useState("manual");
   const [manualPrice, setManualPrice] = useState("");
-  const [discountType, setDiscountType] = useState("percent");
-  const [discountValue, setDiscountValue] = useState("10");
 
   const errors = actionData?.errors || {};
   const displayProducts = searchFetcher.data?.products || products;
@@ -308,15 +306,7 @@ const searchFetcher = useFetcher();
       : 0;
   const estimatedTotal = avgProductPrice * numItemCount;
 
-  const dynamicPrice = useMemo(() => {
-    if (estimatedTotal <= 0) return 0;
-    const val = parseFloat(discountValue) || 0;
-    if (discountType === "percent") return Math.max(0, estimatedTotal * (1 - val / 100));
-    if (discountType === "fixed") return Math.max(0, estimatedTotal - val);
-    return estimatedTotal;
-  }, [estimatedTotal, discountType, discountValue]);
-
-  const bundlePrice = priceMode === "manual" ? parseFloat(manualPrice) || 0 : dynamicPrice;
+  const bundlePrice = priceMode === "manual" ? parseFloat(manualPrice) || 0 : estimatedTotal;
 
   function handleSearchChange(e) {
     const val = e.target.value;
@@ -496,53 +486,21 @@ const searchFetcher = useFetcher();
                 )}
 
                 {priceMode === "dynamic" && (
-                  <div style={{ border: "1px solid #d1d5db", borderRadius: "5px", padding: "12px", background: "#f9fafb" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
-                      <div>
-                        <label style={{ ...labelStyle, fontSize: "10px" }}>Discount Type</label>
-                        <select
-                          value={discountType}
-                          onChange={(e) => setDiscountType(e.target.value)}
-                          style={{ ...fieldStyle, fontSize: "12px" }}
-                        >
-                          <option value="percent">% Off Total</option>
-                          <option value="fixed">₹ Fixed Discount</option>
-                          <option value="none">No Discount</option>
-                        </select>
-                      </div>
-                      {discountType !== "none" && (
-                        <div>
-                          <label style={{ ...labelStyle, fontSize: "10px" }}>
-                            {discountType === "percent" ? "Discount %" : "Amount (₹)"}
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            step={discountType === "percent" ? "1" : "0.01"}
-                            max={discountType === "percent" ? "99" : undefined}
-                            value={discountValue}
-                            onChange={(e) => setDiscountValue(e.target.value)}
-                            style={{ ...fieldStyle, fontSize: "12px" }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <div style={{
-                      background: dynamicPrice > 0 ? "#f0fdf4" : "#f3f4f6",
-                      borderRadius: "4px",
-                      padding: "10px 14px",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      border: "1px solid " + (dynamicPrice > 0 ? "#bbf7d0" : "#e5e7eb"),
-                    }}>
-                      <span style={{ fontSize: "12px", color: "#374151", fontWeight: "500" }}>Calculated Price</span>
-                      <span style={{ fontSize: "17px", fontWeight: "700", color: dynamicPrice > 0 ? "#15803d" : "#9ca3af", fontFamily: "monospace" }}>
-                        {dynamicPrice > 0
-                          ? "₹" + dynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                          : "Select products first"}
-                      </span>
-                    </div>
+                  <div style={{
+                    background: estimatedTotal > 0 ? "#f0fdf4" : "#f3f4f6",
+                    borderRadius: "5px",
+                    padding: "10px 14px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    border: "1px solid " + (estimatedTotal > 0 ? "#bbf7d0" : "#e5e7eb"),
+                  }}>
+                    <span style={{ fontSize: "12px", color: "#374151", fontWeight: "500" }}>Calculated Price</span>
+                    <span style={{ fontSize: "17px", fontWeight: "700", color: estimatedTotal > 0 ? "#15803d" : "#9ca3af", fontFamily: "monospace" }}>
+                      {estimatedTotal > 0
+                        ? "₹" + estimatedTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        : "Select products first"}
+                    </span>
                   </div>
                 )}
 

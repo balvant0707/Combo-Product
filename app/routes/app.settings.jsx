@@ -118,14 +118,14 @@ export default function SettingsPage() {
                     {THEMES.find((t) => t.id === selectedTheme)?.name ?? "Custom"} &mdash; {THEMES.find((t) => t.id === selectedTheme)?.dark ? "Dark" : "Light"}
                   </span>
                 </div>
-                <input
+                {/* <input
                   type="range"
                   min="0"
                   max={THEMES.length - 1}
                   value={THEMES.findIndex((t) => t.id === selectedTheme)}
                   onChange={(e) => setSelectedTheme(THEMES[parseInt(e.target.value)].id)}
                   style={{ width: "100%", accentColor: "#2A7A4F", cursor: "pointer" }}
-                />
+                /> */}
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#9ca3af" }}>
                   <span>{THEMES[0].name}</span>
                   <span>{THEMES[THEMES.length - 1].name}</span>
@@ -291,7 +291,7 @@ export default function SettingsPage() {
                     {widgetMaxWidth === 0 ? "100% (Full Width)" : `${widgetMaxWidth}px`}
                   </span>
                 </div>
-                <input
+                {/* <input
                   type="range"
                   min="0"
                   max="3840"
@@ -299,7 +299,7 @@ export default function SettingsPage() {
                   value={widgetMaxWidth}
                   onChange={(e) => setWidgetMaxWidth(parseInt(e.target.value))}
                   style={{ width: "100%", accentColor: "#2A7A4F", cursor: "pointer" }}
-                />
+                /> */}
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#9ca3af" }}>
                   <span>Full Width</span>
                   <span>3840px</span>

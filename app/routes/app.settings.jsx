@@ -97,6 +97,30 @@ export default function SettingsPage() {
       )}
 
       <Form method="post">
+        {/* ── Save Button (top) ────────────────────────────────────────────── */}
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "8px" }}>
+          <button
+            type="submit"
+            disabled={isSaving}
+            style={{
+              padding: "10px 24px",
+              background: isSaving ? "#9ca3af" : "#2A7A4F",
+              color: "#fff",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "13px",
+              fontWeight: "600",
+              cursor: isSaving ? "not-allowed" : "pointer",
+              letterSpacing: "0.5px",
+            }}
+          >
+            {isSaving ? "Saving..." : "Save Settings"}
+          </button>
+        </div>
+
+        {/* ── All sections wrapper with gap ────────────────────────────────── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+
         {/* ── Theme Customizer + Widget Width side-by-side ─────────────────── */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", alignItems: "start" }}>
 
@@ -449,7 +473,7 @@ export default function SettingsPage() {
 
         {/* ── Advanced Settings ────────────────────────────────────────────── */}
         <s-section heading="Advanced Settings">
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "14px" }}>
             {[
               { name: "giftMessageField", label: "Enable Gift Message Field", desc: "Show a gift message text field during checkout", defaultChecked: settings.giftMessageField },
               { name: "analyticsTracking", label: "Enable Analytics Tracking", desc: "Track bundle orders for analytics (recommended)", defaultChecked: settings.analyticsTracking },
@@ -483,27 +507,7 @@ export default function SettingsPage() {
           </div>
         </s-section>
 
-        <s-section>
-          <div style={{ display: "flex", gap: "12px" }}>
-            <button
-              type="submit"
-              disabled={isSaving}
-              style={{
-                padding: "10px 24px",
-                background: isSaving ? "#9ca3af" : "#2A7A4F",
-                color: "#fff",
-                border: "none",
-                borderRadius: "6px",
-                fontSize: "13px",
-                fontWeight: "600",
-                cursor: isSaving ? "not-allowed" : "pointer",
-                letterSpacing: "0.5px",
-              }}
-            >
-              {isSaving ? "Saving..." : "Save Settings"}
-            </button>
-          </div>
-        </s-section>
+        </div>{/* ── end sections wrapper ── */}
       </Form>
     </s-page>
   );

@@ -110,27 +110,6 @@ export default function SettingsPage() {
               {/* Hidden input carries the selected value on submit */}
               <input type="hidden" name="presetTheme" value={selectedTheme} />
 
-              {/* Theme slider */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "12px", color: "#6b7280" }}>Theme</span>
-                  <span style={{ fontSize: "12px", fontWeight: "600", color: "#065f46", background: "#f0fdf4", padding: "2px 10px", borderRadius: "12px", border: "1px solid #6ee7b7" }}>
-                    {THEMES.find((t) => t.id === selectedTheme)?.name ?? "Custom"} &mdash; {THEMES.find((t) => t.id === selectedTheme)?.dark ? "Dark" : "Light"}
-                  </span>
-                </div>
-                {/* <input
-                  type="range"
-                  min="0"
-                  max={THEMES.length - 1}
-                  value={THEMES.findIndex((t) => t.id === selectedTheme)}
-                  onChange={(e) => setSelectedTheme(THEMES[parseInt(e.target.value)].id)}
-                  style={{ width: "100%", accentColor: "#2A7A4F", cursor: "pointer" }}
-                /> */}
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#9ca3af" }}>
-                  <span>{THEMES[0].name}</span>
-                  <span>{THEMES[THEMES.length - 1].name}</span>
-                </div>
-              </div>
 
               <div
                 style={{
@@ -283,28 +262,6 @@ export default function SettingsPage() {
 
               <input type="hidden" name="widgetMaxWidth" value={widgetMaxWidth} />
 
-              {/* Width slider */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "12px", color: "#6b7280" }}>Width</span>
-                  <span style={{ fontSize: "12px", fontWeight: "600", color: "#065f46", background: "#f0fdf4", padding: "2px 10px", borderRadius: "12px", border: "1px solid #6ee7b7", fontFamily: "monospace" }}>
-                    {widgetMaxWidth === 0 ? "100% (Full Width)" : `${widgetMaxWidth}px`}
-                  </span>
-                </div>
-                {/* <input
-                  type="range"
-                  min="0"
-                  max="3840"
-                  step="20"
-                  value={widgetMaxWidth}
-                  onChange={(e) => setWidgetMaxWidth(parseInt(e.target.value))}
-                  style={{ width: "100%", accentColor: "#2A7A4F", cursor: "pointer" }}
-                /> */}
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#9ca3af" }}>
-                  <span>Full Width</span>
-                  <span>3840px</span>
-                </div>
-              </div>
 
               {/* Preset cards */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: "10px" }}>
@@ -455,7 +412,7 @@ export default function SettingsPage() {
 
         {/* ── Display Options ──────────────────────────────────────────────── */}
         <s-section heading="Display Options">
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             {[
               { name: "showSavingsBadge", label: "Show Savings Badge", desc: "Display a badge showing how much customers save vs buying individually", defaultChecked: settings.showSavingsBadge },
               { name: "showProductPrices", label: "Show Product Prices", desc: "Show individual product prices in the selection grid", defaultChecked: settings.showProductPrices },

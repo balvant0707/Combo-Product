@@ -146,8 +146,10 @@ function CalendarMonth({ year, month, fromDate, toDate, hoverDate, pickingEnd, o
 
 function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
   const navigate = useNavigate();
-  const containerRef = useRef(null);
+  const triggerRef = useRef(null);
+  const popoverRef = useRef(null);
   const [open, setOpen] = useState(false);
+  const [popoverPos, setPopoverPos] = useState({ top: 0, right: 0 });
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -175,9 +177,9 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
   useEffect(() => {
     if (!open) return;
     function handler(e) {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
-        setOpen(false);
-      }
+      const inTrigger = triggerRef.current && triggerRef.current.contains(e.target);
+      const inPopover = popoverRef.current && popoverRef.current.contains(e.target);
+      if (!inTrigger && !inPopover) setOpen(false);
     }
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -263,11 +265,23 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
     lineHeight: 1,
   };
 
+  function handleToggle() {
+    if (!open && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setPopoverPos({
+        top: rect.bottom + window.scrollY + 8,
+        right: window.innerWidth - rect.right,
+      });
+    }
+    setOpen((o) => !o);
+  }
+
   return (
-    <div ref={containerRef} style={{ position: "relative", display: "inline-block" }}>
+    <div style={{ display: "inline-block" }}>
       {/* Trigger */}
       <button
-        onClick={() => setOpen((o) => !o)}
+        ref={triggerRef}
+        onClick={handleToggle}
         style={{
           display: "flex",
           alignItems: "center",
@@ -290,18 +304,19 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
         </svg>
       </button>
 
-      {/* Popover */}
+      {/* Popover — fixed so it escapes any overflow:hidden parent */}
       {open && (
         <div
+          ref={popoverRef}
           style={{
-            position: "absolute",
-            top: "calc(100% + 8px)",
-            right: 0,
+            position: "fixed",
+            top: `${popoverPos.top}px`,
+            right: `${popoverPos.right}px`,
             background: "#ffffff",
             border: "1px solid #e5e7eb",
             borderRadius: "12px",
             boxShadow: "0 8px 32px rgba(0,0,0,0.13)",
-            zIndex: 1000,
+            zIndex: 9999,
             padding: "16px",
             minWidth: "520px",
           }}

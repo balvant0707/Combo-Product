@@ -1,4 +1,4 @@
-import { useLoaderData, useNavigate } from "react-router";
+import { useLoaderData, useLocation, useNavigate } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { getActiveBoxCount } from "../models/boxes.server";
@@ -7,6 +7,7 @@ import {
   getBundleRevenue,
   getRecentOrders,
 } from "../models/orders.server";
+import { withEmbeddedAppParams } from "../utils/embedded-app";
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
@@ -141,15 +142,20 @@ function StatCard({ label, value, icon, accent, bg, sub }) {
 export default function DashboardPage() {
   const { activeBoxCount, bundlesSold, bundleRevenue, recentOrders } =
     useLoaderData();
+  const location = useLocation();
   const navigate = useNavigate();
 
   const stats = STAT_CARDS(activeBoxCount, bundlesSold, bundleRevenue);
+
+  function navigateTo(path) {
+    navigate(withEmbeddedAppParams(path, location.search));
+  }
 
   return (
     <s-page heading="Dashboard">
       <s-button
         slot="primary-action"
-        onClick={() => navigate("/app/boxes/new")}
+        onClick={() => navigateTo("/app/boxes/new")}
       >
         + Create Box
       </s-button>
@@ -280,9 +286,10 @@ export default function DashboardPage() {
             { icon: "📊", label: "View analytics", href: "/app/analytics" },
             { icon: "⚙️", label: "Widget settings", href: "/app/settings" },
           ].map((action) => (
-            <a
+            <button
               key={action.href}
-              href={action.href}
+              type="button"
+              onClick={() => navigateTo(action.href)}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -291,10 +298,12 @@ export default function DashboardPage() {
                 background: "#f9fafb",
                 border: "1px solid #e5e7eb",
                 borderRadius: "8px",
-                textDecoration: "none",
+                width: "100%",
                 color: "#111827",
                 fontSize: "13px",
                 fontWeight: "500",
+                cursor: "pointer",
+                textAlign: "left",
                 transition: "background 0.12s, border-color 0.12s",
               }}
               onMouseEnter={(e) => {
@@ -308,7 +317,7 @@ export default function DashboardPage() {
             >
               <span style={{ fontSize: "16px" }}>{action.icon}</span>
               {action.label}
-            </a>
+            </button>
           ))}
         </div>
       </s-section>

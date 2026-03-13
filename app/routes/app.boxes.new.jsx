@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useLoaderData, useFetcher, Form, useActionData, useNavigation } from "react-router";
-import { redirect } from "react-router";
+import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigation } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { createBox } from "../models/boxes.server";
+import { withEmbeddedAppParams } from "../utils/embedded-app";
 
 const PRODUCTS_QUERY = `#graphql
   query GetProducts($first: Int!, $query: String) {
@@ -79,7 +79,7 @@ export const loader = async ({ request }) => {
 };
 
 export const action = async ({ request }) => {
-  const { session, admin } = await authenticate.admin(request);
+  const { session, admin, redirect } = await authenticate.admin(request);
   const formData = await request.formData();
 
   let eligibleProducts = [];
@@ -166,6 +166,7 @@ export default function CreateBoxPage() {
   const { products } = useLoaderData();
   const actionData = useActionData();
   const searchFetcher = useFetcher();
+  const location = useLocation();
   const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
 
@@ -199,9 +200,14 @@ export default function CreateBoxPage() {
     const val = e.target.value;
     setProductSearch(val);
     if (val.length > 1) {
-      searchFetcher.load(`/app/boxes/new?q=${encodeURIComponent(val)}`);
+      searchFetcher.load(
+        withEmbeddedAppParams(
+          `/app/boxes/new?q=${encodeURIComponent(val)}`,
+          location.search,
+        ),
+      );
     } else if (val.length === 0) {
-      searchFetcher.load(`/app/boxes/new`);
+      searchFetcher.load(withEmbeddedAppParams("/app/boxes/new", location.search));
     }
   }
 
@@ -235,7 +241,7 @@ export default function CreateBoxPage() {
 
   function openPicker() {
     setProductSearch("");
-    searchFetcher.load(`/app/boxes/new`);
+    searchFetcher.load(withEmbeddedAppParams("/app/boxes/new", location.search));
     setShowPicker(true);
   }
 
@@ -259,7 +265,10 @@ export default function CreateBoxPage() {
   };
 
   return (
-    <s-page heading="Create New Box Type" back-url="/app/boxes">
+    <s-page
+      heading="Create New Box Type"
+      back-url={withEmbeddedAppParams("/app/boxes", location.search)}
+    >
       {/* Header — Save (primary) */}
       <s-button
         slot="primary-action"

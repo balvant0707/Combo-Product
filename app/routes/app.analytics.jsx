@@ -1,8 +1,9 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import { useLoaderData, useNavigate } from "react-router";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useLoaderData, useLocation, useNavigate } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { getAnalytics } from "../models/orders.server";
+import { withEmbeddedAppParams } from "../utils/embedded-app";
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
@@ -145,6 +146,7 @@ function CalendarMonth({ year, month, fromDate, toDate, hoverDate, pickingEnd, o
 }
 
 function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
+  const location = useLocation();
   const navigate = useNavigate();
   const triggerRef = useRef(null);
   const popoverRef = useRef(null);
@@ -229,9 +231,19 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
     setOpen(false);
     setPickingEnd(false);
     if (selectedPreset !== "custom") {
-      navigate(`?period=${selectedPreset}`);
+      navigate(
+        withEmbeddedAppParams(
+          `${location.pathname}?period=${selectedPreset}`,
+          location.search,
+        ),
+      );
     } else if (fromDate && toDate) {
-      navigate(`?from=${fromDate}&to=${toDate}`);
+      navigate(
+        withEmbeddedAppParams(
+          `${location.pathname}?from=${fromDate}&to=${toDate}`,
+          location.search,
+        ),
+      );
     }
   }
 

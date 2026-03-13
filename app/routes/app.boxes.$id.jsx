@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
-import { useLoaderData, useFetcher, Form, useActionData, useNavigation } from "react-router";
-import { redirect } from "react-router";
+import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigation } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { getBox, updateBox, deleteBox, getBannerImageSrc } from "../models/boxes.server";
+import { withEmbeddedAppParams } from "../utils/embedded-app";
 
 const PRODUCTS_QUERY = `#graphql
   query GetProducts($first: Int!, $query: String) {
@@ -58,7 +58,7 @@ async function parseBannerImage(formData, errors) {
 }
 
 export const loader = async ({ request, params }) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session, redirect } = await authenticate.admin(request);
   const shop = session.shop;
   const box = await getBox(params.id, shop);
   if (!box) throw redirect("/app/boxes");
@@ -96,7 +96,7 @@ export const loader = async ({ request, params }) => {
 };
 
 export const action = async ({ request, params }) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session, redirect } = await authenticate.admin(request);
   const shop = session.shop;
   const formData = await request.formData();
   const intent = formData.get("_action");
@@ -176,6 +176,7 @@ export default function EditBoxPage() {
   const { box, products } = useLoaderData();
   const actionData = useActionData();
   const searchFetcher = useFetcher();
+  const location = useLocation();
   const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
 
@@ -264,9 +265,16 @@ export default function EditBoxPage() {
     const val = e.target.value;
     setProductSearch(val);
     if (val.length > 1) {
-      searchFetcher.load(`/app/boxes/${box.id}?q=${encodeURIComponent(val)}`);
+      searchFetcher.load(
+        withEmbeddedAppParams(
+          `/app/boxes/${box.id}?q=${encodeURIComponent(val)}`,
+          location.search,
+        ),
+      );
     } else if (val.length === 0) {
-      searchFetcher.load(`/app/boxes/${box.id}`);
+      searchFetcher.load(
+        withEmbeddedAppParams(`/app/boxes/${box.id}`, location.search),
+      );
     }
   }
 
@@ -300,7 +308,9 @@ export default function EditBoxPage() {
 
   function openPicker() {
     setProductSearch("");
-    searchFetcher.load(`/app/boxes/${box.id}`);
+    searchFetcher.load(
+      withEmbeddedAppParams(`/app/boxes/${box.id}`, location.search),
+    );
     setShowPicker(true);
   }
 
@@ -324,7 +334,10 @@ export default function EditBoxPage() {
   };
 
   return (
-    <s-page heading={`Edit: ${box.boxName}`} back-url="/app/boxes">
+    <s-page
+      heading={`Edit: ${box.boxName}`}
+      back-url={withEmbeddedAppParams("/app/boxes", location.search)}
+    >
       {/* Header — Save Changes (primary) */}
       <s-button
         slot="primary-action"

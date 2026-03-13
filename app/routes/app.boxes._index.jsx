@@ -1,4 +1,4 @@
-import { useLoaderData, useNavigate, useFetcher } from "react-router";
+import { useFetcher, useLoaderData, useLocation, useNavigate } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import {
@@ -10,6 +10,7 @@ import {
   repairMissingShopifyProducts,
   repairMissingShopifyVariantIds,
 } from "../models/boxes.server";
+import { withEmbeddedAppParams } from "../utils/embedded-app";
 
 export const loader = async ({ request }) => {
   const { session, admin } = await authenticate.admin(request);
@@ -64,8 +65,13 @@ export const action = async ({ request }) => {
 
 export default function ManageBoxesPage() {
   const { boxes } = useLoaderData();
+  const location = useLocation();
   const navigate = useNavigate();
   const fetcher = useFetcher();
+
+  function navigateTo(path) {
+    navigate(withEmbeddedAppParams(path, location.search));
+  }
 
   function handleToggleStatus(id, currentActive) {
     fetcher.submit(
@@ -132,7 +138,7 @@ export default function ManageBoxesPage() {
     <s-page heading={`All Box Types (${displayBoxes.length})`}>
       <s-button
         slot="primary-action"
-        onClick={() => navigate("/app/boxes/new")}
+        onClick={() => navigateTo("/app/boxes/new")}
       >
         + Create New Box
       </s-button>
@@ -167,7 +173,7 @@ export default function ManageBoxesPage() {
             <p style={{ fontSize: "13px", margin: "0 0 20px", color: "#9ca3af" }}>
               Create your first box to let customers build custom combos.
             </p>
-            <s-button onClick={() => navigate("/app/boxes/new")}>
+            <s-button onClick={() => navigateTo("/app/boxes/new")}>
               Create your first box
             </s-button>
           </div>
@@ -342,7 +348,7 @@ export default function ManageBoxesPage() {
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
                       <div style={{ display: "flex", gap: "6px" }}>
                         <button
-                          onClick={() => navigate(`/app/boxes/${box.id}`)}
+                          onClick={() => navigateTo(`/app/boxes/${box.id}`)}
                           style={{
                             background: "#f9fafb",
                             border: "1px solid #e5e7eb",

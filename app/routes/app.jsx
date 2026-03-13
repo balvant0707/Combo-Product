@@ -1,8 +1,9 @@
-import { Outlet, useLoaderData, useRouteError } from "react-router";
+import { Outlet, useLoaderData, useLocation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
 import { authenticate } from "../shopify.server";
 import { upsertSessionFromAuth, upsertShopFromAdmin } from "../models/shop.server";
+import { withEmbeddedAppParams } from "../utils/embedded-app";
 
 export const loader = async ({ request }) => {
   const { session, admin } = await authenticate.admin(request);
@@ -16,14 +17,15 @@ export const loader = async ({ request }) => {
 
 export default function App() {
   const { apiKey } = useLoaderData();
+  const location = useLocation();
 
   return (
     <AppProvider embedded apiKey={apiKey}>
       <s-app-nav>
         {/* <s-link href="/app">Dashboard</s-link> */}
-        <s-link href="/app/boxes">Manage Boxes</s-link>
-        <s-link href="/app/analytics">Analytics</s-link>
-        <s-link href="/app/settings">Settings</s-link>
+        <s-link href={withEmbeddedAppParams("/app/boxes", location.search)}>Manage Boxes</s-link>
+        <s-link href={withEmbeddedAppParams("/app/analytics", location.search)}>Analytics</s-link>
+        <s-link href={withEmbeddedAppParams("/app/settings", location.search)}>Settings</s-link>
       </s-app-nav>
       <Outlet />
     </AppProvider>

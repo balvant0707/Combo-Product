@@ -146,7 +146,7 @@ function StatCard({ label, value, icon, accent, bg, sub }) {
 }
 
 function ThemeCustomizationCard({
-  onOpenThemeEditor,
+  themeEditorUrl,
 }) {
   const steps = [
     "Open Shopify Theme Editor from this dashboard.",
@@ -281,11 +281,16 @@ function ThemeCustomizationCard({
             </div>
 
             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-              <button
-                type="button"
-                onClick={onOpenThemeEditor}
+              <a
+                href={themeEditorUrl}
+                target="_blank"
+                rel="noreferrer"
                 style={{
-                  border: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textDecoration: "none",
+                  border: "1px solid transparent",
                   borderRadius: "14px",
                   padding: "14px 20px",
                   background: "#111827",
@@ -297,7 +302,7 @@ function ThemeCustomizationCard({
                 }}
               >
                 Open Theme Editor
-              </button>
+              </a>
             </div>
           </div>
 
@@ -783,22 +788,12 @@ export default function DashboardPage() {
     navigate(withEmbeddedAppParams(path, location.search));
   }
 
-  function openThemeEditor() {
-    if (typeof window === "undefined") return;
-    const popup = window.open(themeEditorUrl, "_blank", "noopener,noreferrer");
-    if (popup) {
-      popup.opener = null;
-      return;
-    }
-    window.location.href = themeEditorUrl;
-  }
-
   const quickActions = [
     {
       key: "theme-editor",
       icon: "TE",
       label: "Open theme editor",
-      onClick: openThemeEditor,
+      externalUrl: themeEditorUrl,
     },
     {
       key: "create-box",
@@ -850,7 +845,7 @@ export default function DashboardPage() {
       </s-section>
 
       <ThemeCustomizationCard
-        onOpenThemeEditor={openThemeEditor}
+        themeEditorUrl={themeEditorUrl}
       />
 
       <s-section heading="Recent Bundle Orders">
@@ -1029,18 +1024,20 @@ export default function DashboardPage() {
       <s-section slot="aside" heading="Quick Actions">
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {quickActions.map((action) => (
-            <button
+            <a
               key={action.key}
-              type="button"
-              onClick={() => {
-                if (action.disabled) return;
-                if (typeof action.onClick === "function") {
-                  action.onClick();
+              href={action.externalUrl || "#"}
+              target={action.externalUrl ? "_blank" : undefined}
+              rel={action.externalUrl ? "noreferrer" : undefined}
+              onClick={(event) => {
+                if (action.disabled) {
+                  event.preventDefault();
                   return;
                 }
+                if (action.externalUrl) return;
+                event.preventDefault();
                 navigateTo(action.href);
               }}
-              disabled={action.disabled}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -1055,6 +1052,7 @@ export default function DashboardPage() {
                 fontWeight: "500",
                 cursor: action.disabled ? "not-allowed" : "pointer",
                 textAlign: "left",
+                textDecoration: "none",
                 transition: "background 0.12s, border-color 0.12s",
               }}
               onMouseEnter={(event) => {
@@ -1081,7 +1079,7 @@ export default function DashboardPage() {
                 {action.icon}
               </span>
               {action.label}
-            </button>
+            </a>
           ))}
         </div>
       </s-section>

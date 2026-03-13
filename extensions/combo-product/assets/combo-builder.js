@@ -1052,13 +1052,18 @@
           ? usedVariantIdsByProduct[String(product.productId)].slice()
           : [];
 
-        var productUsedById = !box.allowDuplicates && usedIds.indexOf(product.productId) !== -1 && !isCurrentSlot;
+        var productUsedById = !box.allowDuplicates &&
+          usedIds.indexOf(product.productId) !== -1 &&
+          !isCurrentSlot;
         var allKnownVariantsUsed = variantCapable &&
           productVariantIds.length > 0 &&
           blockedVariantIds.length >= productVariantIds.length &&
           !isCurrentSlot;
 
-        var isUsed = variantCapable ? allKnownVariantsUsed : productUsedById;
+        // When duplicate products are disabled, block the whole product card once the
+        // product is already selected in another slot. Variant selection still applies
+        // for the initial add, but the same product cannot be added a second time.
+        var isUsed = productUsedById || allKnownVariantsUsed;
 
         var card = document.createElement('div');
         card.className = 'cb-product-card';

@@ -78,7 +78,203 @@
 
   // ─── Variant Cache + Picker ───────────────────────────────────────────────────
 
-  var variantCache = {};
+  var productDataCache = {};
+  var productDataPending = {};
+  var _productDescriptionModal = null;
+  var _productDescriptionModalTitle = null;
+  var _productDescriptionModalBody = null;
+  var _productDescriptionModalCloseBtn = null;
+  var _productDescriptionModalLastFocus = null;
+  var _productDescriptionModalBodyOverflow = '';
+  var _productDescriptionModalRequestToken = 0;
+
+  function sanitizeProductDescriptionHtml(html) {
+    var wrapper = document.createElement('div');
+    wrapper.innerHTML = html || '';
+
+    Array.prototype.forEach.call(
+      wrapper.querySelectorAll('script, iframe, object, embed'),
+      function (node) {
+        if (node.parentNode) node.parentNode.removeChild(node);
+      }
+    );
+
+    Array.prototype.forEach.call(wrapper.querySelectorAll('*'), function (node) {
+      for (var i = node.attributes.length - 1; i >= 0; i--) {
+        var attrName = node.attributes[i].name;
+        if (/^on/i.test(attrName)) node.removeAttribute(attrName);
+      }
+    });
+
+    return wrapper.innerHTML;
+  }
+
+  function fetchProductData(handle, cb) {
+    if (!handle) {
+      cb(new Error('Missing product handle'), null);
+      return;
+    }
+
+    if (productDataCache[handle]) {
+      cb(null, productDataCache[handle]);
+      return;
+    }
+
+    if (productDataPending[handle]) {
+      productDataPending[handle].push(cb);
+      return;
+    }
+
+    productDataPending[handle] = [cb];
+
+    fetch('/products/' + handle + '.js')
+      .then(function (r) {
+        if (!r.ok) throw new Error('Failed to load product details');
+        return r.json();
+      })
+      .then(function (data) {
+        var normalized = {
+          descriptionHtml: sanitizeProductDescriptionHtml(data && data.description),
+          variants: (data && data.variants ? data.variants : []).map(function (v) {
+            return {
+              id: String(v.id),
+              title: v.title,
+              available: v.available,
+              price: v.price != null ? parseFloat(v.price) : null,
+              compareAtPrice: v.compare_at_price != null ? parseFloat(v.compare_at_price) : null,
+            };
+          }),
+        };
+
+        productDataCache[handle] = normalized;
+
+        var queued = productDataPending[handle] || [];
+        delete productDataPending[handle];
+        queued.forEach(function (done) { done(null, normalized); });
+      })
+      .catch(function (err) {
+        var queued = productDataPending[handle] || [];
+        delete productDataPending[handle];
+        queued.forEach(function (done) { done(err, null); });
+      });
+  }
+
+  function ensureProductDescriptionModal() {
+    if (_productDescriptionModal) return _productDescriptionModal;
+
+    var overlay = document.createElement('div');
+    overlay.className = 'cb-product-modal';
+    overlay.hidden = true;
+    overlay.setAttribute('aria-hidden', 'true');
+
+    var dialog = document.createElement('div');
+    dialog.className = 'cb-product-modal-dialog';
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
+    dialog.setAttribute('aria-labelledby', 'cb-product-modal-title');
+    dialog.addEventListener('click', function (e) { e.stopPropagation(); });
+
+    var header = document.createElement('div');
+    header.className = 'cb-product-modal-header';
+
+    var title = document.createElement('h3');
+    title.className = 'cb-product-modal-title';
+    title.id = 'cb-product-modal-title';
+    header.appendChild(title);
+
+    var closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'cb-product-modal-close';
+    closeBtn.setAttribute('aria-label', 'Close description popup');
+    closeBtn.innerHTML = '&times;';
+    header.appendChild(closeBtn);
+
+    var body = document.createElement('div');
+    body.className = 'cb-product-modal-body';
+
+    dialog.appendChild(header);
+    dialog.appendChild(body);
+    overlay.appendChild(dialog);
+
+    overlay.addEventListener('click', closeProductDescriptionModal);
+    closeBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      closeProductDescriptionModal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && _productDescriptionModal && !_productDescriptionModal.hidden) {
+        closeProductDescriptionModal();
+      }
+    });
+
+    document.body.appendChild(overlay);
+
+    _productDescriptionModal = overlay;
+    _productDescriptionModalTitle = title;
+    _productDescriptionModalBody = body;
+    _productDescriptionModalCloseBtn = closeBtn;
+
+    return _productDescriptionModal;
+  }
+
+  function closeProductDescriptionModal() {
+    if (!_productDescriptionModal || _productDescriptionModal.hidden) return;
+
+    _productDescriptionModal.hidden = true;
+    _productDescriptionModal.setAttribute('aria-hidden', 'true');
+    _productDescriptionModal.removeAttribute('data-cb-instance');
+    document.body.style.overflow = _productDescriptionModalBodyOverflow;
+
+    if (
+      _productDescriptionModalLastFocus &&
+      typeof _productDescriptionModalLastFocus.focus === 'function'
+    ) {
+      _productDescriptionModalLastFocus.focus();
+    }
+  }
+
+  function openProductDescriptionModal(product, triggerEl, rootEl) {
+    if (!product || !product.productHandle) return;
+
+    var modal = ensureProductDescriptionModal();
+    var blockId = rootEl &&
+      (rootEl.getAttribute('data-cb-instance') || rootEl.getAttribute('data-block-id'));
+    var requestToken = ++_productDescriptionModalRequestToken;
+
+    _productDescriptionModalLastFocus = triggerEl || document.activeElement;
+    _productDescriptionModalBodyOverflow = document.body.style.overflow;
+    _productDescriptionModalTitle.textContent = product.productTitle || 'Product details';
+    _productDescriptionModalBody.innerHTML =
+      '<p class="cb-product-modal-loading">Loading description...</p>';
+
+    if (blockId) modal.setAttribute('data-cb-instance', blockId);
+    modal.hidden = false;
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
+    if (product.productDescriptionResolved) {
+      _productDescriptionModalBody.innerHTML = product.productDescriptionHtml ||
+        '<p class="cb-product-modal-empty">No description available for this product.</p>';
+      if (_productDescriptionModalCloseBtn) _productDescriptionModalCloseBtn.focus();
+      return;
+    }
+
+    fetchProductData(product.productHandle, function (err, data) {
+      if (requestToken !== _productDescriptionModalRequestToken) return;
+
+      product.productDescriptionResolved = !err;
+      product.productDescriptionHtml =
+        !err && data && data.descriptionHtml
+          ? data.descriptionHtml
+          : '';
+
+      _productDescriptionModalBody.innerHTML = product.productDescriptionHtml ||
+        '<p class="cb-product-modal-empty">No description available for this product.</p>';
+
+      if (_productDescriptionModalCloseBtn) _productDescriptionModalCloseBtn.focus();
+    });
+  }
 
   function fetchVariants(handle, allowedVariantIds, cb) {
     function applyAllowedFilter(variants) {
@@ -92,26 +288,13 @@
       return all;
     }
 
-    if (variantCache[handle]) {
-      cb(null, applyAllowedFilter(variantCache[handle]));
-      return;
-    }
-    fetch('/products/' + handle + '.js')
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        var all = (data.variants || []).map(function (v) {
-          return {
-            id: String(v.id),
-            title: v.title,
-            available: v.available,
-            price: v.price != null ? parseFloat(v.price) : null,
-            compareAtPrice: v.compare_at_price != null ? parseFloat(v.compare_at_price) : null,
-          };
-        });
-        variantCache[handle] = all;
-        cb(null, applyAllowedFilter(all));
-      })
-      .catch(function (e) { cb(e, null); });
+    fetchProductData(handle, function (err, productData) {
+      if (err) {
+        cb(err, null);
+        return;
+      }
+      cb(null, applyAllowedFilter(productData.variants));
+    });
   }
 
   function showVariantPicker(card, product, addBtn, blockedVariantIds, cb) {
@@ -861,27 +1044,39 @@
         var infoEl = document.createElement('div');
         infoEl.className = 'cb-product-info';
 
+        var titleRow = document.createElement('div');
+        titleRow.className = 'cb-product-title-row';
+
         var titleEl = document.createElement('div');
         titleEl.className = 'cb-product-title';
         titleEl.textContent = product.productTitle || product.productId;
-        infoEl.appendChild(titleEl);
+        titleRow.appendChild(titleEl);
 
-        // Updatable price + learn row
+        if (product.productHandle && !product.isCollection) {
+          var learnBtn = document.createElement('button');
+          learnBtn.type = 'button';
+          learnBtn.className = 'cb-product-learn-link';
+          learnBtn.innerHTML = '&#9432; Learn';
+          learnBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openProductDescriptionModal(product, learnBtn, ctx.rootEl);
+          });
+          titleRow.appendChild(learnBtn);
+        }
+
+        infoEl.appendChild(titleRow);
+
+        // Updatable price + variant row
         var metaRow = document.createElement('div');
         metaRow.className = 'cb-product-meta-row';
         var priceWrap = document.createElement('span');
         priceWrap.className = 'cb-product-price-wrap';
         metaRow.appendChild(priceWrap);
 
-        if (product.productHandle && !product.isCollection) {
-          var learnLink = document.createElement('a');
-          learnLink.href = '/products/' + product.productHandle;
-          learnLink.target = '_blank';
-          learnLink.className = 'cb-product-learn-link';
-          learnLink.innerHTML = '&#9432; Learn';
-          learnLink.addEventListener('click', function (e) { e.stopPropagation(); });
-          metaRow.appendChild(learnLink);
-        }
+        var metaActions = document.createElement('div');
+        metaActions.className = 'cb-product-meta-actions';
+        metaRow.appendChild(metaActions);
 
         function renderPriceWrap(price, compareAt) {
           priceWrap.innerHTML = '';
@@ -931,7 +1126,7 @@
           });
 
           selectWrap.appendChild(variantSelect);
-          card.appendChild(selectWrap);
+          metaActions.appendChild(selectWrap);
 
           // Load variants and populate select asynchronously
           ;(function (sel, wrap, blockedForLoad) {
@@ -1113,14 +1308,14 @@
       var resolvePromises = slots.map(function (p) {
         if (!p || (p.variantIds && p.variantIds.length > 0)) return Promise.resolve();
         if (!p.productHandle) return Promise.resolve();
-        return fetch('/products/' + p.productHandle + '.js')
-          .then(function (r) { return r.json(); })
-          .then(function (data) {
-            if (data.variants && data.variants.length > 0) {
-              p.variantIds = [String(data.variants[0].id)];
+        return new Promise(function (resolve) {
+          fetchProductData(p.productHandle, function (err, productData) {
+            if (!err && productData && productData.variants && productData.variants.length > 0) {
+              p.variantIds = [String(productData.variants[0].id)];
             }
-          })
-          .catch(function () {});
+            resolve();
+          });
+        });
       });
 
       Promise.all(resolvePromises).then(function () {

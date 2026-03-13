@@ -10,32 +10,9 @@ import {
 } from "../models/orders.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
-function getStoreAdminHandle(shopDomain = "") {
-  return String(shopDomain || "").replace(/\.myshopify\.com$/i, "");
-}
-
-function buildThemeEditorUrl(shopDomain, apiKey) {
-  const storeHandle = getStoreAdminHandle(shopDomain);
-  if (!storeHandle) return "";
-
-  const url = new URL(
-    `https://admin.shopify.com/store/${storeHandle}/themes/current/editor`,
-  );
-  url.searchParams.set("template", "index");
-
-  if (apiKey) {
-    url.searchParams.set("addAppBlockId", `${apiKey}/combo-builder`);
-    url.searchParams.set("target", "newAppsSection");
-  }
-
-  return url.toString();
-}
-
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
   const shop = session.shop;
-  // eslint-disable-next-line no-undef
-  const apiKey = process.env.SHOPIFY_API_KEY || "";
 
   const [activeBoxCount, bundlesSold, bundleRevenue, recentOrders] =
     await Promise.all([
@@ -49,7 +26,6 @@ export const loader = async ({ request }) => {
     activeBoxCount,
     bundlesSold,
     bundleRevenue,
-    themeEditorUrl: buildThemeEditorUrl(shop, apiKey),
     recentOrders: recentOrders.map((order) => ({
       id: order.id,
       orderId: order.orderId,
@@ -169,7 +145,6 @@ function StatCard({ label, value, icon, accent, bg, sub }) {
 
 function ThemeCustomizationCard({
   onOpenThemeEditor,
-  themeEditorDisabled,
 }) {
   const steps = [
     "Open Shopify Theme Editor from this dashboard.",
@@ -296,19 +271,16 @@ function ThemeCustomizationCard({
               <button
                 type="button"
                 onClick={onOpenThemeEditor}
-                disabled={themeEditorDisabled}
                 style={{
                   border: "none",
                   borderRadius: "14px",
                   padding: "14px 20px",
-                  background: themeEditorDisabled ? "#9ca3af" : "#111827",
+                  background: "#111827",
                   color: "#fff",
                   fontSize: "14px",
                   fontWeight: "800",
-                  cursor: themeEditorDisabled ? "not-allowed" : "pointer",
-                  boxShadow: themeEditorDisabled
-                    ? "none"
-                    : "0 10px 22px rgba(17,24,39,0.16)",
+                  cursor: "pointer",
+                  boxShadow: "0 10px 22px rgba(17,24,39,0.16)",
                 }}
               >
                 Open Theme Editor
@@ -327,25 +299,32 @@ export default function DashboardPage() {
     bundlesSold,
     bundleRevenue,
     recentOrders,
-    themeEditorUrl,
   } = useLoaderData();
   const location = useLocation();
   const navigate = useNavigate();
 
   const stats = STAT_CARDS(activeBoxCount, bundlesSold, bundleRevenue);
+  const themeEditorLauncherUrl = withEmbeddedAppParams(
+    "/app/open-theme-editor",
+    location.search,
+  );
 
   function navigateTo(path) {
     navigate(withEmbeddedAppParams(path, location.search));
   }
 
   function openThemeEditor() {
-    if (!themeEditorUrl || typeof window === "undefined") return;
-    const popup = window.open(themeEditorUrl, "_blank", "noopener,noreferrer");
+    if (typeof window === "undefined") return;
+    const popup = window.open(
+      themeEditorLauncherUrl,
+      "_blank",
+      "noopener,noreferrer",
+    );
     if (popup) {
       popup.opener = null;
       return;
     }
-    window.location.href = themeEditorUrl;
+    window.location.href = themeEditorLauncherUrl;
   }
 
   const quickActions = [
@@ -354,7 +333,6 @@ export default function DashboardPage() {
       icon: "TE",
       label: "Open theme editor",
       onClick: openThemeEditor,
-      disabled: !themeEditorUrl,
     },
     {
       key: "create-box",
@@ -407,7 +385,6 @@ export default function DashboardPage() {
 
       <ThemeCustomizationCard
         onOpenThemeEditor={openThemeEditor}
-        themeEditorDisabled={!themeEditorUrl}
       />
 
       <s-section heading="Recent Bundle Orders">

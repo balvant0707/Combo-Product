@@ -70,6 +70,42 @@
 
 @keyframes cb-spin { to { transform: rotate(360deg); } }
 
+.cb-page-loader[hidden] {
+  display: none !important;
+}
+
+.cb-page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 1000001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.28);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+
+.cb-page-loader-panel {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 240px;
+  padding: 18px 22px;
+  border-radius: 16px;
+  background: var(--cb-bg);
+  border: 1px solid var(--cb-border);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+}
+
+.cb-page-loader-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cb-text);
+  font-family: var(--cb-font);
+}
+
 /* ── Wrapper ──────────────────────────────────────────── */
 .cb-wrapper {
   max-width: var(--cb-max-width);

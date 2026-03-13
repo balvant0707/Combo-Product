@@ -446,6 +446,8 @@
   var _stickySavingsEl = null;
   var _stickyTotalEl = null;
   var _drawerScrollRecoveryBound = false;
+  var _pageLoaderEl = null;
+  var _pageLoaderActiveCount = 0;
 
   function removeStickyFooter() {
     if (_stickyEl && _stickyEl.parentNode) {
@@ -456,6 +458,49 @@
     _stickyBtn = null;
     _stickySavingsEl = null;
     _stickyTotalEl = null;
+  }
+
+  function ensurePageLoader() {
+    if (_pageLoaderEl) return _pageLoaderEl;
+
+    var overlay = document.createElement('div');
+    overlay.className = 'cb-page-loader';
+    overlay.hidden = true;
+    overlay.setAttribute('aria-hidden', 'true');
+
+    var panel = document.createElement('div');
+    panel.className = 'cb-page-loader-panel';
+
+    var spinner = document.createElement('span');
+    spinner.className = 'combo-builder-spinner';
+    spinner.setAttribute('aria-hidden', 'true');
+    panel.appendChild(spinner);
+
+    var text = document.createElement('span');
+    text.className = 'cb-page-loader-text';
+    text.textContent = 'Adding products to cart...';
+    panel.appendChild(text);
+
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+    _pageLoaderEl = overlay;
+    return _pageLoaderEl;
+  }
+
+  function showPageLoader() {
+    var overlay = ensurePageLoader();
+    _pageLoaderActiveCount++;
+    overlay.hidden = false;
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+
+  function hidePageLoader(force) {
+    if (!_pageLoaderEl) return;
+    if (force) _pageLoaderActiveCount = 0;
+    else _pageLoaderActiveCount = Math.max(0, _pageLoaderActiveCount - 1);
+    if (_pageLoaderActiveCount > 0) return;
+    _pageLoaderEl.hidden = true;
+    _pageLoaderEl.setAttribute('aria-hidden', 'true');
   }
 
   function createStickyFooter(box, ctx, onCartClick) {
@@ -1613,6 +1658,8 @@
 
     setBtns('loading', 'Adding…');
 
+    showPageLoader();
+
     function postCartItems(items) {
       return fetch('/cart/add.js', {
         method: 'POST',
@@ -1865,6 +1912,7 @@
       if (giftMessage) bundleProps['Gift Message'] = giftMessage;
       items.push({ id: box.shopifyVariantId, quantity: 1, properties: bundleProps });
     } else {
+      hidePageLoader(true);
       setBtns('error', 'Combo product not linked');
       setTimeout(function () { setBtns('ready', resolvedReadyLabel); }, 2500);
       return;
@@ -1953,16 +2001,19 @@
 
         var opened = tryOpenThemeCartDrawer();
         if (!opened) {
+          hidePageLoader(true);
           setTimeout(function () { window.location.href = '/cart'; }, 1200);
           return;
         }
 
         setBtns('loading', 'Adding...');
         return waitForComboCartPresentation(selectedItemsCount).then(function () {
+          hidePageLoader(true);
           setBtns('success', 'Added to Cart! âœ“');
         });
       })
       .catch(function (err) {
+        hidePageLoader(true);
         console.error('[ComboBuilder] Add to cart error:', err);
         setBtns('error', 'Error — Try Again');
         setTimeout(function () { setBtns('ready', resolvedReadyLabel); }, 2500);

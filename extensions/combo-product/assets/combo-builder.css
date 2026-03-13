@@ -1062,6 +1062,42 @@
 
 .cb-variant-cancel-btn:hover { color: var(--cb-error); }
 
+/* ── Inline Variant Select ────────────────────────────── */
+
+.cb-variant-select-wrap {
+  padding: 8px 10px 0;
+}
+
+.cb-variant-select {
+  width: 100%;
+  padding: 6px 28px 6px 10px;
+  border: 1.5px solid var(--cb-border);
+  border-radius: 8px;
+  background: var(--cb-bg);
+  color: var(--cb-text);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--cb-font);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7280' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: border-color var(--cb-transition), box-shadow var(--cb-transition);
+  line-height: 1.4;
+}
+
+.cb-variant-select:focus {
+  outline: none;
+  border-color: var(--cb-primary);
+  box-shadow: 0 0 0 3px var(--cb-primary-glow);
+}
+
+.cb-variant-select:hover {
+  border-color: var(--cb-primary);
+}
+
 /* ── Responsive ───────────────────────────────────────── */
 
 @media (max-width: 1024px) {

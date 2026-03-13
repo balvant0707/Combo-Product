@@ -851,6 +851,12 @@
 
         card.appendChild(imgWrap);
 
+        // Mutable selected-variant state for this card (updated by inline select)
+        var selVarId = null;
+        var selVarTitle = null;
+        var selVarPrice = product.productPrice != null ? parseFloat(product.productPrice) : null;
+        var selVarCompare = product.productCompareAtPrice != null ? parseFloat(product.productCompareAtPrice) : null;
+
         // Product info area
         var infoEl = document.createElement('div');
         infoEl.className = 'cb-product-info';
@@ -860,49 +866,119 @@
         titleEl.textContent = product.productTitle || product.productId;
         infoEl.appendChild(titleEl);
 
-        // Price + Learn row
-        var salePrice = product.productPrice != null ? parseFloat(product.productPrice) : null;
-        var compareAtPrice = product.productCompareAtPrice != null ? parseFloat(product.productCompareAtPrice) : null;
-        var hasPrice = salePrice != null && salePrice > 0;
-        var hasCompare = compareAtPrice != null && compareAtPrice > salePrice;
+        // Updatable price + learn row
+        var metaRow = document.createElement('div');
+        metaRow.className = 'cb-product-meta-row';
+        var priceWrap = document.createElement('span');
+        priceWrap.className = 'cb-product-price-wrap';
+        metaRow.appendChild(priceWrap);
 
-        if (hasPrice || (product.productHandle && !product.isCollection)) {
-          var metaRow = document.createElement('div');
-          metaRow.className = 'cb-product-meta-row';
-
-          if (hasPrice) {
-            var priceWrap = document.createElement('span');
-            priceWrap.className = 'cb-product-price-wrap';
-
-            var priceEl = document.createElement('span');
-            priceEl.className = 'cb-product-price';
-            priceEl.textContent = formatPrice(salePrice, ctx.currencySymbol);
-            priceWrap.appendChild(priceEl);
-
-            if (hasCompare) {
-              var compareEl = document.createElement('span');
-              compareEl.className = 'cb-product-compare-price';
-              compareEl.textContent = formatPrice(compareAtPrice, ctx.currencySymbol);
-              priceWrap.appendChild(compareEl);
-            }
-
-            metaRow.appendChild(priceWrap);
-          }
-
-          if (product.productHandle && !product.isCollection) {
-            var learnLink = document.createElement('a');
-            learnLink.href = '/products/' + product.productHandle;
-            learnLink.target = '_blank';
-            learnLink.className = 'cb-product-learn-link';
-            learnLink.innerHTML = '&#9432; Learn';
-            learnLink.addEventListener('click', function (e) { e.stopPropagation(); });
-            metaRow.appendChild(learnLink);
-          }
-
-          infoEl.appendChild(metaRow);
+        if (product.productHandle && !product.isCollection) {
+          var learnLink = document.createElement('a');
+          learnLink.href = '/products/' + product.productHandle;
+          learnLink.target = '_blank';
+          learnLink.className = 'cb-product-learn-link';
+          learnLink.innerHTML = '&#9432; Learn';
+          learnLink.addEventListener('click', function (e) { e.stopPropagation(); });
+          metaRow.appendChild(learnLink);
         }
 
+        function renderPriceWrap(price, compareAt) {
+          priceWrap.innerHTML = '';
+          var sp = price != null ? parseFloat(price) : null;
+          var cp = compareAt != null ? parseFloat(compareAt) : null;
+          if (sp && sp > 0) {
+            var pEl = document.createElement('span');
+            pEl.className = 'cb-product-price';
+            pEl.textContent = formatPrice(sp, ctx.currencySymbol);
+            priceWrap.appendChild(pEl);
+            if (cp && cp > sp) {
+              var cEl = document.createElement('span');
+              cEl.className = 'cb-product-compare-price';
+              cEl.textContent = formatPrice(cp, ctx.currencySymbol);
+              priceWrap.appendChild(cEl);
+            }
+          }
+        }
+
+        renderPriceWrap(selVarPrice, selVarCompare);
+        infoEl.appendChild(metaRow);
         card.appendChild(infoEl);
+
+        // ── Inline variant select (shown directly on card, no popup) ──
+        if (!product.isCollection && product.productHandle) {
+          var selectWrap = document.createElement('div');
+          selectWrap.className = 'cb-variant-select-wrap';
+          selectWrap.style.display = 'none';
+
+          var variantSelect = document.createElement('select');
+          variantSelect.className = 'cb-variant-select';
+          // Stop card click from firing when interacting with select
+          variantSelect.addEventListener('click', function (e) { e.stopPropagation(); });
+          variantSelect.addEventListener('change', function (e) {
+            e.stopPropagation();
+            var cachedVariants = variantSelect._cbVariants || [];
+            for (var vi = 0; vi < cachedVariants.length; vi++) {
+              if (String(cachedVariants[vi].id) === variantSelect.value) {
+                selVarId    = cachedVariants[vi].id;
+                selVarPrice = cachedVariants[vi].price;
+                selVarCompare = cachedVariants[vi].compareAtPrice;
+                selVarTitle = cachedVariants[vi].title !== 'Default Title' ? cachedVariants[vi].title : null;
+                renderPriceWrap(selVarPrice, selVarCompare);
+                break;
+              }
+            }
+          });
+
+          selectWrap.appendChild(variantSelect);
+          card.appendChild(selectWrap);
+
+          // Load variants and populate select asynchronously
+          ;(function (sel, wrap, blockedForLoad) {
+            fetchVariants(product.productHandle, product.variantIds, function (err, variants) {
+              if (err || !variants || variants.length === 0) return;
+
+              // Single variant — set state silently, no select needed
+              if (variants.length === 1) {
+                var v0 = variants[0];
+                selVarId = v0.id;
+                if (v0.price != null) { selVarPrice = v0.price; selVarCompare = v0.compareAtPrice; }
+                selVarTitle = v0.title !== 'Default Title' ? v0.title : null;
+                renderPriceWrap(selVarPrice, selVarCompare);
+                return;
+              }
+
+              // Multiple variants — build select options
+              sel.innerHTML = '';
+              sel._cbVariants = variants;
+              var blockedSet = {};
+              (blockedForLoad || []).forEach(function (id) { blockedSet[String(id)] = true; });
+
+              var firstAvailable = null;
+              variants.forEach(function (v) {
+                var opt = document.createElement('option');
+                opt.value = v.id;
+                var label = v.title;
+                if (!v.available) { opt.disabled = true; label += ' — Out of stock'; }
+                else if (blockedSet[String(v.id)]) { opt.disabled = true; label += ' — Already in box'; }
+                opt.textContent = label;
+                sel.appendChild(opt);
+                if (!firstAvailable && v.available && !blockedSet[String(v.id)]) firstAvailable = v;
+              });
+
+              if (firstAvailable) {
+                sel.value = firstAvailable.id;
+                selVarId    = firstAvailable.id;
+                selVarPrice = firstAvailable.price;
+                selVarCompare = firstAvailable.compareAtPrice;
+                selVarTitle = firstAvailable.title !== 'Default Title' ? firstAvailable.title : null;
+                renderPriceWrap(selVarPrice, selVarCompare);
+              }
+
+              wrap.style.display = '';
+            });
+          })(variantSelect, selectWrap, blockedVariantIds);
+        }
 
         // ADD TO BOX / REMOVE FROM BOX button
         var addBtn = document.createElement('button');
@@ -982,23 +1058,21 @@
             }
 
             function onProductClick() {
-              var needsPicker = !p.isCollection && !!p.productHandle;
-              if (needsPicker) {
+              if (p.isCollection || !p.productHandle) {
+                // Collection or no handle — add directly with fallback variant
+                var fallbackId = p.variantIds && p.variantIds[0] ? String(p.variantIds[0]) : null;
+                if (!box.allowDuplicates && fallbackId && blockedVariantIdsForProduct && blockedVariantIdsForProduct.indexOf(fallbackId) !== -1) return;
+                doAddToSlot(fallbackId, null, p.productPrice, p.productCompareAtPrice);
+              } else if (selVarId) {
+                // Use variant already selected in the inline dropdown
+                if (!box.allowDuplicates && blockedVariantIdsForProduct && blockedVariantIdsForProduct.indexOf(String(selVarId)) !== -1) return;
+                doAddToSlot(selVarId, selVarTitle, selVarPrice, selVarCompare);
+              } else {
+                // Variants still loading — fall back to popup picker
                 showVariantPicker(card, p, aBtn, blockedVariantIdsForProduct, function (variantId, variantTitle, variantPrice, variantCompareAtPrice) {
                   if (!variantId) return;
                   doAddToSlot(variantId, variantTitle, variantPrice, variantCompareAtPrice);
                 });
-              } else {
-                var fallbackVariantId = p.variantIds && p.variantIds[0] ? String(p.variantIds[0]) : null;
-                if (
-                  !box.allowDuplicates &&
-                  fallbackVariantId &&
-                  blockedVariantIdsForProduct &&
-                  blockedVariantIdsForProduct.indexOf(fallbackVariantId) !== -1
-                ) {
-                  return;
-                }
-                doAddToSlot(fallbackVariantId, null, p.productPrice, p.productCompareAtPrice);
               }
             }
 

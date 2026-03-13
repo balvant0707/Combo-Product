@@ -50,13 +50,13 @@ export const loader = async ({ request }) => {
     bundlesSold,
     bundleRevenue,
     themeEditorUrl: buildThemeEditorUrl(shop, apiKey),
-    recentOrders: recentOrders.map((o) => ({
-      id: o.id,
-      orderId: o.orderId,
-      boxTitle: o.box?.displayTitle || "Unknown Box",
-      itemCount: o.box?.itemCount || 0,
-      bundlePrice: parseFloat(o.bundlePrice),
-      orderDate: o.orderDate.toISOString(),
+    recentOrders: recentOrders.map((order) => ({
+      id: order.id,
+      orderId: order.orderId,
+      boxTitle: order.box?.displayTitle || "Unknown Box",
+      itemCount: order.box?.itemCount || 0,
+      bundlePrice: parseFloat(order.bundlePrice),
+      orderDate: order.orderDate.toISOString(),
     })),
   };
 };
@@ -174,8 +174,17 @@ function ThemeCustomizationCard({
 }) {
   const steps = [
     "Open Shopify Theme Editor from this dashboard.",
-    "On the Home page, use Add section > Apps and choose Combo Builder.",
-    "Confirm the block appears in Apps, then click Save.",
+    "Choose the page template where the Combo Builder should appear.",
+    "Use Add block or Add section, then select Combo Builder from Apps.",
+    "Drag the block to the right position and click Save.",
+  ];
+  const productInfoBlocks = [
+    "Text",
+    "Title",
+    "Price",
+    "Variant picker",
+    "Buy buttons",
+    "Combo Builder",
   ];
 
   return (
@@ -183,7 +192,7 @@ function ThemeCustomizationCard({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "minmax(0, 1.08fr) minmax(320px, 0.92fr)",
+          gridTemplateColumns: "minmax(0, 1.02fr) minmax(360px, 0.98fr)",
           gap: "20px",
           alignItems: "stretch",
         }}
@@ -221,12 +230,19 @@ function ThemeCustomizationCard({
                 color: "#111827",
               }}
             >
-              Start theme customization from the dashboard
+              Theme customization instructions
             </h3>
-            <p style={{ margin: 0, fontSize: "14px", lineHeight: 1.6, color: "#4b5563" }}>
-              Theme setup is part of merchant onboarding. This action opens the
-              Shopify editor directly so the merchant can place the Combo
-              Builder block where customers will interact with it.
+            <p
+              style={{
+                margin: 0,
+                fontSize: "14px",
+                lineHeight: 1.6,
+                color: "#4b5563",
+              }}
+            >
+              The merchant should see where the app block is added, how it is
+              moved, and where the final Save action happens. This mirrors that
+              flow directly in the dashboard.
             </p>
           </div>
 
@@ -257,7 +273,13 @@ function ThemeCustomizationCard({
                 >
                   {index + 1}
                 </div>
-                <div style={{ fontSize: "14px", lineHeight: 1.55, color: "#374151" }}>
+                <div
+                  style={{
+                    fontSize: "14px",
+                    lineHeight: 1.55,
+                    color: "#374151",
+                  }}
+                >
                   {step}
                 </div>
               </div>
@@ -266,18 +288,17 @@ function ThemeCustomizationCard({
 
           <div
             style={{
-              background: "#eff6ff",
-              border: "1px solid #bfdbfe",
+              background: "#f8fafc",
+              border: "1px solid #dbeafe",
               borderRadius: "10px",
               padding: "12px 14px",
-              color: "#1d4ed8",
+              color: "#334155",
               fontSize: "13px",
               lineHeight: 1.55,
             }}
           >
-            If Shopify opens the editor without auto-placing the block, the
-            merchant can still add it manually from the Apps list in the left
-            sidebar.
+            Tip: on product templates, place the widget inside Product
+            information. On home page templates, use Apps as a separate section.
           </div>
 
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
@@ -319,7 +340,7 @@ function ThemeCustomizationCard({
 
         <div
           style={{
-            background: "linear-gradient(180deg, #f8fbff 0%, #eef7f7 100%)",
+            background: "#f8fafc",
             border: "1px solid #dbeafe",
             borderRadius: "14px",
             boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
@@ -351,13 +372,7 @@ function ThemeCustomizationCard({
                 />
               ))}
             </div>
-            <div
-              style={{
-                fontSize: "12px",
-                color: "#6b7280",
-                fontWeight: "600",
-              }}
-            >
+            <div style={{ fontSize: "12px", color: "#6b7280", fontWeight: "600" }}>
               Shopify Theme Editor
             </div>
           </div>
@@ -365,58 +380,143 @@ function ThemeCustomizationCard({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "180px minmax(0, 1fr)",
-              minHeight: "340px",
+              gridTemplateColumns: "220px minmax(0, 1fr)",
+              minHeight: "430px",
             }}
           >
             <div
               style={{
-                background: "#ffffff",
+                background: "#fff",
                 borderRight: "1px solid #e5e7eb",
-                padding: "18px 14px",
+                padding: "16px 14px",
               }}
             >
               <div
                 style={{
-                  fontSize: "12px",
-                  fontWeight: "700",
-                  color: "#111827",
-                  marginBottom: "16px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: "12px",
                 }}
               >
-                Home page
+                <div style={{ fontSize: "12px", fontWeight: "700", color: "#111827" }}>
+                  Default product
+                </div>
+                <div style={{ fontSize: "11px", fontWeight: "700", color: "#2563eb" }}>
+                  Change
+                </div>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {[
-                  { label: "Header", active: false },
-                  { label: "Template", active: false },
-                  { label: "Apps", active: true },
-                  { label: "Combo Builder", active: true, nested: true },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    style={{
-                      padding: item.nested ? "10px 12px 10px 28px" : "10px 12px",
-                      borderRadius: "10px",
-                      background: item.active ? "#ecfeff" : "#f9fafb",
-                      border: `1px solid ${item.active ? "#67e8f9" : "#e5e7eb"}`,
-                      fontSize: "13px",
-                      fontWeight: item.active ? "700" : "600",
-                      color: item.active ? "#0f766e" : "#374151",
-                    }}
-                  >
-                    {item.label}
-                  </div>
-                ))}
+              <div
+                style={{
+                  background: "#f8fafc",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "10px",
+                  padding: "10px 12px",
+                  marginBottom: "14px",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "10px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: "#6b7280",
+                    fontWeight: "700",
+                    marginBottom: "6px",
+                  }}
+                >
+                  Preview
+                </div>
+                <div style={{ fontSize: "13px", color: "#374151", fontWeight: "600" }}>
+                  Small Convertible Flex Bag
+                </div>
+              </div>
+
+              <div
+                style={{
+                  fontSize: "10px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "#6b7280",
+                  fontWeight: "700",
+                  marginBottom: "8px",
+                }}
+              >
+                Template
+              </div>
+              <div
+                style={{
+                  padding: "9px 10px",
+                  borderRadius: "8px 8px 0 0",
+                  background: "#f8fafc",
+                  border: "1px solid #e5e7eb",
+                  borderBottom: "none",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  color: "#374151",
+                }}
+              >
+                Product information
+              </div>
+              <div
+                style={{
+                  border: "1px solid #e5e7eb",
+                  borderTop: "none",
+                  borderRadius: "0 0 8px 8px",
+                  padding: "8px",
+                  background: "#fff",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                }}
+              >
+                {productInfoBlocks.map((item) => {
+                  const isActive = item === "Combo Builder";
+                  return (
+                    <div
+                      key={item}
+                      style={{
+                        padding: "8px 10px",
+                        borderRadius: "7px",
+                        background: isActive ? "#e0f2fe" : "#f9fafb",
+                        border: `1px solid ${isActive ? "#7dd3fc" : "#e5e7eb"}`,
+                        fontSize: "12px",
+                        fontWeight: isActive ? "700" : "600",
+                        color: isActive ? "#0f766e" : "#4b5563",
+                      }}
+                    >
+                      {item}
+                    </div>
+                  );
+                })}
+                <div
+                  style={{
+                    padding: "8px 10px",
+                    borderRadius: "7px",
+                    background: "#eff6ff",
+                    border: "1px solid #bfdbfe",
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    color: "#2563eb",
+                  }}
+                >
+                  Add block
+                </div>
               </div>
             </div>
 
-            <div style={{ padding: "20px" }}>
+            <div
+              style={{
+                position: "relative",
+                padding: "20px",
+                background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+              }}
+            >
               <div
                 style={{
                   background: "#fff",
-                  border: "1px solid #dbeafe",
+                  border: "1px solid #e5e7eb",
                   borderRadius: "14px",
                   padding: "18px",
                 }}
@@ -424,89 +524,278 @@ function ThemeCustomizationCard({
                 <div
                   style={{
                     display: "flex",
-                    justifyContent: "space-between",
                     alignItems: "center",
-                    gap: "12px",
+                    justifyContent: "space-between",
                     marginBottom: "18px",
                   }}
                 >
-                  <div style={{ fontSize: "24px", fontWeight: "800", color: "#0f766e" }}>
-                    Step 2: Select your products
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "700",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                      color: "#6b7280",
+                    }}
+                  >
+                    Product page preview
                   </div>
                   <div
                     style={{
-                      padding: "10px 16px",
-                      borderRadius: "10px",
-                      background: "#10b981",
-                      color: "#fff",
-                      fontSize: "13px",
+                      padding: "7px 10px",
+                      borderRadius: "999px",
+                      background: "#dbeafe",
+                      color: "#1d4ed8",
+                      fontSize: "11px",
                       fontWeight: "700",
-                      whiteSpace: "nowrap",
                     }}
                   >
-                    ADD TO CART
+                    App block selected
                   </div>
                 </div>
 
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-                    gap: "14px",
+                    gridTemplateColumns: "minmax(180px, 0.85fr) minmax(0, 1.15fr)",
+                    gap: "20px",
+                    alignItems: "start",
                   }}
                 >
-                  {[1, 2, 3, 4].map((slot) => (
+                  <div
+                    style={{
+                      height: "290px",
+                      borderRadius: "12px",
+                      background:
+                        "linear-gradient(180deg, rgba(232,211,192,0.92) 0%, rgba(191,136,98,0.96) 100%)",
+                      border: "1px solid #e5d4c6",
+                    }}
+                  />
+                  <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                     <div
-                      key={slot}
                       style={{
-                        minHeight: "124px",
-                        borderRadius: "12px",
-                        border: slot === 1 ? "2px solid #7dd3fc" : "2px dashed #d1d5db",
-                        background: slot === 1 ? "#e0f2fe" : "#f8fafc",
-                        display: "flex",
-                        flexDirection: "column",
+                        display: "inline-flex",
                         alignItems: "center",
-                        justifyContent: "center",
-                        gap: "8px",
+                        alignSelf: "flex-start",
+                        padding: "6px 10px",
+                        borderRadius: "8px",
+                        border: "2px solid #60a5fa",
+                        background: "#eff6ff",
+                        color: "#1d4ed8",
+                        fontSize: "12px",
+                        fontWeight: "700",
                       }}
                     >
-                      <div
-                        style={{
-                          fontSize: "36px",
-                          fontWeight: "800",
-                          color: slot === 1 ? "#0f766e" : "#9ca3af",
-                        }}
-                      >
-                        {slot}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: "600",
-                          color: "#6b7280",
-                          textAlign: "center",
-                        }}
-                      >
-                        Select your Item {slot}
-                      </div>
+                      Combo Builder
                     </div>
-                  ))}
+                    <div
+                      style={{
+                        fontSize: "30px",
+                        fontWeight: "500",
+                        lineHeight: 1.1,
+                        color: "#111827",
+                      }}
+                    >
+                      Small Convertible Flex Bag
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        fontSize: "15px",
+                        fontWeight: "600",
+                        color: "#6b7280",
+                      }}
+                    >
+                      <span style={{ textDecoration: "line-through" }}>Rs. 395.00</span>
+                      <span style={{ color: "#111827", textDecoration: "none" }}>
+                        Rs. 320.00
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        padding: "14px 18px",
+                        borderRadius: "12px",
+                        background: "#f8fafc",
+                        border: "1px solid #dbeafe",
+                        fontSize: "13px",
+                        color: "#334155",
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      Add the block from Apps, then drag it above or below the
+                      product details until it is in the right position.
+                    </div>
+                  </div>
                 </div>
 
                 <div
                   style={{
-                    marginTop: "18px",
-                    padding: "14px 16px",
-                    borderRadius: "12px",
-                    background: "#ecfeff",
-                    border: "1px solid #a5f3fc",
-                    fontSize: "13px",
-                    color: "#155e75",
-                    fontWeight: "600",
+                    marginTop: "16px",
+                    paddingTop: "14px",
+                    borderTop: "1px solid #e5e7eb",
+                    fontSize: "12px",
+                    color: "#6b7280",
                   }}
                 >
-                  The merchant will see Combo Builder inside the Apps section in
-                  the Theme Editor.
+                  Example flow: Product information &gt; Add block &gt; Apps
+                  &gt; Combo Builder &gt; Drag to reorder &gt; Save
+                </div>
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: "90px",
+                  top: "108px",
+                  width: "300px",
+                  background: "#fff",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "12px",
+                  boxShadow: "0 18px 40px rgba(15,23,42,0.16)",
+                  padding: "16px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: "12px",
+                    gap: "12px",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      fontSize: "14px",
+                      fontWeight: "700",
+                      color: "#374151",
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: "20px",
+                        height: "20px",
+                        borderRadius: "999px",
+                        background: "#16a34a",
+                        color: "#fff",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "12px",
+                        fontWeight: "800",
+                      }}
+                    >
+                      +
+                    </span>
+                    &quot;Combo Builder&quot; added
+                  </div>
+                  <span style={{ color: "#6b7280", fontSize: "18px", lineHeight: 1 }}>
+                    x
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    border: "1px solid #d1d5db",
+                    borderRadius: "8px",
+                    background: "#f8fafc",
+                    padding: "14px",
+                    marginBottom: "12px",
+                  }}
+                >
+                  <div
+                    style={{
+                      height: "72px",
+                      borderRadius: "8px",
+                      border: "2px dashed #93c5fd",
+                      background: "#fff",
+                      position: "relative",
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: "absolute",
+                        left: "14px",
+                        top: "22px",
+                        width: "18px",
+                        height: "18px",
+                        borderRadius: "4px",
+                        background: "#60a5fa",
+                        display: "inline-block",
+                      }}
+                    />
+                    <span
+                      style={{
+                        position: "absolute",
+                        left: "42px",
+                        top: "26px",
+                        width: "92px",
+                        height: "10px",
+                        borderRadius: "999px",
+                        background: "#9ca3af",
+                        display: "inline-block",
+                      }}
+                    />
+                    <span
+                      style={{
+                        position: "absolute",
+                        right: "12px",
+                        top: "19px",
+                        width: "26px",
+                        height: "26px",
+                        borderRadius: "6px",
+                        border: "2px solid #60a5fa",
+                        color: "#2563eb",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "12px",
+                        fontWeight: "700",
+                      }}
+                    >
+                      ||
+                    </span>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    fontSize: "13px",
+                    color: "#374151",
+                    lineHeight: 1.55,
+                  }}
+                >
+                  Drag the app block up or down to move it to the position you
+                  want. When ready, save your changes.
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    marginTop: "14px",
+                  }}
+                >
+                  <button
+                    type="button"
+                    style={{
+                      border: "none",
+                      borderRadius: "8px",
+                      background: "#16a34a",
+                      color: "#fff",
+                      fontSize: "13px",
+                      fontWeight: "700",
+                      padding: "9px 14px",
+                      cursor: "default",
+                    }}
+                  >
+                    Got it
+                  </button>
                 </div>
               </div>
             </div>
@@ -529,6 +818,20 @@ export default function DashboardPage() {
   const navigate = useNavigate();
 
   const stats = STAT_CARDS(activeBoxCount, bundlesSold, bundleRevenue);
+
+  function navigateTo(path) {
+    navigate(withEmbeddedAppParams(path, location.search));
+  }
+
+  function openThemeEditor() {
+    if (!themeEditorUrl || typeof window === "undefined") return;
+    if (window.top) {
+      window.top.location.href = themeEditorUrl;
+      return;
+    }
+    window.location.href = themeEditorUrl;
+  }
+
   const quickActions = [
     {
       key: "theme-editor",
@@ -562,19 +865,6 @@ export default function DashboardPage() {
       href: "/app/settings",
     },
   ];
-
-  function navigateTo(path) {
-    navigate(withEmbeddedAppParams(path, location.search));
-  }
-
-  function openThemeEditor() {
-    if (!themeEditorUrl || typeof window === "undefined") return;
-    if (window.top) {
-      window.top.location.href = themeEditorUrl;
-      return;
-    }
-    window.location.href = themeEditorUrl;
-  }
 
   return (
     <s-page heading="Combo Product">

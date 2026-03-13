@@ -152,7 +152,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <s-page heading="Dashboard">
+    <s-page heading="Combo Product">
       <s-button
         slot="primary-action"
         onClick={() => navigateTo("/app/boxes/new")}

@@ -154,30 +154,7 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
   ];
   return (
     <div style={{ marginBottom: "20px" }}>
-      <div
-        style={{
-          borderRadius: "20px",
-          overflow: "hidden",
-          background: "linear-gradient(135deg, #1a4f31 0%, #2A7A4F 55%, #3a9e68 100%)",
-          boxShadow: "0 8px 32px rgba(42,122,79,0.28), 0 2px 8px rgba(0,0,0,0.10)",
-          position: "relative",
-        }}
-      >
-        {/* decorative circles */}
-        <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "220px", height: "220px", borderRadius: "50%", background: "rgba(255,255,255,0.06)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: "-60px", right: "80px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", top: "20px", right: "200px", width: "80px", height: "80px", borderRadius: "50%", background: "rgba(255,255,255,0.03)", pointerEvents: "none" }} />
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr auto",
-            gap: "40px",
-            alignItems: "center",
-            padding: "36px 44px",
-          }}
-        >
-          {/* Left: label + headline + steps + CTA */}
+       {/* Left: label + headline + steps + CTA */}
           <div>
             {/* Badge */}
             <div
@@ -307,6 +284,29 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
               Open Theme Editor
             </a>
           </div>
+      <div
+        style={{
+          borderRadius: "20px",
+          overflow: "hidden",
+          background: "linear-gradient(135deg, #1a4f31 0%, #2A7A4F 55%, #3a9e68 100%)",
+          boxShadow: "0 8px 32px rgba(42,122,79,0.28), 0 2px 8px rgba(0,0,0,0.10)",
+          position: "relative",
+        }}
+      >
+        {/* decorative circles */}
+        <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "220px", height: "220px", borderRadius: "50%", background: "rgba(255,255,255,0.06)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "-60px", right: "80px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: "20px", right: "200px", width: "80px", height: "80px", borderRadius: "50%", background: "rgba(255,255,255,0.03)", pointerEvents: "none" }} />
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr auto",
+            gap: "40px",
+            alignItems: "center",
+            padding: "36px 44px",
+          }}
+        >
 
           {/* Right: decorative badge */}
           <div

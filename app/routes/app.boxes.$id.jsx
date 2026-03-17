@@ -807,40 +807,36 @@ export default function EditBoxPage() {
                           <div>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
                               <label style={labelStyle}>Select collection</label>
-                              {step.collections.length > 0 && <span style={{ fontSize: "10px", fontWeight: "600", background: "#d1fae5", color: "#065f46", padding: "2px 8px", borderRadius: "10px" }}>{step.collections.length} selected</span>}
+                              {step.collections.length > 0 && <span style={{ fontSize: "10px", fontWeight: "600", background: "#e0e7ff", color: "#3730a3", padding: "2px 8px", borderRadius: "10px" }}>{step.collections.length} selected</span>}
                             </div>
-                            <div style={{ border: "1px solid #e5e7eb", borderRadius: "5px", background: "#fff", overflow: "hidden" }}>
-                              {step.collections.length === 0 ? (
-                                <div onClick={() => openCollModal(ai)} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", cursor: "pointer" }} onMouseEnter={(e) => (e.currentTarget.style.background = "#f9fafb")} onMouseLeave={(e) => (e.currentTarget.style.background = "")}>
-                                  <div style={{ width: "36px", height: "36px", borderRadius: "5px", background: "#f3f4f6", border: "1px dashed #d1d5db", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0 }}>📁</div>
-                                  <div>
-                                    <div style={{ fontSize: "13px", color: "#2563eb", fontWeight: "500" }}>+ Select collection</div>
-                                    <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "1px" }}>Choose which collection to show in the popup</div>
-                                  </div>
-                                </div>
-                              ) : (
-                                <>
-                                  {step.collections.map((coll) => (
-                                    <div key={coll.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", padding: "8px 10px", borderBottom: "1px solid #f3f4f6" }}>
-                                      <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: 0 }}>
-                                        {coll.imageUrl ? <img src={coll.imageUrl} alt={coll.title} style={{ width: "36px", height: "36px", objectFit: "cover", borderRadius: "5px", border: "1px solid #e5e7eb", flexShrink: 0 }} /> : <div style={{ width: "36px", height: "36px", borderRadius: "5px", background: "#f3f4f6", border: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0 }}>📁</div>}
-                                        <div style={{ minWidth: 0 }}>
-                                          <div style={{ fontSize: "12px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{coll.title}</div>
-                                          <div style={{ fontSize: "11px", color: "#9ca3af" }}>{coll.handle}</div>
-                                        </div>
-                                      </div>
-                                      <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
-                                        <button type="button" onClick={() => openCollModal(ai)} style={{ padding: "3px 8px", fontSize: "11px", border: "1px solid #e5e7eb", borderRadius: "4px", background: "#f9fafb", cursor: "pointer", color: "#374151" }}>Change</button>
-                                        <button type="button" onClick={() => removeCollection(ai, coll.id)} style={{ width: "22px", height: "22px", borderRadius: "50%", border: "1px solid #e5e7eb", background: "none", cursor: "pointer", fontSize: "10px", color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-                                      </div>
-                                    </div>
-                                  ))}
-                                  <div style={{ padding: "6px 10px", borderTop: "1px solid #f3f4f6" }}>
-                                    <button type="button" onClick={() => openCollModal(ai)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: "#2563eb", fontWeight: "500" }}>+ Add another collection</button>
-                                  </div>
-                                </>
-                              )}
-                            </div>
+                            <button
+                              type="button"
+                              onClick={() => openCollModal(ai)}
+                              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", width: "100%", padding: "9px 12px", border: step.collections.length > 0 ? "1.5px solid #091fd6" : "1.5px solid #d1d5db", borderRadius: "5px", background: step.collections.length > 0 ? "#eef1ff" : "#fff", cursor: "pointer", fontSize: "13px", textAlign: "left", color: step.collections.length > 0 ? "#091fd6" : "#6b7280", transition: "border-color 0.15s, background 0.15s" }}
+                              onMouseEnter={(e) => { if (step.collections.length === 0) { e.currentTarget.style.borderColor = "#091fd6"; e.currentTarget.style.background = "#f0f4ff"; }}}
+                              onMouseLeave={(e) => { if (step.collections.length === 0) { e.currentTarget.style.borderColor = "#d1d5db"; e.currentTarget.style.background = "#fff"; }}}
+                            >
+                              <span style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: 0 }}>
+                                {step.collections.length > 0 && step.collections[0].imageUrl
+                                  ? <img src={step.collections[0].imageUrl} alt="" style={{ width: "20px", height: "20px", borderRadius: "3px", objectFit: "cover", flexShrink: 0, border: "1px solid #c7d2fe" }} />
+                                  : <span style={{ fontSize: "15px", flexShrink: 0 }}>📁</span>}
+                                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: step.collections.length > 0 ? "600" : "400" }}>
+                                  {step.collections.length > 0 ? step.collections.map((c) => c.title).join(", ") : "Select collection"}
+                                </span>
+                              </span>
+                              <span style={{ fontSize: "11px", color: step.collections.length > 0 ? "#091fd6" : "#9ca3af", flexShrink: 0, marginLeft: "4px" }}>▾</span>
+                            </button>
+                            {step.collections.length > 0 && (
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginTop: "6px" }}>
+                                {step.collections.map((coll) => (
+                                  <span key={coll.id} style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#eef1ff", border: "1px solid #c7d2fe", borderRadius: "4px", padding: "3px 8px", fontSize: "11px", color: "#091fd6", fontWeight: "500" }}>
+                                    {coll.title}
+                                    <button type="button" onClick={() => removeCollection(ai, coll.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "10px", color: "#6b7280", padding: "0 0 0 2px", lineHeight: 1 }}>✕</button>
+                                  </span>
+                                ))}
+                                <button type="button" onClick={() => openCollModal(ai)} style={{ background: "none", border: "1px dashed #c7d2fe", borderRadius: "4px", padding: "3px 8px", fontSize: "11px", color: "#091fd6", cursor: "pointer" }}>+ Add</button>
+                              </div>
+                            )}
                             <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>Products from this collection appear in the Step {ai + 1} popup</div>
                           </div>
 
@@ -848,39 +844,31 @@ export default function EditBoxPage() {
                           <div>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
                               <label style={labelStyle}>Select product</label>
-                              {step.selectedProduct && <span style={{ fontSize: "10px", fontWeight: "600", background: "#d1fae5", color: "#065f46", padding: "2px 8px", borderRadius: "10px" }}>1 selected</span>}
+                              {step.selectedProduct && <span style={{ fontSize: "10px", fontWeight: "600", background: "#dcfce7", color: "#166534", padding: "2px 8px", borderRadius: "10px" }}>1 selected</span>}
                             </div>
-                            <div style={{ border: "1px solid #e5e7eb", borderRadius: "5px", background: "#fff", overflow: "hidden" }}>
-                              {!step.selectedProduct ? (
-                                <div onClick={() => openStepProdModal(ai)} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", cursor: "pointer" }} onMouseEnter={(e) => (e.currentTarget.style.background = "#f9fafb")} onMouseLeave={(e) => (e.currentTarget.style.background = "")}>
-                                  <div style={{ width: "36px", height: "36px", borderRadius: "5px", background: "#f3f4f6", border: "1px dashed #d1d5db", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0 }}>+</div>
-                                  <div>
-                                    <div style={{ fontSize: "13px", color: "#2563eb", fontWeight: "500" }}>+ Select product</div>
-                                    <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "1px" }}>
-                                      {collProdsFetchers[ai]?.state === "loading"
-                                        ? "Loading products…"
-                                        : stepProducts[ai]
-                                          ? `${stepProducts[ai].length} product${stepProducts[ai].length !== 1 ? "s" : ""} from selected collection`
-                                          : `${products.length} products across all collections`}
-                                    </div>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", padding: "8px 10px" }}>
-                                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: 0 }}>
-                                    {step.selectedProduct.imageUrl ? <img src={step.selectedProduct.imageUrl} alt={step.selectedProduct.title} style={{ width: "36px", height: "36px", objectFit: "cover", borderRadius: "5px", border: "1px solid #e5e7eb", flexShrink: 0 }} /> : <div style={{ width: "36px", height: "36px", borderRadius: "5px", background: "#f3f4f6", border: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0 }}>📦</div>}
-                                    <div style={{ minWidth: 0 }}>
-                                      <div style={{ fontSize: "12px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{step.selectedProduct.title}</div>
-                                      <div style={{ fontSize: "11px", color: "#9ca3af" }}>₹{parseFloat(step.selectedProduct.price || 0).toLocaleString("en-IN")}</div>
-                                    </div>
-                                  </div>
-                                  <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
-                                    <button type="button" onClick={() => openStepProdModal(ai)} style={{ padding: "3px 8px", fontSize: "11px", border: "1px solid #e5e7eb", borderRadius: "4px", background: "#f9fafb", cursor: "pointer", color: "#374151" }}>Change</button>
-                                    <button type="button" onClick={() => updateComboStep(ai, "selectedProduct", null)} style={{ width: "22px", height: "22px", borderRadius: "50%", border: "1px solid #e5e7eb", background: "none", cursor: "pointer", fontSize: "10px", color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
+                            <button
+                              type="button"
+                              onClick={() => openStepProdModal(ai)}
+                              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", width: "100%", padding: "9px 12px", border: step.selectedProduct ? "1.5px solid #2A7A4F" : "1.5px solid #d1d5db", borderRadius: "5px", background: step.selectedProduct ? "#f0fdf4" : "#fff", cursor: "pointer", fontSize: "13px", textAlign: "left", color: step.selectedProduct ? "#166534" : "#6b7280", transition: "border-color 0.15s, background 0.15s" }}
+                              onMouseEnter={(e) => { if (!step.selectedProduct) { e.currentTarget.style.borderColor = "#2A7A4F"; e.currentTarget.style.background = "#f0fdf4"; }}}
+                              onMouseLeave={(e) => { if (!step.selectedProduct) { e.currentTarget.style.borderColor = "#d1d5db"; e.currentTarget.style.background = "#fff"; }}}
+                            >
+                              <span style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: 0 }}>
+                                {step.selectedProduct
+                                  ? (step.selectedProduct.imageUrl ? <img src={step.selectedProduct.imageUrl} alt="" style={{ width: "20px", height: "20px", borderRadius: "3px", objectFit: "cover", flexShrink: 0, border: "1px solid #86efac" }} /> : <span style={{ fontSize: "15px", flexShrink: 0 }}>📦</span>)
+                                  : <span style={{ fontSize: "15px", flexShrink: 0 }}>📦</span>}
+                                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: step.selectedProduct ? "600" : "400" }}>
+                                  {step.selectedProduct ? step.selectedProduct.title : collProdsFetchers[ai]?.state === "loading" ? "Loading…" : "Select product"}
+                                </span>
+                              </span>
+                              <span style={{ fontSize: "11px", color: step.selectedProduct ? "#2A7A4F" : "#9ca3af", flexShrink: 0, marginLeft: "4px" }}>▾</span>
+                            </button>
+                            {step.selectedProduct && (
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "6px", padding: "4px 10px", background: "#f0fdf4", border: "1px solid #86efac", borderRadius: "4px" }}>
+                                <span style={{ fontSize: "11px", color: "#166534", fontWeight: "600" }}>₹{parseFloat(step.selectedProduct.price || 0).toLocaleString("en-IN")}</span>
+                                <button type="button" onClick={() => updateComboStep(ai, "selectedProduct", null)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "11px", color: "#dc2626" }}>Remove ✕</button>
+                              </div>
+                            )}
                             <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>Pre-selected product shown in this step (optional)</div>
                           </div>
                         </div>
@@ -995,7 +983,7 @@ export default function EditBoxPage() {
                 const isSelected = tempColl?.id === coll.id;
                 const alreadyAdded = collModalStepIdx !== null && comboConfig.steps[collModalStepIdx]?.collections.some((c) => c.id === coll.id) && !isSelected;
                 return (
-                  <div key={coll.id} onClick={() => setTempColl(isSelected ? null : coll)} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filteredColls.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", background: isSelected ? "#f0f7ff" : "#fff", transition: "background 0.1s", userSelect: "none" }}>
+                  <div key={coll.id} onClick={() => setTempColl(isSelected ? null : coll)} onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = "#eef1ff"; }} onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = "#fff"; }} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filteredColls.length - 1 ? "1px solid #f3f4f6" : "none", borderLeft: isSelected ? "3px solid #091fd6" : "3px solid transparent", cursor: "pointer", background: isSelected ? "#eef1ff" : "#fff", transition: "background 0.1s, border-color 0.1s", userSelect: "none" }}>
                     {coll.imageUrl ? <img src={coll.imageUrl} alt={coll.title} style={{ width: "38px", height: "38px", objectFit: "cover", borderRadius: "5px", border: "1px solid #e5e7eb", flexShrink: 0 }} /> : <div style={{ width: "38px", height: "38px", borderRadius: "5px", background: "#f3f4f6", border: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0 }}>📁</div>}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{coll.title}</div>
@@ -1048,8 +1036,8 @@ export default function EditBoxPage() {
               ) : filteredStepProds.map((product, idx) => {
                 const isSel = tempStepProd?.id === product.id;
                 return (
-                  <div key={product.id} onClick={() => setTempStepProd(isSel ? null : { id: product.id, title: product.title, handle: product.handle, imageUrl: product.imageUrl, price: product.price })} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filteredStepProds.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", background: isSel ? "#f0f7ff" : "#fff", transition: "background 0.1s", userSelect: "none" }}>
-                    <div style={{ width: "18px", height: "18px", borderRadius: "5px", border: `2px solid ${isSel ? "#091fd6" : "#d1d5db"}`, background: isSel ? "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.1s" }}>
+                  <div key={product.id} onClick={() => setTempStepProd(isSel ? null : { id: product.id, title: product.title, handle: product.handle, imageUrl: product.imageUrl, price: product.price })} onMouseEnter={(e) => { if (!isSel) e.currentTarget.style.background = "#f0fdf4"; }} onMouseLeave={(e) => { if (!isSel) e.currentTarget.style.background = "#fff"; }} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filteredStepProds.length - 1 ? "1px solid #f3f4f6" : "none", borderLeft: isSel ? "3px solid #2A7A4F" : "3px solid transparent", cursor: "pointer", background: isSel ? "#f0fdf4" : "#fff", transition: "background 0.1s, border-color 0.1s", userSelect: "none" }}>
+                    <div style={{ width: "18px", height: "18px", borderRadius: "4px", border: `2px solid ${isSel ? "#2A7A4F" : "#d1d5db"}`, background: isSel ? "#2A7A4F" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.1s" }}>
                       {isSel && <span style={{ color: "#fff", fontSize: "10px", fontWeight: "700" }}>✓</span>}
                     </div>
                     {product.imageUrl ? <img src={product.imageUrl} alt={product.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} /> : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", border: "1px solid #e5e7eb" }}>📦</div>}

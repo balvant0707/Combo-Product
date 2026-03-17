@@ -4,6 +4,7 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { getBox, updateBox, deleteBox, getBannerImageSrc, upsertComboConfig } from "../models/boxes.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
+import { validateComboConfig } from "../utils/combo-config";
 
 /* ─────────────────────────── GraphQL ─────────────────────────── */
 const PRODUCTS_QUERY = `#graphql
@@ -194,6 +195,16 @@ export const action = async ({ request, params }) => {
 
   if (intent === "save_combo") {
     const comboStepsConfig = formData.get("comboStepsConfig");
+    const comboValidation = validateComboConfig(comboStepsConfig);
+    if (comboValidation) {
+      return {
+        ok: false,
+        errors: {
+          comboConfig: comboValidation.form,
+          comboStepSelections: comboValidation.stepSelections,
+        },
+      };
+    }
     await upsertComboConfig(params.id, comboStepsConfig);
     return { ok: true, comboSaved: true };
   }
@@ -205,6 +216,7 @@ export const action = async ({ request, params }) => {
   const bannerImage = await parseBannerImage(formData, errors);
   const removeBannerImage = formData.get("removeBannerImage") === "true" && !bannerImage;
   const comboStepsConfig = formData.get("comboStepsConfig");
+  const comboValidation = validateComboConfig(comboStepsConfig);
 
   const data = {
     boxName: formData.get("boxName"),
@@ -225,6 +237,10 @@ export const action = async ({ request, params }) => {
   if (!data.itemCount || parseInt(data.itemCount) < 1) errors.itemCount = "Invalid item count";
   if (!data.bundlePrice || parseFloat(data.bundlePrice) <= 0) errors.bundlePrice = "Invalid price";
   if (eligibleProducts.length === 0) errors.eligibleProducts = "Select at least one product";
+  if (comboValidation) {
+    errors.comboConfig = comboValidation.form;
+    errors.comboStepSelections = comboValidation.stepSelections;
+  }
 
   if (Object.keys(errors).length > 0) return { errors };
 
@@ -279,6 +295,9 @@ export default function EditBoxPage() {
 
   /* ── Box Settings state ── */
   const errors = actionData?.errors || {};
+  const comboErrors = comboFetcher.data?.errors || {};
+  const comboFormError = comboErrors.comboConfig || errors.comboConfig;
+  const comboStepErrors = comboErrors.comboStepSelections || errors.comboStepSelections || {};
   const productLookup = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
 
   const initialSelected = useMemo(() =>
@@ -353,7 +372,11 @@ export default function EditBoxPage() {
     return DEFAULT_COMBO_CONFIG;
   });
   const [comboActiveStep, setComboActiveStep] = useState(0);
-  const comboSaved = comboFetcher.data?.comboSaved;
+  const comboSaved = comboFetcher.data?.comboSaved && !comboFetcher.data?.errors;
+
+  useEffect(() => {
+    if (comboFormError) setActiveTab("combo");
+  }, [comboFormError]);
 
   /* Per-step scoped product lists: null = use all products (no collection selected) */
   const [stepProducts, setStepProducts] = useState([null, null, null]);
@@ -671,6 +694,12 @@ export default function EditBoxPage() {
       ════════════════════════════════════════ */}
       {activeTab === "combo" && (
         <s-section>
+          {comboFormError && (
+            <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "5px", padding: "10px 16px", marginBottom: "16px", color: "#991b1b", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "15px" }}>!</span>
+              {comboFormError}
+            </div>
+          )}
           {comboSaved && (
             <div style={{ background: "#f0fdf4", border: "1px solid #86efac", borderRadius: "5px", padding: "10px 16px", marginBottom: "16px", color: "#166534", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
               ✅ Combo configuration saved successfully.
@@ -764,7 +793,7 @@ export default function EditBoxPage() {
               {/* Step tabs */}
               <div style={{ display: "flex", borderBottom: "1px solid #e5e7eb", marginBottom: "16px" }}>
                 {Array.from({ length: comboConfig.type }, (_, i) => (
-                  <button key={i} type="button" onClick={() => setComboActiveStep(i)} style={{ padding: "8px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none", background: "none", borderBottom: comboActiveStep === i ? "2px solid #091fd6" : "2px solid transparent", marginBottom: "-1px", color: comboActiveStep === i ? "#091fd6" : "#6b7280", transition: "color 0.15s, border-color 0.15s" }}>
+                  <button key={i} type="button" onClick={() => setComboActiveStep(i)} style={{ padding: "8px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none", background: "none", borderBottom: comboActiveStep === i ? "2px solid #091fd6" : comboStepErrors[i] ? "2px solid #dc2626" : "2px solid transparent", marginBottom: "-1px", color: comboStepErrors[i] ? "#dc2626" : comboActiveStep === i ? "#091fd6" : "#6b7280", transition: "color 0.15s, border-color 0.15s" }}>
                     Step {i + 1} — {comboConfig.steps[i].label}
                   </button>
                 ))}
@@ -832,6 +861,11 @@ export default function EditBoxPage() {
                               : `${(step.selectedProducts || []).length} selected`}
                           </span>
                         </div>
+                        {comboStepErrors[ai] && (
+                          <div style={{ color: "#e11d48", fontSize: "12px", marginTop: "10px", padding: "8px 12px", background: "#fff5f5", borderRadius: "5px", border: "1px solid #fecaca" }}>
+                            {comboStepErrors[ai]}
+                          </div>
+                        )}
                         {step.collections.length > 0 && (step.scope || "collection") === "collection" && (
                           <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "8px" }}>
                             {step.collections.map((c) => (

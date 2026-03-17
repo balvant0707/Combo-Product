@@ -4,6 +4,7 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { createBox, upsertComboConfig } from "../models/boxes.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
+import { validateComboConfig } from "../utils/combo-config";
 
 const PRODUCTS_QUERY = `#graphql
   query GetProducts($first: Int!, $query: String) {
@@ -146,8 +147,10 @@ export const action = async ({ request }) => {
 
   let eligibleProducts = [];
   try { eligibleProducts = JSON.parse(formData.get("eligibleProducts") || "[]"); } catch {}
+  const comboStepsConfig = formData.get("comboStepsConfig");
   const errors = {};
   const bannerImage = await parseBannerImage(formData, errors);
+  const comboValidation = validateComboConfig(comboStepsConfig);
 
   const data = {
     boxName: formData.get("boxName"),
@@ -173,6 +176,10 @@ export const action = async ({ request }) => {
   }
   if (eligibleProducts.length === 0)
     errors.eligibleProducts = "Select at least one eligible product";
+  if (comboValidation) {
+    errors.comboConfig = comboValidation.form;
+    errors.comboStepSelections = comboValidation.stepSelections;
+  }
 
   if (Object.keys(errors).length > 0) return { errors };
 
@@ -180,7 +187,6 @@ export const action = async ({ request }) => {
     const box = await createBox(session.shop, data, admin);
 
     /* Save combo config if provided */
-    const comboStepsConfig = formData.get("comboStepsConfig");
     if (comboStepsConfig) {
       try { await upsertComboConfig(box.id, comboStepsConfig); } catch (e) {
         console.error("[app.boxes.new] upsertComboConfig error:", e);
@@ -239,6 +245,8 @@ export default function CreateBoxPage() {
   const [manualPrice, setManualPrice] = useState("");
 
   const errors = actionData?.errors || {};
+  const comboFormError = errors.comboConfig;
+  const comboStepErrors = errors.comboStepSelections || {};
   const displayProducts = searchFetcher.data?.products || products;
 
   const numItemCount = Math.max(1, parseInt(itemCount) || 1);
@@ -251,6 +259,10 @@ export default function CreateBoxPage() {
   /* ── Combo Config state ── */
   const [comboConfig, setComboConfig] = useState(DEFAULT_COMBO_CONFIG);
   const [comboActiveStep, setComboActiveStep] = useState(0);
+
+  useEffect(() => {
+    if (comboFormError) setActiveTab("combo");
+  }, [comboFormError]);
 
   /* Per-step scoped product lists: null = use all products */
   const [stepProducts, setStepProducts] = useState([null, null, null]);
@@ -556,6 +568,12 @@ export default function CreateBoxPage() {
         ════════════════════════════════════════ */}
         {activeTab === "combo" && (
           <s-section>
+            {comboFormError && (
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "5px", padding: "10px 16px", marginBottom: "16px", color: "#991b1b", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "15px" }}>!</span>
+                {comboFormError}
+              </div>
+            )}
             {/* Info banner */}
             <div style={{ display: "flex", gap: "10px", padding: "12px 14px", borderLeft: "3px solid #458fff", background: "#f4f6f8", fontSize: "13px", marginBottom: "20px", borderRadius: "0 5px 5px 0", alignItems: "flex-start" }}>
               <span style={{ fontSize: "16px", flexShrink: 0, marginTop: "1px" }}>ℹ️</span>
@@ -637,7 +655,7 @@ export default function CreateBoxPage() {
                 {/* Step tabs */}
                 <div style={{ display: "flex", borderBottom: "1px solid #e5e7eb", marginBottom: "16px" }}>
                   {Array.from({ length: comboConfig.type }, (_, i) => (
-                    <button key={i} type="button" onClick={() => setComboActiveStep(i)} style={{ padding: "8px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none", background: "none", borderBottom: comboActiveStep === i ? "2px solid #091fd6" : "2px solid transparent", marginBottom: "-1px", color: comboActiveStep === i ? "#091fd6" : "#6b7280", transition: "color 0.15s, border-color 0.15s" }}>
+                    <button key={i} type="button" onClick={() => setComboActiveStep(i)} style={{ padding: "8px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none", background: "none", borderBottom: comboActiveStep === i ? "2px solid #091fd6" : comboStepErrors[i] ? "2px solid #dc2626" : "2px solid transparent", marginBottom: "-1px", color: comboStepErrors[i] ? "#dc2626" : comboActiveStep === i ? "#091fd6" : "#6b7280", transition: "color 0.15s, border-color 0.15s" }}>
                       Step {i + 1} — {comboConfig.steps[i].label}
                     </button>
                   ))}
@@ -698,13 +716,18 @@ export default function CreateBoxPage() {
                                 Select products
                               </button>
                             )}
-                            <span style={{ fontSize: "13px", color: "#6b7280" }}>
+                          <span style={{ fontSize: "13px", color: "#6b7280" }}>
                               {(step.scope || "collection") === "collection"
                                 ? `${step.collections.length} selected`
                                 : `${(step.selectedProducts || []).length} selected`}
-                            </span>
+                          </span>
+                        </div>
+                        {comboStepErrors[ai] && (
+                          <div style={{ color: "#e11d48", fontSize: "12px", marginTop: "10px", padding: "8px 12px", background: "#fff5f5", borderRadius: "5px", border: "1px solid #fecaca" }}>
+                            {comboStepErrors[ai]}
                           </div>
-                          {step.collections.length > 0 && (step.scope || "collection") === "collection" && (
+                        )}
+                        {step.collections.length > 0 && (step.scope || "collection") === "collection" && (
                             <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "8px" }}>
                               {step.collections.map((c) => (
                                 <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", background: "#eef1ff", border: "1.5px solid #091fd6", borderRadius: "5px" }}>

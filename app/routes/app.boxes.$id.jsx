@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigation } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -33,6 +33,26 @@ const COLLECTIONS_QUERY = `#graphql
           title
           handle
           image { url }
+        }
+      }
+    }
+  }
+`;
+
+const COLLECTION_PRODUCTS_QUERY = `#graphql
+  query GetCollectionProducts($id: ID!, $first: Int!) {
+    collection(id: $id) {
+      products(first: $first) {
+        edges {
+          node {
+            id
+            title
+            handle
+            featuredImage { url }
+            variants(first: 1) {
+              edges { node { id price } }
+            }
+          }
         }
       }
     }
@@ -75,6 +95,27 @@ async function parseBannerImage(formData, errors) {
 export const loader = async ({ request, params }) => {
   const { admin, session, redirect } = await authenticate.admin(request);
   const shop = session.shop;
+
+  /* ── Fast path: fetch products for a specific collection (used by per-step pickers) ── */
+  const url = new URL(request.url);
+  const collectionId = url.searchParams.get("collectionId");
+  if (collectionId) {
+    const resp = await admin.graphql(COLLECTION_PRODUCTS_QUERY, {
+      variables: { id: collectionId, first: 100 },
+    });
+    const json = await resp.json();
+    const collectionProducts = (json?.data?.collection?.products?.edges || []).map(({ node }) => ({
+      id: node.id,
+      title: node.title,
+      handle: node.handle,
+      imageUrl: node.featuredImage?.url || null,
+      variantIds: (node.variants?.edges || []).map(({ node: v }) => v.id),
+      variantId: node.variants?.edges?.[0]?.node?.id || null,
+      price: node.variants?.edges?.[0]?.node?.price || "0",
+    }));
+    return { collectionProducts };
+  }
+
   const box = await getBox(params.id, shop);
   if (!box) throw redirect("/app/boxes");
   const bannerImageSrc = getBannerImageSrc(box);
@@ -83,7 +124,6 @@ export const loader = async ({ request, params }) => {
   delete boxWithoutBinary.bannerImageMimeType;
   delete boxWithoutBinary.bannerImageFileName;
 
-  const url = new URL(request.url);
   const query = url.searchParams.get("q") || "";
   const searchQuery = query ? `${query} NOT vendor:ComboBuilder` : "NOT vendor:ComboBuilder";
 
@@ -199,6 +239,11 @@ export default function EditBoxPage() {
   const actionData = useActionData();
   const searchFetcher = useFetcher();
   const comboFetcher = useFetcher();
+  /* One fetcher per step for lazy-loading collection-scoped products */
+  const collProdsFetcher0 = useFetcher();
+  const collProdsFetcher1 = useFetcher();
+  const collProdsFetcher2 = useFetcher();
+  const collProdsFetchers = [collProdsFetcher0, collProdsFetcher1, collProdsFetcher2];
   const location = useLocation();
   const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
@@ -264,6 +309,23 @@ export default function EditBoxPage() {
   const [comboActiveStep, setComboActiveStep] = useState(0);
   const comboSaved = comboFetcher.data?.comboSaved;
 
+  /* Per-step scoped product lists: null = use all products (no collection selected) */
+  const [stepProducts, setStepProducts] = useState([null, null, null]);
+
+  /* Sync each step fetcher result into stepProducts */
+  useEffect(() => {
+    if (collProdsFetcher0.data?.collectionProducts)
+      setStepProducts((p) => { const n = [...p]; n[0] = collProdsFetcher0.data.collectionProducts; return n; });
+  }, [collProdsFetcher0.data]);
+  useEffect(() => {
+    if (collProdsFetcher1.data?.collectionProducts)
+      setStepProducts((p) => { const n = [...p]; n[1] = collProdsFetcher1.data.collectionProducts; return n; });
+  }, [collProdsFetcher1.data]);
+  useEffect(() => {
+    if (collProdsFetcher2.data?.collectionProducts)
+      setStepProducts((p) => { const n = [...p]; n[2] = collProdsFetcher2.data.collectionProducts; return n; });
+  }, [collProdsFetcher2.data]);
+
   /* collection modal */
   const [showCollModal, setShowCollModal] = useState(false);
   const [collModalStepIdx, setCollModalStepIdx] = useState(null);
@@ -325,18 +387,28 @@ export default function EditBoxPage() {
         if (i !== stepIdx) return s;
         const already = s.collections.find((c) => c.id === tempColl.id);
         const newColls = already ? s.collections : [...s.collections, tempColl];
-        // reset selectedProduct if not in new collection scope
-        return { ...s, collections: newColls };
+        return { ...s, collections: newColls, selectedProduct: null }; // clear stale selection
       });
       return { ...prev, steps };
     });
+    /* Fetch scoped products for this step via the per-step fetcher */
+    setStepProducts((p) => { const n = [...p]; n[stepIdx] = null; return n; }); // clear while loading
+    collProdsFetchers[stepIdx].load(
+      withEmbeddedAppParams(`/app/boxes/${box.id}?collectionId=${encodeURIComponent(tempColl.id)}`, location.search)
+    );
     setShowCollModal(false);
   }
   function removeCollection(stepIdx, collId) {
     setComboConfig((prev) => {
-      const steps = prev.steps.map((s, i) => i === stepIdx ? { ...s, collections: s.collections.filter((c) => c.id !== collId) } : s);
+      const steps = prev.steps.map((s, i) => {
+        if (i !== stepIdx) return s;
+        const newColls = s.collections.filter((c) => c.id !== collId);
+        return { ...s, collections: newColls, selectedProduct: null };
+      });
       return { ...prev, steps };
     });
+    /* If no collections remain for this step, revert to showing all products */
+    setStepProducts((p) => { const n = [...p]; n[stepIdx] = null; return n; });
   }
 
   /* step product modal helpers */
@@ -344,6 +416,13 @@ export default function EditBoxPage() {
     setStepProdModalIdx(stepIdx);
     setTempStepProd(comboConfig.steps[stepIdx].selectedProduct || null);
     setStepProdSearch("");
+    /* Lazy-load scoped products if a collection is selected but not yet fetched */
+    const step = comboConfig.steps[stepIdx];
+    if (step.collections.length > 0 && !stepProducts[stepIdx] && collProdsFetchers[stepIdx].state === "idle") {
+      collProdsFetchers[stepIdx].load(
+        withEmbeddedAppParams(`/app/boxes/${box.id}?collectionId=${encodeURIComponent(step.collections[0].id)}`, location.search)
+      );
+    }
     setShowStepProdModal(true);
   }
   function confirmStepProd() {
@@ -352,7 +431,10 @@ export default function EditBoxPage() {
   }
 
   const filteredColls = collections.filter((c) => !collSearch || c.title.toLowerCase().includes(collSearch.toLowerCase()));
-  const filteredStepProds = products.filter((p) => !stepProdSearch || p.title.toLowerCase().includes(stepProdSearch.toLowerCase()));
+  /* Use collection-scoped products when available, else fall back to all products */
+  const activeScopedProducts = stepProdModalIdx !== null ? (stepProducts[stepProdModalIdx] ?? products) : products;
+  const isLoadingStepProds = stepProdModalIdx !== null && collProdsFetchers[stepProdModalIdx]?.state === "loading";
+  const filteredStepProds = activeScopedProducts.filter((p) => !stepProdSearch || p.title.toLowerCase().includes(stepProdSearch.toLowerCase()));
 
   /* ── Liquid snippet generator ── */
   function liquidSnippet(stepIdx) {
@@ -758,7 +840,13 @@ export default function EditBoxPage() {
                                   <div style={{ width: "36px", height: "36px", borderRadius: "5px", background: "#f3f4f6", border: "1px dashed #d1d5db", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0 }}>+</div>
                                   <div>
                                     <div style={{ fontSize: "13px", color: "#2563eb", fontWeight: "500" }}>+ Select product</div>
-                                    <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "1px" }}>{products.length} products available</div>
+                                    <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "1px" }}>
+                                      {collProdsFetchers[ai]?.state === "loading"
+                                        ? "Loading products…"
+                                        : stepProducts[ai]
+                                          ? `${stepProducts[ai].length} product${stepProducts[ai].length !== 1 ? "s" : ""} from selected collection`
+                                          : `${products.length} products across all collections`}
+                                    </div>
                                   </div>
                                 </div>
                               ) : (
@@ -938,7 +1026,9 @@ export default function EditBoxPage() {
               <div>
                 <div style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>Select product — Step {stepProdModalIdx + 1}</div>
                 <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>
-                  Pre-selected default · {comboConfig.steps[stepProdModalIdx]?.label}
+                  {stepProdModalIdx !== null && stepProducts[stepProdModalIdx]
+                    ? `${stepProducts[stepProdModalIdx].length} products · scoped to collection`
+                    : `All products · ${comboConfig.steps[stepProdModalIdx]?.label}`}
                 </div>
               </div>
               <button type="button" onClick={() => setShowStepProdModal(false)} style={modalCloseBtn}>✕</button>
@@ -947,7 +1037,9 @@ export default function EditBoxPage() {
               <input type="text" placeholder="Search products…" value={stepProdSearch} onChange={(e) => setStepProdSearch(e.target.value)} autoFocus style={searchInputStyle} />
             </div>
             <div style={modalBodyStyle}>
-              {filteredStepProds.length === 0 ? (
+              {isLoadingStepProds ? (
+                <div style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>Loading products…</div>
+              ) : filteredStepProds.length === 0 ? (
                 <div style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>No products found</div>
               ) : filteredStepProds.map((product, idx) => {
                 const isSel = tempStepProd?.id === product.id;

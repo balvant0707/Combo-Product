@@ -158,7 +158,7 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
         style={{
           borderRadius: "20px",
           overflow: "hidden",
-          background: "linear-gradient(135deg, #1a4f31 0%, #2A7A4F 55%, #3a9e68 100%)",
+          background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)",
           boxShadow: "0 8px 32px rgba(42,122,79,0.28), 0 2px 8px rgba(0,0,0,0.10)",
           position: "relative",
         }}
@@ -508,7 +508,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Getting Started */}
-      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "linear-gradient(135deg,#1a4f31 0%,#2A7A4F 55%,#3a9e68 100%)", boxShadow: "0 8px 32px rgba(42,122,79,0.22)", overflow: "hidden", position: "relative" }}>
+      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(42,122,79,0.22)", overflow: "hidden", position: "relative" }}>
         <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: "-30px", left: "60px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
         <div style={{ padding: "28px 32px 20px", borderBottom: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", gap: "12px" }}>

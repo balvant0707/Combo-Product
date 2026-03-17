@@ -7,6 +7,18 @@
   data-currency="{{ cart.currency.iso_code }}"
   data-currency-symbol="{{ cart.currency.symbol }}"
   data-api-base="https://combo-products.vercel.app"
+  {% if block.settings.section_heading != blank %}
+  data-heading="{{ block.settings.section_heading | escape }}"
+  {% endif %}
+  {% if block.settings.show_on_product_page %}
+  data-product-handle="{{ product.handle }}"
+  {% endif %}
+  style="
+    padding-top: {{ block.settings.padding_top }}px;
+    padding-bottom: {{ block.settings.padding_bottom }}px;
+    {% if block.settings.bg_color != blank %}background-color: {{ block.settings.bg_color }};{% endif %}
+  "
+  {{ block.shopify_attributes }}
 >
   <div class="combo-builder-loading">
     <div class="combo-builder-spinner"></div>
@@ -23,7 +35,9 @@
     shop:           '{{ shop.permanent_domain }}',
     currency:       '{{ cart.currency.iso_code }}',
     currencySymbol: '{{ cart.currency.symbol }}',
-    apiBase:        'https://combo-products.vercel.app'
+    apiBase:        'https://combo-products.vercel.app',
+    productHandle:  '{{ product.handle }}',
+    heading:        '{{ block.settings.section_heading | escape }}'
   });
 </script>
 <script defer src="{{ 'combo-builder.js' | asset_url }}"></script>
@@ -32,6 +46,52 @@
 {
   "name": "Combo Builder",
   "target": "section",
-  "settings": []
+  "settings": [
+    {
+      "type": "text",
+      "id": "section_heading",
+      "label": "Section heading",
+      "default": "Build Your Combo"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_product_page",
+      "label": "Show on product page",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color"
+    }
+  ]
 }
 {% endschema %}

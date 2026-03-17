@@ -76,9 +76,9 @@ const DEFAULT_COMBO_CONFIG = {
   showProgressBar: true,
   allowReselection: true,
   steps: [
-    { label: "Main Product",      scope: "collection", collections: [], selectedProduct: null, popup: { title: "Choose your main product",  desc: "Select the primary product.",     btn: "Confirm selection" } },
-    { label: "Add-on Accessory",  scope: "collection", collections: [], selectedProduct: null, popup: { title: "Choose an accessory",       desc: "Pick an add-on.",                 btn: "Confirm selection" } },
-    { label: "Extra Item",        scope: "collection", collections: [], selectedProduct: null, popup: { title: "Choose an extra item",      desc: "Complete your bundle.",           btn: "Complete bundle"   } },
+    { label: "Main Product",      scope: "collection", collections: [], selectedProducts: [], popup: { title: "Choose your main product",  desc: "Select the primary product.",     btn: "Confirm selection" } },
+    { label: "Add-on Accessory",  scope: "collection", collections: [], selectedProducts: [], popup: { title: "Choose an accessory",       desc: "Pick an add-on.",                 btn: "Confirm selection" } },
+    { label: "Extra Item",        scope: "collection", collections: [], selectedProducts: [], popup: { title: "Choose an extra item",      desc: "Complete your bundle.",           btn: "Complete bundle"   } },
   ],
 };
 
@@ -352,13 +352,13 @@ export default function EditBoxPage() {
   const [showCollModal, setShowCollModal] = useState(false);
   const [collModalStepIdx, setCollModalStepIdx] = useState(null);
   const [collSearch, setCollSearch] = useState("");
-  const [tempColl, setTempColl] = useState(null);
+  const [tempColls, setTempColls] = useState([]);
 
   /* step product modal */
   const [showStepProdModal, setShowStepProdModal] = useState(false);
   const [stepProdModalIdx, setStepProdModalIdx] = useState(null);
   const [stepProdSearch, setStepProdSearch] = useState("");
-  const [tempStepProd, setTempStepProd] = useState(null);
+  const [tempStepProds, setTempStepProds] = useState([]);
 
   /* ── Box Settings helpers ── */
   function handleSearchChange(e) {
@@ -396,25 +396,23 @@ export default function EditBoxPage() {
 
   /* collection modal helpers */
   function confirmColl() {
-    if (!tempColl) return;
+    if (tempColls.length === 0) return;
     const stepIdx = collModalStepIdx;
     setComboConfig((prev) => {
       const steps = prev.steps.map((s, i) => {
         if (i !== stepIdx) return s;
-        return { ...s, collections: [tempColl], selectedProduct: null };
+        return { ...s, collections: tempColls, selectedProducts: [] };
       });
       return { ...prev, steps };
     });
-    /* Fetch scoped products for this step via the per-step fetcher */
-    setStepProducts((p) => { const n = [...p]; n[stepIdx] = null; return n; }); // clear while loading
+    setStepProducts((p) => { const n = [...p]; n[stepIdx] = null; return n; });
     collProdsFetchers[stepIdx].load(
-      withEmbeddedAppParams(`/app/boxes/${box.id}?collectionId=${encodeURIComponent(tempColl.id)}`, location.search)
+      withEmbeddedAppParams(`/app/boxes/${box.id}?collectionId=${encodeURIComponent(tempColls[0].id)}`, location.search)
     );
     setShowCollModal(false);
   }
-  /* step product modal helpers */
   function confirmStepProd() {
-    updateComboStep(stepProdModalIdx, "selectedProduct", tempStepProd);
+    updateComboStep(stepProdModalIdx, "selectedProducts", tempStepProds);
     setShowStepProdModal(false);
   }
 
@@ -774,7 +772,7 @@ export default function EditBoxPage() {
                             onChange={(e) => {
                               const newScope = e.target.value;
                               setComboConfig((prev) => {
-                                const steps = prev.steps.map((s, i) => i !== ai ? s : { ...s, scope: newScope, collections: [], selectedProduct: null });
+                                const steps = prev.steps.map((s, i) => i !== ai ? s : { ...s, scope: newScope, collections: [], selectedProducts: [] });
                                 return { ...prev, steps };
                               });
                             }}
@@ -789,7 +787,7 @@ export default function EditBoxPage() {
                           {(step.scope || "collection") === "collection" ? (
                             <button
                               type="button"
-                              onClick={() => { setCollModalStepIdx(ai); setTempColl(step.collections[0] || null); setCollSearch(""); setShowCollModal(true); }}
+                              onClick={() => { setCollModalStepIdx(ai); setTempColls([...step.collections]); setCollSearch(""); setShowCollModal(true); }}
                               style={{ padding: "7px 16px", border: "1px solid #d1d5db", borderRadius: "5px", background: "#fff", fontSize: "13px", color: "#374151", cursor: "pointer", fontWeight: "500" }}
                             >
                               Select collections
@@ -797,7 +795,7 @@ export default function EditBoxPage() {
                           ) : (
                             <button
                               type="button"
-                              onClick={() => { setStepProdModalIdx(ai); setTempStepProd(step.selectedProduct || null); setStepProdSearch(""); setShowStepProdModal(true); }}
+                              onClick={() => { setStepProdModalIdx(ai); setTempStepProds([...(step.selectedProducts || [])]); setStepProdSearch(""); setShowStepProdModal(true); }}
                               style={{ padding: "7px 16px", border: "1px solid #d1d5db", borderRadius: "5px", background: "#fff", fontSize: "13px", color: "#374151", cursor: "pointer", fontWeight: "500" }}
                             >
                               Select products
@@ -806,19 +804,27 @@ export default function EditBoxPage() {
                           <span style={{ fontSize: "13px", color: "#6b7280" }}>
                             {(step.scope || "collection") === "collection"
                               ? `${step.collections.length} selected`
-                              : step.selectedProduct ? "1 selected" : "0 selected"}
+                              : `${(step.selectedProducts || []).length} selected`}
                           </span>
                         </div>
                         {step.collections.length > 0 && (step.scope || "collection") === "collection" && (
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "8px", padding: "6px 10px", background: "#eef1ff", border: "1.5px solid #091fd6", borderRadius: "5px" }}>
-                            <span style={{ fontSize: "12px", color: "#091fd6", fontWeight: "600" }}>📁 {step.collections[0].title}</span>
-                            <button type="button" onClick={() => updateComboStep(ai, "collections", [])} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "11px", color: "#dc2626" }}>✕</button>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "8px" }}>
+                            {step.collections.map((c) => (
+                              <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", background: "#eef1ff", border: "1.5px solid #091fd6", borderRadius: "5px" }}>
+                                <span style={{ fontSize: "12px", color: "#091fd6", fontWeight: "600" }}>📁 {c.title}</span>
+                                <button type="button" onClick={() => updateComboStep(ai, "collections", step.collections.filter((x) => x.id !== c.id))} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "11px", color: "#dc2626" }}>✕</button>
+                              </div>
+                            ))}
                           </div>
                         )}
-                        {step.selectedProduct && (step.scope || "collection") === "product" && (
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "6px", padding: "6px 10px", background: "#f0fdf4", border: "1.5px solid #2A7A4F", borderRadius: "5px" }}>
-                            <span style={{ fontSize: "12px", color: "#166534", fontWeight: "600" }}>📦 {step.selectedProduct.title} — ₹{parseFloat(step.selectedProduct.price || 0).toLocaleString("en-IN")}</span>
-                            <button type="button" onClick={() => updateComboStep(ai, "selectedProduct", null)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "11px", color: "#dc2626" }}>✕</button>
+                        {(step.selectedProducts || []).length > 0 && (step.scope || "collection") === "product" && (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "6px" }}>
+                            {step.selectedProducts.map((p) => (
+                              <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", background: "#f0fdf4", border: "1.5px solid #2A7A4F", borderRadius: "5px" }}>
+                                <span style={{ fontSize: "12px", color: "#166534", fontWeight: "600" }}>📦 {p.title} — ₹{parseFloat(p.price || 0).toLocaleString("en-IN")}</span>
+                                <button type="button" onClick={() => updateComboStep(ai, "selectedProducts", step.selectedProducts.filter((x) => x.id !== p.id))} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "11px", color: "#dc2626" }}>✕</button>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>
@@ -929,10 +935,9 @@ export default function EditBoxPage() {
               {filteredColls.length === 0 ? (
                 <div style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>No collections found{collSearch ? ` for "${collSearch}"` : ""}</div>
               ) : filteredColls.map((coll, idx) => {
-                const isSelected = tempColl?.id === coll.id;
-                const alreadyAdded = collModalStepIdx !== null && comboConfig.steps[collModalStepIdx]?.collections.some((c) => c.id === coll.id) && !isSelected;
+                const isSelected = tempColls.some((c) => c.id === coll.id);
                 return (
-                  <div key={coll.id} onClick={() => setTempColl(isSelected ? null : coll)} onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = "#eef1ff"; }} onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = "#fff"; }} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filteredColls.length - 1 ? "1px solid #f3f4f6" : "none", borderLeft: isSelected ? "3px solid #091fd6" : "3px solid transparent", cursor: "pointer", background: isSelected ? "#eef1ff" : "#fff", transition: "background 0.1s, border-color 0.1s", userSelect: "none" }}>
+                  <div key={coll.id} onClick={() => setTempColls(isSelected ? tempColls.filter((c) => c.id !== coll.id) : [...tempColls, coll])} onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = "#eef1ff"; }} onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = "#fff"; }} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filteredColls.length - 1 ? "1px solid #f3f4f6" : "none", borderLeft: isSelected ? "3px solid #091fd6" : "3px solid transparent", cursor: "pointer", background: isSelected ? "#eef1ff" : "#fff", transition: "background 0.1s, border-color 0.1s", userSelect: "none" }}>
                     {coll.imageUrl ? <img src={coll.imageUrl} alt={coll.title} style={{ width: "38px", height: "38px", objectFit: "cover", borderRadius: "5px", border: "1px solid #e5e7eb", flexShrink: 0 }} /> : <div style={{ width: "38px", height: "38px", borderRadius: "5px", background: "#f3f4f6", border: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0 }}>📁</div>}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{coll.title}</div>
@@ -947,10 +952,10 @@ export default function EditBoxPage() {
               })}
             </div>
             <div style={modalFooterStyle}>
-              <span style={{ fontSize: "12px", color: "#6b7280" }}>{tempColl ? `Selected: ${tempColl.title}` : "No collection selected"}</span>
+              <span style={{ fontSize: "12px", color: "#6b7280" }}>{tempColls.length > 0 ? `${tempColls.length} selected` : "No collection selected"}</span>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button type="button" onClick={() => setShowCollModal(false)} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#374151" }}>Cancel</button>
-                <button type="button" disabled={!tempColl} onClick={confirmColl} style={{ background: tempColl ? "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)" : "#d1d5db", border: "none", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: tempColl ? "pointer" : "not-allowed", color: "#fff" }}>Confirm</button>
+                <button type="button" disabled={tempColls.length === 0} onClick={confirmColl} style={{ background: tempColls.length > 0 ? "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)" : "#d1d5db", border: "none", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: tempColls.length > 0 ? "pointer" : "not-allowed", color: "#fff" }}>Confirm ({tempColls.length})</button>
               </div>
             </div>
           </div>
@@ -983,9 +988,9 @@ export default function EditBoxPage() {
               ) : filteredStepProds.length === 0 ? (
                 <div style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>No products found</div>
               ) : filteredStepProds.map((product, idx) => {
-                const isSel = tempStepProd?.id === product.id;
+                const isSel = tempStepProds.some((p) => p.id === product.id);
                 return (
-                  <div key={product.id} onClick={() => setTempStepProd(isSel ? null : { id: product.id, title: product.title, handle: product.handle, imageUrl: product.imageUrl, price: product.price })} onMouseEnter={(e) => { if (!isSel) e.currentTarget.style.background = "#f0fdf4"; }} onMouseLeave={(e) => { if (!isSel) e.currentTarget.style.background = "#fff"; }} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filteredStepProds.length - 1 ? "1px solid #f3f4f6" : "none", borderLeft: isSel ? "3px solid #2A7A4F" : "3px solid transparent", cursor: "pointer", background: isSel ? "#f0fdf4" : "#fff", transition: "background 0.1s, border-color 0.1s", userSelect: "none" }}>
+                  <div key={product.id} onClick={() => setTempStepProds(isSel ? tempStepProds.filter((p) => p.id !== product.id) : [...tempStepProds, { id: product.id, title: product.title, handle: product.handle, imageUrl: product.imageUrl, price: product.price }])} onMouseEnter={(e) => { if (!isSel) e.currentTarget.style.background = "#f0fdf4"; }} onMouseLeave={(e) => { if (!isSel) e.currentTarget.style.background = "#fff"; }} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filteredStepProds.length - 1 ? "1px solid #f3f4f6" : "none", borderLeft: isSel ? "3px solid #2A7A4F" : "3px solid transparent", cursor: "pointer", background: isSel ? "#f0fdf4" : "#fff", transition: "background 0.1s, border-color 0.1s", userSelect: "none" }}>
                     <div style={{ width: "18px", height: "18px", borderRadius: "4px", border: `2px solid ${isSel ? "#2A7A4F" : "#d1d5db"}`, background: isSel ? "#2A7A4F" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.1s" }}>
                       {isSel && <span style={{ color: "#fff", fontSize: "10px", fontWeight: "700" }}>✓</span>}
                     </div>
@@ -1000,10 +1005,10 @@ export default function EditBoxPage() {
               })}
             </div>
             <div style={modalFooterStyle}>
-              <span style={{ fontSize: "12px", color: "#6b7280" }}>{tempStepProd ? `Selected: ${tempStepProd.title}` : "No product selected"}</span>
+              <span style={{ fontSize: "12px", color: "#6b7280" }}>{tempStepProds.length > 0 ? `${tempStepProds.length} product${tempStepProds.length !== 1 ? "s" : ""} selected` : "No product selected"}</span>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button type="button" onClick={() => setShowStepProdModal(false)} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#374151" }}>Cancel</button>
-                <button type="button" disabled={!tempStepProd} onClick={confirmStepProd} style={{ background: tempStepProd ? "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)" : "#d1d5db", border: "none", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: tempStepProd ? "pointer" : "not-allowed", color: "#fff" }}>Confirm selection</button>
+                <button type="button" disabled={tempStepProds.length === 0} onClick={confirmStepProd} style={{ background: tempStepProds.length > 0 ? "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)" : "#d1d5db", border: "none", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: tempStepProds.length > 0 ? "pointer" : "not-allowed", color: "#fff" }}>Confirm ({tempStepProds.length})</button>
               </div>
             </div>
           </div>

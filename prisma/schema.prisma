@@ -75,7 +75,7 @@ model ComboBox {
   bannerImageData     Bytes?            @db.MediumBlob
   bannerImageFileName String?           @db.VarChar(255)
   bannerImageMimeType String?           @db.VarChar(100)
-  comboStepsConfig    String?           @db.LongText
+  comboStepsConfig    String?           @map("combo_steps_config") @db.LongText
   orders              BundleOrder[]
   products            ComboBoxProduct[]
 

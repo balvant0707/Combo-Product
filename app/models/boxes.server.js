@@ -398,7 +398,7 @@ export async function listBoxes(shop, activeOnly = false, includeBannerBinary = 
 export async function getBox(id, shop) {
   return db.comboBox.findFirst({
     where: { id: parseInt(id), shop, deletedAt: null },
-    include: { products: true },
+    include: { products: true, config: true },
   });
 }
 
@@ -503,6 +503,34 @@ export async function updateComboStepsConfig(id, shop, comboStepsConfig) {
   return db.comboBox.update({
     where: { id: parseInt(id) },
     data: { comboStepsConfig: typeof comboStepsConfig === "string" ? comboStepsConfig : JSON.stringify(comboStepsConfig) },
+  });
+}
+
+/**
+ * Upsert the ComboBoxConfig record for a box.
+ * Handles both INSERT (first save) and UPDATE (subsequent saves).
+ * `config` may be a JSON string or a plain object matching DEFAULT_COMBO_CONFIG shape.
+ */
+export async function upsertComboConfig(boxId, config) {
+  const parsed = typeof config === "string" ? JSON.parse(config) : config;
+  const stepsJson = JSON.stringify(Array.isArray(parsed.steps) ? parsed.steps : []);
+
+  const payload = {
+    comboType:         parseInt(parsed.type) || 2,
+    title:             parsed.title            ?? null,
+    subtitle:          parsed.subtitle         ?? null,
+    discountBadge:     parsed.discountBadge    ?? null,
+    isActive:          parsed.isActive         !== false,
+    showProductImages: parsed.showProductImages !== false,
+    showProgressBar:   parsed.showProgressBar  !== false,
+    allowReselection:  parsed.allowReselection !== false,
+    stepsJson,
+  };
+
+  return db.comboBoxConfig.upsert({
+    where:  { boxId: parseInt(boxId) },
+    create: { boxId: parseInt(boxId), ...payload },
+    update: payload,
   });
 }
 

@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigation } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
-import { getBox, updateBox, deleteBox, getBannerImageSrc, updateComboStepsConfig } from "../models/boxes.server";
+import { getBox, updateBox, deleteBox, getBannerImageSrc, upsertComboConfig } from "../models/boxes.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
 /* ─────────────────────────── GraphQL ─────────────────────────── */
@@ -151,8 +151,30 @@ export const loader = async ({ request, params }) => {
     imageUrl: node.image?.url || null,
   }));
 
+  /* Build comboStepsConfig from the new ComboBoxConfig model (primary),
+     falling back to the legacy JSON blob for boxes saved before migration. */
+  let comboStepsConfig = null;
+  if (box.config) {
+    const cfg = box.config;
+    let steps = [];
+    try { steps = JSON.parse(cfg.stepsJson || "[]"); } catch {}
+    comboStepsConfig = JSON.stringify({
+      type:              cfg.comboType,
+      title:             cfg.title             ?? undefined,
+      subtitle:          cfg.subtitle          ?? undefined,
+      discountBadge:     cfg.discountBadge     ?? undefined,
+      isActive:          cfg.isActive,
+      showProductImages: cfg.showProductImages,
+      showProgressBar:   cfg.showProgressBar,
+      allowReselection:  cfg.allowReselection,
+      steps,
+    });
+  } else if (box.comboStepsConfig) {
+    comboStepsConfig = box.comboStepsConfig;
+  }
+
   return {
-    box: { ...boxWithoutBinary, bundlePrice: parseFloat(box.bundlePrice), bannerImageSrc, comboStepsConfig: box.comboStepsConfig || null },
+    box: { ...boxWithoutBinary, bundlePrice: parseFloat(box.bundlePrice), bannerImageSrc, comboStepsConfig },
     products,
     collections,
   };
@@ -172,7 +194,7 @@ export const action = async ({ request, params }) => {
 
   if (intent === "save_combo") {
     const comboStepsConfig = formData.get("comboStepsConfig");
-    await updateComboStepsConfig(params.id, shop, comboStepsConfig);
+    await upsertComboConfig(params.id, comboStepsConfig);
     return { ok: true, comboSaved: true };
   }
 
@@ -435,12 +457,6 @@ export default function EditBoxPage() {
   const activeScopedProducts = stepProdModalIdx !== null ? (stepProducts[stepProdModalIdx] ?? products) : products;
   const isLoadingStepProds = stepProdModalIdx !== null && collProdsFetchers[stepProdModalIdx]?.state === "loading";
   const filteredStepProds = activeScopedProducts.filter((p) => !stepProdSearch || p.title.toLowerCase().includes(stepProdSearch.toLowerCase()));
-
-  /* ── Liquid snippet generator ── */
-  function liquidSnippet(stepIdx) {
-    const s = comboConfig.steps[stepIdx];
-    return `{% render 'combo-step',\n  step: ${stepIdx + 1},\n  collection: '${s.collections[0]?.handle || "none"}',\n  product_id: '${s.selectedProduct?.id || ""}',\n  popup_title: '${s.popup.title}',\n  btn_text: '${s.popup.btn}' %}`;
-  }
 
   /* ── Shared modal styles ── */
   const modalOverlayStyle = { position: "fixed", inset: 0, background: "rgba(17,24,39,0.55)", backdropFilter: "blur(3px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" };
@@ -759,7 +775,7 @@ export default function EditBoxPage() {
               {/* Step tabs */}
               <div style={{ display: "flex", borderBottom: "1px solid #e5e7eb", marginBottom: "16px" }}>
                 {Array.from({ length: comboConfig.type }, (_, i) => (
-                  <button key={i} type="button" onClick={() => setComboActiveStep(i)} style={{ padding: "8px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none", background: "none", borderBottom: comboActiveStep === i ? "2px solid #2A7A4F" : "2px solid transparent", marginBottom: "-1px", color: comboActiveStep === i ? "#2A7A4F" : "#6b7280", transition: "color 0.15s, border-color 0.15s" }}>
+                  <button key={i} type="button" onClick={() => setComboActiveStep(i)} style={{ padding: "8px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none", background: "none", borderBottom: comboActiveStep === i ? "2px solid #091fd6" : "2px solid transparent", marginBottom: "-1px", color: comboActiveStep === i ? "#091fd6" : "#6b7280", transition: "color 0.15s, border-color 0.15s" }}>
                     Step {i + 1} — {comboConfig.steps[i].label}
                   </button>
                 ))}
@@ -776,13 +792,13 @@ export default function EditBoxPage() {
                       {/* Step header */}
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", background: "#f9fafb", borderBottom: "1px solid #f3f4f6", borderRadius: "8px 8px 0 0" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "#2A7A4F", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: "700", flexShrink: 0 }}>{ai + 1}</div>
+                          <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: "700", flexShrink: 0 }}>{ai + 1}</div>
                           <div>
                             <div style={{ fontSize: "13px", fontWeight: "700", color: "#111827" }}>Step {ai + 1} — Pickers</div>
                             <div style={{ fontSize: "11px", color: "#6b7280" }}>Each step has its own independent collection and product selector</div>
                           </div>
                         </div>
-                        <span style={{ fontSize: "11px", fontWeight: "600", background: "#dbeafe", color: "#1e40af", padding: "2px 10px", borderRadius: "10px" }}>Step {ai + 1} of {comboConfig.type}</span>
+                        <span style={{ fontSize: "11px", fontWeight: "600", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", color: "#fff", padding: "2px 10px", borderRadius: "10px" }}>Step {ai + 1} of {comboConfig.type}</span>
                       </div>
                       <div style={{ padding: "16px" }}>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
@@ -898,18 +914,6 @@ export default function EditBoxPage() {
                       </div>
                     </div>
 
-                    {/* ── Liquid Snippet card ── */}
-                    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-                      <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#111827", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span>Liquid snippet — Step {ai + 1}</span>
-                        <button type="button" onClick={() => navigator.clipboard?.writeText(liquidSnippet(ai)).catch(() => {})} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: "#2563eb", fontWeight: "600" }}>Copy</button>
-                      </div>
-                      <div style={{ padding: "14px 16px" }}>
-                        <pre style={{ background: "#f6f6f7", border: "1px solid #e5e7eb", borderRadius: "5px", padding: "12px 14px", fontFamily: "'SF Mono','Fira Code',monospace", fontSize: "11px", color: "#454545", lineHeight: "1.8", overflowX: "auto", margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
-                          {liquidSnippet(ai)}
-                        </pre>
-                      </div>
-                    </div>
                   </div>
                 );
               })()}
@@ -998,7 +1002,7 @@ export default function EditBoxPage() {
                       <div style={{ fontSize: "11px", color: "#9ca3af" }}>{coll.handle}</div>
                     </div>
                     {alreadyAdded && <span style={{ fontSize: "10px", fontWeight: "600", background: "#d1fae5", color: "#065f46", padding: "2px 8px", borderRadius: "10px", flexShrink: 0 }}>Added</span>}
-                    <div style={{ width: "18px", height: "18px", borderRadius: "50%", border: `2px solid ${isSelected ? "#2A7A4F" : "#d1d5db"}`, background: isSelected ? "#2A7A4F" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.1s" }}>
+                    <div style={{ width: "18px", height: "18px", borderRadius: "50%", border: `2px solid ${isSelected ? "#091fd6" : "#d1d5db"}`, background: isSelected ? "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.1s" }}>
                       {isSelected && <span style={{ color: "#fff", fontSize: "10px", fontWeight: "700" }}>✓</span>}
                     </div>
                   </div>
@@ -1009,7 +1013,7 @@ export default function EditBoxPage() {
               <span style={{ fontSize: "12px", color: "#6b7280" }}>{tempColl ? `Selected: ${tempColl.title}` : "No collection selected"}</span>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button type="button" onClick={() => setShowCollModal(false)} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#374151" }}>Cancel</button>
-                <button type="button" disabled={!tempColl} onClick={confirmColl} style={{ background: tempColl ? "#2A7A4F" : "#d1d5db", border: "none", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: tempColl ? "pointer" : "not-allowed", color: "#fff" }}>Confirm</button>
+                <button type="button" disabled={!tempColl} onClick={confirmColl} style={{ background: tempColl ? "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)" : "#d1d5db", border: "none", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: tempColl ? "pointer" : "not-allowed", color: "#fff" }}>Confirm</button>
               </div>
             </div>
           </div>
@@ -1045,7 +1049,7 @@ export default function EditBoxPage() {
                 const isSel = tempStepProd?.id === product.id;
                 return (
                   <div key={product.id} onClick={() => setTempStepProd(isSel ? null : { id: product.id, title: product.title, handle: product.handle, imageUrl: product.imageUrl, price: product.price })} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filteredStepProds.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", background: isSel ? "#f0f7ff" : "#fff", transition: "background 0.1s", userSelect: "none" }}>
-                    <div style={{ width: "18px", height: "18px", borderRadius: "5px", border: `2px solid ${isSel ? "#2A7A4F" : "#d1d5db"}`, background: isSel ? "#2A7A4F" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.1s" }}>
+                    <div style={{ width: "18px", height: "18px", borderRadius: "5px", border: `2px solid ${isSel ? "#091fd6" : "#d1d5db"}`, background: isSel ? "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.1s" }}>
                       {isSel && <span style={{ color: "#fff", fontSize: "10px", fontWeight: "700" }}>✓</span>}
                     </div>
                     {product.imageUrl ? <img src={product.imageUrl} alt={product.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} /> : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", border: "1px solid #e5e7eb" }}>📦</div>}
@@ -1062,7 +1066,7 @@ export default function EditBoxPage() {
               <span style={{ fontSize: "12px", color: "#6b7280" }}>{tempStepProd ? `Selected: ${tempStepProd.title}` : "No product selected"}</span>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button type="button" onClick={() => setShowStepProdModal(false)} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#374151" }}>Cancel</button>
-                <button type="button" disabled={!tempStepProd} onClick={confirmStepProd} style={{ background: tempStepProd ? "#2A7A4F" : "#d1d5db", border: "none", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: tempStepProd ? "pointer" : "not-allowed", color: "#fff" }}>Confirm selection</button>
+                <button type="button" disabled={!tempStepProd} onClick={confirmStepProd} style={{ background: tempStepProd ? "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)" : "#d1d5db", border: "none", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: tempStepProd ? "pointer" : "not-allowed", color: "#fff" }}>Confirm selection</button>
               </div>
             </div>
           </div>

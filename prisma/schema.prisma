@@ -78,9 +78,29 @@ model ComboBox {
   comboStepsConfig    String?           @map("combo_steps_config") @db.LongText
   orders              BundleOrder[]
   products            ComboBoxProduct[]
+  config              ComboBoxConfig?
 
   @@index([shop])
   @@map("combo_box")
+}
+
+model ComboBoxConfig {
+  id                Int      @id @default(autoincrement())
+  boxId             Int      @unique
+  comboType         Int      @default(2)
+  title             String?  @db.VarChar(255)
+  subtitle          String?  @db.VarChar(255)
+  discountBadge     String?  @db.VarChar(100)
+  isActive          Boolean  @default(true)
+  showProductImages Boolean  @default(true)
+  showProgressBar   Boolean  @default(true)
+  allowReselection  Boolean  @default(true)
+  stepsJson         String?  @db.LongText
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  box               ComboBox @relation(fields: [boxId], references: [id], onDelete: Cascade)
+
+  @@map("combo_box_config")
 }
 
 model ComboBoxProduct {

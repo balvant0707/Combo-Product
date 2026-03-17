@@ -395,21 +395,13 @@ export default function EditBoxPage() {
   }
 
   /* collection modal helpers */
-  function openCollModal(stepIdx) {
-    setCollModalStepIdx(stepIdx);
-    setTempColl(comboConfig.steps[stepIdx].collections[0] || null);
-    setCollSearch("");
-    setShowCollModal(true);
-  }
   function confirmColl() {
     if (!tempColl) return;
     const stepIdx = collModalStepIdx;
     setComboConfig((prev) => {
       const steps = prev.steps.map((s, i) => {
         if (i !== stepIdx) return s;
-        const already = s.collections.find((c) => c.id === tempColl.id);
-        const newColls = already ? s.collections : [...s.collections, tempColl];
-        return { ...s, collections: newColls, selectedProduct: null }; // clear stale selection
+        return { ...s, collections: [tempColl], selectedProduct: null };
       });
       return { ...prev, steps };
     });
@@ -420,33 +412,7 @@ export default function EditBoxPage() {
     );
     setShowCollModal(false);
   }
-  function removeCollection(stepIdx, collId) {
-    setComboConfig((prev) => {
-      const steps = prev.steps.map((s, i) => {
-        if (i !== stepIdx) return s;
-        const newColls = s.collections.filter((c) => c.id !== collId);
-        return { ...s, collections: newColls, selectedProduct: null };
-      });
-      return { ...prev, steps };
-    });
-    /* If no collections remain for this step, revert to showing all products */
-    setStepProducts((p) => { const n = [...p]; n[stepIdx] = null; return n; });
-  }
-
   /* step product modal helpers */
-  function openStepProdModal(stepIdx) {
-    setStepProdModalIdx(stepIdx);
-    setTempStepProd(comboConfig.steps[stepIdx].selectedProduct || null);
-    setStepProdSearch("");
-    /* Lazy-load scoped products if a collection is selected but not yet fetched */
-    const step = comboConfig.steps[stepIdx];
-    if (step.collections.length > 0 && !stepProducts[stepIdx] && collProdsFetchers[stepIdx].state === "idle") {
-      collProdsFetchers[stepIdx].load(
-        withEmbeddedAppParams(`/app/boxes/${box.id}?collectionId=${encodeURIComponent(step.collections[0].id)}`, location.search)
-      );
-    }
-    setShowStepProdModal(true);
-  }
   function confirmStepProd() {
     updateComboStep(stepProdModalIdx, "selectedProduct", tempStepProd);
     setShowStepProdModal(false);
@@ -805,64 +771,48 @@ export default function EditBoxPage() {
 
                           {/* Collection picker */}
                           <div>
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
-                              <label style={labelStyle}>Select collection</label>
-                              {step.collections.length > 0 && <span style={{ fontSize: "10px", fontWeight: "600", background: "#e0e7ff", color: "#3730a3", padding: "2px 8px", borderRadius: "10px" }}>{step.collections.length} selected</span>}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => openCollModal(ai)}
-                              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", width: "100%", padding: "9px 12px", border: step.collections.length > 0 ? "1.5px solid #091fd6" : "1.5px solid #d1d5db", borderRadius: "5px", background: step.collections.length > 0 ? "#eef1ff" : "#fff", cursor: "pointer", fontSize: "13px", textAlign: "left", color: step.collections.length > 0 ? "#091fd6" : "#6b7280", transition: "border-color 0.15s, background 0.15s" }}
-                              onMouseEnter={(e) => { if (step.collections.length === 0) { e.currentTarget.style.borderColor = "#091fd6"; e.currentTarget.style.background = "#f0f4ff"; }}}
-                              onMouseLeave={(e) => { if (step.collections.length === 0) { e.currentTarget.style.borderColor = "#d1d5db"; e.currentTarget.style.background = "#fff"; }}}
-                            >
-                              <span style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: 0 }}>
-                                {step.collections.length > 0 && step.collections[0].imageUrl
-                                  ? <img src={step.collections[0].imageUrl} alt="" style={{ width: "20px", height: "20px", borderRadius: "3px", objectFit: "cover", flexShrink: 0, border: "1px solid #c7d2fe" }} />
-                                  : <span style={{ fontSize: "15px", flexShrink: 0 }}>📁</span>}
-                                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: step.collections.length > 0 ? "600" : "400" }}>
-                                  {step.collections.length > 0 ? step.collections.map((c) => c.title).join(", ") : "Select collection"}
-                                </span>
-                              </span>
-                              <span style={{ fontSize: "11px", color: step.collections.length > 0 ? "#091fd6" : "#9ca3af", flexShrink: 0, marginLeft: "4px" }}>▾</span>
-                            </button>
-                            {step.collections.length > 0 && (
-                              <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginTop: "6px" }}>
-                                {step.collections.map((coll) => (
-                                  <span key={coll.id} style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#eef1ff", border: "1px solid #c7d2fe", borderRadius: "4px", padding: "3px 8px", fontSize: "11px", color: "#091fd6", fontWeight: "500" }}>
-                                    {coll.title}
-                                    <button type="button" onClick={() => removeCollection(ai, coll.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "10px", color: "#6b7280", padding: "0 0 0 2px", lineHeight: 1 }}>✕</button>
-                                  </span>
+                            <label style={labelStyle}>Select collection</label>
+                            <div style={{ position: "relative" }}>
+                              <span style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "15px", pointerEvents: "none", zIndex: 1 }}>📁</span>
+                              <select
+                                value={step.collections[0]?.id || ""}
+                                onChange={(e) => {
+                                  const coll = collections.find((c) => c.id === e.target.value);
+                                  if (coll) { setCollModalStepIdx(ai); setTempColl(coll); setCollSearch(""); setShowCollModal(true); }
+                                }}
+                                style={{ width: "100%", padding: "9px 32px 9px 34px", border: step.collections.length > 0 ? "1.5px solid #091fd6" : "1.5px solid #d1d5db", borderRadius: "5px", background: step.collections.length > 0 ? "#eef1ff" : "#fff", fontSize: "13px", color: step.collections.length > 0 ? "#091fd6" : "#6b7280", fontWeight: step.collections.length > 0 ? "600" : "400", cursor: "pointer", appearance: "none", WebkitAppearance: "none", outline: "none", transition: "border-color 0.15s, background 0.15s" }}
+                              >
+                                <option value="">Select collection</option>
+                                {collections.map((c) => (
+                                  <option key={c.id} value={c.id}>{c.title}</option>
                                 ))}
-                                <button type="button" onClick={() => openCollModal(ai)} style={{ background: "none", border: "1px dashed #c7d2fe", borderRadius: "4px", padding: "3px 8px", fontSize: "11px", color: "#091fd6", cursor: "pointer" }}>+ Add</button>
-                              </div>
-                            )}
+                              </select>
+                              <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: step.collections.length > 0 ? "#091fd6" : "#9ca3af", pointerEvents: "none" }}>▾</span>
+                            </div>
                             <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>Products from this collection appear in the Step {ai + 1} popup</div>
                           </div>
 
                           {/* Product picker */}
                           <div>
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
-                              <label style={labelStyle}>Select product</label>
-                              {step.selectedProduct && <span style={{ fontSize: "10px", fontWeight: "600", background: "#dcfce7", color: "#166534", padding: "2px 8px", borderRadius: "10px" }}>1 selected</span>}
+                            <label style={labelStyle}>Select product</label>
+                            <div style={{ position: "relative" }}>
+                              <span style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "15px", pointerEvents: "none", zIndex: 1 }}>📦</span>
+                              <select
+                                value={step.selectedProduct?.id || ""}
+                                onChange={(e) => {
+                                  const prodList = stepProducts[ai] || products;
+                                  const prod = prodList.find((p) => p.id === e.target.value);
+                                  if (prod) { setStepProdModalIdx(ai); setTempStepProd({ id: prod.id, title: prod.title, handle: prod.handle, imageUrl: prod.imageUrl, price: prod.price }); setStepProdSearch(""); setShowStepProdModal(true); }
+                                }}
+                                style={{ width: "100%", padding: "9px 32px 9px 34px", border: step.selectedProduct ? "1.5px solid #2A7A4F" : "1.5px solid #d1d5db", borderRadius: "5px", background: step.selectedProduct ? "#f0fdf4" : "#fff", fontSize: "13px", color: step.selectedProduct ? "#166534" : "#6b7280", fontWeight: step.selectedProduct ? "600" : "400", cursor: "pointer", appearance: "none", WebkitAppearance: "none", outline: "none", transition: "border-color 0.15s, background 0.15s" }}
+                              >
+                                <option value="">Select product</option>
+                                {(stepProducts[ai] || products).map((p) => (
+                                  <option key={p.id} value={p.id}>{p.title}</option>
+                                ))}
+                              </select>
+                              <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: step.selectedProduct ? "#2A7A4F" : "#9ca3af", pointerEvents: "none" }}>▾</span>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => openStepProdModal(ai)}
-                              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", width: "100%", padding: "9px 12px", border: step.selectedProduct ? "1.5px solid #2A7A4F" : "1.5px solid #d1d5db", borderRadius: "5px", background: step.selectedProduct ? "#f0fdf4" : "#fff", cursor: "pointer", fontSize: "13px", textAlign: "left", color: step.selectedProduct ? "#166534" : "#6b7280", transition: "border-color 0.15s, background 0.15s" }}
-                              onMouseEnter={(e) => { if (!step.selectedProduct) { e.currentTarget.style.borderColor = "#2A7A4F"; e.currentTarget.style.background = "#f0fdf4"; }}}
-                              onMouseLeave={(e) => { if (!step.selectedProduct) { e.currentTarget.style.borderColor = "#d1d5db"; e.currentTarget.style.background = "#fff"; }}}
-                            >
-                              <span style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: 0 }}>
-                                {step.selectedProduct
-                                  ? (step.selectedProduct.imageUrl ? <img src={step.selectedProduct.imageUrl} alt="" style={{ width: "20px", height: "20px", borderRadius: "3px", objectFit: "cover", flexShrink: 0, border: "1px solid #86efac" }} /> : <span style={{ fontSize: "15px", flexShrink: 0 }}>📦</span>)
-                                  : <span style={{ fontSize: "15px", flexShrink: 0 }}>📦</span>}
-                                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: step.selectedProduct ? "600" : "400" }}>
-                                  {step.selectedProduct ? step.selectedProduct.title : collProdsFetchers[ai]?.state === "loading" ? "Loading…" : "Select product"}
-                                </span>
-                              </span>
-                              <span style={{ fontSize: "11px", color: step.selectedProduct ? "#2A7A4F" : "#9ca3af", flexShrink: 0, marginLeft: "4px" }}>▾</span>
-                            </button>
                             {step.selectedProduct && (
                               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "6px", padding: "4px 10px", background: "#f0fdf4", border: "1px solid #86efac", borderRadius: "4px" }}>
                                 <span style={{ fontSize: "11px", color: "#166534", fontWeight: "600" }}>₹{parseFloat(step.selectedProduct.price || 0).toLocaleString("en-IN")}</span>

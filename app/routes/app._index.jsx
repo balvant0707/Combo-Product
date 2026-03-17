@@ -432,95 +432,6 @@ export default function DashboardPage() {
         + Create Box
       </s-button>
 
-      {/* Quick Actions — full-width horizontal row */}
-      <s-section>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(5, 1fr)",
-            gap: "12px",
-          }}
-        >
-          {quickActions.map((action) => (
-            <a
-              key={action.key}
-              href={action.externalUrl || "#"}
-              target={action.externalUrl ? "_blank" : undefined}
-              rel={action.externalUrl ? "noreferrer" : undefined}
-              onClick={(event) => {
-                if (action.externalUrl) return;
-                event.preventDefault();
-                navigateTo(action.href);
-              }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                padding: "14px 16px",
-                background: action.bg,
-                border: `1.5px solid ${action.border}`,
-                borderRadius: "14px",
-                textDecoration: "none",
-                cursor: "pointer",
-                transition: "transform 0.12s, box-shadow 0.12s",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = `0 6px 18px ${action.accent}28`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)";
-              }}
-            >
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "10px",
-                  background: "#fff",
-                  boxShadow: `0 2px 8px ${action.accent}22`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "20px",
-                  flexShrink: 0,
-                }}
-              >
-                {action.emoji}
-              </div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div
-                  style={{
-                    fontSize: "13px",
-                    fontWeight: "700",
-                    color: "#111827",
-                    lineHeight: 1.3,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {action.label}
-                </div>
-                <div
-                  style={{
-                    fontSize: "11px",
-                    color: action.accent,
-                    fontWeight: "500",
-                    marginTop: "2px",
-                  }}
-                >
-                  {action.sub}
-                </div>
-              </div>
-              <div style={{ color: action.accent, fontSize: "16px", opacity: 0.5, flexShrink: 0 }}>→</div>
-            </a>
-          ))}
-        </div>
-      </s-section>
-
       <ThemeCustomizationCard themeEditorUrl={themeEditorUrl} />
 
       <s-section>
@@ -708,6 +619,98 @@ export default function DashboardPage() {
             </table>
           </div>
         )}
+      </s-section>
+
+      <s-section slot="aside" heading="Quick Actions">
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {quickActions.map((action) => (
+            <a
+              key={action.key}
+              href={action.externalUrl || "#"}
+              target={action.externalUrl ? "_blank" : undefined}
+              rel={action.externalUrl ? "noreferrer" : undefined}
+              onClick={(event) => {
+                if (action.externalUrl) return;
+                event.preventDefault();
+                navigateTo(action.href);
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "12px 14px",
+                background: action.bg,
+                border: `1.5px solid ${action.border}`,
+                borderRadius: "12px",
+                textDecoration: "none",
+                cursor: "pointer",
+                transition: "transform 0.12s, box-shadow 0.12s",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = `0 6px 16px ${action.accent}22`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)";
+              }}
+            >
+              <div
+                style={{
+                  width: "38px",
+                  height: "38px",
+                  borderRadius: "10px",
+                  background: "#fff",
+                  boxShadow: `0 2px 8px ${action.accent}22`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "18px",
+                  flexShrink: 0,
+                }}
+              >
+                {action.emoji}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "700",
+                    color: "#111827",
+                    lineHeight: 1.3,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {action.label}
+                </div>
+                <div
+                  style={{
+                    fontSize: "11px",
+                    color: action.accent,
+                    fontWeight: "500",
+                    marginTop: "1px",
+                  }}
+                >
+                  {action.sub}
+                </div>
+              </div>
+              <div
+                style={{
+                  marginLeft: "auto",
+                  color: action.accent,
+                  fontSize: "16px",
+                  opacity: 0.6,
+                  flexShrink: 0,
+                }}
+              >
+                →
+              </div>
+            </a>
+          ))}
+        </div>
       </s-section>
 
       <s-section slot="aside" heading="Getting Started">

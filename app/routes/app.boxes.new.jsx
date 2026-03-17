@@ -429,9 +429,9 @@ export default function CreateBoxPage() {
                     gap: "10px",
                     cursor: "pointer",
                     padding: "12px 14px",
-                    border: options[opt.key] ? "1.5px solid #86efac" : "1.5px solid #e5e7eb",
+                    border: options[opt.key] ? "1.5px solid #091fd6" : "1.5px solid #e5e7eb",
                     borderRadius: "6px",
-                    background: options[opt.key] ? "#f0fdf4" : "#fafafa",
+                    background: options[opt.key] ? "#eef1ff" : "#fafafa",
                     transition: "border-color 0.15s, background 0.15s",
                   }}
                 >
@@ -439,7 +439,7 @@ export default function CreateBoxPage() {
                     type="checkbox"
                     checked={options[opt.key]}
                     onChange={() => toggleOption(opt.key)}
-                    style={{ marginTop: "3px", width: "14px", height: "14px", accentColor: "#2A7A4F", flexShrink: 0 }}
+                    style={{ marginTop: "3px", width: "14px", height: "14px", accentColor: "#091fd6", flexShrink: 0 }}
                   />
                   <div>
                     <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", display: "flex", alignItems: "center", gap: "5px" }}>
@@ -457,7 +457,7 @@ export default function CreateBoxPage() {
             <div style={sectionHeadingStyle}>
               <span style={{ fontSize: "15px" }}>🛍️</span> Eligible Products
               {selectedProducts.length > 0 && (
-                <span style={{ marginLeft: "6px", background: "#2A7A4F", color: "#fff", borderRadius: "4px", padding: "2px 8px", fontSize: "10px", fontWeight: "700", fontFamily: "monospace" }}>
+                <span style={{ marginLeft: "6px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", color: "#fff", borderRadius: "4px", padding: "2px 8px", fontSize: "10px", fontWeight: "700", fontFamily: "monospace" }}>
                   {selectedProducts.length} selected
                 </span>
               )}
@@ -471,8 +471,8 @@ export default function CreateBoxPage() {
 
             {/* Selected products chips */}
             {selectedProducts.length > 0 && (
-              <div style={{ marginBottom: "12px", padding: "12px 14px", background: "#f0fdf4", borderRadius: "5px", border: "1px solid #bbf7d0" }}>
-                <div style={{ fontSize: "10px", fontWeight: "700", color: "#15803d", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.6px" }}>
+              <div style={{ marginBottom: "12px", padding: "12px 14px", background: "#eef1ff", borderRadius: "5px", border: "1px solid #c7d2fe" }}>
+                <div style={{ fontSize: "10px", fontWeight: "700", color: "#091fd6", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.6px" }}>
                   Selected Products
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
@@ -481,7 +481,7 @@ export default function CreateBoxPage() {
                       key={p.id}
                       onClick={() => toggleProduct(p)}
                       style={{
-                        background: "#2A7A4F",
+                        background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)",
                         color: "#fff",
                         borderRadius: "4px",
                         padding: "4px 10px",
@@ -515,13 +515,13 @@ export default function CreateBoxPage() {
                 borderRadius: "5px",
                 fontSize: "13px",
                 fontWeight: "600",
-                color: "#2A7A4F",
+                color: "#091fd6",
                 cursor: "pointer",
                 width: "100%",
                 justifyContent: "center",
                 transition: "border-color 0.15s, background 0.15s",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#2A7A4F"; e.currentTarget.style.background = "#f0fdf4"; }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#091fd6"; e.currentTarget.style.background = "#eef1ff"; }}
               onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#d1d5db"; e.currentTarget.style.background = "#fff"; }}
             >
               <span style={{ fontSize: "16px" }}>+</span>
@@ -634,7 +634,7 @@ export default function CreateBoxPage() {
                         padding: "10px 16px",
                         borderBottom: idx < displayProducts.length - 1 ? "1px solid #f3f4f6" : "none",
                         cursor: "pointer",
-                        background: selected ? "#f0fdf4" : "#fff",
+                        background: selected ? "#eef1ff" : "#fff",
                         transition: "background 0.1s",
                       }}
                     >
@@ -642,7 +642,7 @@ export default function CreateBoxPage() {
                         type="checkbox"
                         checked={selected}
                         onChange={() => toggleProduct(product)}
-                        style={{ width: "15px", height: "15px", flexShrink: 0, accentColor: "#2A7A4F" }}
+                        style={{ width: "15px", height: "15px", flexShrink: 0, accentColor: "#091fd6" }}
                       />
                       {product.imageUrl ? (
                         <img
@@ -667,7 +667,7 @@ export default function CreateBoxPage() {
                         </div>
                       )}
                       {selected && (
-                        <span style={{ width: "18px", height: "18px", background: "#2A7A4F", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <span style={{ width: "18px", height: "18px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           <span style={{ color: "#fff", fontSize: "10px", fontWeight: "700" }}>✓</span>
                         </span>
                       )}
@@ -717,7 +717,7 @@ export default function CreateBoxPage() {
                   type="button"
                   onClick={closePicker}
                   style={{
-                    background: "#2A7A4F",
+                    background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)",
                     border: "none",
                     borderRadius: "5px",
                     padding: "8px 20px",
@@ -725,7 +725,7 @@ export default function CreateBoxPage() {
                     fontWeight: "700",
                     cursor: "pointer",
                     color: "#fff",
-                    boxShadow: "0 1px 6px rgba(42,122,79,0.35)",
+                    boxShadow: "0 1px 6px rgba(9,31,214,0.35)",
                   }}
                 >
                   Done{selectedProducts.length > 0 ? ` (${selectedProducts.length})` : ""}

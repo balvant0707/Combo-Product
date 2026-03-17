@@ -67,7 +67,7 @@ export async function buildThemeEditorUrl({ shop, admin }) {
 
   if (apiKey) {
     destination.searchParams.set("addAppBlockId", `${apiKey}/combo-builder`);
-    destination.searchParams.set("target", "mainSection");
+    destination.searchParams.set("target", "newAppsSection");
   }
 
   return destination.toString();

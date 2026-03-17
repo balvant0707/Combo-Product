@@ -434,15 +434,15 @@ export default function DashboardPage() {
 
       <ThemeCustomizationCard themeEditorUrl={themeEditorUrl} />
 
-      {/* Quick Actions — full-width horizontal row */}
-      <s-section heading="Quick Actions">
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(5, 1fr)",
-            gap: "12px",
-          }}
-        >
+      {/* Quick Actions */}
+      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "#fff", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", overflow: "hidden" }}>
+        <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "linear-gradient(135deg,#eff6ff,#dbeafe)", border: "1px solid #bfdbfe", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#2563eb" }}>
+            ⚡ Quick Actions
+          </div>
+          <span style={{ fontSize: "13px", color: "#9ca3af" }}>Jump to any section instantly</span>
+        </div>
+        <div style={{ padding: "20px 32px 24px", display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "12px" }}>
           {quickActions.map((action) => (
             <a
               key={action.key}
@@ -456,318 +456,143 @@ export default function DashboardPage() {
               }}
               style={{
                 display: "flex",
+                flexDirection: "column",
                 alignItems: "center",
-                gap: "12px",
-                padding: "14px 16px",
+                textAlign: "center",
+                gap: "10px",
+                padding: "20px 12px 18px",
                 background: action.bg,
                 border: `1.5px solid ${action.border}`,
-                borderRadius: "14px",
+                borderRadius: "16px",
                 textDecoration: "none",
                 cursor: "pointer",
-                transition: "transform 0.12s, box-shadow 0.12s",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                transition: "transform 0.15s, box-shadow 0.15s",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+                position: "relative",
+                overflow: "hidden",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = `0 6px 18px ${action.accent}28`;
+                e.currentTarget.style.transform = "translateY(-3px)";
+                e.currentTarget.style.boxShadow = `0 10px 28px ${action.accent}30`;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)";
+                e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.05)";
               }}
             >
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "10px",
-                  background: "#fff",
-                  boxShadow: `0 2px 8px ${action.accent}22`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "20px",
-                  flexShrink: 0,
-                }}
-              >
+              <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "#fff", boxShadow: `0 4px 12px ${action.accent}25`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px" }}>
                 {action.emoji}
               </div>
-              <div style={{ minWidth: 0 }}>
-                <div
-                  style={{
-                    fontSize: "13px",
-                    fontWeight: "700",
-                    color: "#111827",
-                    lineHeight: 1.3,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {action.label}
-                </div>
-                <div
-                  style={{
-                    fontSize: "11px",
-                    color: action.accent,
-                    fontWeight: "500",
-                    marginTop: "2px",
-                  }}
-                >
-                  {action.sub}
-                </div>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: "800", color: "#111827", lineHeight: 1.3, marginBottom: "3px" }}>{action.label}</div>
+                <div style={{ fontSize: "11px", color: action.accent, fontWeight: "600" }}>{action.sub}</div>
               </div>
-              <div
-                style={{
-                  marginLeft: "auto",
-                  color: action.accent,
-                  fontSize: "16px",
-                  opacity: 0.6,
-                  flexShrink: 0,
-                }}
-              >
-                →
-              </div>
+              <div style={{ position: "absolute", top: "10px", right: "12px", color: action.accent, fontSize: "14px", opacity: 0.5 }}>→</div>
             </a>
           ))}
         </div>
-      </s-section>
+      </div>
 
-      <s-section>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: "16px",
-          }}
-        >
+      {/* Stats */}
+      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "#fff", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", overflow: "hidden" }}>
+        <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "linear-gradient(135deg,#fffbeb,#fef3c7)", border: "1px solid #fde68a", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#d97706" }}>
+            📊 Performance
+          </div>
+          <span style={{ fontSize: "13px", color: "#9ca3af" }}>Last 30 days overview</span>
+        </div>
+        <div style={{ padding: "20px 32px 24px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
           {stats.map((stat) => (
             <StatCard key={stat.label} {...stat} />
           ))}
         </div>
-      </s-section>
+      </div>
 
-      <s-section heading="Recent Bundle Orders">
-        {recentOrders.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "48px 0",
-              color: "#9ca3af",
-            }}
-          >
-            <div
-              style={{
-                width: "56px",
-                height: "56px",
-                borderRadius: "14px",
-                margin: "0 auto 12px",
-                background: "#f3f4f6",
-                color: "#6b7280",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "14px",
-                fontWeight: "800",
-              }}
-            >
-              ORD
+      {/* Recent Bundle Orders */}
+      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "#fff", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", overflow: "hidden" }}>
+        <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "linear-gradient(135deg,#f0fdf4,#dcfce7)", border: "1px solid #bbf7d0", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#2A7A4F" }}>
+            🧾 Recent Orders
+          </div>
+          <span style={{ fontSize: "13px", color: "#9ca3af" }}>Latest bundle purchases</span>
+        </div>
+        <div style={{ padding: "0 32px 24px" }}>
+          {recentOrders.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "56px 0" }}>
+              <div style={{ fontSize: "48px", marginBottom: "14px" }}>📭</div>
+              <p style={{ fontSize: "15px", margin: "0 0 6px", color: "#374151", fontWeight: "700" }}>No bundle orders yet</p>
+              <p style={{ fontSize: "13px", margin: 0, color: "#9ca3af" }}>Add the Combo Builder block to your theme to start receiving orders.</p>
             </div>
-            <p
-              style={{
-                fontSize: "14px",
-                margin: "0 0 4px",
-                color: "#6b7280",
-                fontWeight: "600",
-              }}
-            >
-              No bundle orders yet
-            </p>
-            <p style={{ fontSize: "13px", margin: 0, color: "#9ca3af" }}>
-              Add the Combo Builder block to your theme to start receiving
-              orders.
-            </p>
-          </div>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                fontSize: "13px",
-              }}
-            >
-              <thead>
-                <tr style={{ background: "#f9fafb" }}>
-                  {["Order #", "Box Type", "Items", "Amount", "Date"].map(
-                    (heading) => (
-                      <th
-                        key={heading}
-                        style={{
-                          textAlign: "left",
-                          padding: "10px 16px",
-                          borderBottom: "1.5px solid #e5e7eb",
-                          color: "#6b7280",
-                          fontSize: "10px",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.8px",
-                          fontWeight: "600",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {heading}
-                      </th>
-                    ),
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {recentOrders.map((order, index) => (
-                  <tr
-                    key={order.id}
-                    style={{
-                      background: index % 2 === 0 ? "#fff" : "#fafafa",
-                      transition: "background 0.12s",
-                    }}
-                    onMouseEnter={(event) => {
-                      event.currentTarget.style.background = "#f0fdf4";
-                    }}
-                    onMouseLeave={(event) => {
-                      event.currentTarget.style.background =
-                        index % 2 === 0 ? "#fff" : "#fafafa";
-                    }}
-                  >
-                    <td
-                      style={{
-                        padding: "12px 16px",
-                        borderBottom: "1px solid #f3f4f6",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontFamily: "monospace",
-                          fontWeight: "600",
-                          color: "#111827",
-                        }}
-                      >
-                        #{order.orderId}
-                      </span>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px 16px",
-                        borderBottom: "1px solid #f3f4f6",
-                        color: "#374151",
-                        fontWeight: "500",
-                      }}
-                    >
-                      {order.boxTitle}
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px 16px",
-                        borderBottom: "1px solid #f3f4f6",
-                      }}
-                    >
-                      <span
-                        style={{
-                          display: "inline-block",
-                          background: "#f3f4f6",
-                          borderRadius: "6px",
-                          padding: "2px 8px",
-                          fontSize: "12px",
-                          fontWeight: "600",
-                          color: "#374151",
-                          fontFamily: "monospace",
-                        }}
-                      >
-                        {order.itemCount}
-                      </span>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px 16px",
-                        borderBottom: "1px solid #f3f4f6",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontFamily: "monospace",
-                          fontWeight: "700",
-                          color: "#2A7A4F",
-                        }}
-                      >
-                        {"\u20B9"}
-                        {Number(order.bundlePrice).toLocaleString("en-IN")}
-                      </span>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px 16px",
-                        borderBottom: "1px solid #f3f4f6",
-                        color: "#9ca3af",
-                        fontSize: "12px",
-                        fontFamily: "monospace",
-                      }}
-                    >
-                      {new Date(order.orderDate).toLocaleDateString("en-IN")}
-                    </td>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                <thead>
+                  <tr>
+                    {["Order #", "Box Type", "Items", "Amount", "Date"].map((h) => (
+                      <th key={h} style={{ textAlign: "left", padding: "14px 16px", borderBottom: "2px solid #f3f4f6", color: "#6b7280", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.9px", fontWeight: "700", whiteSpace: "nowrap" }}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </s-section>
+                </thead>
+                <tbody>
+                  {recentOrders.map((order, index) => (
+                    <tr
+                      key={order.id}
+                      style={{ background: index % 2 === 0 ? "#fff" : "#fafafa", transition: "background 0.12s" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "#f0fdf4"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = index % 2 === 0 ? "#fff" : "#fafafa"; }}
+                    >
+                      <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                        <span style={{ fontFamily: "monospace", fontWeight: "700", color: "#111827", background: "#f3f4f6", padding: "3px 8px", borderRadius: "6px" }}>#{order.orderId}</span>
+                      </td>
+                      <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6", color: "#374151", fontWeight: "600" }}>{order.boxTitle}</td>
+                      <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                        <span style={{ display: "inline-block", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "6px", padding: "2px 10px", fontSize: "12px", fontWeight: "700", color: "#2563eb", fontFamily: "monospace" }}>{order.itemCount}</span>
+                      </td>
+                      <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                        <span style={{ fontFamily: "monospace", fontWeight: "800", color: "#2A7A4F", background: "#f0fdf4", padding: "3px 8px", borderRadius: "6px" }}>₹{Number(order.bundlePrice).toLocaleString("en-IN")}</span>
+                      </td>
+                      <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6", color: "#9ca3af", fontSize: "12px", fontFamily: "monospace" }}>
+                        {new Date(order.orderDate).toLocaleDateString("en-IN")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
 
-      <s-section heading="Getting Started">
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+      {/* Getting Started */}
+      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "linear-gradient(135deg,#1a4f31 0%,#2A7A4F 55%,#3a9e68 100%)", boxShadow: "0 8px 32px rgba(42,122,79,0.22)", overflow: "hidden", position: "relative" }}>
+        <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "-30px", left: "60px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
+        <div style={{ padding: "28px 32px 20px", borderBottom: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#d1fae5" }}>
+            🚀 Getting Started
+          </div>
+          <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.55)" }}>Three steps to go live</span>
+        </div>
+        <div style={{ padding: "24px 32px 32px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
           {[
-            { step: "1", emoji: "📦", title: "Create a Combo Box", text: "Create a combo box and add eligible products." },
-            { step: "2", emoji: "🎨", title: "Open Theme Editor", text: "Add the Combo Builder block to your product template." },
-            { step: "3", emoji: "✅", title: "Go Live", text: "Save the theme so customers can build their own box on the storefront." },
+            { step: "1", emoji: "📦", title: "Create a Combo Box", text: "Create a combo box and add eligible products to offer as a bundle." },
+            { step: "2", emoji: "🎨", title: "Open Theme Editor", text: "Add the Combo Builder block to your product template in one click." },
+            { step: "3", emoji: "✅", title: "Go Live", text: "Save the theme so customers can build their own combo box on the storefront." },
           ].map((item) => (
             <div
               key={item.step}
-              style={{
-                display: "flex",
-                gap: "14px",
-                alignItems: "flex-start",
-                padding: "16px",
-                background: "#f9fafb",
-                border: "1px solid #e5e7eb",
-                borderRadius: "12px",
-              }}
+              style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: "16px", padding: "22px 20px" }}
             >
-              <div
-                style={{
-                  flexShrink: 0,
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "50%",
-                  background: "#2A7A4F",
-                  color: "#fff",
-                  fontSize: "13px",
-                  fontWeight: "800",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {item.step}
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+                <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(255,255,255,0.22)", color: "#fff", fontSize: "12px", fontWeight: "800", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{item.step}</div>
+                <span style={{ fontSize: "22px" }}>{item.emoji}</span>
               </div>
-              <div>
-                <div style={{ fontSize: "14px", fontWeight: "700", color: "#111827", marginBottom: "4px" }}>
-                  {item.emoji} {item.title}
-                </div>
-                <p style={{ margin: 0, fontSize: "13px", color: "#6b7280", lineHeight: 1.5 }}>
-                  {item.text}
-                </p>
-              </div>
+              <div style={{ fontSize: "14px", fontWeight: "800", color: "#fff", marginBottom: "8px" }}>{item.title}</div>
+              <p style={{ margin: 0, fontSize: "13px", color: "rgba(255,255,255,0.72)", lineHeight: 1.6 }}>{item.text}</p>
             </div>
           ))}
         </div>
-      </s-section>
+      </div>
     </s-page>
   );
 }

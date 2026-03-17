@@ -172,9 +172,8 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
           style={{
             display: "grid",
             gridTemplateColumns: "1fr auto",
-            gap: "40px",
             alignItems: "center",
-            padding: "36px 44px",
+            padding: "15px 15px",
           }}
         >
           {/* Left: label + headline + steps + CTA */}
@@ -215,11 +214,10 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
             </h2>
             <p
               style={{
-                margin: "0 0 28px",
-                fontSize: "15px",
+                margin: "0 0 8px",
+                fontSize: "14px",
                 color: "rgba(255,255,255,0.72)",
-                lineHeight: 1.6,
-                maxWidth: "520px",
+                lineHeight: normal,
               }}
             >
               One click opens the theme editor with the block pre-loaded — just drag, drop, and save.

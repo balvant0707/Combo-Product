@@ -307,47 +307,6 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
               Open Theme Editor
             </a>
           </div>
-
-          {/* Right: decorative badge */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "12px",
-              flexShrink: 0,
-            }}
-          >
-            <div
-              style={{
-                width: "110px",
-                height: "110px",
-                borderRadius: "28px",
-                background: "rgba(255,255,255,0.12)",
-                border: "2px solid rgba(255,255,255,0.22)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "52px",
-                boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-              }}
-            >
-              🧩
-            </div>
-            <div
-              style={{
-                fontSize: "11px",
-                fontWeight: "700",
-                color: "rgba(255,255,255,0.60)",
-                textAlign: "center",
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                lineHeight: 1.4,
-              }}
-            >
-              Theme<br />Extension
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -434,8 +393,11 @@ export default function DashboardPage() {
 
       <ThemeCustomizationCard themeEditorUrl={themeEditorUrl} />
 
+      {/* 2-column grid: 4 sections, 2 per row */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "20px" }}>
+
       {/* Quick Actions */}
-      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "#fff", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "20px", background: "#fff", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", overflow: "hidden" }}>
         <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "linear-gradient(135deg,#eff6ff,#dbeafe)", border: "1px solid #bfdbfe", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#2563eb" }}>
             ⚡ Quick Actions
@@ -494,7 +456,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "#fff", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "20px", background: "#fff", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", overflow: "hidden" }}>
         <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "linear-gradient(135deg,#fffbeb,#fef3c7)", border: "1px solid #fde68a", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#d97706" }}>
             📊 Performance
@@ -509,7 +471,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Bundle Orders */}
-      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "#fff", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "20px", background: "#fff", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", overflow: "hidden" }}>
         <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "linear-gradient(135deg,#f0fdf4,#dcfce7)", border: "1px solid #bbf7d0", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#2A7A4F" }}>
             🧾 Recent Orders
@@ -564,7 +526,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Getting Started */}
-      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "linear-gradient(135deg,#1a4f31 0%,#2A7A4F 55%,#3a9e68 100%)", boxShadow: "0 8px 32px rgba(42,122,79,0.22)", overflow: "hidden", position: "relative" }}>
+      <div style={{ borderRadius: "20px", background: "linear-gradient(135deg,#1a4f31 0%,#2A7A4F 55%,#3a9e68 100%)", boxShadow: "0 8px 32px rgba(42,122,79,0.22)", overflow: "hidden", position: "relative" }}>
         <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: "-30px", left: "60px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
         <div style={{ padding: "28px 32px 20px", borderBottom: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", gap: "12px" }}>
@@ -593,6 +555,8 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
+
+      </div>{/* end 2-col grid */}
     </s-page>
   );
 }

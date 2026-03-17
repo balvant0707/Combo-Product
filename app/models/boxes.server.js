@@ -498,6 +498,14 @@ export async function createBox(shop, data, admin) {
   });
 }
 
+export async function updateComboStepsConfig(id, shop, comboStepsConfig) {
+  await db.comboBox.findFirstOrThrow({ where: { id: parseInt(id), shop, deletedAt: null } });
+  return db.comboBox.update({
+    where: { id: parseInt(id) },
+    data: { comboStepsConfig: typeof comboStepsConfig === "string" ? comboStepsConfig : JSON.stringify(comboStepsConfig) },
+  });
+}
+
 export async function updateBox(id, shop, data, admin) {
   const existing = await db.comboBox.findFirst({
     where: { id: parseInt(id), shop, deletedAt: null },

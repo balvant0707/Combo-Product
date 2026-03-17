@@ -217,7 +217,7 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
                 margin: "0 0 8px",
                 fontSize: "14px",
                 color: "rgba(255,255,255,0.72)",
-                lineHeight: normal,
+                lineHeight: "normal",
               }}
             >
               One click opens the theme editor with the block pre-loaded — just drag, drop, and save.

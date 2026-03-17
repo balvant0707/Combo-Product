@@ -384,11 +384,12 @@ export default function DashboardPage() {
       <div style={{ display: "grid", gridTemplateColumns: "35fr 65fr", gap: "20px", marginBottom: "20px", alignItems: "start" }}>
 
       {/* Quick Actions */}
-      <div style={{ borderRadius: "20px", background: "#fff", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", overflow: "hidden" }}>
-        <div style={{ padding: "20px 20px 14px" }}>
-          <div style={{ fontSize: "15px", fontWeight: "800", color: "#111827", letterSpacing: "-0.2px" }}>Quick Actions</div>
+      <div style={{ borderRadius: "20px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative" }}>
+        <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
+        <div style={{ padding: "20px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.12)" }}>
+          <div style={{ fontSize: "15px", fontWeight: "800", color: "#fff", letterSpacing: "-0.2px" }}>Quick Actions</div>
         </div>
-        <div style={{ padding: "0 12px 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+        <div style={{ padding: "12px 12px 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
           {quickActions.map((action) => (
             <a
               key={action.key}
@@ -405,43 +406,43 @@ export default function DashboardPage() {
                 alignItems: "center",
                 gap: "14px",
                 padding: "5px 10px",
-                background: action.bg,
-                border: `1.5px solid ${action.border}`,
+                background: "rgba(255,255,255,0.12)",
+                border: "1.5px solid rgba(255,255,255,0.20)",
                 borderRadius: "14px",
                 textDecoration: "none",
                 cursor: "pointer",
-                transition: "transform 0.13s, box-shadow 0.13s",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                transition: "transform 0.13s, background 0.13s",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateX(3px)";
-                e.currentTarget.style.boxShadow = `0 4px 16px ${action.accent}22`;
+                e.currentTarget.style.background = "rgba(255,255,255,0.20)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "translateX(0)";
-                e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)";
+                e.currentTarget.style.background = "rgba(255,255,255,0.12)";
               }}
             >
-              <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "#fff", boxShadow: `0 2px 8px ${action.accent}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>
+              <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "rgba(255,255,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>
                 {action.emoji}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "14px", fontWeight: "700", color: "#111827", lineHeight: 1.3 }}>{action.label}</div>
-                <div style={{ fontSize: "12px", color: action.accent, fontWeight: "600", marginTop: "2px" }}>{action.sub}</div>
+                <div style={{ fontSize: "14px", fontWeight: "700", color: "#fff", lineHeight: 1.3 }}>{action.label}</div>
+                <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.65)", fontWeight: "600", marginTop: "2px" }}>{action.sub}</div>
               </div>
-              <div style={{ color: action.accent, fontSize: "16px", opacity: 0.55, flexShrink: 0 }}>→</div>
+              <div style={{ color: "rgba(255,255,255,0.55)", fontSize: "16px", flexShrink: 0 }}>→</div>
             </a>
           ))}
         </div>
       </div>
 
       {/* Stats */}
-      <div style={{ borderRadius: "20px", background: "#fff", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", overflow: "hidden" }}>
-        <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "linear-gradient(135deg,#fffbeb,#fef3c7)", border: "1px solid #fde68a", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#d97706" }}>
+      <div style={{ borderRadius: "20px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative" }}>
+        <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
+        <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#d1fae5" }}>
             📊 Performance
           </div>
-          <span style={{ fontSize: "13px", color: "#9ca3af" }}>Last 30 days overview</span>
+          <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.55)" }}>Last 30 days overview</span>
         </div>
         <div style={{ padding: "20px 10px 20px;", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px" }}>
           {stats.map((stat) => (
@@ -453,14 +454,16 @@ export default function DashboardPage() {
       </div>{/* end 35/65 row */}
 
       {/* Recent Bundle Orders */}
-      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "#fff", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", overflow: "hidden" }}>
-        <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "linear-gradient(135deg,#f0fdf4,#dcfce7)", border: "1px solid #bbf7d0", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#2A7A4F" }}>
+      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative" }}>
+        <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "150px", height: "150px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
+        <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#d1fae5" }}>
             🧾 Recent Orders
           </div>
-          <span style={{ fontSize: "13px", color: "#9ca3af" }}>Latest bundle purchases</span>
+          <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.55)" }}>Latest bundle purchases</span>
         </div>
-        <div style={{ padding: "0 32px 24px" }}>
+        <div style={{ padding: "16px 16px 16px" }}>
+        <div style={{ background: "rgba(255,255,255,0.97)", borderRadius: "12px", padding: "0 16px 8px", overflow: "hidden" }}>
           {recentOrders.length === 0 ? (
             <div style={{ textAlign: "center", padding: "56px 0" }}>
               <div style={{ fontSize: "48px", marginBottom: "14px" }}>📭</div>
@@ -504,6 +507,7 @@ export default function DashboardPage() {
               </table>
             </div>
           )}
+        </div>
         </div>
       </div>
 

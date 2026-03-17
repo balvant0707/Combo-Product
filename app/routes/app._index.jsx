@@ -80,7 +80,7 @@ function StatCard({ label, value, icon, accent, bg, sub }) {
       style={{
         background: "#fff",
         border: "1px solid #e5e7eb",
-        borderRadius: "12px",
+        borderRadius: "5px",
         padding: "20px 22px 18px",
         position: "relative",
         overflow: "hidden",
@@ -95,7 +95,7 @@ function StatCard({ label, value, icon, accent, bg, sub }) {
           right: 0,
           height: "3px",
           background: accent,
-          borderRadius: "12px 12px 0 0",
+          borderRadius: "5px 5px 0 0",
         }}
       />
       <div
@@ -105,7 +105,7 @@ function StatCard({ label, value, icon, accent, bg, sub }) {
           justifyContent: "center",
           width: "38px",
           height: "38px",
-          borderRadius: "10px",
+          borderRadius: "5px",
           background: bg,
           fontSize: "12px",
           fontWeight: "800",
@@ -156,7 +156,7 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
     <div style={{ marginBottom: "20px" }}>
       <div
         style={{
-          borderRadius: "20px",
+          borderRadius: "5px",
           overflow: "hidden",
           background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)",
           boxShadow: "0 8px 32px rgba(42,122,79,0.28), 0 2px 8px rgba(0,0,0,0.10)",
@@ -238,7 +238,7 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
                   style={{
                     background: "rgba(255,255,255,0.10)",
                     border: "1px solid rgba(255,255,255,0.18)",
-                    borderRadius: "14px",
+                    borderRadius: "5px",
                     padding: "16px 14px",
                     display: "flex",
                     gap: "10px",
@@ -281,7 +281,7 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
                 alignItems: "center",
                 gap: "10px",
                 textDecoration: "none",
-                borderRadius: "12px",
+                borderRadius: "5px",
                 padding: "14px 28px",
                 background: "#ffffff",
                 color: "#1a4f31",
@@ -384,7 +384,7 @@ export default function DashboardPage() {
       <div style={{ display: "grid", gridTemplateColumns: "35fr 65fr", gap: "20px", marginBottom: "20px", alignItems: "start" }}>
 
       {/* Quick Actions */}
-      <div style={{ borderRadius: "20px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative" }}>
+      <div style={{ borderRadius: "5px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative" }}>
         <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
         <div style={{ padding: "20px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.12)" }}>
           <div style={{ fontSize: "15px", fontWeight: "800", color: "#fff", letterSpacing: "-0.2px" }}>Quick Actions</div>
@@ -408,7 +408,7 @@ export default function DashboardPage() {
                 padding: "5px 10px",
                 background: "rgba(255,255,255,0.12)",
                 border: "1.5px solid rgba(255,255,255,0.20)",
-                borderRadius: "14px",
+                borderRadius: "5px",
                 textDecoration: "none",
                 cursor: "pointer",
                 transition: "transform 0.13s, background 0.13s",
@@ -422,7 +422,7 @@ export default function DashboardPage() {
                 e.currentTarget.style.background = "rgba(255,255,255,0.12)";
               }}
             >
-              <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "rgba(255,255,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>
+              <div style={{ width: "42px", height: "42px", borderRadius: "5px", background: "rgba(255,255,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>
                 {action.emoji}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -436,7 +436,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div style={{ borderRadius: "20px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative" }}>
+      <div style={{ borderRadius: "5px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative" }}>
         <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
         <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#d1fae5" }}>
@@ -463,7 +463,7 @@ export default function DashboardPage() {
           <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.55)" }}>Latest bundle purchases</span>
         </div>
         <div style={{ padding: "16px 16px 16px" }}>
-        <div style={{ background: "rgba(255,255,255,0.97)", borderRadius: "12px", padding: "0 16px 8px", overflow: "hidden" }}>
+        <div style={{ background: "rgba(255,255,255,0.97)", borderRadius: "5px", padding: "0 16px 8px", overflow: "hidden" }}>
           {recentOrders.length === 0 ? (
             <div style={{ textAlign: "center", padding: "56px 0" }}>
               <div style={{ fontSize: "48px", marginBottom: "14px" }}>📭</div>
@@ -493,10 +493,10 @@ export default function DashboardPage() {
                       </td>
                       <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6", color: "#374151", fontWeight: "600" }}>{order.boxTitle}</td>
                       <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                        <span style={{ display: "inline-block", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "6px", padding: "2px 10px", fontSize: "12px", fontWeight: "700", color: "#2563eb", fontFamily: "monospace" }}>{order.itemCount}</span>
+                        <span style={{ display: "inline-block", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "5px", padding: "2px 10px", fontSize: "12px", fontWeight: "700", color: "#2563eb", fontFamily: "monospace" }}>{order.itemCount}</span>
                       </td>
                       <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                        <span style={{ fontFamily: "monospace", fontWeight: "800", color: "#2A7A4F", background: "#f0fdf4", padding: "3px 8px", borderRadius: "6px" }}>₹{Number(order.bundlePrice).toLocaleString("en-IN")}</span>
+                        <span style={{ fontFamily: "monospace", fontWeight: "800", color: "#2A7A4F", background: "#f0fdf4", padding: "3px 8px", borderRadius: "5px" }}>₹{Number(order.bundlePrice).toLocaleString("en-IN")}</span>
                       </td>
                       <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6", color: "#9ca3af", fontSize: "12px", fontFamily: "monospace" }}>
                         {new Date(order.orderDate).toLocaleDateString("en-IN")}
@@ -512,7 +512,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Getting Started */}
-      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(42,122,79,0.22)", overflow: "hidden", position: "relative" }}>
+      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(42,122,79,0.22)", overflow: "hidden", position: "relative" }}>
         <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: "-30px", left: "60px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
         <div style={{ padding: "28px 32px 20px", borderBottom: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", gap: "12px" }}>
@@ -529,7 +529,7 @@ export default function DashboardPage() {
           ].map((item) => (
             <div
               key={item.step}
-              style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: "16px", padding: "22px 20px" }}
+              style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: "5px", padding: "22px 20px" }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
                 <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(255,255,255,0.22)", color: "#fff", fontSize: "12px", fontWeight: "800", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{item.step}</div>

@@ -331,16 +331,6 @@ export default function DashboardPage() {
 
   const quickActions = [
     {
-      key: "theme-editor",
-      emoji: "🎨",
-      label: "Open Theme Editor",
-      sub: "Customize your storefront",
-      accent: "#2A7A4F",
-      bg: "linear-gradient(135deg,#f0fdf4,#dcfce7)",
-      border: "#bbf7d0",
-      externalUrl: themeEditorUrl,
-    },
-    {
       key: "create-box",
       emoji: "📦",
       label: "Create Combo Box",
@@ -417,7 +407,7 @@ export default function DashboardPage() {
                 display: "flex",
                 alignItems: "center",
                 gap: "14px",
-                padding: "13px 14px",
+                padding: "5px 10px",
                 background: action.bg,
                 border: `1.5px solid ${action.border}`,
                 borderRadius: "14px",
@@ -456,7 +446,7 @@ export default function DashboardPage() {
           </div>
           <span style={{ fontSize: "13px", color: "#9ca3af" }}>Last 30 days overview</span>
         </div>
-        <div style={{ padding: "20px 32px 24px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
+        <div style={{ padding: "10px 10px 10px;", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px" }}>
           {stats.map((stat) => (
             <StatCard key={stat.label} {...stat} />
           ))}

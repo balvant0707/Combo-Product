@@ -31,6 +31,12 @@ export const loader = async ({ request }) => {
       isActive: b.isActive,
       sortOrder: b.sortOrder,
       orderCount: b._count?.orders ?? 0,
+      comboConfig: b.config ? {
+        comboType: b.config.comboType,
+        title: b.config.title,
+        isActive: b.config.isActive,
+        stepsJson: b.config.stepsJson,
+      } : null,
     })),
   };
 };
@@ -194,7 +200,7 @@ export default function ManageBoxesPage() {
             >
               <thead>
                 <tr style={{ background: "#f9fafb" }}>
-                  {["", "Box Name", "Items", "Price", "Gift", "Orders", "Status", "Actions"].map(
+                  {["", "Box Name", "Items", "Price", "Gift", "Combo", "Orders", "Status", "Actions"].map(
                     (h) => (
                       <th
                         key={h}
@@ -307,6 +313,30 @@ export default function ManageBoxesPage() {
                           Yes
                         </span>
                       ) : (
+                        <span style={{ color: "#d1d5db", fontSize: "12px" }}>—</span>
+                      )}
+                    </td>
+
+                    {/* Combo config */}
+                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                      {box.comboConfig ? (() => {
+                        const cfg = box.comboConfig;
+                        let stepsCount = 0;
+                        try { stepsCount = cfg.stepsJson ? JSON.parse(cfg.stepsJson).length : cfg.comboType; } catch { stepsCount = cfg.comboType; }
+                        return (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: "700", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", color: "#fff", padding: "2px 8px", borderRadius: "5px", width: "fit-content" }}>
+                              {stepsCount}-Step Combo
+                            </span>
+                            {cfg.title && (
+                              <span style={{ fontSize: "11px", color: "#6b7280", maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cfg.title}</span>
+                            )}
+                            <span style={{ fontSize: "10px", fontWeight: "600", color: cfg.isActive ? "#059669" : "#9ca3af" }}>
+                              {cfg.isActive ? "● Active" : "● Inactive"}
+                            </span>
+                          </div>
+                        );
+                      })() : (
                         <span style={{ color: "#d1d5db", fontSize: "12px" }}>—</span>
                       )}
                     </td>

@@ -379,6 +379,7 @@ export async function listBoxes(shop, activeOnly = false, includeBannerBinary = 
     where,
     include: {
       products: true,
+      config: true,
       _count: { select: { orders: true } },
     },
     orderBy: { sortOrder: "asc" },

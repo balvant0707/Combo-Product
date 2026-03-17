@@ -398,13 +398,10 @@ export default function DashboardPage() {
 
       {/* Quick Actions */}
       <div style={{ borderRadius: "20px", background: "#fff", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", overflow: "hidden" }}>
-        <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "linear-gradient(135deg,#eff6ff,#dbeafe)", border: "1px solid #bfdbfe", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#2563eb" }}>
-            ⚡ Quick Actions
-          </div>
-          <span style={{ fontSize: "13px", color: "#9ca3af" }}>Jump to any section instantly</span>
+        <div style={{ padding: "20px 20px 14px" }}>
+          <div style={{ fontSize: "15px", fontWeight: "800", color: "#111827", letterSpacing: "-0.2px" }}>Quick Actions</div>
         </div>
-        <div style={{ padding: "20px 32px 24px", display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "12px" }}>
+        <div style={{ padding: "0 12px 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
           {quickActions.map((action) => (
             <a
               key={action.key}
@@ -418,38 +415,34 @@ export default function DashboardPage() {
               }}
               style={{
                 display: "flex",
-                flexDirection: "column",
                 alignItems: "center",
-                textAlign: "center",
-                gap: "10px",
-                padding: "20px 12px 18px",
+                gap: "14px",
+                padding: "13px 14px",
                 background: action.bg,
                 border: `1.5px solid ${action.border}`,
-                borderRadius: "16px",
+                borderRadius: "14px",
                 textDecoration: "none",
                 cursor: "pointer",
-                transition: "transform 0.15s, box-shadow 0.15s",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-                position: "relative",
-                overflow: "hidden",
+                transition: "transform 0.13s, box-shadow 0.13s",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-3px)";
-                e.currentTarget.style.boxShadow = `0 10px 28px ${action.accent}30`;
+                e.currentTarget.style.transform = "translateX(3px)";
+                e.currentTarget.style.boxShadow = `0 4px 16px ${action.accent}22`;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.05)";
+                e.currentTarget.style.transform = "translateX(0)";
+                e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)";
               }}
             >
-              <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "#fff", boxShadow: `0 4px 12px ${action.accent}25`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px" }}>
+              <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "#fff", boxShadow: `0 2px 8px ${action.accent}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>
                 {action.emoji}
               </div>
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: "800", color: "#111827", lineHeight: 1.3, marginBottom: "3px" }}>{action.label}</div>
-                <div style={{ fontSize: "11px", color: action.accent, fontWeight: "600" }}>{action.sub}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: "14px", fontWeight: "700", color: "#111827", lineHeight: 1.3 }}>{action.label}</div>
+                <div style={{ fontSize: "12px", color: action.accent, fontWeight: "600", marginTop: "2px" }}>{action.sub}</div>
               </div>
-              <div style={{ position: "absolute", top: "10px", right: "12px", color: action.accent, fontSize: "14px", opacity: 0.5 }}>→</div>
+              <div style={{ color: action.accent, fontSize: "16px", opacity: 0.55, flexShrink: 0 }}>→</div>
             </a>
           ))}
         </div>

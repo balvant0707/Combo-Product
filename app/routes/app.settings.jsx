@@ -75,7 +75,7 @@ export default function SettingsPage() {
     width: "100%",
     padding: "8px 12px",
     border: "1px solid #c9c6be",
-    borderRadius: "6px",
+    borderRadius: "5px",
     fontSize: "13px",
     color: "#1a1814",
     background: "#fff",
@@ -97,7 +97,7 @@ export default function SettingsPage() {
           style={{
             background: "#d1fae5",
             border: "1px solid #6ee7b7",
-            borderRadius: "8px",
+            borderRadius: "5px",
             padding: "12px 16px",
             marginBottom: "16px",
             color: "#065f46",
@@ -161,7 +161,7 @@ export default function SettingsPage() {
                         gap: "8px",
                         padding: "10px 8px",
                         border: isActive ? "2px solid #091fd6" : "2px solid #e5e1d8",
-                        borderRadius: "10px",
+                        borderRadius: "5px",
                         background: isActive ? "#eef1ff" : "#fff",
                         cursor: "pointer",
                         transition: "border-color 0.15s, background 0.15s",
@@ -237,7 +237,7 @@ export default function SettingsPage() {
                         name="buttonColor"
                         value={buttonColor}
                         onChange={(e) => setButtonColor(e.target.value)}
-                        style={{ width: "40px", height: "36px", border: "1px solid #c9c6be", borderRadius: "6px", cursor: "pointer", padding: "2px" }}
+                        style={{ width: "40px", height: "36px", border: "1px solid #c9c6be", borderRadius: "5px", cursor: "pointer", padding: "2px" }}
                       />
                       <input
                         type="text"
@@ -257,7 +257,7 @@ export default function SettingsPage() {
                         name="activeSlotColor"
                         value={activeSlotColor}
                         onChange={(e) => setActiveSlotColor(e.target.value)}
-                        style={{ width: "40px", height: "36px", border: "1px solid #c9c6be", borderRadius: "6px", cursor: "pointer", padding: "2px" }}
+                        style={{ width: "40px", height: "36px", border: "1px solid #c9c6be", borderRadius: "5px", cursor: "pointer", padding: "2px" }}
                       />
                       <input
                         type="text"
@@ -311,7 +311,7 @@ export default function SettingsPage() {
                         gap: "10px",
                         padding: "12px 8px",
                         border: isActive ? "2px solid #091fd6" : "2px solid #e5e7eb",
-                        borderRadius: "10px",
+                        borderRadius: "5px",
                         background: isActive ? "#eef1ff" : "#fff",
                         cursor: "pointer",
                         transition: "border-color 0.15s, background 0.15s",
@@ -322,7 +322,7 @@ export default function SettingsPage() {
                         <div
                           style={{
                             height: "8px",
-                            borderRadius: "4px",
+                            borderRadius: "5px",
                             background: isActive ? "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)" : "#d1d5db",
                             width: preset.value === 0 ? "100%" :
                                    preset.value <= 860 ? "45%" :
@@ -419,7 +419,7 @@ export default function SettingsPage() {
                       gap: "10px",
                       padding: "14px 10px",
                       border: isActive ? "2px solid #2A7A4F" : "2px solid #e5e7eb",
-                      borderRadius: "10px",
+                      borderRadius: "5px",
                       background: isActive ? "#f0fdf4" : "#fff",
                       cursor: "pointer",
                       boxShadow: isActive ? "0 0 0 3px rgba(42,122,79,0.12)" : "none",
@@ -433,7 +433,7 @@ export default function SettingsPage() {
                           style={{
                             display: "block",
                             height: "16px",
-                            borderRadius: "4px",
+                            borderRadius: "5px",
                             background: isActive ? "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)" : "#d1d5db",
                             opacity: isActive ? 1 : 0.85,
                           }}
@@ -513,7 +513,7 @@ export default function SettingsPage() {
                   gap: "12px",
                   padding: "12px",
                   border: "1px solid #e5e1d8",
-                  borderRadius: "8px",
+                  borderRadius: "5px",
                   cursor: "pointer",
                 }}
               >
@@ -549,7 +549,7 @@ export default function SettingsPage() {
                   gap: "12px",
                   padding: "12px",
                   border: "1px solid #e5e1d8",
-                  borderRadius: "8px",
+                  borderRadius: "5px",
                   cursor: "pointer",
                 }}
               >

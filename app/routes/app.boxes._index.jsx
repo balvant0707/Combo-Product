@@ -144,7 +144,7 @@ export default function ManageBoxesPage() {
       </s-button>
 
       {/* Hero banner */}
-      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
+      <div style={{ marginBottom: "10px", borderRadius: "5px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
         <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
         <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#d1fae5", marginBottom: "10px" }}>
           📦 Combo Boxes
@@ -166,7 +166,7 @@ export default function ManageBoxesPage() {
               style={{
                 width: "64px",
                 height: "64px",
-                borderRadius: "16px",
+                borderRadius: "5px",
                 background: "rgba(42,122,79,0.08)",
                 display: "flex",
                 alignItems: "center",
@@ -269,7 +269,7 @@ export default function ManageBoxesPage() {
                         style={{
                           display: "inline-block",
                           background: "#f3f4f6",
-                          borderRadius: "6px",
+                          borderRadius: "5px",
                           padding: "2px 8px",
                           fontSize: "12px",
                           fontWeight: "600",
@@ -301,7 +301,7 @@ export default function ManageBoxesPage() {
                             color: "#7c3aed",
                             background: "rgba(124,58,237,0.08)",
                             padding: "2px 8px",
-                            borderRadius: "20px",
+                            borderRadius: "5px",
                           }}
                         >
                           Yes
@@ -328,7 +328,7 @@ export default function ManageBoxesPage() {
                           alignItems: "center",
                           gap: "5px",
                           padding: "4px 10px",
-                          borderRadius: "20px",
+                          borderRadius: "5px",
                           fontSize: "11px",
                           fontWeight: "600",
                           cursor: "pointer",
@@ -362,7 +362,7 @@ export default function ManageBoxesPage() {
                           style={{
                             background: "#f9fafb",
                             border: "1px solid #e5e7eb",
-                            borderRadius: "6px",
+                            borderRadius: "5px",
                             padding: "5px 14px",
                             fontSize: "12px",
                             fontWeight: "500",
@@ -386,7 +386,7 @@ export default function ManageBoxesPage() {
                           style={{
                             background: "#fff5f5",
                             border: "1px solid #fecaca",
-                            borderRadius: "6px",
+                            borderRadius: "5px",
                             padding: "5px 14px",
                             fontSize: "12px",
                             fontWeight: "500",

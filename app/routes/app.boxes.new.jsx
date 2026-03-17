@@ -290,7 +290,7 @@ export default function CreateBoxPage() {
       )}
 
       {/* Hero banner */}
-      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
+      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
         <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
         <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#d1fae5", marginBottom: "10px" }}>
           📦 New Box
@@ -430,7 +430,7 @@ export default function CreateBoxPage() {
                     cursor: "pointer",
                     padding: "12px 14px",
                     border: options[opt.key] ? "1.5px solid #091fd6" : "1.5px solid #e5e7eb",
-                    borderRadius: "6px",
+                    borderRadius: "5px",
                     background: options[opt.key] ? "#eef1ff" : "#fafafa",
                     transition: "border-color 0.15s, background 0.15s",
                   }}
@@ -457,14 +457,14 @@ export default function CreateBoxPage() {
             <div style={sectionHeadingStyle}>
               <span style={{ fontSize: "15px" }}>🛍️</span> Eligible Products
               {selectedProducts.length > 0 && (
-                <span style={{ marginLeft: "6px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", color: "#fff", borderRadius: "4px", padding: "2px 8px", fontSize: "10px", fontWeight: "700", fontFamily: "monospace" }}>
+                <span style={{ marginLeft: "6px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", color: "#fff", borderRadius: "5px", padding: "2px 8px", fontSize: "10px", fontWeight: "700", fontFamily: "monospace" }}>
                   {selectedProducts.length} selected
                 </span>
               )}
             </div>
 
             {errors.eligibleProducts && (
-              <div style={{ color: "#e11d48", fontSize: "12px", marginBottom: "10px", padding: "8px 12px", background: "#fff5f5", borderRadius: "4px", border: "1px solid #fecaca" }}>
+              <div style={{ color: "#e11d48", fontSize: "12px", marginBottom: "10px", padding: "8px 12px", background: "#fff5f5", borderRadius: "5px", border: "1px solid #fecaca" }}>
                 {errors.eligibleProducts}
               </div>
             )}
@@ -483,7 +483,7 @@ export default function CreateBoxPage() {
                       style={{
                         background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)",
                         color: "#fff",
-                        borderRadius: "4px",
+                        borderRadius: "5px",
                         padding: "4px 10px",
                         fontSize: "12px",
                         cursor: "pointer",
@@ -551,7 +551,7 @@ export default function CreateBoxPage() {
           <div
             style={{
               background: "#fff",
-              borderRadius: "8px",
+              borderRadius: "5px",
               width: "100%",
               maxWidth: "560px",
               maxHeight: "85vh",
@@ -588,7 +588,7 @@ export default function CreateBoxPage() {
                   fontSize: "18px",
                   color: "#9ca3af",
                   padding: "4px 8px",
-                  borderRadius: "4px",
+                  borderRadius: "5px",
                   lineHeight: 1,
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = "#f3f4f6"; e.currentTarget.style.color = "#374151"; }}
@@ -648,10 +648,10 @@ export default function CreateBoxPage() {
                         <img
                           src={product.imageUrl}
                           alt={product.title}
-                          style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "4px", flexShrink: 0, border: "1px solid #e5e7eb" }}
+                          style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }}
                         />
                       ) : (
-                        <div style={{ width: "40px", height: "40px", borderRadius: "4px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", border: "1px solid #e5e7eb" }}>
+                        <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", border: "1px solid #e5e7eb" }}>
                           📦
                         </div>
                       )}

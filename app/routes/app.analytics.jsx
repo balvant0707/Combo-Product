@@ -269,7 +269,7 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
   const navBtnStyle = {
     background: "none",
     border: "1px solid #e5e7eb",
-    borderRadius: "6px",
+    borderRadius: "5px",
     cursor: "pointer",
     padding: "4px 8px",
     fontSize: "14px",
@@ -299,7 +299,7 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
           alignItems: "center",
           gap: "8px",
           padding: "7px 14px",
-          borderRadius: "8px",
+          borderRadius: "5px",
           border: "1.5px solid #e5e7eb",
           background: "#ffffff",
           fontSize: "13px",
@@ -326,7 +326,7 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
             right: `${popoverPos.right}px`,
             background: "#ffffff",
             border: "1px solid #e5e7eb",
-            borderRadius: "12px",
+            borderRadius: "5px",
             boxShadow: "0 8px 32px rgba(0,0,0,0.13)",
             zIndex: 9999,
             padding: "16px",
@@ -361,14 +361,14 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
               type="date"
               value={fromDate}
               onChange={(e) => { setFromDate(e.target.value); setSelectedPreset("custom"); }}
-              style={{ flex: 1, padding: "8px 10px", borderRadius: "8px", border: "1.5px solid #e5e7eb", fontSize: "13px", color: "#374151" }}
+              style={{ flex: 1, padding: "8px 10px", borderRadius: "5px", border: "1.5px solid #e5e7eb", fontSize: "13px", color: "#374151" }}
             />
             <span style={{ color: "#9ca3af", fontSize: "16px" }}>→</span>
             <input
               type="date"
               value={toDate}
               onChange={(e) => { setToDate(e.target.value); setSelectedPreset("custom"); }}
-              style={{ flex: 1, padding: "8px 10px", borderRadius: "8px", border: "1.5px solid #e5e7eb", fontSize: "13px", color: "#374151" }}
+              style={{ flex: 1, padding: "8px 10px", borderRadius: "5px", border: "1.5px solid #e5e7eb", fontSize: "13px", color: "#374151" }}
             />
           </div>
 
@@ -419,13 +419,13 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
           <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "16px", borderTop: "1px solid #f3f4f6", paddingTop: "16px" }}>
             <button
               onClick={handleCancel}
-              style={{ padding: "8px 20px", borderRadius: "8px", border: "1.5px solid #e5e7eb", background: "#ffffff", fontSize: "13px", fontWeight: "600", color: "#374151", cursor: "pointer" }}
+              style={{ padding: "8px 20px", borderRadius: "5px", border: "1.5px solid #e5e7eb", background: "#ffffff", fontSize: "13px", fontWeight: "600", color: "#374151", cursor: "pointer" }}
             >
               Cancel
             </button>
             <button
               onClick={handleApply}
-              style={{ padding: "8px 20px", borderRadius: "8px", border: "none", background: "#111827", fontSize: "13px", fontWeight: "600", color: "#ffffff", cursor: "pointer" }}
+              style={{ padding: "8px 20px", borderRadius: "5px", border: "none", background: "#111827", fontSize: "13px", fontWeight: "600", color: "#ffffff", cursor: "pointer" }}
             >
               Apply
             </button>
@@ -444,7 +444,7 @@ function KpiCard({ label, value, subLabel, change, accentColor, icon, subtitle }
       style={{
         background: "#ffffff",
         border: "1px solid #e5e7eb",
-        borderRadius: "14px",
+        borderRadius: "5px",
         padding: "20px 22px 18px",
         position: "relative",
         overflow: "hidden",
@@ -453,7 +453,7 @@ function KpiCard({ label, value, subLabel, change, accentColor, icon, subtitle }
       }}
     >
       {/* Top accent line */}
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "3px", background: accentColor, borderRadius: "14px 14px 0 0" }} />
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "3px", background: accentColor, borderRadius: "5px 5px 0 0" }} />
 
       {/* Icon bubble */}
       <div
@@ -463,7 +463,7 @@ function KpiCard({ label, value, subLabel, change, accentColor, icon, subtitle }
           justifyContent: "center",
           width: "36px",
           height: "36px",
-          borderRadius: "10px",
+          borderRadius: "5px",
           background: `${accentColor}15`,
           fontSize: "18px",
           marginBottom: "12px",
@@ -491,7 +491,7 @@ function KpiCard({ label, value, subLabel, change, accentColor, icon, subtitle }
               color: isUp ? "#059669" : "#dc2626",
               background: isUp ? "#d1fae5" : "#fee2e2",
               padding: "3px 8px",
-              borderRadius: "20px",
+              borderRadius: "5px",
             }}
           >
             {isUp ? "↑" : "↓"} {Math.abs(change).toFixed(1)}%
@@ -630,7 +630,7 @@ function LineChart({
               color: isUp ? "#059669" : "#dc2626",
               background: isUp ? "#d1fae5" : "#fee2e2",
               padding: "5px 12px",
-              borderRadius: "20px",
+              borderRadius: "5px",
             }}
           >
             {isUp ? "↑" : "↓"} {Math.abs(change).toFixed(1)}% vs prev period
@@ -643,7 +643,7 @@ function LineChart({
         style={{
           background: "#ffffff",
           border: "1px solid #e5e7eb",
-          borderRadius: "12px",
+          borderRadius: "5px",
           padding: "8px 4px 4px",
           overflow: "hidden",
           position: "relative",
@@ -876,13 +876,13 @@ function TopProductsChart({ data }) {
             >
               #{shortId}
             </div>
-            <div style={{ background: "#f3f4f6", borderRadius: "4px", height: "22px", overflow: "hidden", position: "relative" }}>
+            <div style={{ background: "#f3f4f6", borderRadius: "5px", height: "22px", overflow: "hidden", position: "relative" }}>
               <div
                 style={{
                   width: `${pct}%`,
                   background: `linear-gradient(90deg, ${color}bb, ${color})`,
                   height: "100%",
-                  borderRadius: "4px",
+                  borderRadius: "5px",
                   minWidth: "4px",
                   display: "flex",
                   alignItems: "center",
@@ -936,13 +936,13 @@ function BoxPerformanceChart({ data }) {
                 <span>{b.orders} orders</span>
               </div>
             </div>
-            <div style={{ background: "#f3f4f6", borderRadius: "6px", height: "10px", overflow: "hidden", marginBottom: "5px" }}>
+            <div style={{ background: "#f3f4f6", borderRadius: "5px", height: "10px", overflow: "hidden", marginBottom: "5px" }}>
               <div
                 style={{
                   width: `${revPct}%`,
                   background: `linear-gradient(90deg, hsl(${hue},55%,38%), hsl(${hue},50%,52%))`,
                   height: "100%",
-                  borderRadius: "6px",
+                  borderRadius: "5px",
                   minWidth: "4px",
                   transition: "width 0.6s ease",
                 }}
@@ -971,7 +971,7 @@ function ComparisonBanner({ period, prevPeriod }) {
         padding: "12px 16px",
         background: "linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%)",
         border: "1px solid #dbeafe",
-        borderRadius: "10px",
+        borderRadius: "5px",
         marginBottom: "20px",
         fontSize: "12px",
         color: "#374151",
@@ -1025,7 +1025,7 @@ export default function AnalyticsPage() {
   return (
     <s-page heading="Analytics">
       {/* Hero banner */}
-      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
+      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
         <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
         <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#d1fae5", marginBottom: "10px" }}>
           📊 Analytics

@@ -76,9 +76,9 @@ const DEFAULT_COMBO_CONFIG = {
   showProgressBar: true,
   allowReselection: true,
   steps: [
-    { label: "Main Product",      collections: [], selectedProduct: null, popup: { title: "Choose your main product",  desc: "Select the primary product.",     btn: "Confirm selection" } },
-    { label: "Add-on Accessory",  collections: [], selectedProduct: null, popup: { title: "Choose an accessory",       desc: "Pick an add-on.",                 btn: "Confirm selection" } },
-    { label: "Extra Item",        collections: [], selectedProduct: null, popup: { title: "Choose an extra item",      desc: "Complete your bundle.",           btn: "Complete bundle"   } },
+    { label: "Main Product",      scope: "collection", collections: [], selectedProduct: null, popup: { title: "Choose your main product",  desc: "Select the primary product.",     btn: "Confirm selection" } },
+    { label: "Add-on Accessory",  scope: "collection", collections: [], selectedProduct: null, popup: { title: "Choose an accessory",       desc: "Pick an add-on.",                 btn: "Confirm selection" } },
+    { label: "Extra Item",        scope: "collection", collections: [], selectedProduct: null, popup: { title: "Choose an extra item",      desc: "Complete your bundle.",           btn: "Complete bundle"   } },
   ],
 };
 
@@ -767,30 +767,55 @@ export default function EditBoxPage() {
                         <span style={{ fontSize: "11px", fontWeight: "600", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", color: "#fff", padding: "2px 10px", borderRadius: "10px" }}>Step {ai + 1} of {comboConfig.type}</span>
                       </div>
                       <div style={{ padding: "16px" }}>
-                        <label style={labelStyle}>Add to step</label>
-                        <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
-                          <button
-                            type="button"
-                            onClick={() => { setStepProdModalIdx(ai); setTempStepProd(step.selectedProduct || null); setStepProdSearch(""); setShowStepProdModal(true); }}
-                            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "9px 14px", border: step.selectedProduct ? "1.5px solid #2A7A4F" : "1.5px solid #d1d5db", borderRadius: "5px", background: step.selectedProduct ? "#f0fdf4" : "#fff", fontSize: "13px", color: step.selectedProduct ? "#166534" : "#374151", fontWeight: step.selectedProduct ? "600" : "400", cursor: "pointer" }}
+                        <label style={labelStyle}>Scope</label>
+                        <div style={{ position: "relative", marginBottom: "10px" }}>
+                          <select
+                            value={step.scope || "collection"}
+                            onChange={(e) => {
+                              const newScope = e.target.value;
+                              setComboConfig((prev) => {
+                                const steps = prev.steps.map((s, i) => i !== ai ? s : { ...s, scope: newScope, collections: [], selectedProduct: null });
+                                return { ...prev, steps };
+                              });
+                            }}
+                            style={{ width: "100%", padding: "9px 32px 9px 12px", border: "1.5px solid #d1d5db", borderRadius: "6px", background: "#fff", fontSize: "13px", color: "#374151", cursor: "pointer", appearance: "none", WebkitAppearance: "none", outline: "none" }}
                           >
-                            <span>📦</span> Select Product
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => { setCollModalStepIdx(ai); setTempColl(step.collections[0] || null); setCollSearch(""); setShowCollModal(true); }}
-                            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "9px 14px", border: step.collections.length > 0 ? "1.5px solid #091fd6" : "1.5px solid #d1d5db", borderRadius: "5px", background: step.collections.length > 0 ? "#eef1ff" : "#fff", fontSize: "13px", color: step.collections.length > 0 ? "#091fd6" : "#374151", fontWeight: step.collections.length > 0 ? "600" : "400", cursor: "pointer" }}
-                          >
-                            <span>📁</span> Select Collection
-                          </button>
+                            <option value="collection">Specific collections</option>
+                            <option value="product">Specific products</option>
+                          </select>
+                          <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "13px", color: "#6b7280", pointerEvents: "none" }}>⌃⌄</span>
                         </div>
-                        {step.collections.length > 0 && (
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                          {(step.scope || "collection") === "collection" ? (
+                            <button
+                              type="button"
+                              onClick={() => { setCollModalStepIdx(ai); setTempColl(step.collections[0] || null); setCollSearch(""); setShowCollModal(true); }}
+                              style={{ padding: "7px 16px", border: "1px solid #d1d5db", borderRadius: "5px", background: "#fff", fontSize: "13px", color: "#374151", cursor: "pointer", fontWeight: "500" }}
+                            >
+                              Select collections
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => { setStepProdModalIdx(ai); setTempStepProd(step.selectedProduct || null); setStepProdSearch(""); setShowStepProdModal(true); }}
+                              style={{ padding: "7px 16px", border: "1px solid #d1d5db", borderRadius: "5px", background: "#fff", fontSize: "13px", color: "#374151", cursor: "pointer", fontWeight: "500" }}
+                            >
+                              Select products
+                            </button>
+                          )}
+                          <span style={{ fontSize: "13px", color: "#6b7280" }}>
+                            {(step.scope || "collection") === "collection"
+                              ? `${step.collections.length} selected`
+                              : step.selectedProduct ? "1 selected" : "0 selected"}
+                          </span>
+                        </div>
+                        {step.collections.length > 0 && (step.scope || "collection") === "collection" && (
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "8px", padding: "6px 10px", background: "#eef1ff", border: "1.5px solid #091fd6", borderRadius: "5px" }}>
                             <span style={{ fontSize: "12px", color: "#091fd6", fontWeight: "600" }}>📁 {step.collections[0].title}</span>
                             <button type="button" onClick={() => updateComboStep(ai, "collections", [])} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "11px", color: "#dc2626" }}>✕</button>
                           </div>
                         )}
-                        {step.selectedProduct && (
+                        {step.selectedProduct && (step.scope || "collection") === "product" && (
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "6px", padding: "6px 10px", background: "#f0fdf4", border: "1.5px solid #2A7A4F", borderRadius: "5px" }}>
                             <span style={{ fontSize: "12px", color: "#166534", fontWeight: "600" }}>📦 {step.selectedProduct.title} — ₹{parseFloat(step.selectedProduct.price || 0).toLocaleString("en-IN")}</span>
                             <button type="button" onClick={() => updateComboStep(ai, "selectedProduct", null)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "11px", color: "#dc2626" }}>✕</button>

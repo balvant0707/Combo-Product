@@ -434,6 +434,105 @@ export default function DashboardPage() {
 
       <ThemeCustomizationCard themeEditorUrl={themeEditorUrl} />
 
+      {/* Quick Actions — full-width horizontal row */}
+      <s-section heading="Quick Actions">
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(5, 1fr)",
+            gap: "12px",
+          }}
+        >
+          {quickActions.map((action) => (
+            <a
+              key={action.key}
+              href={action.externalUrl || "#"}
+              target={action.externalUrl ? "_blank" : undefined}
+              rel={action.externalUrl ? "noreferrer" : undefined}
+              onClick={(event) => {
+                if (action.externalUrl) return;
+                event.preventDefault();
+                navigateTo(action.href);
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "14px 16px",
+                background: action.bg,
+                border: `1.5px solid ${action.border}`,
+                borderRadius: "14px",
+                textDecoration: "none",
+                cursor: "pointer",
+                transition: "transform 0.12s, box-shadow 0.12s",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = `0 6px 18px ${action.accent}28`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)";
+              }}
+            >
+              <div
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "10px",
+                  background: "#fff",
+                  boxShadow: `0 2px 8px ${action.accent}22`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "20px",
+                  flexShrink: 0,
+                }}
+              >
+                {action.emoji}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "700",
+                    color: "#111827",
+                    lineHeight: 1.3,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {action.label}
+                </div>
+                <div
+                  style={{
+                    fontSize: "11px",
+                    color: action.accent,
+                    fontWeight: "500",
+                    marginTop: "2px",
+                  }}
+                >
+                  {action.sub}
+                </div>
+              </div>
+              <div
+                style={{
+                  marginLeft: "auto",
+                  color: action.accent,
+                  fontSize: "16px",
+                  opacity: 0.6,
+                  flexShrink: 0,
+                }}
+              >
+                →
+              </div>
+            </a>
+          ))}
+        </div>
+      </s-section>
+
       <s-section>
         <div
           style={{
@@ -621,128 +720,35 @@ export default function DashboardPage() {
         )}
       </s-section>
 
-      <s-section slot="aside" heading="Quick Actions">
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          {quickActions.map((action) => (
-            <a
-              key={action.key}
-              href={action.externalUrl || "#"}
-              target={action.externalUrl ? "_blank" : undefined}
-              rel={action.externalUrl ? "noreferrer" : undefined}
-              onClick={(event) => {
-                if (action.externalUrl) return;
-                event.preventDefault();
-                navigateTo(action.href);
-              }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                padding: "12px 14px",
-                background: action.bg,
-                border: `1.5px solid ${action.border}`,
-                borderRadius: "12px",
-                textDecoration: "none",
-                cursor: "pointer",
-                transition: "transform 0.12s, box-shadow 0.12s",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = `0 6px 16px ${action.accent}22`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)";
-              }}
-            >
-              <div
-                style={{
-                  width: "38px",
-                  height: "38px",
-                  borderRadius: "10px",
-                  background: "#fff",
-                  boxShadow: `0 2px 8px ${action.accent}22`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "18px",
-                  flexShrink: 0,
-                }}
-              >
-                {action.emoji}
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <div
-                  style={{
-                    fontSize: "13px",
-                    fontWeight: "700",
-                    color: "#111827",
-                    lineHeight: 1.3,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {action.label}
-                </div>
-                <div
-                  style={{
-                    fontSize: "11px",
-                    color: action.accent,
-                    fontWeight: "500",
-                    marginTop: "1px",
-                  }}
-                >
-                  {action.sub}
-                </div>
-              </div>
-              <div
-                style={{
-                  marginLeft: "auto",
-                  color: action.accent,
-                  fontSize: "16px",
-                  opacity: 0.6,
-                  flexShrink: 0,
-                }}
-              >
-                →
-              </div>
-            </a>
-          ))}
-        </div>
-      </s-section>
-
-      <s-section slot="aside" heading="Getting Started">
-        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+      <s-section heading="Getting Started">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
           {[
-            {
-              step: "1",
-              text: "Create a combo box and add eligible products.",
-            },
-            {
-              step: "2",
-              text: "Open Theme Editor to load Theme Customization with the Combo Builder block targeted to the product template.",
-            },
-            {
-              step: "3",
-              text: "Save the theme so customers can build their own box on the storefront.",
-            },
+            { step: "1", emoji: "📦", title: "Create a Combo Box", text: "Create a combo box and add eligible products." },
+            { step: "2", emoji: "🎨", title: "Open Theme Editor", text: "Add the Combo Builder block to your product template." },
+            { step: "3", emoji: "✅", title: "Go Live", text: "Save the theme so customers can build their own box on the storefront." },
           ].map((item) => (
             <div
               key={item.step}
-              style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}
+              style={{
+                display: "flex",
+                gap: "14px",
+                alignItems: "flex-start",
+                padding: "16px",
+                background: "#f9fafb",
+                border: "1px solid #e5e7eb",
+                borderRadius: "12px",
+              }}
             >
               <div
                 style={{
                   flexShrink: 0,
-                  width: "24px",
-                  height: "24px",
+                  width: "32px",
+                  height: "32px",
                   borderRadius: "50%",
                   background: "#2A7A4F",
                   color: "#fff",
-                  fontSize: "11px",
-                  fontWeight: "700",
+                  fontSize: "13px",
+                  fontWeight: "800",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -750,16 +756,14 @@ export default function DashboardPage() {
               >
                 {item.step}
               </div>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: "13px",
-                  color: "#374151",
-                  lineHeight: 1.5,
-                }}
-              >
-                {item.text}
-              </p>
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: "700", color: "#111827", marginBottom: "4px" }}>
+                  {item.emoji} {item.title}
+                </div>
+                <p style={{ margin: 0, fontSize: "13px", color: "#6b7280", lineHeight: 1.5 }}>
+                  {item.text}
+                </p>
+              </div>
             </div>
           ))}
         </div>

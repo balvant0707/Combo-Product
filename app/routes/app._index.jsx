@@ -328,32 +328,52 @@ export default function DashboardPage() {
   const quickActions = [
     {
       key: "theme-editor",
-      icon: "TE",
-      label: "Open theme editor",
+      emoji: "🎨",
+      label: "Open Theme Editor",
+      sub: "Customize your storefront",
+      accent: "#2A7A4F",
+      bg: "linear-gradient(135deg,#f0fdf4,#dcfce7)",
+      border: "#bbf7d0",
       externalUrl: themeEditorUrl,
     },
     {
       key: "create-box",
-      icon: "+",
-      label: "Create a new combo box",
+      emoji: "📦",
+      label: "Create Combo Box",
+      sub: "Add a new bundle",
+      accent: "#3b82f6",
+      bg: "linear-gradient(135deg,#eff6ff,#dbeafe)",
+      border: "#bfdbfe",
       href: "/app/boxes/new",
     },
     {
       key: "manage-boxes",
-      icon: "BX",
-      label: "Manage existing boxes",
+      emoji: "🗂️",
+      label: "Manage Boxes",
+      sub: "Edit existing combos",
+      accent: "#8b5cf6",
+      bg: "linear-gradient(135deg,#f5f3ff,#ede9fe)",
+      border: "#ddd6fe",
       href: "/app/boxes",
     },
     {
       key: "analytics",
-      icon: "AN",
-      label: "View analytics",
+      emoji: "📊",
+      label: "View Analytics",
+      sub: "Sales & revenue",
+      accent: "#f59e0b",
+      bg: "linear-gradient(135deg,#fffbeb,#fef3c7)",
+      border: "#fde68a",
       href: "/app/analytics",
     },
     {
       key: "settings",
-      icon: "ST",
-      label: "Widget settings",
+      emoji: "⚙️",
+      label: "Widget Settings",
+      sub: "Theme & appearance",
+      accent: "#6b7280",
+      bg: "linear-gradient(135deg,#f9fafb,#f3f4f6)",
+      border: "#e5e7eb",
       href: "/app/settings",
     },
   ];
@@ -565,10 +585,6 @@ export default function DashboardPage() {
               target={action.externalUrl ? "_blank" : undefined}
               rel={action.externalUrl ? "noreferrer" : undefined}
               onClick={(event) => {
-                if (action.disabled) {
-                  event.preventDefault();
-                  return;
-                }
                 if (action.externalUrl) return;
                 event.preventDefault();
                 navigateTo(action.href);
@@ -576,44 +592,77 @@ export default function DashboardPage() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "10px",
-                padding: "10px 12px",
-                background: action.disabled ? "#f3f4f6" : "#f9fafb",
-                border: "1px solid #e5e7eb",
-                borderRadius: "8px",
-                width: "100%",
-                color: action.disabled ? "#9ca3af" : "#111827",
-                fontSize: "13px",
-                fontWeight: "500",
-                cursor: action.disabled ? "not-allowed" : "pointer",
-                textAlign: "left",
+                gap: "12px",
+                padding: "12px 14px",
+                background: action.bg,
+                border: `1.5px solid ${action.border}`,
+                borderRadius: "12px",
                 textDecoration: "none",
-                transition: "background 0.12s, border-color 0.12s",
+                cursor: "pointer",
+                transition: "transform 0.12s, box-shadow 0.12s",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
               }}
-              onMouseEnter={(event) => {
-                if (action.disabled) return;
-                event.currentTarget.style.background = "#f0fdf4";
-                event.currentTarget.style.borderColor = "#86efac";
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = `0 6px 16px ${action.accent}22`;
               }}
-              onMouseLeave={(event) => {
-                event.currentTarget.style.background = action.disabled
-                  ? "#f3f4f6"
-                  : "#f9fafb";
-                event.currentTarget.style.borderColor = "#e5e7eb";
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)";
               }}
             >
-              <span
+              <div
                 style={{
-                  fontSize: "12px",
-                  fontWeight: "800",
-                  minWidth: "20px",
-                  display: "inline-flex",
+                  width: "38px",
+                  height: "38px",
+                  borderRadius: "10px",
+                  background: "#fff",
+                  boxShadow: `0 2px 8px ${action.accent}22`,
+                  display: "flex",
+                  alignItems: "center",
                   justifyContent: "center",
+                  fontSize: "18px",
+                  flexShrink: 0,
                 }}
               >
-                {action.icon}
-              </span>
-              {action.label}
+                {action.emoji}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "700",
+                    color: "#111827",
+                    lineHeight: 1.3,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {action.label}
+                </div>
+                <div
+                  style={{
+                    fontSize: "11px",
+                    color: action.accent,
+                    fontWeight: "500",
+                    marginTop: "1px",
+                  }}
+                >
+                  {action.sub}
+                </div>
+              </div>
+              <div
+                style={{
+                  marginLeft: "auto",
+                  color: action.accent,
+                  fontSize: "16px",
+                  opacity: 0.6,
+                  flexShrink: 0,
+                }}
+              >
+                →
+              </div>
             </a>
           ))}
         </div>

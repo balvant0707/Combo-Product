@@ -663,22 +663,21 @@ export default function CreateBoxPage() {
                         </div>
                         <div style={{ padding: "16px" }}>
                           <label style={labelStyle}>Add to step</label>
-                          <div style={{ position: "relative" }}>
-                            <select
-                              value=""
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                e.target.value = "";
-                                if (val === "collection") { setCollModalStepIdx(ai); setTempColl(step.collections[0] || null); setCollSearch(""); setShowCollModal(true); }
-                                else if (val === "product") { setStepProdModalIdx(ai); setTempStepProd(step.selectedProduct || null); setStepProdSearch(""); setShowStepProdModal(true); }
-                              }}
-                              style={{ width: "100%", padding: "9px 32px 9px 12px", border: "1.5px solid #d1d5db", borderRadius: "5px", background: "#fff", fontSize: "13px", color: "#374151", cursor: "pointer", appearance: "none", WebkitAppearance: "none", outline: "none" }}
+                          <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+                            <button
+                              type="button"
+                              onClick={() => { setStepProdModalIdx(ai); setTempStepProd(step.selectedProduct || null); setStepProdSearch(""); setShowStepProdModal(true); }}
+                              style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "9px 14px", border: step.selectedProduct ? "1.5px solid #2A7A4F" : "1.5px solid #d1d5db", borderRadius: "5px", background: step.selectedProduct ? "#f0fdf4" : "#fff", fontSize: "13px", color: step.selectedProduct ? "#166534" : "#374151", fontWeight: step.selectedProduct ? "600" : "400", cursor: "pointer" }}
                             >
-                              <option value="">— Select type —</option>
-                              <option value="product">📦 Select Product</option>
-                              <option value="collection">📁 Select Collection</option>
-                            </select>
-                            <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "#9ca3af", pointerEvents: "none" }}>▾</span>
+                              <span>📦</span> Select Product
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setCollModalStepIdx(ai); setTempColl(step.collections[0] || null); setCollSearch(""); setShowCollModal(true); }}
+                              style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "9px 14px", border: step.collections.length > 0 ? "1.5px solid #091fd6" : "1.5px solid #d1d5db", borderRadius: "5px", background: step.collections.length > 0 ? "#eef1ff" : "#fff", fontSize: "13px", color: step.collections.length > 0 ? "#091fd6" : "#374151", fontWeight: step.collections.length > 0 ? "600" : "400", cursor: "pointer" }}
+                            >
+                              <span>📁</span> Select Collection
+                            </button>
                           </div>
                           {step.collections.length > 0 && (
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "8px", padding: "6px 10px", background: "#eef1ff", border: "1.5px solid #091fd6", borderRadius: "5px" }}>

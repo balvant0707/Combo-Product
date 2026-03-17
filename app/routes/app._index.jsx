@@ -153,7 +153,7 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
     { icon: "💾", text: "Click Save — your storefront is live!" },
   ];
   return (
-    <s-section>
+    <div style={{ marginBottom: "20px" }}>
       <div
         style={{
           borderRadius: "20px",
@@ -164,20 +164,22 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
         }}
       >
         {/* decorative circles */}
-        <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: "-60px", right: "120px", width: "160px", height: "160px", borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "220px", height: "220px", borderRadius: "50%", background: "rgba(255,255,255,0.06)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "-60px", right: "80px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: "20px", right: "200px", width: "80px", height: "80px", borderRadius: "50%", background: "rgba(255,255,255,0.03)", pointerEvents: "none" }} />
 
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "1fr auto",
-            gap: "32px",
+            gap: "40px",
             alignItems: "center",
-            padding: "10px 15px",
+            padding: "36px 44px",
           }}
         >
-          {/* Left: label + headline + steps */}
+          {/* Left: label + headline + steps + CTA */}
           <div>
+            {/* Badge */}
             <div
               style={{
                 display: "inline-flex",
@@ -185,49 +187,51 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
                 gap: "6px",
                 background: "rgba(255,255,255,0.15)",
                 borderRadius: "999px",
-                padding: "4px 14px",
+                padding: "5px 16px",
                 fontSize: "11px",
                 fontWeight: "700",
                 letterSpacing: "0.10em",
                 textTransform: "uppercase",
                 color: "#d1fae5",
-                marginBottom: "14px",
+                marginBottom: "16px",
+                backdropFilter: "blur(4px)",
               }}
             >
               <span style={{ fontSize: "13px" }}>⚡</span> Guided Setup
             </div>
 
+            {/* Headline */}
             <h2
               style={{
-                margin: "0 0 6px",
-                fontSize: "14px",
+                margin: "0 0 8px",
+                fontSize: "28px",
                 fontWeight: "800",
                 color: "#ffffff",
-                lineHeight: 1.2,
-                letterSpacing: "-0.4px",
+                lineHeight: 1.15,
+                letterSpacing: "-0.5px",
               }}
             >
               Add Combo Builder to Your Theme
             </h2>
             <p
               style={{
-                margin: "0 0 24px",
-                fontSize: "14px",
-                color: "rgba(255,255,255,0.75)",
+                margin: "0 0 28px",
+                fontSize: "15px",
+                color: "rgba(255,255,255,0.72)",
                 lineHeight: 1.6,
-                maxWidth: "480px",
+                maxWidth: "520px",
               }}
             >
               One click opens the theme editor with the block pre-loaded — just drag, drop, and save.
             </p>
 
-            {/* Steps — horizontal row */}
+            {/* Steps — 4 equal columns */}
             <div
               style={{
-                display: "block",
-                gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))`,
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
                 gap: "12px",
-                marginBottom: "28px",
+                marginBottom: "32px",
               }}
             >
               {steps.map((step, i) => (
@@ -237,19 +241,19 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
                     background: "rgba(255,255,255,0.10)",
                     border: "1px solid rgba(255,255,255,0.18)",
                     borderRadius: "14px",
-                    padding: "14px 12px",
+                    padding: "16px 14px",
                     display: "flex",
-                    alignItems: "flex-start",
-                    gap: "8px",
+                    flexDirection: "column",
+                    gap: "10px",
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <div
                       style={{
-                        width: "22px",
-                        height: "22px",
+                        width: "24px",
+                        height: "24px",
                         borderRadius: "50%",
-                        background: "rgba(255,255,255,0.20)",
+                        background: "rgba(255,255,255,0.22)",
                         color: "#fff",
                         fontSize: "11px",
                         fontWeight: "800",
@@ -261,9 +265,9 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
                     >
                       {i + 1}
                     </div>
-                    <span style={{ fontSize: "18px", lineHeight: 1 }}>{step.icon}</span>
+                    <span style={{ fontSize: "20px", lineHeight: 1 }}>{step.icon}</span>
                   </div>
-                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.85)", lineHeight: 1.5 }}>
+                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.85)", lineHeight: 1.55 }}>
                     {step.text}
                   </div>
                 </div>
@@ -278,34 +282,75 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "8px",
+                gap: "10px",
                 textDecoration: "none",
                 borderRadius: "12px",
-                padding: "13px 24px",
+                padding: "14px 28px",
                 background: "#ffffff",
                 color: "#1a4f31",
-                fontSize: "14px",
+                fontSize: "15px",
                 fontWeight: "800",
                 cursor: "pointer",
-                boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.18)",
                 transition: "transform 0.12s, box-shadow 0.12s",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-1px)";
-                e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.20)";
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 10px 28px rgba(0,0,0,0.24)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.15)";
+                e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.18)";
               }}
             >
-              <span style={{ fontSize: "16px" }}>🎨</span>
+              <span style={{ fontSize: "18px" }}>🎨</span>
               Open Theme Editor
             </a>
           </div>
+
+          {/* Right: decorative badge */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "12px",
+              flexShrink: 0,
+            }}
+          >
+            <div
+              style={{
+                width: "110px",
+                height: "110px",
+                borderRadius: "28px",
+                background: "rgba(255,255,255,0.12)",
+                border: "2px solid rgba(255,255,255,0.22)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "52px",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+              }}
+            >
+              🧩
+            </div>
+            <div
+              style={{
+                fontSize: "11px",
+                fontWeight: "700",
+                color: "rgba(255,255,255,0.60)",
+                textAlign: "center",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                lineHeight: 1.4,
+              }}
+            >
+              Theme<br />Extension
+            </div>
+          </div>
         </div>
       </div>
-    </s-section>
+    </div>
   );
 }
 

@@ -54,6 +54,7 @@ export const loader = async ({ request }) => {
     activeSlotColor: settings.activeSlotColor || "#2A7A4F",
     showSavingsBadge: settings.showSavingsBadge,
     showProductPrices: settings.showProductPrices,
+    forceShowOos: settings.forceShowOos,
     presetTheme: settings.presetTheme || "custom",
     widgetMaxWidth: settings.widgetMaxWidth ?? 1140,
     productCardsPerRow: settings.productCardsPerRow ?? 4,

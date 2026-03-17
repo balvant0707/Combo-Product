@@ -1184,6 +1184,7 @@
         metaRow.className = 'cb-product-meta-row';
         var priceWrap = document.createElement('span');
         priceWrap.className = 'cb-product-price-wrap';
+        if (ctx.settings && ctx.settings.showProductPrices === false) priceWrap.style.display = 'none';
         metaRow.appendChild(priceWrap);
 
         var metaActions = document.createElement('div');

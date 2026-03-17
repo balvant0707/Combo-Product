@@ -204,6 +204,7 @@ export const action = async ({ request, params }) => {
   const errors = {};
   const bannerImage = await parseBannerImage(formData, errors);
   const removeBannerImage = formData.get("removeBannerImage") === "true" && !bannerImage;
+  const comboStepsConfig = formData.get("comboStepsConfig");
 
   const data = {
     boxName: formData.get("boxName"),
@@ -229,6 +230,9 @@ export const action = async ({ request, params }) => {
 
   try {
     await updateBox(params.id, shop, data, admin);
+    if (comboStepsConfig) {
+      await upsertComboConfig(params.id, comboStepsConfig);
+    }
   } catch (e) {
     console.error("[app.boxes.$id] updateBox error:", e);
     return { errors: { _global: "Failed to save changes. Please try again." } };
@@ -323,8 +327,28 @@ export default function EditBoxPage() {
 
   /* ── Combo Config state ── */
   const [comboConfig, setComboConfig] = useState(() => {
+    // Primary: raw JSON saved on ComboBox row
     if (box.comboStepsConfig) {
       try { return { ...DEFAULT_COMBO_CONFIG, ...JSON.parse(box.comboStepsConfig) }; } catch {}
+    }
+    // Fallback: ComboBoxConfig relation (for records saved before the comboStepsConfig sync was added)
+    if (box.config) {
+      try {
+        return {
+          ...DEFAULT_COMBO_CONFIG,
+          type:             box.config.comboType          ?? DEFAULT_COMBO_CONFIG.type,
+          title:            box.config.title              ?? DEFAULT_COMBO_CONFIG.title,
+          subtitle:         box.config.subtitle           ?? DEFAULT_COMBO_CONFIG.subtitle,
+          discountBadge:    box.config.discountBadge      ?? DEFAULT_COMBO_CONFIG.discountBadge,
+          isActive:         box.config.isActive,
+          showProductImages:box.config.showProductImages,
+          showProgressBar:  box.config.showProgressBar,
+          allowReselection: box.config.allowReselection,
+          steps: box.config.stepsJson
+            ? JSON.parse(box.config.stepsJson)
+            : DEFAULT_COMBO_CONFIG.steps,
+        };
+      } catch {}
     }
     return DEFAULT_COMBO_CONFIG;
   });
@@ -510,6 +534,7 @@ export default function EditBoxPage() {
             <input type="hidden" name="allowDuplicates" value={String(options.allowDuplicates)} />
             <input type="hidden" name="giftMessageEnabled" value={String(options.giftMessageEnabled)} />
             <input type="hidden" name="isActive" value={String(options.isActive)} />
+            <input type="hidden" name="comboStepsConfig" value={JSON.stringify(comboConfig)} />
 
             {/* Basic Information */}
             <div style={{ marginBottom: "28px" }}>
@@ -936,6 +961,11 @@ export default function EditBoxPage() {
                 <div style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>No collections found{collSearch ? ` for "${collSearch}"` : ""}</div>
               ) : filteredColls.map((coll, idx) => {
                 const isSelected = tempColls.some((c) => c.id === coll.id);
+                const alreadyAdded = comboConfig.steps.some((step, stepIdx) =>
+                  stepIdx !== collModalStepIdx &&
+                  Array.isArray(step.collections) &&
+                  step.collections.some((selectedColl) => selectedColl.id === coll.id)
+                );
                 return (
                   <div key={coll.id} onClick={() => setTempColls(isSelected ? tempColls.filter((c) => c.id !== coll.id) : [...tempColls, coll])} onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = "#eef1ff"; }} onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = "#fff"; }} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filteredColls.length - 1 ? "1px solid #f3f4f6" : "none", borderLeft: isSelected ? "3px solid #091fd6" : "3px solid transparent", cursor: "pointer", background: isSelected ? "#eef1ff" : "#fff", transition: "background 0.1s, border-color 0.1s", userSelect: "none" }}>
                     {coll.imageUrl ? <img src={coll.imageUrl} alt={coll.title} style={{ width: "38px", height: "38px", objectFit: "cover", borderRadius: "5px", border: "1px solid #e5e7eb", flexShrink: 0 }} /> : <div style={{ width: "38px", height: "38px", borderRadius: "5px", background: "#f3f4f6", border: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0 }}>📁</div>}

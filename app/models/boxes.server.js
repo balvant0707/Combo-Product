@@ -514,6 +514,7 @@ export async function updateComboStepsConfig(id, shop, comboStepsConfig) {
  */
 export async function upsertComboConfig(boxId, config) {
   const parsed = typeof config === "string" ? JSON.parse(config) : config;
+  const rawJson = typeof config === "string" ? config : JSON.stringify(config);
   const stepsJson = JSON.stringify(Array.isArray(parsed.steps) ? parsed.steps : []);
 
   const payload = {
@@ -527,6 +528,12 @@ export async function upsertComboConfig(boxId, config) {
     allowReselection:  parsed.allowReselection !== false,
     stepsJson,
   };
+
+  // Persist raw JSON to ComboBox.comboStepsConfig so the edit page can read it back
+  await db.comboBox.update({
+    where: { id: parseInt(boxId) },
+    data:  { comboStepsConfig: rawJson },
+  });
 
   return db.comboBoxConfig.upsert({
     where:  { boxId: parseInt(boxId) },

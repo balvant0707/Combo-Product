@@ -9,14 +9,54 @@ import {
   activateAllBundleProducts,
   repairMissingShopifyProducts,
   repairMissingShopifyVariantIds,
+  upsertComboConfig,
 } from "../models/boxes.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
+
+function getComboConfigSummary(box) {
+  if (box.config) {
+    return {
+      comboType: box.config.comboType,
+      title: box.config.title,
+      isActive: box.config.isActive,
+      stepsJson: box.config.stepsJson,
+    };
+  }
+
+  if (!box.comboStepsConfig) return null;
+
+  try {
+    const parsed = JSON.parse(box.comboStepsConfig);
+    const steps = Array.isArray(parsed?.steps) ? parsed.steps : [];
+    return {
+      comboType: parseInt(parsed?.type) || steps.length || 0,
+      title: parsed?.title || null,
+      isActive: parsed?.isActive !== false,
+      stepsJson: JSON.stringify(steps),
+    };
+  } catch {
+    return null;
+  }
+}
 
 export const loader = async ({ request }) => {
   const { session, admin } = await authenticate.admin(request);
   await repairMissingShopifyProducts(session.shop, admin);
   await repairMissingShopifyVariantIds(session.shop, admin);
-  const boxes = await listBoxes(session.shop);
+  let boxes = await listBoxes(session.shop);
+  const boxesMissingTypedComboConfig = boxes.filter((box) => !box.config && box.comboStepsConfig);
+
+  if (boxesMissingTypedComboConfig.length > 0) {
+    await Promise.all(
+      boxesMissingTypedComboConfig.map((box) =>
+        upsertComboConfig(box.id, box.comboStepsConfig).catch((error) => {
+          console.error("[app.boxes._index] Failed to repair combo config for box", box.id, error);
+        })
+      )
+    );
+    boxes = await listBoxes(session.shop);
+  }
+
   // Fire-and-forget: activate any DRAFT bundle products left from before the fix
   activateAllBundleProducts(session.shop, admin).catch(() => {});
   return {
@@ -31,12 +71,7 @@ export const loader = async ({ request }) => {
       isActive: b.isActive,
       sortOrder: b.sortOrder,
       orderCount: b._count?.orders ?? 0,
-      comboConfig: b.config ? {
-        comboType: b.config.comboType,
-        title: b.config.title,
-        isActive: b.config.isActive,
-        stepsJson: b.config.stepsJson,
-      } : null,
+      comboConfig: getComboConfigSummary(b),
     })),
   };
 };

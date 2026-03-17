@@ -200,7 +200,7 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
             <h2
               style={{
                 margin: "0 0 6px",
-                fontSize: "26px",
+                fontSize: "14px",
                 fontWeight: "800",
                 color: "#ffffff",
                 lineHeight: 1.2,
@@ -224,8 +224,8 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
             {/* Steps — horizontal row */}
             <div
               style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, 1fr)",
+                display: "block",
+                gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))`,
                 gap: "12px",
                 marginBottom: "28px",
               }}
@@ -239,7 +239,7 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
                     borderRadius: "14px",
                     padding: "14px 12px",
                     display: "flex",
-                    flexDirection: "column",
+                    alignItems: "flex-start",
                     gap: "8px",
                   }}
                 >

@@ -393,8 +393,11 @@ export default function DashboardPage() {
 
       <ThemeCustomizationCard themeEditorUrl={themeEditorUrl} />
 
+      {/* Row: Quick Actions (35%) + Stats (65%) */}
+      <div style={{ display: "grid", gridTemplateColumns: "35fr 65fr", gap: "20px", marginBottom: "20px", alignItems: "start" }}>
+
       {/* Quick Actions */}
-      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "#fff", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "20px", background: "#fff", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", overflow: "hidden" }}>
         <div style={{ padding: "20px 20px 14px" }}>
           <div style={{ fontSize: "15px", fontWeight: "800", color: "#111827", letterSpacing: "-0.2px" }}>Quick Actions</div>
         </div>
@@ -446,7 +449,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "#fff", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", overflow: "hidden" }}>
+      <div style={{ borderRadius: "20px", background: "#fff", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", overflow: "hidden" }}>
         <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "linear-gradient(135deg,#fffbeb,#fef3c7)", border: "1px solid #fde68a", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#d97706" }}>
             📊 Performance
@@ -459,6 +462,8 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
+
+      </div>{/* end 35/65 row */}
 
       {/* Recent Bundle Orders */}
       <div style={{ marginBottom: "20px", borderRadius: "20px", background: "#fff", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", overflow: "hidden" }}>

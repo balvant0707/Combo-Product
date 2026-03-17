@@ -204,7 +204,7 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
             <h2
               style={{
                 margin: "0 0 8px",
-                fontSize: "28px",
+                fontSize: "18px",
                 fontWeight: "800",
                 color: "#ffffff",
                 lineHeight: 1.15,
@@ -229,7 +229,7 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(4, 1fr)",
+                gridTemplateColumns: "repeat(2, 1fr)",
                 gap: "12px",
                 marginBottom: "32px",
               }}
@@ -243,7 +243,6 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
                     borderRadius: "14px",
                     padding: "16px 14px",
                     display: "flex",
-                    flexDirection: "column",
                     gap: "10px",
                   }}
                 >
@@ -446,7 +445,7 @@ export default function DashboardPage() {
           </div>
           <span style={{ fontSize: "13px", color: "#9ca3af" }}>Last 30 days overview</span>
         </div>
-        <div style={{ padding: "10px 10px 10px;", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px" }}>
+        <div style={{ padding: "20px 10px 20px;", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px" }}>
           {stats.map((stat) => (
             <StatCard key={stat.label} {...stat} />
           ))}

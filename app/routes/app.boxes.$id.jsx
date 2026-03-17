@@ -767,61 +767,36 @@ export default function EditBoxPage() {
                         <span style={{ fontSize: "11px", fontWeight: "600", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", color: "#fff", padding: "2px 10px", borderRadius: "10px" }}>Step {ai + 1} of {comboConfig.type}</span>
                       </div>
                       <div style={{ padding: "16px" }}>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-
-                          {/* Collection picker */}
-                          <div>
-                            <label style={labelStyle}>Select collection</label>
-                            <div style={{ position: "relative" }}>
-                              <span style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "15px", pointerEvents: "none", zIndex: 1 }}>📁</span>
-                              <select
-                                value={step.collections[0]?.id || ""}
-                                onChange={(e) => {
-                                  const coll = collections.find((c) => c.id === e.target.value);
-                                  if (coll) { setCollModalStepIdx(ai); setTempColl(coll); setCollSearch(""); setShowCollModal(true); }
-                                }}
-                                style={{ width: "100%", padding: "9px 32px 9px 34px", border: step.collections.length > 0 ? "1.5px solid #091fd6" : "1.5px solid #d1d5db", borderRadius: "5px", background: step.collections.length > 0 ? "#eef1ff" : "#fff", fontSize: "13px", color: step.collections.length > 0 ? "#091fd6" : "#6b7280", fontWeight: step.collections.length > 0 ? "600" : "400", cursor: "pointer", appearance: "none", WebkitAppearance: "none", outline: "none", transition: "border-color 0.15s, background 0.15s" }}
-                              >
-                                <option value="">Select collection</option>
-                                {collections.map((c) => (
-                                  <option key={c.id} value={c.id}>{c.title}</option>
-                                ))}
-                              </select>
-                              <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: step.collections.length > 0 ? "#091fd6" : "#9ca3af", pointerEvents: "none" }}>▾</span>
-                            </div>
-                            <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>Products from this collection appear in the Step {ai + 1} popup</div>
-                          </div>
-
-                          {/* Product picker */}
-                          <div>
-                            <label style={labelStyle}>Select product</label>
-                            <div style={{ position: "relative" }}>
-                              <span style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "15px", pointerEvents: "none", zIndex: 1 }}>📦</span>
-                              <select
-                                value={step.selectedProduct?.id || ""}
-                                onChange={(e) => {
-                                  const prodList = stepProducts[ai] || products;
-                                  const prod = prodList.find((p) => p.id === e.target.value);
-                                  if (prod) { setStepProdModalIdx(ai); setTempStepProd({ id: prod.id, title: prod.title, handle: prod.handle, imageUrl: prod.imageUrl, price: prod.price }); setStepProdSearch(""); setShowStepProdModal(true); }
-                                }}
-                                style={{ width: "100%", padding: "9px 32px 9px 34px", border: step.selectedProduct ? "1.5px solid #2A7A4F" : "1.5px solid #d1d5db", borderRadius: "5px", background: step.selectedProduct ? "#f0fdf4" : "#fff", fontSize: "13px", color: step.selectedProduct ? "#166534" : "#6b7280", fontWeight: step.selectedProduct ? "600" : "400", cursor: "pointer", appearance: "none", WebkitAppearance: "none", outline: "none", transition: "border-color 0.15s, background 0.15s" }}
-                              >
-                                <option value="">Select product</option>
-                                {(stepProducts[ai] || products).map((p) => (
-                                  <option key={p.id} value={p.id}>{p.title}</option>
-                                ))}
-                              </select>
-                              <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: step.selectedProduct ? "#2A7A4F" : "#9ca3af", pointerEvents: "none" }}>▾</span>
-                            </div>
-                            {step.selectedProduct && (
-                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "6px", padding: "4px 10px", background: "#f0fdf4", border: "1px solid #86efac", borderRadius: "4px" }}>
-                                <span style={{ fontSize: "11px", color: "#166534", fontWeight: "600" }}>₹{parseFloat(step.selectedProduct.price || 0).toLocaleString("en-IN")}</span>
-                                <button type="button" onClick={() => updateComboStep(ai, "selectedProduct", null)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "11px", color: "#dc2626" }}>Remove ✕</button>
-                              </div>
-                            )}
-                            <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>Pre-selected product shown in this step (optional)</div>
-                          </div>
+                        <label style={labelStyle}>Add to step</label>
+                        <div style={{ position: "relative" }}>
+                          <select
+                            value=""
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              e.target.value = "";
+                              if (val === "collection") { setCollModalStepIdx(ai); setTempColl(step.collections[0] || null); setCollSearch(""); setShowCollModal(true); }
+                              else if (val === "product") { setStepProdModalIdx(ai); setTempStepProd(step.selectedProduct || null); setStepProdSearch(""); setShowStepProdModal(true); }
+                            }}
+                            style={{ width: "100%", padding: "9px 32px 9px 12px", border: "1.5px solid #d1d5db", borderRadius: "5px", background: "#fff", fontSize: "13px", color: "#374151", cursor: "pointer", appearance: "none", WebkitAppearance: "none", outline: "none" }}
+                          >
+                            <option value="">— Select type —</option>
+                            <option value="product">📦 Select Product</option>
+                            <option value="collection">📁 Select Collection</option>
+                          </select>
+                          <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "#9ca3af", pointerEvents: "none" }}>▾</span>
                         </div>
+                        {step.collections.length > 0 && (
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "8px", padding: "6px 10px", background: "#eef1ff", border: "1.5px solid #091fd6", borderRadius: "5px" }}>
+                            <span style={{ fontSize: "12px", color: "#091fd6", fontWeight: "600" }}>📁 {step.collections[0].title}</span>
+                            <button type="button" onClick={() => updateComboStep(ai, "collections", [])} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "11px", color: "#dc2626" }}>✕</button>
+                          </div>
+                        )}
+                        {step.selectedProduct && (
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "6px", padding: "6px 10px", background: "#f0fdf4", border: "1.5px solid #2A7A4F", borderRadius: "5px" }}>
+                            <span style={{ fontSize: "12px", color: "#166534", fontWeight: "600" }}>📦 {step.selectedProduct.title} — ₹{parseFloat(step.selectedProduct.price || 0).toLocaleString("en-IN")}</span>
+                            <button type="button" onClick={() => updateComboStep(ai, "selectedProduct", null)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "11px", color: "#dc2626" }}>✕</button>
+                          </div>
+                        )}
                       </div>
                     </div>
 

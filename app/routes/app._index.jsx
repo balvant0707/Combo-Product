@@ -173,7 +173,7 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
             gridTemplateColumns: "1fr auto",
             gap: "32px",
             alignItems: "center",
-            padding: "36px 40px",
+            padding: "10px 15px",
           }}
         >
           {/* Left: label + headline + steps */}
@@ -302,46 +302,6 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
               <span style={{ fontSize: "16px" }}>🎨</span>
               Open Theme Editor
             </a>
-          </div>
-
-          {/* Right: decorative badge */}
-          <div
-            style={{
-              flexShrink: 0,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "10px",
-              opacity: 0.9,
-            }}
-          >
-            <div
-              style={{
-                width: "100px",
-                height: "100px",
-                borderRadius: "26px",
-                background: "rgba(255,255,255,0.12)",
-                border: "2px solid rgba(255,255,255,0.20)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "44px",
-              }}
-            >
-              🧩
-            </div>
-            <div
-              style={{
-                fontSize: "11px",
-                fontWeight: "700",
-                color: "rgba(255,255,255,0.65)",
-                textAlign: "center",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-              }}
-            >
-              Theme<br />Extension
-            </div>
           </div>
         </div>
       </div>

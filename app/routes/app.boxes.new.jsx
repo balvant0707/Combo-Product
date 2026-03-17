@@ -838,7 +838,6 @@ export default function CreateBoxPage() {
                       <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{coll.title}</div>
                       <div style={{ fontSize: "11px", color: "#9ca3af" }}>{coll.handle}</div>
                     </div>
-                    {alreadyAdded && <span style={{ fontSize: "10px", fontWeight: "600", background: "#d1fae5", color: "#065f46", padding: "2px 8px", borderRadius: "10px", flexShrink: 0 }}>Added</span>}
                     <div style={{ width: "18px", height: "18px", borderRadius: "50%", border: `2px solid ${isSel ? "#091fd6" : "#d1d5db"}`, background: isSel ? "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.1s" }}>
                       {isSel && <span style={{ color: "#fff", fontSize: "10px", fontWeight: "700" }}>✓</span>}
                     </div>

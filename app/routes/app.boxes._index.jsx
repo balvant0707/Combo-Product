@@ -183,6 +183,16 @@ export default function ManageBoxesPage() {
       >
         + Create New Box
       </s-button>
+      <div slot="primary-action" style={{ display: "inline-flex" }}>
+        <button
+          onClick={() => navigateTo("/app/boxes/new-combo")}
+          style={{ background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", color: "#fff", border: "none", borderRadius: "6px", padding: "9px 18px", fontSize: "13px", fontWeight: "700", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", boxShadow: "0 2px 8px rgba(9,31,214,0.35)" }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+        >
+          🎯 Create Specific Combo Box
+        </button>
+      </div>
 
       {/* Hero banner */}
       <div style={{ marginBottom: "10px", borderRadius: "5px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>

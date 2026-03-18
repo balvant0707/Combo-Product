@@ -24,6 +24,7 @@ export default function App() {
       <s-app-nav>
         {/* <s-link href="/app">Dashboard</s-link> */}
         <s-link href={withEmbeddedAppParams("/app/boxes", location.search)}>Manage Boxes</s-link>
+        <s-link href={withEmbeddedAppParams("/app/boxes/new-combo", location.search)}>Specific Combo Box</s-link>
         <s-link href={withEmbeddedAppParams("/app/analytics", location.search)}>Analytics</s-link>
         <s-link href={withEmbeddedAppParams("/app/settings", location.search)}>Settings</s-link>
       </s-app-nav>

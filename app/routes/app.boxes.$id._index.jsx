@@ -259,6 +259,32 @@ export default function BoxSettingsPage() {
 
   /* ─────────────── Render ─────────────── */
   return (
+    <s-page
+      heading={`Box Settings: ${box.boxName}`}
+      back-url={withEmbeddedAppParams("/app/boxes", location.search)}
+    >
+      {/* Hero banner */}
+      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
+        <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
+        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#d1fae5", marginBottom: "10px" }}>📋 Box Settings</div>
+        <div style={{ fontSize: "18px", fontWeight: "800", color: "#fff", letterSpacing: "-0.5px" }}>{box.boxName}</div>
+        <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.65)", marginTop: "4px" }}>Update settings, pricing, and eligible products for this bundle.</div>
+      </div>
+
+      {/* Quick link to Specific Combo Box */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", padding: "12px 16px", background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: "8px" }}>
+        <div>
+          <div style={{ fontSize: "13px", fontWeight: "700", color: "#166534" }}>🎯 Configure Specific Combo Box</div>
+          <div style={{ fontSize: "11px", color: "#4ade80", marginTop: "2px" }}>Set combo steps, collections and product pickers for this box</div>
+        </div>
+        <a
+          href={withEmbeddedAppParams(`/app/boxes/${box.id}/combo`, location.search)}
+          style={{ background: "#2A7A4F", color: "#fff", border: "none", borderRadius: "6px", padding: "8px 18px", fontSize: "13px", fontWeight: "700", cursor: "pointer", textDecoration: "none", whiteSpace: "nowrap" }}
+        >
+          Configure →
+        </a>
+      </div>
+
     <s-section>
       {/* Save + Delete buttons row */}
       <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginBottom: "20px" }}>
@@ -473,6 +499,7 @@ export default function BoxSettingsPage() {
         </div>
       )}
     </s-section>
+    </s-page>
   );
 }
 

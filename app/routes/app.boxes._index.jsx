@@ -384,16 +384,16 @@ export default function ManageBoxesPage() {
                         return (
                           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                             <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: "700", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", color: "#fff", padding: "2px 8px", borderRadius: "5px", width: "fit-content" }}>
-                              🎯 Specific Combo
+                             {displayLabel}
                             </span>
-                            <span style={{ fontSize: "11px", color: "#6b7280", maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{displayLabel}</span>
+                            <span style={{ fontSize: "11px", color: "#6b7280", maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Specific Combo</span>
                             <span style={{ fontSize: "10px", fontWeight: "600", color: cfg.isActive ? "#059669" : "#9ca3af" }}>
                               {cfg.isActive ? "● Active" : "● Inactive"}
                             </span>
                           </div>
                         );
                       })() : (
-                        <span style={{ fontSize: "11px", fontWeight: "600", color: "#6b7280" }}>Single Combo Product</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: "700", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", color: "#fff", padding: "2px 8px", borderRadius: "5px", width: "fit-content" }}>Single Combo Product</span>
                       )}
                     </td>
 

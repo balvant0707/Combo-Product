@@ -263,6 +263,15 @@ export default function BoxSettingsPage() {
       heading={`Box Settings: ${box.boxName}`}
       back-url={withEmbeddedAppParams("/app/boxes", location.search)}
     >
+      <ui-title-bar title={`Box Settings: ${box.boxName}`}>
+        <button onClick={() => document.getElementById("delete-box-form")?.requestSubmit()} style={{ color: "#dc2626" }}>
+          Delete Box
+        </button>
+        <button variant="primary" onClick={() => document.getElementById("edit-box-form")?.requestSubmit()}>
+          {isSaving ? "Saving..." : "Save Changes"}
+        </button>
+      </ui-title-bar>
+
       {/* Hero banner */}
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
         <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
@@ -274,15 +283,6 @@ export default function BoxSettingsPage() {
 
 
     <s-section>
-      {/* Save + Delete buttons row */}
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginBottom: "20px" }}>
-        <button type="submit" form="edit-box-form" style={{ background: "#2A7A4F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px 24px", fontSize: "14px", fontWeight: "700", cursor: "pointer" }}>
-          {isSaving ? "Saving..." : "Save Changes"}
-        </button>
-        <button type="submit" form="delete-box-form" style={{ background: "#dc2626", color: "#fff", border: "none", borderRadius: "6px", padding: "10px 24px", fontSize: "14px", fontWeight: "700", cursor: "pointer" }}>
-          Delete Box
-        </button>
-      </div>
 
       {errors._global && (
         <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "5px", padding: "12px 16px", marginBottom: "16px", color: "#991b1b", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
@@ -418,15 +418,6 @@ export default function BoxSettingsPage() {
           </button>
         </div>
 
-        {/* Save button at bottom */}
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginBottom: "20px" }}>
-          <button type="submit" form="edit-box-form" style={{ background: "#2A7A4F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px 24px", fontSize: "14px", fontWeight: "700", cursor: "pointer" }}>
-            {isSaving ? "Saving..." : "Save Changes"}
-          </button>
-          <button type="submit" form="delete-box-form" style={{ background: "#dc2626", color: "#fff", border: "none", borderRadius: "6px", padding: "10px 24px", fontSize: "14px", fontWeight: "700", cursor: "pointer" }}>
-            Delete Box
-          </button>
-        </div>
       </Form>
 
       {/* Delete form */}

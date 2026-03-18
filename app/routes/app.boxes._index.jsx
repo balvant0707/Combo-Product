@@ -29,7 +29,7 @@ function getComboConfigSummary(box) {
     const parsed = JSON.parse(box.comboStepsConfig);
     const steps = Array.isArray(parsed?.steps) ? parsed.steps : [];
     return {
-      comboType: parseInt(parsed?.type) || steps.length || 0,
+      comboType: parseInt(parsed?.type) || 0,
       title: parsed?.title || null,
       isActive: parsed?.isActive !== false,
       stepsJson: JSON.stringify(steps),
@@ -357,7 +357,7 @@ export default function ManageBoxesPage() {
                       {box.comboConfig ? (() => {
                         const cfg = box.comboConfig;
                         let stepsCount = 0;
-                        try { stepsCount = cfg.stepsJson ? JSON.parse(cfg.stepsJson).length : cfg.comboType; } catch { stepsCount = cfg.comboType; }
+                        stepsCount = cfg.comboType || 0;
                         return (
                           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                             <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: "700", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", color: "#fff", padding: "2px 8px", borderRadius: "5px", width: "fit-content" }}>

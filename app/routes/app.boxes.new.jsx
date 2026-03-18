@@ -69,6 +69,8 @@ const DEFAULT_COMBO_CONFIG = {
   type: 2,
   title: "Build Your Perfect Bundle",
   subtitle: "Choose a product for each step",
+  bundlePrice: 0,
+  bundlePriceType: "manual",
   isActive: true,
   showProductImages: true,
   showProgressBar: true,
@@ -450,7 +452,7 @@ export default function CreateBoxPage() {
         <input type="hidden" name="allowDuplicates" value={String(options.allowDuplicates)} />
         <input type="hidden" name="giftMessageEnabled" value={String(options.giftMessageEnabled)} />
         <input type="hidden" name="isActive" value={String(options.isActive)} />
-        <input type="hidden" name="comboStepsConfig" value={JSON.stringify({ ...comboConfig, bundlePrice, bundlePriceType: priceMode })} />
+        <input type="hidden" name="comboStepsConfig" value={JSON.stringify({ ...comboConfig, bundlePrice: comboConfig.bundlePriceType === "dynamic" ? estimatedTotal : parseFloat(comboConfig.bundlePrice) || 0 })} />
 
         {/* ════════════════════════════════════════
             TAB 1 — BOX SETTINGS
@@ -615,20 +617,19 @@ export default function CreateBoxPage() {
                       <label style={labelStyle}>Bundle Price (₹) *</label>
                       <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "5px", overflow: "hidden", marginBottom: "8px" }}>
                         {["manual", "dynamic"].map((mode) => (
-                          <button key={mode} type="button" onClick={() => setPriceMode(mode)} style={{ flex: 1, padding: "6px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: priceMode === mode ? "#2A7A4F" : "#f9fafb", color: priceMode === mode ? "#fff" : "#374151", transition: "background 0.15s" }}>
+                          <button key={mode} type="button" onClick={() => updateComboField("bundlePriceType", mode)} style={{ flex: 1, padding: "6px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: comboConfig.bundlePriceType === mode ? "#2A7A4F" : "#f9fafb", color: comboConfig.bundlePriceType === mode ? "#fff" : "#374151", transition: "background 0.15s" }}>
                             {mode === "manual" ? "Manual" : "Dynamic"}
                           </button>
                         ))}
                       </div>
-                      {priceMode === "manual" && (
-                        <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} style={{ ...fieldStyle, borderColor: errors.bundlePrice ? "#e11d48" : "#d1d5db" }} />
+                      {comboConfig.bundlePriceType === "manual" && (
+                        <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={comboConfig.bundlePrice || ""} onChange={(e) => updateComboField("bundlePrice", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
                       )}
-                      {priceMode === "dynamic" && (
+                      {comboConfig.bundlePriceType === "dynamic" && (
                         <div style={{ border: "1px solid #d1d5db", borderRadius: "5px", padding: "8px 10px", background: "#f9fafb", fontSize: "12px", color: "#6b7280" }}>
                           Dynamic: ₹{estimatedTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                         </div>
                       )}
-                      {errors.bundlePrice && <div style={errorStyle}>{errors.bundlePrice}</div>}
                     </div>
                   </div>
                   {/* Combo active toggle */}

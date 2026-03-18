@@ -71,6 +71,10 @@ const DEFAULT_COMBO_CONFIG = {
   type: 2,
   title: "Build Your Perfect Bundle",
   subtitle: "Choose a product for each step",
+  bundlePrice: 0,
+  bundlePriceType: "manual",
+  discountType: "percent",
+  discountValue: "10",
   isActive: true,
   showProductImages: true,
   showProgressBar: true,
@@ -358,6 +362,8 @@ export default function EditBoxPage() {
           type:             box.config.comboType          ?? DEFAULT_COMBO_CONFIG.type,
           title:            box.config.title              ?? DEFAULT_COMBO_CONFIG.title,
           subtitle:         box.config.subtitle           ?? DEFAULT_COMBO_CONFIG.subtitle,
+          bundlePrice:      box.config.bundlePrice != null ? parseFloat(box.config.bundlePrice) : DEFAULT_COMBO_CONFIG.bundlePrice,
+          bundlePriceType:  box.config.bundlePriceType    ?? DEFAULT_COMBO_CONFIG.bundlePriceType,
           isActive:         box.config.isActive,
           showProductImages:box.config.showProductImages,
           showProgressBar:  box.config.showProgressBar,
@@ -427,6 +433,13 @@ export default function EditBoxPage() {
 
   /* ── Combo Config helpers ── */
   function updateComboField(field, value) { setComboConfig((prev) => ({ ...prev, [field]: value })); }
+  const comboDynamicPrice = useMemo(() => {
+    if (estimatedTotal <= 0) return 0;
+    const val = parseFloat(comboConfig.discountValue) || 0;
+    if (comboConfig.discountType === "percent") return Math.max(0, estimatedTotal * (1 - val / 100));
+    if (comboConfig.discountType === "fixed") return Math.max(0, estimatedTotal - val);
+    return estimatedTotal;
+  }, [estimatedTotal, comboConfig.discountType, comboConfig.discountValue]);
   function updateComboStep(stepIdx, field, value) {
     setComboConfig((prev) => {
       const steps = prev.steps.map((s, i) => i === stepIdx ? { ...s, [field]: value } : s);
@@ -556,7 +569,7 @@ export default function EditBoxPage() {
             <input type="hidden" name="allowDuplicates" value={String(options.allowDuplicates)} />
             <input type="hidden" name="giftMessageEnabled" value={String(options.giftMessageEnabled)} />
             <input type="hidden" name="isActive" value={String(options.isActive)} />
-            <input type="hidden" name="comboStepsConfig" value={JSON.stringify({ ...comboConfig, bundlePrice, bundlePriceType: priceMode })} />
+            <input type="hidden" name="comboStepsConfig" value={JSON.stringify({ ...comboConfig, bundlePrice: comboConfig.bundlePriceType === "dynamic" ? comboDynamicPrice : parseFloat(comboConfig.bundlePrice) || 0 })} />
 
             {/* Basic Information */}
             <div style={{ marginBottom: "28px" }}>
@@ -708,7 +721,7 @@ export default function EditBoxPage() {
           {/* Hidden form for saving */}
           <comboFetcher.Form id="combo-config-form" method="POST">
             <input type="hidden" name="_action" value="save_combo" />
-            <input type="hidden" name="comboStepsConfig" value={JSON.stringify({ ...comboConfig, bundlePrice, bundlePriceType: priceMode })} />
+            <input type="hidden" name="comboStepsConfig" value={JSON.stringify({ ...comboConfig, bundlePrice: comboConfig.bundlePriceType === "dynamic" ? comboDynamicPrice : parseFloat(comboConfig.bundlePrice) || 0 })} />
           </comboFetcher.Form>
 
           {/* Info banner */}
@@ -753,36 +766,35 @@ export default function EditBoxPage() {
                     <label style={labelStyle}>Bundle Price (₹) *</label>
                     <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "5px", overflow: "hidden", marginBottom: "8px" }}>
                       {["manual", "dynamic"].map((mode) => (
-                        <button key={mode} type="button" onClick={() => setPriceMode(mode)} style={{ flex: 1, padding: "6px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: priceMode === mode ? "#2A7A4F" : "#f9fafb", color: priceMode === mode ? "#fff" : "#374151", transition: "background 0.15s" }}>
+                        <button key={mode} type="button" onClick={() => updateComboField("bundlePriceType", mode)} style={{ flex: 1, padding: "6px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: comboConfig.bundlePriceType === mode ? "#2A7A4F" : "#f9fafb", color: comboConfig.bundlePriceType === mode ? "#fff" : "#374151", transition: "background 0.15s" }}>
                           {mode === "manual" ? "Manual" : "Dynamic"}
                         </button>
                       ))}
                     </div>
-                    {priceMode === "manual" && (
-                      <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} style={{ ...fieldStyle, borderColor: errors.bundlePrice ? "#e11d48" : "#d1d5db" }} />
+                    {comboConfig.bundlePriceType === "manual" && (
+                      <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={comboConfig.bundlePrice || ""} onChange={(e) => updateComboField("bundlePrice", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
                     )}
-                    {priceMode === "dynamic" && (
+                    {comboConfig.bundlePriceType === "dynamic" && (
                       <div style={{ border: "1px solid #d1d5db", borderRadius: "5px", padding: "10px", background: "#f9fafb" }}>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "8px" }}>
                           <div>
                             <label style={{ ...labelStyle, fontSize: "10px" }}>Discount Type</label>
-                            <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }}>
+                            <select value={comboConfig.discountType} onChange={(e) => updateComboField("discountType", e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }}>
                               <option value="percent">% Off Total</option>
                               <option value="fixed">₹ Fixed Discount</option>
                               <option value="none">No Discount</option>
                             </select>
                           </div>
-                          {discountType !== "none" && (
+                          {comboConfig.discountType !== "none" && (
                             <div>
-                              <label style={{ ...labelStyle, fontSize: "10px" }}>{discountType === "percent" ? "Discount %" : "Amount (₹)"}</label>
-                              <input type="number" min="0" step={discountType === "percent" ? "1" : "0.01"} max={discountType === "percent" ? "99" : undefined} value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
+                              <label style={{ ...labelStyle, fontSize: "10px" }}>{comboConfig.discountType === "percent" ? "Discount %" : "Amount (₹)"}</label>
+                              <input type="number" min="0" step={comboConfig.discountType === "percent" ? "1" : "0.01"} max={comboConfig.discountType === "percent" ? "99" : undefined} value={comboConfig.discountValue} onChange={(e) => updateComboField("discountValue", e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
                             </div>
                           )}
                         </div>
-                        <div style={{ fontSize: "11px", color: "#6b7280" }}>Price: ₹{bundlePrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+                        <div style={{ fontSize: "11px", color: "#6b7280" }}>Price: ₹{comboDynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
                       </div>
                     )}
-                    {errors.bundlePrice && <div style={errorStyle}>{errors.bundlePrice}</div>}
                   </div>
                 </div>
                 {/* Combo active toggle */}

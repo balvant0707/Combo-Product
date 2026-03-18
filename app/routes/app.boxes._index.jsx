@@ -372,7 +372,7 @@ export default function ManageBoxesPage() {
                           Yes
                         </span>
                       ) : (
-                        <span style={{ color: "#d1d5db", fontSize: "12px" }}>—</span>
+                        <span style={{ color: "#d1d5db", fontSize: "12px" }}>No</span>
                       )}
                     </td>
 
@@ -400,7 +400,7 @@ export default function ManageBoxesPage() {
                     {/* Orders */}
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
                       <span style={{ fontFamily: "monospace", fontWeight: "600", color: box.orderCount > 0 ? "#111827" : "#d1d5db" }}>
-                        {box.orderCount > 0 ? box.orderCount : "—"}
+                        {box.orderCount > 0 ? box.orderCount : "No"}
                       </span>
                     </td>
 

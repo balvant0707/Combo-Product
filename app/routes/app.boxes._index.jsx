@@ -192,6 +192,13 @@ export default function ManageBoxesPage() {
         + Create New Box
       </s-button>
 
+      <s-button
+        slot="secondary-action"
+        onClick={() => navigateTo("/app/boxes/new-combo")}
+      >
+        🎯 Create Specific Combo Box
+      </s-button>
+
       {/* Hero banner */}
       <div style={{ marginBottom: "10px", borderRadius: "5px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
         <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
@@ -232,9 +239,14 @@ export default function ManageBoxesPage() {
             <p style={{ fontSize: "13px", margin: "0 0 20px", color: "#9ca3af" }}>
               Create your first box to let customers build custom combos.
             </p>
-            <s-button onClick={() => navigateTo("/app/boxes/new")}>
-              Create your first box
-            </s-button>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
+              <s-button onClick={() => navigateTo("/app/boxes/new")}>
+                + Create New Box
+              </s-button>
+              <s-button onClick={() => navigateTo("/app/boxes/new-combo")}>
+                🎯 Specific Combo Box
+              </s-button>
+            </div>
           </div>
         ) : (
           <div style={{ overflowX: "auto" }}>
@@ -478,6 +490,25 @@ export default function ManageBoxesPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Footer CTA */}
+        {displayBoxes.length > 0 && (
+          <div style={{ marginTop: "20px", padding: "14px 18px", background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontSize: "13px", fontWeight: "700", color: "#166534" }}>🎯 Want a step-by-step combo experience?</div>
+              <div style={{ fontSize: "12px", color: "#4b7a5e", marginTop: "2px" }}>Create a Specific Combo Box with per-step collection and product pickers.</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigateTo("/app/boxes/new-combo")}
+              style={{ background: "#2A7A4F", color: "#fff", border: "none", borderRadius: "6px", padding: "8px 18px", fontSize: "13px", fontWeight: "700", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#1e5e3a")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "#2A7A4F")}
+            >
+              Create Specific Combo Box →
+            </button>
           </div>
         )}
       </s-section>

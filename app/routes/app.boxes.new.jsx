@@ -207,6 +207,13 @@ export default function CreateBoxPage() {
         {isSaving ? "Saving..." : "Save & Publish"}
       </s-button>
 
+      <s-button
+        slot="secondary-action"
+        onClick={() => { window.location.href = withEmbeddedAppParams("/app/boxes/new-combo", location.search); }}
+      >
+        🎯 Specific Combo Box
+      </s-button>
+
       {/* Hero banner */}
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
         <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />

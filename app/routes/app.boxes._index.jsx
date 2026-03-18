@@ -193,7 +193,6 @@ export default function ManageBoxesPage() {
       </s-button>
 
       <s-button
-       style="background: #303030 !important;color: #ffffff;"
         onClick={() => navigateTo("/app/boxes/specific-combo")}
       >
         🎯 Create Specific Combo Box

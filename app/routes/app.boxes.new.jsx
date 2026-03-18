@@ -450,7 +450,7 @@ export default function CreateBoxPage() {
         <input type="hidden" name="allowDuplicates" value={String(options.allowDuplicates)} />
         <input type="hidden" name="giftMessageEnabled" value={String(options.giftMessageEnabled)} />
         <input type="hidden" name="isActive" value={String(options.isActive)} />
-        <input type="hidden" name="comboStepsConfig" value={JSON.stringify(comboConfig)} />
+        <input type="hidden" name="comboStepsConfig" value={JSON.stringify({ ...comboConfig, bundlePrice, bundlePriceType: priceMode })} />
 
         {/* ════════════════════════════════════════
             TAB 1 — BOX SETTINGS
@@ -477,6 +477,25 @@ export default function CreateBoxPage() {
                   <label style={labelStyle}>Number of Items *</label>
                   <input type="number" placeholder="e.g. 4" min="1" max="20" value={itemCount} onChange={(e) => setItemCount(e.target.value)} style={{ ...fieldStyle, borderColor: errors.itemCount ? "#e11d48" : "#d1d5db" }} />
                   {errors.itemCount && <div style={errorStyle}>{errors.itemCount}</div>}
+                </div>
+                <div>
+                  <label style={labelStyle}>Bundle Price (₹) *</label>
+                  <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "5px", overflow: "hidden", marginBottom: "10px" }}>
+                    {["manual", "dynamic"].map((mode) => (
+                      <button key={mode} type="button" onClick={() => setPriceMode(mode)} style={{ flex: 1, padding: "7px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: priceMode === mode ? "#2A7A4F" : "#f9fafb", color: priceMode === mode ? "#fff" : "#374151", transition: "background 0.15s" }}>
+                        {mode === "manual" ? "Manual" : "Dynamic"}
+                      </button>
+                    ))}
+                  </div>
+                  {priceMode === "manual" && (
+                    <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} style={{ ...fieldStyle, borderColor: errors.bundlePrice ? "#e11d48" : "#d1d5db" }} />
+                  )}
+                  {priceMode === "dynamic" && (
+                    <div style={{ border: "1px solid #d1d5db", borderRadius: "5px", padding: "10px", background: "#f9fafb", fontSize: "12px", color: "#6b7280" }}>
+                      Dynamic price: ₹{estimatedTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })} (avg × items)
+                    </div>
+                  )}
+                  {errors.bundlePrice && <div style={errorStyle}>{errors.bundlePrice}</div>}
                 </div>
                 <div style={{ gridColumn: "1 / -1" }}>
                   <label style={labelStyle}>Banner Image (optional)</label>

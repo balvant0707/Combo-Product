@@ -162,6 +162,8 @@ export const loader = async ({ request, params }) => {
       type:              cfg.comboType,
       title:             cfg.title             ?? undefined,
       subtitle:          cfg.subtitle          ?? undefined,
+      bundlePrice:       cfg.bundlePrice != null ? parseFloat(cfg.bundlePrice) : undefined,
+      bundlePriceType:   cfg.bundlePriceType   ?? undefined,
       isActive:          cfg.isActive,
       showProductImages: cfg.showProductImages,
       showProgressBar:   cfg.showProgressBar,
@@ -554,7 +556,7 @@ export default function EditBoxPage() {
             <input type="hidden" name="allowDuplicates" value={String(options.allowDuplicates)} />
             <input type="hidden" name="giftMessageEnabled" value={String(options.giftMessageEnabled)} />
             <input type="hidden" name="isActive" value={String(options.isActive)} />
-            <input type="hidden" name="comboStepsConfig" value={JSON.stringify(comboConfig)} />
+            <input type="hidden" name="comboStepsConfig" value={JSON.stringify({ ...comboConfig, bundlePrice, bundlePriceType: priceMode })} />
 
             {/* Basic Information */}
             <div style={{ marginBottom: "28px" }}>
@@ -574,6 +576,40 @@ export default function EditBoxPage() {
                   <label style={labelStyle}>Number of Items *</label>
                   <input type="number" placeholder="e.g. 4" min="1" max="20" value={itemCount} onChange={(e) => setItemCount(e.target.value)} style={{ ...fieldStyle, borderColor: errors.itemCount ? "#e11d48" : "#d1d5db" }} />
                   {errors.itemCount && <div style={errorStyle}>{errors.itemCount}</div>}
+                </div>
+                <div>
+                  <label style={labelStyle}>Bundle Price (₹) *</label>
+                  <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "5px", overflow: "hidden", marginBottom: "10px" }}>
+                    {["manual", "dynamic"].map((mode) => (
+                      <button key={mode} type="button" onClick={() => setPriceMode(mode)} style={{ flex: 1, padding: "7px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: priceMode === mode ? "#2A7A4F" : "#f9fafb", color: priceMode === mode ? "#fff" : "#374151", transition: "background 0.15s" }}>
+                        {mode === "manual" ? "Manual" : "Dynamic"}
+                      </button>
+                    ))}
+                  </div>
+                  {priceMode === "manual" && (
+                    <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} style={{ ...fieldStyle, borderColor: errors.bundlePrice ? "#e11d48" : "#d1d5db" }} />
+                  )}
+                  {priceMode === "dynamic" && (
+                    <div style={{ border: "1px solid #d1d5db", borderRadius: "5px", padding: "12px", background: "#f9fafb" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
+                        <div>
+                          <label style={{ ...labelStyle, fontSize: "10px" }}>Discount Type</label>
+                          <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }}>
+                            <option value="percent">% Off Total</option>
+                            <option value="fixed">₹ Fixed Discount</option>
+                            <option value="none">No Discount</option>
+                          </select>
+                        </div>
+                        {discountType !== "none" && (
+                          <div>
+                            <label style={{ ...labelStyle, fontSize: "10px" }}>{discountType === "percent" ? "Discount %" : "Amount (₹)"}</label>
+                            <input type="number" min="0" step={discountType === "percent" ? "1" : "0.01"} max={discountType === "percent" ? "99" : undefined} value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {errors.bundlePrice && <div style={errorStyle}>{errors.bundlePrice}</div>}
                 </div>
                 <div style={{ gridColumn: "1 / -1" }}>
                   <label style={labelStyle}>Banner Image (optional)</label>
@@ -672,7 +708,7 @@ export default function EditBoxPage() {
           {/* Hidden form for saving */}
           <comboFetcher.Form id="combo-config-form" method="POST">
             <input type="hidden" name="_action" value="save_combo" />
-            <input type="hidden" name="comboStepsConfig" value={JSON.stringify(comboConfig)} />
+            <input type="hidden" name="comboStepsConfig" value={JSON.stringify({ ...comboConfig, bundlePrice, bundlePriceType: priceMode })} />
           </comboFetcher.Form>
 
           {/* Info banner */}

@@ -673,6 +673,15 @@ export async function updateBox(id, shop, data, admin) {
     },
   });
 
+  // Sync new banner image to Shopify product
+  if (hasUploadedBanner && existing.shopifyProductId && admin) {
+    await addImageToProduct(admin, existing.shopifyProductId, {
+      bytes: data.bannerImage.bytes,
+      mimeType: data.bannerImage.mimeType,
+      fileName: data.bannerImage.fileName,
+    });
+  }
+
   // Replace eligible products only when a non-empty list is submitted (prevents accidental wipe)
   if (data.eligibleProducts && Array.isArray(data.eligibleProducts) && data.eligibleProducts.length > 0) {
     await db.comboBoxProduct.deleteMany({ where: { boxId: parseInt(id) } });

@@ -44,6 +44,20 @@ const PRODUCTS_QUERY = `#graphql
 `;
 
 /* ─────────────────────────── Constants ─────────────────────────── */
+const MAX_BANNER_IMAGE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_BANNER_MIME_TYPES = new Set([
+  "image/jpeg", "image/jpg", "image/png",
+  "image/webp", "image/gif", "image/avif",
+]);
+
+async function parseBannerImage(formData, errors) {
+  const file = formData.get("bannerImage");
+  if (!file || typeof file !== "object" || typeof file.arrayBuffer !== "function" || !file.size) return null;
+  if (!ALLOWED_BANNER_MIME_TYPES.has(file.type)) { errors.bannerImage = "Only JPG, PNG, WEBP, GIF, and AVIF files are allowed"; return null; }
+  if (file.size > MAX_BANNER_IMAGE_SIZE) { errors.bannerImage = "Banner image must be 5MB or smaller"; return null; }
+  return { bytes: new Uint8Array(await file.arrayBuffer()), mimeType: file.type, fileName: file.name || null };
+}
+
 const DEFAULT_COMBO = {
   type: 2,
   title: "Build Your Perfect Bundle",
@@ -107,6 +121,7 @@ export const action = async ({ request }) => {
 
   const comboStepsConfig = formData.get("comboStepsConfig");
   const errors = {};
+  const bannerImage = await parseBannerImage(formData, errors);
   const comboValidation = validateComboConfig(comboStepsConfig);
 
   const comboName = formData.get("comboName")?.trim() || "";
@@ -141,7 +156,7 @@ export const action = async ({ request }) => {
     allowDuplicates:    false,
     giftMessageEnabled: false,
     isActive:           parsedCombo.isActive !== false,
-    bannerImage:        null,
+    bannerImage,
     eligibleProducts:   [],
   };
 
@@ -289,7 +304,7 @@ export default function CreateSpecificComboBoxPage() {
         </div>
       )}
 
-      <Form id="specific-combo-form" method="POST" action={`/app/boxes/specific-combo${location.search}`}>
+      <Form id="specific-combo-form" method="POST" encType="multipart/form-data" action={`/app/boxes/specific-combo${location.search}`}>
         <input type="hidden" name="comboStepsConfig" value={comboConfigJson} />
 
         <s-section>
@@ -298,6 +313,14 @@ export default function CreateSpecificComboBoxPage() {
             <label style={labelStyle}>Combo Name *</label>
             <input type="text" name="comboName" placeholder="e.g. Premium Bundle" style={{ ...fieldStyle, borderColor: errors.comboName ? "#e11d48" : "#d1d5db" }} />
             {errors.comboName && <div style={errorStyle}>{errors.comboName}</div>}
+          </div>
+
+          {/* Banner Image */}
+          <div style={{ marginBottom: "20px" }}>
+            <label style={labelStyle}>Banner Image (optional)</label>
+            <input type="file" name="bannerImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ ...fieldStyle, padding: "7px 12px" }} />
+            <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>JPG, PNG, WEBP, GIF, or AVIF — max 5MB. Added as product image in Shopify Admin.</div>
+            {errors.bannerImage && <div style={errorStyle}>{errors.bannerImage}</div>}
           </div>
 
           {/* Combo Config Error */}

@@ -667,8 +667,8 @@ export async function updateBox(id, shop, data, admin) {
     },
   });
 
-  // Replace eligible products if provided
-  if (data.eligibleProducts && Array.isArray(data.eligibleProducts)) {
+  // Replace eligible products only when a non-empty list is submitted (prevents accidental wipe)
+  if (data.eligibleProducts && Array.isArray(data.eligibleProducts) && data.eligibleProducts.length > 0) {
     await db.comboBoxProduct.deleteMany({ where: { boxId: parseInt(id) } });
     const productRows = data.eligibleProducts.map((p) => {
       const rawIds = Array.isArray(p.variantIds) ? p.variantIds : [];

@@ -1338,6 +1338,15 @@
   .cb-sticky-btn { width: 100%; text-align: center; }
 }
 
+/* ── Subtitle under step heading ── */
+.cb-combo-subtitle {
+  font-family: var(--cb-font);
+  font-size: 14px;
+  color: var(--cb-text-muted);
+  margin: -12px 0 20px;
+  text-align: center;
+}
+
 /* ═══════════════════════════════════════════════════════
    Specific Combo Builder — Vertical Stepper Design
    Distinct from standard combo (product-grid) layout.

@@ -407,7 +407,7 @@ export default function ManageBoxesPage() {
                     {/* Status toggle */}
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
                       <button
-                        onClick={() => handleToggleStatus(box.id, box.isActive)}
+                        onClick={() => handleToggleStatus(box.id, box.isActive)}Specific combo Product step 
                         title={box.isActive ? "Click to deactivate" : "Click to activate"}
                         style={{
                           display: "inline-flex",

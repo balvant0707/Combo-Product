@@ -381,20 +381,14 @@ export default function DashboardPage() {
 
   return (
     <s-page heading="Combo Product">
-      <div slot="primary-action" style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-        <button
-          onClick={() => navigateTo("/app/boxes/specific-combo")}
-          style={{ padding: "8px 16px", fontSize: "13px", fontWeight: "600", borderRadius: "6px", border: "1.5px solid #2A7A4F", background: "transparent", color: "#2A7A4F", cursor: "pointer", whiteSpace: "nowrap" }}
-        >
+      <ui-title-bar title="Combo Product">
+        <button onClick={() => navigateTo("/app/boxes/specific-combo")}>
           🎯 Create Specific Combo Box
         </button>
-        <button
-          onClick={() => navigateTo("/app/boxes/new")}
-          style={{ padding: "8px 16px", fontSize: "13px", fontWeight: "600", borderRadius: "6px", border: "none", background: "#2A7A4F", color: "#fff", cursor: "pointer", whiteSpace: "nowrap" }}
-        >
+        <button variant="primary" onClick={() => navigateTo("/app/boxes/new")}>
           + Create Combo Box
         </button>
-      </div>
+      </ui-title-bar>
 
       <ThemeCustomizationCard themeEditorUrl={themeEditorUrl} />
 

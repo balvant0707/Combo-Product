@@ -382,7 +382,7 @@ export default function DashboardPage() {
   return (
     <s-page heading="Combo Product">
       <ui-title-bar title="Combo Product">
-        <button variant="primary" onClick={() => navigateTo("/app/boxes/specific-combo")}>
+        <button class="primary btn" onClick={() => navigateTo("/app/boxes/specific-combo")}>
           Create Specific Combo Box
         </button>
         <button variant="primary" onClick={() => navigateTo("/app/boxes/new")}>

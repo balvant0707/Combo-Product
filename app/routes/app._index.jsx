@@ -345,7 +345,7 @@ export default function DashboardPage() {
       accent: "#2A7A4F",
       bg: "linear-gradient(135deg,#f0fdf4,#dcfce7)",
       border: "#86efac",
-      href: "/app/boxes/new-combo",
+      href: "/app/boxes/specific-combo",
     },
     {
       key: "manage-boxes",
@@ -383,7 +383,7 @@ export default function DashboardPage() {
     <s-page heading="Combo Product">
       <s-button
         slot="primary-action"
-        onClick={() => navigateTo("/app/boxes/new-combo")}
+        onClick={() => navigateTo("/app/boxes/specific-combo")}
       >
         🎯 Create Specific Combo Box
       </s-button>

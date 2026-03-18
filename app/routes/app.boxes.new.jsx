@@ -209,7 +209,7 @@ export default function CreateBoxPage() {
 
       <s-button
         slot="secondary-action"
-        onClick={() => { window.location.href = withEmbeddedAppParams("/app/boxes/new-combo", location.search); }}
+        onClick={() => { window.location.href = withEmbeddedAppParams("/app/boxes/specific-combo", location.search); }}
       >
         🎯 Specific Combo Box
       </s-button>

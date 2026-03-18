@@ -187,16 +187,16 @@ export default function ManageBoxesPage() {
     <s-page heading={`All Box Types (${displayBoxes.length})`}>
       <s-button
         slot="primary-action"
-        onClick={() => navigateTo("/app/boxes/new-combo")}
+        onClick={() => navigateTo("/app/boxes/new")}
       >
-        🎯 Create Specific Combo Box
+        + Create Combo Box
       </s-button>
 
       <s-button
         slot="primary-action"
-        onClick={() => navigateTo("/app/boxes/new")}
+        onClick={() => navigateTo("/app/boxes/specific-combo")}
       >
-        + Create New Box
+        🎯 Create Specific Combo Box
       </s-button>
 
       {/* Hero banner */}
@@ -243,7 +243,7 @@ export default function ManageBoxesPage() {
               <s-button onClick={() => navigateTo("/app/boxes/new")}>
                 + Create New Box
               </s-button>
-              <s-button onClick={() => navigateTo("/app/boxes/new-combo")}>
+              <s-button onClick={() => navigateTo("/app/boxes/specific-combo")}>
                 🎯 Specific Combo Box
               </s-button>
             </div>

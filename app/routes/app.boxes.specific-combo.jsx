@@ -149,7 +149,7 @@ export const action = async ({ request }) => {
     const box = await createBox(session.shop, data, admin);
     if (comboStepsConfig) {
       try { await upsertComboConfig(box.id, comboStepsConfig); } catch (e) {
-        console.error("[app.boxes.new-combo] upsertComboConfig error:", e);
+        console.error("[app.boxes.specific-combo] upsertComboConfig error:", e);
       }
     }
   } catch (e) {
@@ -228,7 +228,7 @@ export default function CreateSpecificComboBoxPage() {
     const idx = collModalStepIdx;
     setComboConfig((prev) => ({ ...prev, steps: prev.steps.map((s, i) => i !== idx ? s : { ...s, collections: tempColls, selectedProducts: [] }) }));
     setStepProducts((p) => { const n = [...p]; n[idx] = null; return n; });
-    collProdsFetchers[idx].load(withEmbeddedAppParams(`/app/boxes/new-combo?collectionId=${encodeURIComponent(tempColls[0].id)}`, location.search));
+    collProdsFetchers[idx].load(withEmbeddedAppParams(`/app/boxes/specific-combo?collectionId=${encodeURIComponent(tempColls[0].id)}`, location.search));
     setShowCollModal(false);
   }
   function confirmStepProd() {
@@ -270,7 +270,7 @@ export default function CreateSpecificComboBoxPage() {
         slot="primary-action"
         variant="primary"
         disabled={isSaving || undefined}
-        onClick={() => { const f = document.getElementById("new-combo-form"); if (f) f.requestSubmit(); }}
+        onClick={() => { const f = document.getElementById("specific-combo-form"); if (f) f.requestSubmit(); }}
       >
         {isSaving ? "Saving..." : "Save & Publish"}
       </s-button>
@@ -289,7 +289,7 @@ export default function CreateSpecificComboBoxPage() {
         </div>
       )}
 
-      <Form id="new-combo-form" method="POST" action={`/app/boxes/new-combo${location.search}`}>
+      <Form id="specific-combo-form" method="POST" action={`/app/boxes/specific-combo${location.search}`}>
         <input type="hidden" name="comboStepsConfig" value={comboConfigJson} />
 
         <s-section>

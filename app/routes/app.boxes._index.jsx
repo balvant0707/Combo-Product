@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useFetcher, useLoaderData, useLocation, useNavigate } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -110,6 +111,8 @@ export default function ManageBoxesPage() {
   const navigate = useNavigate();
   const fetcher = useFetcher();
 
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // { id, name }
+
   function navigateTo(path) {
     navigate(withEmbeddedAppParams(path, location.search));
   }
@@ -122,9 +125,14 @@ export default function ManageBoxesPage() {
   }
 
   function handleDelete(id, name) {
-    if (window.confirm(`Delete "${name}"? This cannot be undone.`)) {
-      fetcher.submit({ _action: "delete", id: String(id) }, { method: "POST" });
+    setDeleteConfirm({ id, name });
+  }
+
+  function confirmDelete() {
+    if (deleteConfirm) {
+      fetcher.submit({ _action: "delete", id: String(deleteConfirm.id) }, { method: "POST" });
     }
+    setDeleteConfirm(null);
   }
 
   // Drag & drop state
@@ -423,7 +431,7 @@ export default function ManageBoxesPage() {
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
                       <div style={{ display: "flex", gap: "6px" }}>
                         <button
-                          onClick={() => navigateTo(`/app/boxes/${box.id}`)}
+                          onClick={() => navigateTo(box.comboConfig ? `/app/boxes/${box.id}/combo` : `/app/boxes/${box.id}`)}
                           style={{
                             background: "#f9fafb",
                             border: "1px solid #e5e7eb",
@@ -473,6 +481,55 @@ export default function ManageBoxesPage() {
           </div>
         )}
       </s-section>
+
+      {/* ── Delete Confirmation Modal ── */}
+      {deleteConfirm && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(17,24,39,0.55)", backdropFilter: "blur(3px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+          <div style={{ background: "#fff", borderRadius: "10px", width: "100%", maxWidth: "420px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", overflow: "hidden" }}>
+            {/* Header */}
+            <div style={{ padding: "20px 24px 16px", borderBottom: "1px solid #f3f4f6" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <span style={{ fontSize: "18px" }}>🗑️</span>
+                </div>
+                <div>
+                  <div style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>Delete Box</div>
+                  <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "2px" }}>This action cannot be undone</div>
+                </div>
+              </div>
+            </div>
+            {/* Body */}
+            <div style={{ padding: "20px 24px" }}>
+              <p style={{ fontSize: "13px", color: "#374151", margin: 0, lineHeight: "1.6" }}>
+                Are you sure you want to delete <strong style={{ color: "#111827" }}>&ldquo;{deleteConfirm.name}&rdquo;</strong>?
+                <br />
+                <span style={{ color: "#dc2626", fontSize: "12px" }}>The associated Shopify product will also be removed.</span>
+              </p>
+            </div>
+            {/* Footer */}
+            <div style={{ padding: "12px 24px 20px", display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                onClick={() => setDeleteConfirm(null)}
+                style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "6px", padding: "8px 20px", fontSize: "13px", fontWeight: "600", cursor: "pointer", color: "#374151" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#f9fafb")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                style={{ background: "#dc2626", border: "none", borderRadius: "6px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: "pointer", color: "#fff" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#b91c1c")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "#dc2626")}
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </s-page>
   );
 }

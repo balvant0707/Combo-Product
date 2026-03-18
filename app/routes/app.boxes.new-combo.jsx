@@ -266,20 +266,21 @@ export default function CreateSpecificComboBoxPage() {
   return (
     <s-page heading="Create Specific Combo Box" back-url={withEmbeddedAppParams("/app/boxes", location.search)}>
 
+      <s-button
+        slot="primary-action"
+        variant="primary"
+        disabled={isSaving || undefined}
+        onClick={() => { const f = document.getElementById("new-combo-form"); if (f) f.requestSubmit(); }}
+      >
+        {isSaving ? "Saving..." : "Save & Publish"}
+      </s-button>
+
       {/* Hero banner */}
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
         <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
         <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#d1fae5", marginBottom: "10px" }}>🎯 Specific Combo Box</div>
         <div style={{ fontSize: "18px", fontWeight: "800", color: "#fff", letterSpacing: "-0.5px" }}>Create Specific Combo Box</div>
         <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.65)", marginTop: "4px" }}>Configure your combo experience — define steps, collections, and product pickers.</div>
-      </div>
-
-      {/* Save button */}
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
-        <button type="button" disabled={isSaving} onClick={() => { const f = document.getElementById("new-combo-form"); if (f) f.requestSubmit(); }}
-          style={{ background: "#2A7A4F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px 28px", fontSize: "14px", fontWeight: "700", cursor: isSaving ? "not-allowed" : "pointer", opacity: isSaving ? 0.7 : 1 }}>
-          {isSaving ? "Saving..." : "Save & Publish"}
-        </button>
       </div>
 
       {errors._global && (

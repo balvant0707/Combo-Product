@@ -5,6 +5,20 @@ import { authenticate } from "../shopify.server";
 import { createBox } from "../models/boxes.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
+const COLLECTIONS_QUERY = `#graphql
+  query GetCollections($first: Int!) {
+    collections(first: $first) {
+      edges {
+        node {
+          id
+          title
+          image { url }
+        }
+      }
+    }
+  }
+`;
+
 const PRODUCTS_QUERY = `#graphql
   query GetProducts($first: Int!, $query: String) {
     products(first: $first, query: $query) {
@@ -43,8 +57,12 @@ export const loader = async ({ request }) => {
   const query = url.searchParams.get("q") || "";
   const searchQuery = query ? `${query} NOT vendor:ComboBuilder` : "NOT vendor:ComboBuilder";
 
-  const prodResp = await admin.graphql(PRODUCTS_QUERY, { variables: { first: 50, query: searchQuery } });
+  const [prodResp, collResp] = await Promise.all([
+    admin.graphql(PRODUCTS_QUERY, { variables: { first: 50, query: searchQuery } }),
+    admin.graphql(COLLECTIONS_QUERY, { variables: { first: 50 } }),
+  ]);
   const prodJson = await prodResp.json();
+  const collJson = await collResp.json();
 
   const products = (prodJson?.data?.products?.edges || []).map(({ node }) => ({
     id: node.id,
@@ -56,7 +74,13 @@ export const loader = async ({ request }) => {
     price: node.variants?.edges?.[0]?.node?.price || "0",
   }));
 
-  return { products };
+  const collections = (collJson?.data?.collections?.edges || []).map(({ node }) => ({
+    id: node.id,
+    title: node.title,
+    imageUrl: node.image?.url || null,
+  }));
+
+  return { products, collections };
 };
 
 export const action = async ({ request }) => {
@@ -126,7 +150,7 @@ const sectionHeadingStyle = {
 };
 
 export default function CreateBoxPage() {
-  const { products } = useLoaderData();
+  const { products, collections } = useLoaderData();
   const actionData = useActionData();
   const searchFetcher = useFetcher();
   const location = useLocation();
@@ -136,6 +160,10 @@ export default function CreateBoxPage() {
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [productSearch, setProductSearch] = useState("");
   const [showPicker, setShowPicker] = useState(false);
+  const [scope, setScope] = useState("specific_collections");
+  const [scopeItems, setScopeItems] = useState([]);
+  const [showScopePicker, setShowScopePicker] = useState(false);
+  const [scopeSearch, setScopeSearch] = useState("");
   const [options, setOptions] = useState({
     isGiftBox: false, allowDuplicates: false, giftMessageEnabled: false, isActive: true,
   });
@@ -236,6 +264,8 @@ export default function CreateBoxPage() {
         <input type="hidden" name="bundlePriceType" value={priceMode} />
         <input type="hidden" name="itemCount" value={itemCount} />
         <input type="hidden" name="eligibleProducts" value={JSON.stringify(selectedProducts)} />
+        <input type="hidden" name="scope" value={scope} />
+        <input type="hidden" name="scopeItems" value={JSON.stringify(scopeItems)} />
         <input type="hidden" name="isGiftBox" value={String(options.isGiftBox)} />
         <input type="hidden" name="allowDuplicates" value={String(options.allowDuplicates)} />
         <input type="hidden" name="giftMessageEnabled" value={String(options.giftMessageEnabled)} />
@@ -310,6 +340,47 @@ export default function CreateBoxPage() {
                 </label>
               ))}
             </div>
+          </div>
+
+          {/* Scope */}
+          <div style={{ marginBottom: "28px" }}>
+            <div style={sectionHeadingStyle}><span style={{ fontSize: "15px" }}>🎯</span> Scope</div>
+            <div style={{ marginBottom: "12px" }}>
+              <label style={labelStyle}>Select Scope</label>
+              <select
+                value={scope}
+                onChange={(e) => { setScope(e.target.value); setScopeItems([]); }}
+                style={{ ...fieldStyle, borderColor: "#d1d5db", cursor: "pointer", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", paddingRight: "32px" }}
+              >
+                <option value="specific_collections">Specific collections</option>
+                <option value="specific_products">Specific products</option>
+              </select>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <button
+                type="button"
+                onClick={() => { setScopeSearch(""); setShowScopePicker(true); }}
+                style={{ padding: "8px 16px", background: "#f9fafb", border: "1.5px solid #e5e7eb", borderRadius: "5px", fontSize: "13px", fontWeight: "600", color: "#374151", cursor: "pointer", transition: "background 0.12s, border-color 0.12s" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#f3f4f6"; e.currentTarget.style.borderColor = "#d1d5db"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "#f9fafb"; e.currentTarget.style.borderColor = "#e5e7eb"; }}
+              >
+                {scope === "specific_collections" ? "Select collections" : "Select products"}
+              </button>
+              <span style={{ fontSize: "12px", color: "#6b7280", fontWeight: "500" }}>
+                {scopeItems.length} selected
+              </span>
+            </div>
+            {scopeItems.length > 0 && (
+              <div style={{ marginTop: "10px", padding: "10px 12px", background: "#f0fdf4", borderRadius: "5px", border: "1px solid #bbf7d0" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                  {scopeItems.map((item) => (
+                    <span key={item.id} onClick={() => setScopeItems((prev) => prev.filter((i) => i.id !== item.id))} style={{ background: "#2A7A4F", color: "#fff", borderRadius: "5px", padding: "3px 10px", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", fontWeight: "500" }}>
+                      {item.title}<span style={{ opacity: 0.75, fontSize: "10px" }}>✕</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Eligible Products */}
@@ -392,6 +463,79 @@ export default function CreateBoxPage() {
           </div>
         </div>
       )}
+      {/* Scope Picker Modal */}
+      {showScopePicker && (() => {
+        const isCollections = scope === "specific_collections";
+        const allItems = isCollections ? collections : products;
+        const filtered = scopeSearch.trim()
+          ? allItems.filter((i) => i.title.toLowerCase().includes(scopeSearch.toLowerCase()))
+          : allItems;
+        const isScopeSelected = (id) => scopeItems.some((i) => i.id === id);
+        function toggleScopeItem(item) {
+          setScopeItems((prev) => prev.some((i) => i.id === item.id)
+            ? prev.filter((i) => i.id !== item.id)
+            : [...prev, { id: item.id, title: item.title }]
+          );
+        }
+        return (
+          <div style={modalOverlayStyle} onClick={(e) => { if (e.target === e.currentTarget) setShowScopePicker(false); }}>
+            <div style={modalBoxStyle}>
+              <div style={modalHeaderStyle}>
+                <div>
+                  <div style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>
+                    {isCollections ? "Select Collections" : "Select Products"}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>
+                    {scopeItems.length} {isCollections ? "collection" : "product"}{scopeItems.length !== 1 ? "s" : ""} selected
+                  </div>
+                </div>
+                <button type="button" onClick={() => setShowScopePicker(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: "#9ca3af", padding: "4px 8px", borderRadius: "5px", lineHeight: 1 }}>✕</button>
+              </div>
+              <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                <input
+                  type="text"
+                  placeholder={`Search ${isCollections ? "collections" : "products"}...`}
+                  value={scopeSearch}
+                  onChange={(e) => setScopeSearch(e.target.value)}
+                  autoFocus
+                  style={searchInputStyle}
+                />
+              </div>
+              <div style={modalBodyStyle}>
+                {filtered.length === 0 ? (
+                  <div style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>No items found</div>
+                ) : filtered.map((item, idx) => {
+                  const selected = isScopeSelected(item.id);
+                  return (
+                    <label key={item.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filtered.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", background: selected ? "#f0fdf4" : "#fff", transition: "background 0.1s" }}>
+                      <input type="checkbox" checked={selected} onChange={() => toggleScopeItem(item)} style={{ width: "15px", height: "15px", flexShrink: 0, accentColor: "#2A7A4F" }} />
+                      {item.imageUrl
+                        ? <img src={item.imageUrl} alt={item.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} />
+                        : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", border: "1px solid #e5e7eb" }}>{isCollections ? "📂" : "📦"}</div>
+                      }
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.title}</div>
+                      </div>
+                      {selected && <span style={{ width: "18px", height: "18px", background: "#2A7A4F", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><span style={{ color: "#fff", fontSize: "10px", fontWeight: "700" }}>✓</span></span>}
+                    </label>
+                  );
+                })}
+              </div>
+              <div style={modalFooterStyle}>
+                <span style={{ fontSize: "12px", color: "#6b7280" }}>
+                  {scopeItems.length > 0 ? `${scopeItems.length} selected` : "None selected"}
+                </span>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button type="button" onClick={() => setShowScopePicker(false)} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#374151" }}>Cancel</button>
+                  <button type="button" onClick={() => setShowScopePicker(false)} style={{ background: "#2A7A4F", border: "none", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: "pointer", color: "#fff", boxShadow: "0 1px 6px rgba(42,122,79,0.35)" }}>
+                    Done{scopeItems.length > 0 ? ` (${scopeItems.length})` : ""}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </s-page>
   );
 }

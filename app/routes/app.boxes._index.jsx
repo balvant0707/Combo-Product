@@ -376,16 +376,14 @@ export default function ManageBoxesPage() {
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
                       {box.comboConfig ? (() => {
                         const cfg = box.comboConfig;
-                        let stepsCount = 0;
-                        stepsCount = cfg.comboType || 0;
+                        const stepsCount = cfg.comboType || 2;
+                        const displayLabel = box.displayTitle || box.boxName;
                         return (
                           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                             <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: "700", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", color: "#fff", padding: "2px 8px", borderRadius: "5px", width: "fit-content" }}>
                               {stepsCount}-Step Combo
                             </span>
-                            {cfg.title && (
-                              <span style={{ fontSize: "11px", color: "#6b7280", maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cfg.title}</span>
-                            )}
+                            <span style={{ fontSize: "11px", color: "#6b7280", maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{displayLabel}</span>
                             <span style={{ fontSize: "10px", fontWeight: "600", color: cfg.isActive ? "#059669" : "#9ca3af" }}>
                               {cfg.isActive ? "● Active" : "● Inactive"}
                             </span>

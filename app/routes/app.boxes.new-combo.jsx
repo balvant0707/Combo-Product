@@ -7,19 +7,6 @@ import { withEmbeddedAppParams } from "../utils/embedded-app";
 import { validateComboConfig } from "../utils/combo-config";
 
 /* ─────────────────────────── GraphQL ─────────────────────────── */
-const PRODUCTS_QUERY = `#graphql
-  query GetProducts($first: Int!, $query: String) {
-    products(first: $first, query: $query) {
-      edges {
-        node {
-          id title handle
-          featuredImage { url }
-          variants(first: 100) { edges { node { id price } } }
-        }
-      }
-    }
-  }
-`;
 const COLLECTIONS_QUERY = `#graphql
   query GetCollections($first: Int!) {
     collections(first: $first) {
@@ -42,11 +29,21 @@ const COLLECTION_PRODUCTS_QUERY = `#graphql
     }
   }
 `;
+const PRODUCTS_QUERY = `#graphql
+  query GetProducts($first: Int!) {
+    products(first: $first, query: "NOT vendor:ComboBuilder") {
+      edges {
+        node {
+          id title handle
+          featuredImage { url }
+          variants(first: 1) { edges { node { id price } } }
+        }
+      }
+    }
+  }
+`;
 
 /* ─────────────────────────── Constants ─────────────────────────── */
-const MAX_BANNER_SIZE = 5 * 1024 * 1024;
-const ALLOWED_MIME = new Set(["image/jpeg","image/jpg","image/png","image/webp","image/gif","image/avif"]);
-
 const DEFAULT_COMBO = {
   type: 2,
   title: "Build Your Perfect Bundle",
@@ -66,15 +63,6 @@ const DEFAULT_COMBO = {
   ],
 };
 
-/* ─────────────────────────── Helpers ─────────────────────────── */
-async function parseBannerImage(formData, errors) {
-  const file = formData.get("bannerImage");
-  if (!file || typeof file !== "object" || typeof file.arrayBuffer !== "function" || !file.size) return null;
-  if (!ALLOWED_MIME.has(file.type)) { errors.bannerImage = "Only JPG, PNG, WEBP, GIF, AVIF allowed"; return null; }
-  if (file.size > MAX_BANNER_SIZE)  { errors.bannerImage = "Banner image must be 5MB or smaller"; return null; }
-  return { bytes: new Uint8Array(await file.arrayBuffer()), mimeType: file.type, fileName: file.name || null };
-}
-
 /* ─────────────────────────── Loader ─────────────────────────── */
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
@@ -89,17 +77,14 @@ export const loader = async ({ request }) => {
       collectionProducts: (json?.data?.collection?.products?.edges || []).map(({ node }) => ({
         id: node.id, title: node.title, handle: node.handle,
         imageUrl: node.featuredImage?.url || null,
-        variantIds: (node.variants?.edges || []).map(({ node: v }) => v.id),
         variantId: node.variants?.edges?.[0]?.node?.id || null,
         price: node.variants?.edges?.[0]?.node?.price || "0",
       })),
     };
   }
 
-  const query = url.searchParams.get("q") || "";
-  const searchQuery = query ? `${query} NOT vendor:ComboBuilder` : "NOT vendor:ComboBuilder";
   const [prodResp, collResp] = await Promise.all([
-    admin.graphql(PRODUCTS_QUERY, { variables: { first: 50, query: searchQuery } }),
+    admin.graphql(PRODUCTS_QUERY, { variables: { first: 50 } }),
     admin.graphql(COLLECTIONS_QUERY, { variables: { first: 50 } }),
   ]);
   const [prodJson, collJson] = await Promise.all([prodResp.json(), collResp.json()]);
@@ -108,7 +93,6 @@ export const loader = async ({ request }) => {
     products: (prodJson?.data?.products?.edges || []).map(({ node }) => ({
       id: node.id, title: node.title, handle: node.handle,
       imageUrl: node.featuredImage?.url || null,
-      variantIds: (node.variants?.edges || []).map(({ node: v }) => v.id),
       variantId: node.variants?.edges?.[0]?.node?.id || null,
       price: node.variants?.edges?.[0]?.node?.price || "0",
     })),
@@ -123,42 +107,45 @@ export const action = async ({ request }) => {
   const { session, admin, redirect } = await authenticate.admin(request);
   const formData = await request.formData();
 
-  let eligibleProducts = [];
-  try { eligibleProducts = JSON.parse(formData.get("eligibleProducts") || "[]"); } catch {}
   const comboStepsConfig = formData.get("comboStepsConfig");
   const errors = {};
-  const bannerImage = await parseBannerImage(formData, errors);
   const comboValidation = validateComboConfig(comboStepsConfig);
 
-  const data = {
-    boxName:            formData.get("boxName"),
-    displayTitle:       formData.get("displayTitle"),
-    itemCount:          formData.get("itemCount"),
-    bundlePrice:        formData.get("bundlePrice"),
-    bundlePriceType:    formData.get("bundlePriceType"),
-    isGiftBox:          formData.get("isGiftBox") === "true",
-    allowDuplicates:    formData.get("allowDuplicates") === "true",
-    giftMessageEnabled: formData.get("giftMessageEnabled") === "true",
-    isActive:           formData.get("isActive") !== "false",
-    bannerImage,
-    eligibleProducts,
-  };
-
-  if (!data.boxName?.trim())    errors.boxName      = "Box name is required";
-  if (!data.displayTitle?.trim()) errors.displayTitle = "Display title is required";
-  if (!data.itemCount || parseInt(data.itemCount) < 1 || parseInt(data.itemCount) > 20)
-    errors.itemCount = "Item count must be between 1 and 20";
-  if (!data.bundlePrice || parseFloat(data.bundlePrice) <= 0)
-    errors.bundlePrice = data.bundlePriceType === "dynamic"
-      ? "Select products so the dynamic price can be calculated"
-      : "Bundle price must be greater than 0";
-  if (eligibleProducts.length === 0) errors.eligibleProducts = "Select at least one eligible product";
+  const comboName = formData.get("comboName")?.trim() || "";
+  if (!comboName) errors.comboName = "Combo name is required";
   if (comboValidation) {
     errors.comboConfig = comboValidation.form;
     errors.comboStepSelections = comboValidation.stepSelections;
   }
 
   if (Object.keys(errors).length > 0) return { errors };
+
+  // Derive box fields from combo config
+  let parsedCombo = {};
+  try { parsedCombo = JSON.parse(comboStepsConfig); } catch {}
+
+  const bundlePrice = parsedCombo.bundlePrice > 0 ? String(parsedCombo.bundlePrice) : "0";
+  const bundlePriceType = parsedCombo.bundlePriceType || "manual";
+  const itemCount = String(parsedCombo.type || 2);
+
+  if (!bundlePrice || parseFloat(bundlePrice) <= 0) {
+    errors.bundlePrice = "Set a bundle price in the combo configuration";
+    return { errors };
+  }
+
+  const data = {
+    boxName:            comboName,
+    displayTitle:       comboName,
+    itemCount,
+    bundlePrice,
+    bundlePriceType,
+    isGiftBox:          false,
+    allowDuplicates:    false,
+    giftMessageEnabled: false,
+    isActive:           parsedCombo.isActive !== false,
+    bannerImage:        null,
+    eligibleProducts:   [],
+  };
 
   try {
     const box = await createBox(session.shop, data, admin);
@@ -169,7 +156,7 @@ export const action = async ({ request }) => {
     }
   } catch (e) {
     if (e instanceof Response) throw e;
-    const message = e instanceof Error && e.message ? e.message : "Failed to create box. Please try again.";
+    const message = e instanceof Error && e.message ? e.message : "Failed to create combo box. Please try again.";
     return { errors: { _global: message } };
   }
 
@@ -190,7 +177,6 @@ export default function CreateSpecificComboBoxPage() {
   const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
 
-  const searchFetcher = useFetcher();
   const collProdsFetcher0 = useFetcher();
   const collProdsFetcher1 = useFetcher();
   const collProdsFetcher2 = useFetcher();
@@ -199,22 +185,6 @@ export default function CreateSpecificComboBoxPage() {
   const errors = actionData?.errors || {};
   const comboFormError = errors.comboConfig;
   const comboStepErrors = errors.comboStepSelections || {};
-
-  /* ── Box Settings state ── */
-  const [selectedProducts, setSelectedProducts] = useState([]);
-  const [productSearch, setProductSearch] = useState("");
-  const [showPicker, setShowPicker] = useState(false);
-  const [options, setOptions] = useState({ isGiftBox: false, allowDuplicates: false, giftMessageEnabled: false, isActive: true });
-  const [itemCount, setItemCount] = useState("4");
-  const [priceMode, setPriceMode] = useState("manual");
-  const [manualPrice, setManualPrice] = useState("");
-
-  const displayProducts = searchFetcher.data?.products || products;
-  const numItemCount = Math.max(1, parseInt(itemCount) || 1);
-  const avgProductPrice = selectedProducts.length > 0
-    ? selectedProducts.reduce((s, p) => s + (parseFloat(p.price) || 0), 0) / selectedProducts.length : 0;
-  const estimatedTotal = avgProductPrice * numItemCount;
-  const bundlePrice = priceMode === "manual" ? parseFloat(manualPrice) || 0 : estimatedTotal;
 
   /* ── Combo Config state ── */
   const [comboConfig, setComboConfig] = useState(DEFAULT_COMBO);
@@ -234,19 +204,19 @@ export default function CreateSpecificComboBoxPage() {
       setStepProducts((p) => { const n = [...p]; n[2] = collProdsFetcher2.data.collectionProducts; return n; });
   }, [collProdsFetcher2.data]);
 
-  /* collection modal */
+  /* ── Collection modal ── */
   const [showCollModal, setShowCollModal] = useState(false);
   const [collModalStepIdx, setCollModalStepIdx] = useState(null);
   const [collSearch, setCollSearch] = useState("");
   const [tempColls, setTempColls] = useState([]);
 
-  /* step product modal */
+  /* ── Step product modal ── */
   const [showStepProdModal, setShowStepProdModal] = useState(false);
   const [stepProdModalIdx, setStepProdModalIdx] = useState(null);
   const [stepProdSearch, setStepProdSearch] = useState("");
   const [tempStepProds, setTempStepProds] = useState([]);
 
-  /* ── Helpers ── */
+  /* ── Combo helpers ── */
   function updateComboField(field, value) { setComboConfig((prev) => ({ ...prev, [field]: value })); }
   function updateComboStep(stepIdx, field, value) {
     setComboConfig((prev) => ({ ...prev, steps: prev.steps.map((s, i) => i === stepIdx ? { ...s, [field]: value } : s) }));
@@ -255,58 +225,49 @@ export default function CreateSpecificComboBoxPage() {
     setComboConfig((prev) => ({ ...prev, steps: prev.steps.map((s, i) => i === stepIdx ? { ...s, popup: { ...s.popup, [field]: value } } : s) }));
   }
 
-  const comboDynamicPrice = useMemo(() => {
-    const allProds = products || [];
-    const avg = allProds.length > 0 ? allProds.reduce((s, p) => s + (parseFloat(p.price) || 0), 0) / allProds.length : 0;
-    const total = avg * (comboConfig.type || 2);
-    const val = parseFloat(comboConfig.discountValue) || 0;
-    if (comboConfig.discountType === "percent") return Math.max(0, total * (1 - val / 100));
-    if (comboConfig.discountType === "fixed")   return Math.max(0, total - val);
-    return total;
-  }, [products, comboConfig.type, comboConfig.discountType, comboConfig.discountValue]);
-
   function confirmColl() {
     if (tempColls.length === 0) return;
-    const stepIdx = collModalStepIdx;
-    setComboConfig((prev) => ({ ...prev, steps: prev.steps.map((s, i) => i !== stepIdx ? s : { ...s, collections: tempColls, selectedProducts: [] }) }));
-    setStepProducts((p) => { const n = [...p]; n[stepIdx] = null; return n; });
-    collProdsFetchers[stepIdx].load(withEmbeddedAppParams(`/app/boxes/new-combo?collectionId=${encodeURIComponent(tempColls[0].id)}`, location.search));
+    const idx = collModalStepIdx;
+    setComboConfig((prev) => ({ ...prev, steps: prev.steps.map((s, i) => i !== idx ? s : { ...s, collections: tempColls, selectedProducts: [] }) }));
+    setStepProducts((p) => { const n = [...p]; n[idx] = null; return n; });
+    collProdsFetchers[idx].load(withEmbeddedAppParams(`/app/boxes/new-combo?collectionId=${encodeURIComponent(tempColls[0].id)}`, location.search));
     setShowCollModal(false);
   }
-  function confirmStepProd() { updateComboStep(stepProdModalIdx, "selectedProducts", tempStepProds); setShowStepProdModal(false); }
+  function confirmStepProd() {
+    updateComboStep(stepProdModalIdx, "selectedProducts", tempStepProds);
+    setShowStepProdModal(false);
+  }
 
-  function toggleProduct(product) {
-    setSelectedProducts((prev) => {
-      const exists = prev.find((p) => p.id === product.id);
-      if (exists) return prev.filter((p) => p.id !== product.id);
-      return [...prev, { id: product.id, productId: product.id, productTitle: product.title, productImageUrl: product.imageUrl, productHandle: product.handle, variantIds: Array.isArray(product.variantIds) && product.variantIds.length > 0 ? product.variantIds : (product.variantId ? [product.variantId] : []), price: parseFloat(product.price) || 0 }];
-    });
-  }
-  const isSelected = (id) => selectedProducts.some((p) => p.id === id);
-  function toggleOption(name) { setOptions((prev) => ({ ...prev, [name]: !prev[name] })); }
-  function openPicker() { setProductSearch(""); searchFetcher.load(withEmbeddedAppParams("/app/boxes/new-combo", location.search)); setShowPicker(true); }
-  function closePicker() { setShowPicker(false); setProductSearch(""); }
-  function handleSearchChange(e) {
-    const val = e.target.value; setProductSearch(val);
-    if (val.length > 1) searchFetcher.load(withEmbeddedAppParams(`/app/boxes/new-combo?q=${encodeURIComponent(val)}`, location.search));
-    else if (val.length === 0) searchFetcher.load(withEmbeddedAppParams("/app/boxes/new-combo", location.search));
-  }
+  const comboDynamicPrice = useMemo(() => {
+    const cfg = comboConfig;
+    const stepPrices = cfg.steps.slice(0, cfg.type).flatMap((s) =>
+      (s.selectedProducts || []).map((p) => parseFloat(p.price) || 0)
+    );
+    const total = stepPrices.reduce((a, b) => a + b, 0);
+    if (cfg.discountType === "percent") return total * (1 - (parseFloat(cfg.discountValue) || 0) / 100);
+    if (cfg.discountType === "fixed")   return Math.max(0, total - (parseFloat(cfg.discountValue) || 0));
+    return total;
+  }, [comboConfig]);
+
+  const comboConfigJson = JSON.stringify({
+    ...comboConfig,
+    bundlePrice: comboConfig.bundlePriceType === "dynamic"
+      ? comboDynamicPrice
+      : parseFloat(comboConfig.bundlePrice) || 0,
+  });
 
   const filteredColls = collections.filter((c) => !collSearch || c.title.toLowerCase().includes(collSearch.toLowerCase()));
   const activeScopedProducts = stepProdModalIdx !== null ? (stepProducts[stepProdModalIdx] ?? products) : products;
   const isLoadingStepProds = stepProdModalIdx !== null && collProdsFetchers[stepProdModalIdx]?.state === "loading";
   const filteredStepProds = activeScopedProducts.filter((p) => !stepProdSearch || p.title.toLowerCase().includes(stepProdSearch.toLowerCase()));
 
-  /* Modal styles */
   const modalOverlayStyle = { position: "fixed", inset: 0, background: "rgba(17,24,39,0.55)", backdropFilter: "blur(3px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" };
   const modalBoxStyle = { background: "#fff", borderRadius: "8px", width: "100%", maxWidth: "560px", maxHeight: "85vh", display: "flex", flexDirection: "column", boxShadow: "0 20px 60px rgba(0,0,0,0.18)", overflow: "hidden" };
   const modalHeaderStyle = { padding: "16px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fafafa" };
   const modalBodyStyle = { flex: 1, overflowY: "auto" };
   const modalFooterStyle = { padding: "14px 16px", borderTop: "1px solid #f3f4f6", background: "#fafafa", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" };
   const modalCloseBtn = { background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: "#9ca3af", padding: "4px 8px", borderRadius: "5px", lineHeight: 1 };
-  const searchInputStyle = { ...fieldStyle, borderColor: "#d1d5db" };
-
-  const comboConfigJson = JSON.stringify({ ...comboConfig, bundlePrice: comboConfig.bundlePriceType === "dynamic" ? comboDynamicPrice : parseFloat(comboConfig.bundlePrice) || 0 });
+  const searchInputStyle = { ...fieldStyle, borderColor: "#d1d5db", fontSize: "13px" };
 
   return (
     <s-page heading="Create Specific Combo Box" back-url={withEmbeddedAppParams("/app/boxes", location.search)}>
@@ -315,8 +276,8 @@ export default function CreateSpecificComboBoxPage() {
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
         <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
         <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#d1fae5", marginBottom: "10px" }}>🎯 Specific Combo Box</div>
-        <div style={{ fontSize: "18px", fontWeight: "800", color: "#fff", letterSpacing: "-0.5px" }}>Create a Specific Combo Box</div>
-        <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.65)", marginTop: "4px" }}>Configure box settings and combo steps together — saved as one box in your store.</div>
+        <div style={{ fontSize: "18px", fontWeight: "800", color: "#fff", letterSpacing: "-0.5px" }}>Create Specific Combo Box</div>
+        <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.65)", marginTop: "4px" }}>Configure your combo experience — define steps, collections, and product pickers.</div>
       </div>
 
       {/* Save button */}
@@ -333,113 +294,28 @@ export default function CreateSpecificComboBoxPage() {
         </div>
       )}
 
-      <Form id="new-combo-form" method="POST" action={`/app/boxes/new-combo${location.search}`} encType="multipart/form-data">
-        <input type="hidden" name="bundlePrice"        value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
-        <input type="hidden" name="bundlePriceType"    value={priceMode} />
-        <input type="hidden" name="itemCount"          value={itemCount} />
-        <input type="hidden" name="eligibleProducts"   value={JSON.stringify(selectedProducts)} />
-        <input type="hidden" name="isGiftBox"          value={String(options.isGiftBox)} />
-        <input type="hidden" name="allowDuplicates"    value={String(options.allowDuplicates)} />
-        <input type="hidden" name="giftMessageEnabled" value={String(options.giftMessageEnabled)} />
-        <input type="hidden" name="isActive"           value={String(options.isActive)} />
-        <input type="hidden" name="comboStepsConfig"   value={comboConfigJson} />
+      <Form id="new-combo-form" method="POST" action={`/app/boxes/new-combo${location.search}`}>
+        <input type="hidden" name="comboStepsConfig" value={comboConfigJson} />
 
-        {/* ══════════════════════════════════════
-            SECTION 1 — BOX SETTINGS (compact)
-        ══════════════════════════════════════ */}
         <s-section>
-          <div style={sectionHeadingStyle}><span style={{ fontSize: "15px" }}>📋</span> Box Settings</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "20px" }}>
-            <div>
-              <label style={labelStyle}>Box Internal Name *</label>
-              <input type="text" name="boxName" placeholder="e.g. Premium Bundle" style={{ ...fieldStyle, borderColor: errors.boxName ? "#e11d48" : "#d1d5db" }} />
-              {errors.boxName && <div style={errorStyle}>{errors.boxName}</div>}
-            </div>
-            <div>
-              <label style={labelStyle}>Display Title (Storefront) *</label>
-              <input type="text" name="displayTitle" placeholder="Shown to customers" style={{ ...fieldStyle, borderColor: errors.displayTitle ? "#e11d48" : "#d1d5db" }} />
-              {errors.displayTitle && <div style={errorStyle}>{errors.displayTitle}</div>}
-            </div>
-            <div>
-              <label style={labelStyle}>Number of Items *</label>
-              <input type="number" placeholder="e.g. 2" min="1" max="20" value={itemCount} onChange={(e) => setItemCount(e.target.value)} style={{ ...fieldStyle, borderColor: errors.itemCount ? "#e11d48" : "#d1d5db" }} />
-              {errors.itemCount && <div style={errorStyle}>{errors.itemCount}</div>}
-            </div>
-            <div>
-              <label style={labelStyle}>Bundle Price (₹) *</label>
-              <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "5px", overflow: "hidden", marginBottom: "8px" }}>
-                {["manual", "dynamic"].map((mode) => (
-                  <button key={mode} type="button" onClick={() => setPriceMode(mode)} style={{ flex: 1, padding: "7px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: priceMode === mode ? "#2A7A4F" : "#f9fafb", color: priceMode === mode ? "#fff" : "#374151", transition: "background 0.15s" }}>
-                    {mode === "manual" ? "Manual" : "Dynamic"}
-                  </button>
-                ))}
-              </div>
-              {priceMode === "manual" && <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} style={{ ...fieldStyle, borderColor: errors.bundlePrice ? "#e11d48" : "#d1d5db" }} />}
-              {priceMode === "dynamic" && <div style={{ border: "1px solid #d1d5db", borderRadius: "5px", padding: "10px", background: "#f9fafb", fontSize: "12px", color: "#6b7280" }}>Dynamic: ₹{estimatedTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>}
-              {errors.bundlePrice && <div style={errorStyle}>{errors.bundlePrice}</div>}
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={labelStyle}>Banner Image (optional)</label>
-              <input type="file" name="bannerImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ ...fieldStyle, padding: "7px 12px" }} />
-              <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>JPG, PNG, WEBP, GIF or AVIF — max 5MB</div>
-              {errors.bannerImage && <div style={errorStyle}>{errors.bannerImage}</div>}
-            </div>
+          {/* Combo Name */}
+          <div style={{ marginBottom: "20px" }}>
+            <label style={labelStyle}>Combo Name *</label>
+            <input type="text" name="comboName" placeholder="e.g. Premium Bundle" style={{ ...fieldStyle, borderColor: errors.comboName ? "#e11d48" : "#d1d5db" }} />
+            {errors.comboName && <div style={errorStyle}>{errors.comboName}</div>}
           </div>
 
-          {/* Options row */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "20px" }}>
-            {[
-              { key: "isGiftBox",          label: "Gift Box Mode",        icon: "🎁" },
-              { key: "allowDuplicates",    label: "Allow Duplicates",     icon: "🔁" },
-              { key: "giftMessageEnabled", label: "Gift Message Field",   icon: "✉️" },
-              { key: "isActive",           label: "Active on Storefront", icon: "✅" },
-            ].map((opt) => (
-              <label key={opt.key} style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", padding: "10px 12px", border: options[opt.key] ? "1.5px solid #091fd6" : "1.5px solid #e5e7eb", borderRadius: "5px", background: options[opt.key] ? "#eef1ff" : "#fafafa" }}>
-                <input type="checkbox" checked={options[opt.key]} onChange={() => toggleOption(opt.key)} style={{ width: "14px", height: "14px", accentColor: "#091fd6" }} />
-                <span style={{ fontSize: "12px", fontWeight: "600", color: "#111827" }}>{opt.icon} {opt.label}</span>
-              </label>
-            ))}
-          </div>
-
-          {/* Eligible Products */}
-          <div>
-            <div style={sectionHeadingStyle}><span style={{ fontSize: "15px" }}>🛍️</span> Eligible Products
-              {selectedProducts.length > 0 && <span style={{ marginLeft: "6px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", color: "#fff", borderRadius: "5px", padding: "2px 8px", fontSize: "10px", fontWeight: "700" }}>{selectedProducts.length} selected</span>}
-            </div>
-            {errors.eligibleProducts && <div style={{ color: "#e11d48", fontSize: "12px", marginBottom: "10px", padding: "8px 12px", background: "#fff5f5", borderRadius: "5px", border: "1px solid #fecaca" }}>{errors.eligibleProducts}</div>}
-            {selectedProducts.length > 0 && (
-              <div style={{ marginBottom: "10px", padding: "10px 12px", background: "#eef1ff", borderRadius: "5px", border: "1px solid #c7d2fe" }}>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                  {selectedProducts.map((p) => (
-                    <span key={p.id} onClick={() => toggleProduct(p)} style={{ background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", color: "#fff", borderRadius: "5px", padding: "3px 10px", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px" }}>
-                      {p.productTitle}<span style={{ opacity: 0.75, fontSize: "10px" }}>✕</span>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            <button type="button" onClick={openPicker} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "9px 16px", background: "#fff", border: "1.5px dashed #d1d5db", borderRadius: "5px", fontSize: "13px", fontWeight: "600", color: "#091fd6", cursor: "pointer", width: "100%", justifyContent: "center" }}>
-              <span style={{ fontSize: "16px" }}>+</span>{selectedProducts.length > 0 ? "Edit Product Selection" : "Select Eligible Products"}
-            </button>
-          </div>
-        </s-section>
-
-        {/* ══════════════════════════════════════
-            SECTION 2 — SPECIFIC COMBO BOX
-        ══════════════════════════════════════ */}
-        <s-section>
-          <div style={sectionHeadingStyle}><span style={{ fontSize: "15px" }}>🎯</span> Specific Combo Box Configuration</div>
-
+          {/* Combo Config Error */}
           {comboFormError && (
             <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "5px", padding: "10px 16px", marginBottom: "16px", color: "#991b1b", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
               <span>!</span>{comboFormError}
             </div>
           )}
-
-          <div style={{ display: "flex", gap: "10px", padding: "12px 14px", borderLeft: "3px solid #458fff", background: "#f4f6f8", fontSize: "13px", marginBottom: "20px", borderRadius: "0 5px 5px 0", alignItems: "flex-start" }}>
-            <span style={{ fontSize: "16px", flexShrink: 0 }}>ℹ️</span>
-            <span>Configure the step-by-step combo experience. Each step has its own <strong>collection</strong> and <strong>product</strong> picker.</span>
-          </div>
+          {errors.bundlePrice && (
+            <div style={{ background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: "5px", padding: "10px 16px", marginBottom: "16px", color: "#9a3412", fontSize: "13px" }}>
+              ⚠ {errors.bundlePrice}
+            </div>
+          )}
 
           <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: "20px", alignItems: "start" }}>
 
@@ -646,44 +522,7 @@ export default function CreateSpecificComboBoxPage() {
         </s-section>
       </Form>
 
-      {/* ── MODAL: Box Settings — Product Picker ── */}
-      {showPicker && (
-        <div style={modalOverlayStyle} onClick={(e) => { if (e.target === e.currentTarget) closePicker(); }}>
-          <div style={modalBoxStyle}>
-            <div style={modalHeaderStyle}>
-              <div><div style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>Select Eligible Products</div><div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>{selectedProducts.length} selected</div></div>
-              <button type="button" onClick={closePicker} style={modalCloseBtn}>✕</button>
-            </div>
-            <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
-              <input type="text" placeholder="Search products..." value={productSearch} onChange={handleSearchChange} autoFocus style={searchInputStyle} />
-            </div>
-            <div style={modalBodyStyle}>
-              {displayProducts.length === 0 ? <div style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>No products found</div>
-                : displayProducts.map((product, idx) => {
-                  const sel = isSelected(product.id);
-                  return (
-                    <label key={product.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < displayProducts.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", background: sel ? "#eef1ff" : "#fff" }}>
-                      <input type="checkbox" checked={sel} onChange={() => toggleProduct(product)} style={{ width: "15px", height: "15px", flexShrink: 0, accentColor: "#091fd6" }} />
-                      {product.imageUrl ? <img src={product.imageUrl} alt={product.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} /> : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px" }}>📦</div>}
-                      <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{product.title}</div></div>
-                      {product.price && parseFloat(product.price) > 0 && <div style={{ fontSize: "13px", fontWeight: "700", color: "#374151", fontFamily: "monospace", flexShrink: 0 }}>₹{parseFloat(product.price).toLocaleString("en-IN")}</div>}
-                      {sel && <span style={{ width: "18px", height: "18px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><span style={{ color: "#fff", fontSize: "10px", fontWeight: "700" }}>✓</span></span>}
-                    </label>
-                  );
-                })}
-            </div>
-            <div style={modalFooterStyle}>
-              <span style={{ fontSize: "12px", color: "#6b7280" }}>{selectedProducts.length > 0 ? `${selectedProducts.length} selected` : "No products selected"}</span>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button type="button" onClick={closePicker} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#374151" }}>Cancel</button>
-                <button type="button" onClick={closePicker} style={{ background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", border: "none", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: "pointer", color: "#fff" }}>Done{selectedProducts.length > 0 ? ` (${selectedProducts.length})` : ""}</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── MODAL: Combo — Collection Picker ── */}
+      {/* ── MODAL: Collection Picker ── */}
       {showCollModal && (
         <div style={modalOverlayStyle} onClick={(e) => { if (e.target === e.currentTarget) setShowCollModal(false); }}>
           <div style={{ ...modalBoxStyle, maxWidth: "520px" }}>
@@ -720,7 +559,7 @@ export default function CreateSpecificComboBoxPage() {
         </div>
       )}
 
-      {/* ── MODAL: Combo — Step Product Picker ── */}
+      {/* ── MODAL: Step Product Picker ── */}
       {showStepProdModal && (
         <div style={modalOverlayStyle} onClick={(e) => { if (e.target === e.currentTarget) setShowStepProdModal(false); }}>
           <div style={modalBoxStyle}>
@@ -763,5 +602,4 @@ export default function CreateSpecificComboBoxPage() {
 }
 
 export const ErrorBoundary = boundary.error;
-
 export const headers = (headersArgs) => boundary.headers(headersArgs);

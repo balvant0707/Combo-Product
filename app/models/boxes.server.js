@@ -521,7 +521,6 @@ export async function upsertComboConfig(boxId, config) {
     comboType:         parseInt(parsed.type) || 2,
     title:             parsed.title            ?? null,
     subtitle:          parsed.subtitle         ?? null,
-    discountBadge:     parsed.discountBadge    ?? null,
     isActive:          parsed.isActive         !== false,
     showProductImages: parsed.showProductImages !== false,
     showProgressBar:   parsed.showProgressBar  !== false,

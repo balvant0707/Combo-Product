@@ -90,7 +90,6 @@ model ComboBoxConfig {
   comboType         Int      @default(2)
   title             String?  @db.VarChar(255)
   subtitle          String?  @db.VarChar(255)
-  discountBadge     String?  @db.VarChar(100)
   isActive          Boolean  @default(true)
   showProductImages Boolean  @default(true)
   showProgressBar   Boolean  @default(true)

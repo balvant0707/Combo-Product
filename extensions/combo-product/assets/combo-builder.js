@@ -1519,6 +1519,9 @@
     var slots = [];
     for (var si = 0; si < numSteps; si++) slots.push(null);
 
+    // activePickerIdx: which step's product grid is currently open (-1 = none)
+    var activePickerIdx = -1;
+
     // ── Outer wrapper ──
     var wrap = document.createElement('div');
     wrap.className = 'cb-sc-wrap';
@@ -1569,20 +1572,29 @@
     stepper.className = 'cb-sc-stepper';
     wrap.appendChild(stepper);
 
+    // ── Inline product grid panel (shown below stepper) ──
+    var pickerPanel = document.createElement('div');
+    pickerPanel.className = 'cb-sc-picker-panel';
+    pickerPanel.style.display = 'none';
+    wrap.appendChild(pickerPanel);
+
     function renderStepper() {
       stepper.innerHTML = '';
       for (var si2 = 0; si2 < numSteps; si2++) {
         (function (idx) {
           var stepCfg = steps[idx];
           var selected = slots[idx];
+          var isActive = activePickerIdx === idx;
 
           // Step row
           var row = document.createElement('div');
-          row.className = 'cb-sc-step' + (selected ? ' cb-sc-step--filled' : '');
+          row.className = 'cb-sc-step'
+            + (selected ? ' cb-sc-step--filled' : '')
+            + (isActive ? ' cb-sc-step--active' : '');
 
           // Number circle
           var numEl = document.createElement('div');
-          numEl.className = 'cb-sc-step-num' + (selected ? ' cb-sc-step-num--done' : '');
+          numEl.className = 'cb-sc-step-num' + (selected ? ' cb-sc-step-num--done' : (isActive ? ' cb-sc-step-num--active' : ''));
           numEl.innerHTML = selected ? '&#10003;' : String(idx + 1);
           row.appendChild(numEl);
 
@@ -1625,7 +1637,7 @@
             content.appendChild(info);
           } else {
             var emptyText = document.createElement('div');
-            emptyText.className = 'cb-sc-step-empty-text';
+            emptyText.className = 'cb-sc-step-empty-text' + (isActive ? ' cb-sc-step-empty-text--active' : '');
             emptyText.textContent = stepCfg.label || ('Select item ' + (idx + 1));
             content.appendChild(emptyText);
           }
@@ -1634,13 +1646,25 @@
           // Action button
           var action = document.createElement('div');
           action.className = 'cb-sc-step-action';
-          if (selected && comboConfig.allowReselection) {
+
+          if (isActive && !selected) {
+            // Cancel button when picker open for empty step
+            var cancelBtn = document.createElement('button');
+            cancelBtn.type = 'button';
+            cancelBtn.className = 'cb-sc-cancel-btn';
+            cancelBtn.textContent = '✕ Cancel';
+            cancelBtn.addEventListener('click', function (e) { e.stopPropagation(); closePicker(); });
+            action.appendChild(cancelBtn);
+          } else if (selected && comboConfig.allowReselection) {
             var changeBtn = document.createElement('button');
             changeBtn.type = 'button';
-            changeBtn.className = 'cb-sc-change-btn';
-            changeBtn.innerHTML = '&#9998;&nbsp;Change';
+            changeBtn.className = isActive ? 'cb-sc-cancel-btn' : 'cb-sc-change-btn';
+            changeBtn.innerHTML = isActive ? '✕ Cancel' : '&#9998;&nbsp;Change';
             ;(function (i) {
-              changeBtn.addEventListener('click', function (e) { e.stopPropagation(); openStepPicker(i); });
+              changeBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (activePickerIdx === i) { closePicker(); } else { openStepPicker(i); }
+              });
             })(idx);
             action.appendChild(changeBtn);
           } else if (!selected) {
@@ -1700,109 +1724,61 @@
       renderStepper();
     }
 
-    // ── Picker modal ──
-    var pickerOverlay = null;
-
-    function openStepPicker(stepIdx) {
-      var stepCfg = steps[stepIdx];
-      var scope = stepCfg.scope || 'product';
-
-      function showPicker(products) { renderPickerModal(stepIdx, stepCfg, products); }
-
-      if (scope === 'product') {
-        var prods = (stepCfg.selectedProducts || []).map(function (p) {
-          var rawVarId = p.variantId || null;
-          var numericVarId = rawVarId && String(rawVarId).indexOf('/') !== -1 ? String(rawVarId).split('/').pop() : (rawVarId ? String(rawVarId) : null);
-          return {
-            productId: p.id,
-            productTitle: p.title,
-            productHandle: p.handle,
-            productImageUrl: p.imageUrl || null,
-            productPrice: parseFloat(p.price) || 0,
-            variantIds: numericVarId ? [numericVarId] : [],
-          };
-        });
-        showPicker(prods);
-      } else {
-        var colls = stepCfg.collections || [];
-        if (!colls.length || !colls[0].handle) { showPicker([]); return; }
-        renderPickerModal(stepIdx, stepCfg, null);
-        fetchCollectionProducts(colls[0].handle, function (err, prods) {
-          if (pickerOverlay && pickerOverlay.parentNode) pickerOverlay.parentNode.removeChild(pickerOverlay);
-          pickerOverlay = null;
-          showPicker(err || !prods ? [] : prods);
-        });
-      }
+    // ── Inline picker panel ──
+    function closePicker() {
+      activePickerIdx = -1;
+      pickerPanel.style.display = 'none';
+      pickerPanel.innerHTML = '';
+      renderStepper();
     }
 
-    function closePickerModal() {
-      if (pickerOverlay && pickerOverlay.parentNode) pickerOverlay.parentNode.removeChild(pickerOverlay);
-      pickerOverlay = null;
-      document.body.style.overflow = '';
-    }
+    function showPickerProducts(stepIdx, stepCfg, products) {
+      pickerPanel.innerHTML = '';
+      pickerPanel.style.display = 'block';
 
-    function renderPickerModal(stepIdx, stepCfg, products) {
-      if (pickerOverlay && pickerOverlay.parentNode) pickerOverlay.parentNode.removeChild(pickerOverlay);
+      // Panel header
+      var panelHdr = document.createElement('div');
+      panelHdr.className = 'cb-sc-panel-hdr';
 
-      var overlay = document.createElement('div');
-      overlay.className = 'cb-sc-picker-overlay';
-      overlay.addEventListener('click', function (e) { if (e.target === overlay) closePickerModal(); });
+      var panelHdrLeft = document.createElement('div');
+      panelHdrLeft.className = 'cb-sc-panel-hdr-left';
+      var panelBadge = document.createElement('div');
+      panelBadge.className = 'cb-sc-panel-badge';
+      panelBadge.textContent = String(stepIdx + 1);
+      panelHdrLeft.appendChild(panelBadge);
+      var panelTitleEl = document.createElement('div');
+      panelTitleEl.className = 'cb-sc-panel-title';
+      panelTitleEl.textContent = (stepCfg.popup && stepCfg.popup.title) || ('Choose product for Step ' + (stepIdx + 1));
+      panelHdrLeft.appendChild(panelTitleEl);
+      panelHdr.appendChild(panelHdrLeft);
 
-      var modal = document.createElement('div');
-      modal.className = 'cb-sc-picker-modal';
+      var panelCloseBtn = document.createElement('button');
+      panelCloseBtn.type = 'button';
+      panelCloseBtn.className = 'cb-sc-panel-close';
+      panelCloseBtn.innerHTML = '&times;';
+      panelCloseBtn.addEventListener('click', closePicker);
+      panelHdr.appendChild(panelCloseBtn);
+      pickerPanel.appendChild(panelHdr);
 
-      // ── Modal header ──
-      var hdr = document.createElement('div');
-      hdr.className = 'cb-sc-picker-hdr';
-
-      var hdrLeft = document.createElement('div');
-      hdrLeft.className = 'cb-sc-picker-hdr-left';
-
-      var stepBadge = document.createElement('div');
-      stepBadge.className = 'cb-sc-picker-step-badge';
-      stepBadge.textContent = String(stepIdx + 1);
-      hdrLeft.appendChild(stepBadge);
-
-      var hdrMeta = document.createElement('div');
-      var hdrTitle = document.createElement('h3');
-      hdrTitle.className = 'cb-sc-picker-title';
-      hdrTitle.textContent = (stepCfg.popup && stepCfg.popup.title) || ('Choose for Step ' + (stepIdx + 1));
-      hdrMeta.appendChild(hdrTitle);
-      if (stepCfg.popup && stepCfg.popup.desc) {
-        var hdrDesc = document.createElement('p');
-        hdrDesc.className = 'cb-sc-picker-desc';
-        hdrDesc.textContent = stepCfg.popup.desc;
-        hdrMeta.appendChild(hdrDesc);
-      }
-      hdrLeft.appendChild(hdrMeta);
-      hdr.appendChild(hdrLeft);
-
-      var closeBtn = document.createElement('button');
-      closeBtn.type = 'button';
-      closeBtn.className = 'cb-sc-picker-close';
-      closeBtn.innerHTML = '&times;';
-      closeBtn.setAttribute('aria-label', 'Close');
-      closeBtn.addEventListener('click', closePickerModal);
-      hdr.appendChild(closeBtn);
-      modal.appendChild(hdr);
-
-      // ── Modal body ──
-      var body = document.createElement('div');
-      body.className = 'cb-sc-picker-body';
+      // Product grid
+      var gridWrap = document.createElement('div');
+      gridWrap.className = 'cb-sc-panel-body';
 
       if (!products) {
         var loadDiv = document.createElement('div');
         loadDiv.className = 'cb-sc-picker-loading';
         loadDiv.innerHTML = '<div class="combo-builder-spinner"></div><span>Loading products\u2026</span>';
-        body.appendChild(loadDiv);
+        gridWrap.appendChild(loadDiv);
       } else if (products.length === 0) {
         var emptyEl = document.createElement('p');
         emptyEl.className = 'cb-sc-picker-empty';
         emptyEl.textContent = 'No products available for this step.';
-        body.appendChild(emptyEl);
+        gridWrap.appendChild(emptyEl);
       } else {
+        var cols = normalizeProductCardsPerRow(ctx.settings && ctx.settings.productCardsPerRow);
         var grid = document.createElement('div');
         grid.className = 'cb-sc-picker-grid';
+        grid.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
 
         products.forEach(function (product) {
           var pCard = document.createElement('div');
@@ -1901,7 +1877,7 @@
             }
 
             function doSelect() {
-              selectProduct(stepIdx, {
+              slots[stepIdx] = {
                 productId: prod.productId,
                 productTitle: prod.productTitle,
                 productImageUrl: prod.productImageUrl,
@@ -1911,7 +1887,9 @@
                 selectedVariantId: resolvedVarId || null,
                 selectedVariantTitle: resolvedVarTitle || null,
                 isCollection: false,
-              });
+              };
+              closePicker();
+              updateCartState();
             }
 
             sBtn.addEventListener('click', function (e) { e.stopPropagation(); doSelect(); });
@@ -1920,20 +1898,54 @@
 
           grid.appendChild(pCard);
         });
-        body.appendChild(grid);
+        gridWrap.appendChild(grid);
       }
 
-      modal.appendChild(body);
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-      document.body.style.overflow = 'hidden';
-      pickerOverlay = overlay;
+      pickerPanel.appendChild(gridWrap);
+
+      // Scroll picker into view
+      setTimeout(function () {
+        pickerPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 50);
     }
 
-    function selectProduct(stepIdx, slotData) {
-      slots[stepIdx] = slotData;
-      closePickerModal();
-      updateCartState();
+    function openStepPicker(stepIdx) {
+      // Toggle: clicking same step closes the panel
+      if (activePickerIdx === stepIdx) { closePicker(); return; }
+
+      activePickerIdx = stepIdx;
+      pickerPanel.innerHTML = '';
+      pickerPanel.style.display = 'block';
+
+      // Show loading state immediately
+      pickerPanel.innerHTML = '<div class="cb-sc-picker-loading"><div class="combo-builder-spinner"></div><span>Loading\u2026</span></div>';
+      renderStepper();
+
+      var stepCfg = steps[stepIdx];
+      var scope = stepCfg.scope || 'product';
+
+      if (scope === 'product') {
+        var prods = (stepCfg.selectedProducts || []).map(function (p) {
+          var rawVarId = p.variantId || null;
+          var numericVarId = rawVarId && String(rawVarId).indexOf('/') !== -1 ? String(rawVarId).split('/').pop() : (rawVarId ? String(rawVarId) : null);
+          return {
+            productId: p.id,
+            productTitle: p.title,
+            productHandle: p.handle,
+            productImageUrl: p.imageUrl || null,
+            productPrice: parseFloat(p.price) || 0,
+            variantIds: numericVarId ? [numericVarId] : [],
+          };
+        });
+        showPickerProducts(stepIdx, stepCfg, prods);
+      } else {
+        var colls = stepCfg.collections || [];
+        if (!colls.length || !colls[0].handle) { showPickerProducts(stepIdx, stepCfg, []); return; }
+        fetchCollectionProducts(colls[0].handle, function (err, prods) {
+          if (activePickerIdx !== stepIdx) return; // user changed step
+          showPickerProducts(stepIdx, stepCfg, err || !prods ? [] : prods);
+        });
+      }
     }
 
     // ── Cart action ──
@@ -1941,6 +1953,7 @@
       setTimeout(function () {
         for (var i = 0; i < slots.length; i++) slots[i] = null;
         setBoxCardPrice(box, isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0), ctx.currencySymbol);
+        closePicker();
         updateCartState();
       }, 0);
     }

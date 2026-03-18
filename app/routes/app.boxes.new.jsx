@@ -214,7 +214,7 @@ export default function CreateBoxPage() {
           📦 New Box
         </div>
         <div style={{ fontSize: "18px", fontWeight: "800", color: "#fff", letterSpacing: "-0.5px" }}>Create a New Box</div>
-        <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.65)", marginTop: "4px" }}>Set the price, item count, and eligible products. For step-by-step combo experiences, use <strong style={{ color: "#fff" }}>Specific Combo Box</strong>.</div>
+        <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.65)", marginTop: "4px" }}>Set the box name, price, item count, and eligible products.</div>
       </div>
 
       {errors._global && (
@@ -339,17 +339,6 @@ export default function CreateBoxPage() {
           </div>
         </s-section>
       </Form>
-
-      {/* Tip: Specific Combo Box */}
-      <div style={{ marginTop: "16px", padding: "14px 18px", background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
-        <div>
-          <div style={{ fontSize: "13px", fontWeight: "700", color: "#166534" }}>🎯 Need a step-by-step combo experience?</div>
-          <div style={{ fontSize: "12px", color: "#4b7a5e", marginTop: "2px" }}>Create a Specific Combo Box to define per-step product/collection pickers.</div>
-        </div>
-        <a href={withEmbeddedAppParams("/app/boxes/new-combo", location.search)} style={{ background: "#2A7A4F", color: "#fff", padding: "8px 16px", borderRadius: "5px", fontSize: "12px", fontWeight: "700", textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>
-          Create Combo Box →
-        </a>
-      </div>
 
       {/* Product Picker Modal */}
       {showPicker && (

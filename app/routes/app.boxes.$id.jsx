@@ -178,8 +178,17 @@ export const loader = async ({ request, params }) => {
     comboStepsConfig = box.comboStepsConfig;
   }
 
+  // If ComboBox.bundlePrice was never set (0), fall back to the price saved in ComboBoxConfig
+  let effectiveBundlePrice = parseFloat(box.bundlePrice) || 0;
+  if (effectiveBundlePrice === 0 && comboStepsConfig) {
+    try {
+      const parsed = JSON.parse(comboStepsConfig);
+      effectiveBundlePrice = parseFloat(parsed.bundlePrice) || 0;
+    } catch {}
+  }
+
   return {
-    box: { ...boxWithoutBinary, bundlePrice: parseFloat(box.bundlePrice), bannerImageSrc, comboStepsConfig },
+    box: { ...boxWithoutBinary, bundlePrice: effectiveBundlePrice, bannerImageSrc, comboStepsConfig },
     products,
     collections,
   };
@@ -213,14 +222,12 @@ export const action = async ({ request, params }) => {
     return { ok: true, comboSaved: true };
   }
 
-  // Default: save box settings
+  // Default: save box settings only (ComboBox table)
   let eligibleProducts = [];
   try { eligibleProducts = JSON.parse(formData.get("eligibleProducts") || "[]"); } catch {}
   const errors = {};
   const bannerImage = await parseBannerImage(formData, errors);
   const removeBannerImage = formData.get("removeBannerImage") === "true" && !bannerImage;
-  const comboStepsConfig = formData.get("comboStepsConfig");
-  const comboValidation = validateComboConfig(comboStepsConfig);
 
   const data = {
     boxName: formData.get("boxName"),
@@ -241,18 +248,11 @@ export const action = async ({ request, params }) => {
   if (!data.itemCount || parseInt(data.itemCount) < 1) errors.itemCount = "Invalid item count";
   if (!data.bundlePrice || parseFloat(data.bundlePrice) <= 0) errors.bundlePrice = "Invalid price";
   if (eligibleProducts.length === 0) errors.eligibleProducts = "Select at least one product";
-  if (comboValidation) {
-    errors.comboConfig = comboValidation.form;
-    errors.comboStepSelections = comboValidation.stepSelections;
-  }
 
   if (Object.keys(errors).length > 0) return { errors };
 
   try {
     await updateBox(params.id, shop, data, admin);
-    if (comboStepsConfig) {
-      await upsertComboConfig(params.id, comboStepsConfig);
-    }
   } catch (e) {
     console.error("[app.boxes.$id] updateBox error:", e);
     return { errors: { _global: "Failed to save changes. Please try again." } };
@@ -569,7 +569,6 @@ export default function EditBoxPage() {
             <input type="hidden" name="allowDuplicates" value={String(options.allowDuplicates)} />
             <input type="hidden" name="giftMessageEnabled" value={String(options.giftMessageEnabled)} />
             <input type="hidden" name="isActive" value={String(options.isActive)} />
-            <input type="hidden" name="comboStepsConfig" value={JSON.stringify({ ...comboConfig, bundlePrice: comboConfig.bundlePriceType === "dynamic" ? comboDynamicPrice : parseFloat(comboConfig.bundlePrice) || 0 })} />
 
             {/* Basic Information */}
             <div style={{ marginBottom: "28px" }}>

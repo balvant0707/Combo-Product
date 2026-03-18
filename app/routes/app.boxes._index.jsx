@@ -16,8 +16,10 @@ import { withEmbeddedAppParams } from "../utils/embedded-app";
 
 function getComboConfigSummary(box) {
   if (box.config) {
+    const comboType = box.config.comboType;
+    if (!comboType || comboType <= 0) return null;
     return {
-      comboType: box.config.comboType,
+      comboType,
       title: box.config.title,
       isActive: box.config.isActive,
       stepsJson: box.config.stepsJson,
@@ -28,9 +30,11 @@ function getComboConfigSummary(box) {
 
   try {
     const parsed = JSON.parse(box.comboStepsConfig);
+    const comboType = parseInt(parsed?.type) || 0;
+    if (comboType <= 0) return null;
     const steps = Array.isArray(parsed?.steps) ? parsed.steps : [];
     return {
-      comboType: parseInt(parsed?.type) || 0,
+      comboType,
       title: parsed?.title || null,
       isActive: parsed?.isActive !== false,
       stepsJson: JSON.stringify(steps),
@@ -374,9 +378,9 @@ export default function ManageBoxesPage() {
 
                     {/* Combo config */}
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                      {box.comboConfig ? (() => {
+                      {box.comboConfig && box.comboConfig.comboType > 0 ? (() => {
                         const cfg = box.comboConfig;
-                        const stepsCount = cfg.comboType || 2;
+                        const stepsCount = cfg.comboType;
                         const displayLabel = box.displayTitle || box.boxName;
                         return (
                           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>

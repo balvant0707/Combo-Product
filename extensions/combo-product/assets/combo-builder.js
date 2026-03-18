@@ -565,6 +565,30 @@
     return btn;
   }
 
+  // ─── Specific Combo: Collection Products Fetcher ──────────────────────────────
+  var _collectionProductsCache = {};
+  function fetchCollectionProducts(handle, cb) {
+    if (_collectionProductsCache[handle]) { cb(null, _collectionProductsCache[handle]); return; }
+    fetch('/collections/' + encodeURIComponent(handle) + '/products.json?limit=250')
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (data) {
+        var prods = (data.products || []).map(function (p) {
+          var v0 = p.variants && p.variants[0] ? p.variants[0] : null;
+          return {
+            productId: p.id ? ('gid://shopify/Product/' + p.id) : null,
+            productTitle: p.title,
+            productHandle: p.handle,
+            productImageUrl: p.images && p.images[0] ? p.images[0].src : null,
+            productPrice: v0 ? parseFloat(v0.price) : 0,
+            variantIds: (p.variants || []).map(function (v) { return String(v.id); }),
+          };
+        });
+        _collectionProductsCache[handle] = prods;
+        cb(null, prods);
+      })
+      .catch(function (err) { cb(err, null); });
+  }
+
   // ─── Main Widget Init ─────────────────────────────────────────────────────────
 
   function initWidget(config) {
@@ -791,14 +815,20 @@
     builderArea.style.display = 'block';
     builderArea.innerHTML = '<div class="cb-section-loading"><div class="combo-builder-spinner"></div> Loading products…</div>';
 
-    fetchProducts(box.id, ctx.shop, ctx.apiBase, function (err, products) {
-      if (err || !products || products.length === 0) {
-        builderArea.innerHTML = '<p class="cb-error">Failed to load products. Please reload and try again.</p>';
-        return;
-      }
-      renderBuilder(builderArea, box, products, ctx);
+    if (box.comboConfig && Array.isArray(box.comboConfig.steps) && box.comboConfig.steps.length > 0) {
+      builderArea.innerHTML = '';
+      renderSpecificComboBuilder(builderArea, box, ctx);
       builderArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+    } else {
+      fetchProducts(box.id, ctx.shop, ctx.apiBase, function (err, products) {
+        if (err || !products || products.length === 0) {
+          builderArea.innerHTML = '<p class="cb-error">Failed to load products. Please reload and try again.</p>';
+          return;
+        }
+        renderBuilder(builderArea, box, products, ctx);
+        builderArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
   }
 
   // ─── Render Builder ───────────────────────────────────────────────────────────
@@ -1474,6 +1504,451 @@
     // Create sticky footer
     createStickyFooter(box, ctx, doAddToCart);
     updateCartButton();
+  }
+
+  // ─── Specific Combo Builder ────────────────────────────────────────────────────
+
+  function renderSpecificComboBuilder(container, box, ctx) {
+    container.innerHTML = '';
+
+    var comboConfig = box.comboConfig;
+    var numSteps = Math.min(comboConfig.comboType || 2, comboConfig.steps.length);
+    var steps = comboConfig.steps.slice(0, numSteps);
+    var sessionId = generateSessionId();
+
+    // slots[i] = selected slot object (null = not selected)
+    var slots = [];
+    for (var si = 0; si < numSteps; si++) slots.push(null);
+
+    // ── Step 2 Heading ──
+    var step2Head = document.createElement('h2');
+    step2Head.className = 'cb-step-heading';
+    step2Head.textContent = 'Step 2: ' + (comboConfig.title || 'Build Your Bundle');
+    container.appendChild(step2Head);
+
+    if (comboConfig.subtitle) {
+      var subEl = document.createElement('p');
+      subEl.className = 'cb-combo-subtitle';
+      subEl.textContent = comboConfig.subtitle;
+      container.appendChild(subEl);
+    }
+
+    // ── Progress bar ──
+    var progressEl = null;
+    if (comboConfig.showProgressBar) {
+      progressEl = document.createElement('div');
+      progressEl.className = 'cb-specific-progress';
+      container.appendChild(progressEl);
+    }
+
+    function renderProgress() {
+      if (!progressEl) return;
+      progressEl.innerHTML = '';
+      for (var i = 0; i < numSteps; i++) {
+        var dot = document.createElement('div');
+        dot.className = 'cb-specific-progress-dot' + (slots[i] ? ' cb-specific-progress-dot--filled' : '');
+        dot.textContent = slots[i] ? '✓' : String(i + 1);
+        progressEl.appendChild(dot);
+        if (i < numSteps - 1) {
+          var line = document.createElement('div');
+          line.className = 'cb-specific-progress-line' + (slots[i] ? ' cb-specific-progress-line--filled' : '');
+          progressEl.appendChild(line);
+        }
+      }
+    }
+    renderProgress();
+
+    // ── Step cards ──
+    var stepsRow = document.createElement('div');
+    stepsRow.className = 'cb-specific-steps';
+    container.appendChild(stepsRow);
+
+    function renderStepCards() {
+      stepsRow.innerHTML = '';
+      for (var si2 = 0; si2 < numSteps; si2++) {
+        (function (idx) {
+          var stepCfg = steps[idx];
+          var selected = slots[idx];
+
+          var card = document.createElement('div');
+          card.className = 'cb-specific-step-card' + (selected ? ' cb-specific-step-card--filled' : '');
+
+          var badge = document.createElement('div');
+          badge.className = 'cb-specific-step-badge';
+          badge.textContent = String(idx + 1);
+          card.appendChild(badge);
+
+          var body = document.createElement('div');
+          body.className = 'cb-specific-step-body';
+
+          if (selected) {
+            if (comboConfig.showProductImages && selected.productImageUrl) {
+              var img = document.createElement('img');
+              img.src = selected.productImageUrl;
+              img.alt = selected.productTitle || '';
+              img.className = 'cb-specific-step-img';
+              body.appendChild(img);
+            } else if (!selected.productImageUrl) {
+              var ph2 = document.createElement('div');
+              ph2.className = 'cb-specific-step-placeholder';
+              ph2.textContent = (selected.productTitle || '?').charAt(0).toUpperCase();
+              body.appendChild(ph2);
+            }
+
+            var prodTitle = document.createElement('div');
+            prodTitle.className = 'cb-specific-step-product-title';
+            prodTitle.textContent = selected.productTitle || '';
+            body.appendChild(prodTitle);
+
+            if (selected.productPrice && parseFloat(selected.productPrice) > 0) {
+              var priceEl2 = document.createElement('div');
+              priceEl2.className = 'cb-specific-step-price';
+              priceEl2.textContent = formatPrice(selected.productPrice, ctx.currencySymbol);
+              body.appendChild(priceEl2);
+            }
+
+            if (comboConfig.allowReselection) {
+              var changeBtn = document.createElement('button');
+              changeBtn.type = 'button';
+              changeBtn.className = 'cb-specific-choose-btn cb-specific-change-btn';
+              changeBtn.textContent = '✏ Change';
+              ;(function (i) {
+                changeBtn.addEventListener('click', function (e) { e.stopPropagation(); openStepPicker(i); });
+              })(idx);
+              body.appendChild(changeBtn);
+            }
+          } else {
+            var stepLabelEl = document.createElement('div');
+            stepLabelEl.className = 'cb-specific-step-label';
+            stepLabelEl.textContent = stepCfg.label || ('Step ' + (idx + 1));
+            body.appendChild(stepLabelEl);
+
+            var emptyIcon = document.createElement('div');
+            emptyIcon.className = 'cb-specific-step-empty-icon';
+            emptyIcon.textContent = '+';
+            body.appendChild(emptyIcon);
+
+            var chooseBtn = document.createElement('button');
+            chooseBtn.type = 'button';
+            chooseBtn.className = 'cb-specific-choose-btn';
+            chooseBtn.textContent = 'Choose';
+            ;(function (i) {
+              chooseBtn.addEventListener('click', function (e) { e.stopPropagation(); openStepPicker(i); });
+            })(idx);
+            body.appendChild(chooseBtn);
+          }
+
+          card.appendChild(body);
+          stepsRow.appendChild(card);
+        })(si2);
+      }
+    }
+    renderStepCards();
+
+    // ── Cart Button ──
+    var inlineCartBtn = document.createElement('button');
+    inlineCartBtn.className = 'cb-inline-cart-btn';
+    inlineCartBtn.type = 'button';
+    inlineCartBtn.disabled = true;
+    inlineCartBtn.textContent = resolveAddToCartLabel(ctx.settings);
+    container.appendChild(inlineCartBtn);
+
+    function updateCartState() {
+      var allFilled = true;
+      for (var i = 0; i < slots.length; i++) { if (!slots[i]) { allFilled = false; break; } }
+
+      inlineCartBtn.disabled = !allFilled;
+      if (allFilled) inlineCartBtn.classList.add('cb-inline-cart-btn--ready');
+      else inlineCartBtn.classList.remove('cb-inline-cart-btn--ready');
+
+      if (_stickyBtn) {
+        _stickyBtn.disabled = !allFilled;
+        if (allFilled) _stickyBtn.classList.add('cb-sticky-btn--ready');
+        else _stickyBtn.classList.remove('cb-sticky-btn--ready');
+      }
+
+      if (allFilled && _stickyTotalEl) {
+        var totalAmt = 0;
+        slots.forEach(function (s) { if (s && s.productPrice) totalAmt += parseFloat(s.productPrice) || 0; });
+        var isDyn = isDynamicBundlePrice(box);
+        renderStickyTotal(_stickyTotalEl, isDyn ? totalAmt : (parseFloat(box.bundlePrice) || 0), ctx.currencySymbol);
+      }
+
+      renderProgress();
+    }
+
+    // ── Picker modal state ──
+    var pickerOverlay = null;
+
+    function openStepPicker(stepIdx) {
+      var stepCfg = steps[stepIdx];
+      var scope = stepCfg.scope || 'product';
+
+      function showPicker(products) {
+        renderPickerModal(stepIdx, stepCfg, products);
+      }
+
+      if (scope === 'product') {
+        var prods = (stepCfg.selectedProducts || []).map(function (p) {
+          var rawVarId = p.variantId || null;
+          var numericVarId = rawVarId && String(rawVarId).indexOf('/') !== -1 ? String(rawVarId).split('/').pop() : (rawVarId ? String(rawVarId) : null);
+          return {
+            productId: p.id,
+            productTitle: p.title,
+            productHandle: p.handle,
+            productImageUrl: p.imageUrl || null,
+            productPrice: parseFloat(p.price) || 0,
+            variantIds: numericVarId ? [numericVarId] : [],
+          };
+        });
+        showPicker(prods);
+      } else {
+        var colls = stepCfg.collections || [];
+        if (!colls.length || !colls[0].handle) { showPicker([]); return; }
+        renderPickerModal(stepIdx, stepCfg, null); // show loading state first
+        fetchCollectionProducts(colls[0].handle, function (err, prods) {
+          if (pickerOverlay && pickerOverlay.parentNode) pickerOverlay.parentNode.removeChild(pickerOverlay);
+          pickerOverlay = null;
+          showPicker(err || !prods ? [] : prods);
+        });
+      }
+    }
+
+    function renderPickerModal(stepIdx, stepCfg, products) {
+      if (pickerOverlay && pickerOverlay.parentNode) pickerOverlay.parentNode.removeChild(pickerOverlay);
+
+      var overlay = document.createElement('div');
+      overlay.className = 'cb-specific-picker-overlay';
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) closePickerModal(); });
+
+      var modal = document.createElement('div');
+      modal.className = 'cb-specific-picker-modal';
+
+      // Header
+      var hdr = document.createElement('div');
+      hdr.className = 'cb-specific-picker-header';
+
+      var titleEl = document.createElement('h3');
+      titleEl.className = 'cb-specific-picker-title';
+      titleEl.textContent = (stepCfg.popup && stepCfg.popup.title) || ('Choose for Step ' + (stepIdx + 1));
+      hdr.appendChild(titleEl);
+
+      if (stepCfg.popup && stepCfg.popup.desc) {
+        var descEl = document.createElement('p');
+        descEl.className = 'cb-specific-picker-desc';
+        descEl.textContent = stepCfg.popup.desc;
+        hdr.appendChild(descEl);
+      }
+
+      var closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'cb-specific-picker-close';
+      closeBtn.innerHTML = '&times;';
+      closeBtn.setAttribute('aria-label', 'Close');
+      closeBtn.addEventListener('click', closePickerModal);
+      hdr.appendChild(closeBtn);
+      modal.appendChild(hdr);
+
+      // Body
+      var body = document.createElement('div');
+      body.className = 'cb-specific-picker-body';
+
+      if (!products) {
+        // Loading state
+        var loadDiv = document.createElement('div');
+        loadDiv.className = 'cb-specific-picker-loading';
+        loadDiv.innerHTML = '<div class="combo-builder-spinner"></div><span>Loading products\u2026</span>';
+        body.appendChild(loadDiv);
+      } else if (products.length === 0) {
+        var emptyEl = document.createElement('p');
+        emptyEl.className = 'cb-specific-picker-empty';
+        emptyEl.textContent = 'No products available for this step.';
+        body.appendChild(emptyEl);
+      } else {
+        var grid = document.createElement('div');
+        grid.className = 'cb-specific-picker-grid';
+
+        products.forEach(function (product) {
+          var pCard = document.createElement('div');
+          pCard.className = 'cb-specific-picker-card';
+
+          if (comboConfig.showProductImages) {
+            var imgWrap = document.createElement('div');
+            imgWrap.className = 'cb-specific-picker-img-wrap';
+            if (product.productImageUrl) {
+              var pImg = document.createElement('img');
+              pImg.src = product.productImageUrl;
+              pImg.alt = product.productTitle || '';
+              pImg.className = 'cb-specific-picker-img';
+              pImg.loading = 'lazy';
+              imgWrap.appendChild(pImg);
+            } else {
+              var pPh = document.createElement('div');
+              pPh.className = 'cb-specific-picker-img-placeholder';
+              pPh.textContent = (product.productTitle || '?').charAt(0).toUpperCase();
+              imgWrap.appendChild(pPh);
+            }
+            pCard.appendChild(imgWrap);
+          }
+
+          var pTitle = document.createElement('div');
+          pTitle.className = 'cb-specific-picker-card-title';
+          pTitle.textContent = product.productTitle || '';
+          pCard.appendChild(pTitle);
+
+          if (ctx.settings && ctx.settings.showProductPrices !== false && product.productPrice > 0) {
+            var pPrice = document.createElement('div');
+            pPrice.className = 'cb-specific-picker-card-price';
+            pPrice.textContent = formatPrice(product.productPrice, ctx.currencySymbol);
+            pCard.appendChild(pPrice);
+          }
+
+          // Variant area (built after fetchVariants)
+          var variantArea = document.createElement('div');
+          variantArea.className = 'cb-specific-picker-variant-area';
+          pCard.appendChild(variantArea);
+
+          // Select button
+          var selBtn = document.createElement('button');
+          selBtn.type = 'button';
+          selBtn.className = 'cb-specific-picker-select-btn';
+          selBtn.textContent = (stepCfg.popup && stepCfg.popup.btn) ? stepCfg.popup.btn : 'Select';
+          pCard.appendChild(selBtn);
+
+          ;(function (prod, vArea, sBtn) {
+            var resolvedVarId = prod.variantIds && prod.variantIds.length === 1 ? prod.variantIds[0] : null;
+            var resolvedVarTitle = null;
+            var resolvedPrice = prod.productPrice;
+
+            // Fetch variants for multi-variant products
+            if (prod.productHandle) {
+              fetchVariants(prod.productHandle, null, function (err, variants) {
+                if (err || !variants || variants.length === 0) return;
+                if (variants.length === 1) {
+                  resolvedVarId = variants[0].id;
+                  resolvedVarTitle = variants[0].title !== 'Default Title' ? variants[0].title : null;
+                  if (variants[0].price != null) resolvedPrice = variants[0].price;
+                  return;
+                }
+                // Multiple variants: show select dropdown
+                vArea.innerHTML = '';
+                var sel = document.createElement('select');
+                sel.className = 'cb-specific-picker-variant-select';
+                sel.addEventListener('click', function (e) { e.stopPropagation(); });
+                var firstAvailable = null;
+                variants.forEach(function (v) {
+                  var opt = document.createElement('option');
+                  opt.value = v.id;
+                  var lbl = v.title;
+                  if (!v.available) { opt.disabled = true; lbl += ' \u2014 Out of stock'; }
+                  opt.textContent = lbl;
+                  sel.appendChild(opt);
+                  if (!firstAvailable && v.available) firstAvailable = v;
+                });
+                if (firstAvailable) {
+                  sel.value = firstAvailable.id;
+                  resolvedVarId = firstAvailable.id;
+                  resolvedVarTitle = firstAvailable.title !== 'Default Title' ? firstAvailable.title : null;
+                  if (firstAvailable.price != null) resolvedPrice = firstAvailable.price;
+                }
+                sel.addEventListener('change', function () {
+                  for (var vi = 0; vi < variants.length; vi++) {
+                    if (String(variants[vi].id) === sel.value) {
+                      resolvedVarId = variants[vi].id;
+                      resolvedVarTitle = variants[vi].title !== 'Default Title' ? variants[vi].title : null;
+                      if (variants[vi].price != null) resolvedPrice = variants[vi].price;
+                      break;
+                    }
+                  }
+                });
+                vArea.appendChild(sel);
+              });
+            }
+
+            sBtn.addEventListener('click', function (e) {
+              e.stopPropagation();
+              selectProduct(stepIdx, {
+                productId: prod.productId,
+                productTitle: prod.productTitle,
+                productImageUrl: prod.productImageUrl,
+                productHandle: prod.productHandle,
+                productPrice: resolvedPrice,
+                variantIds: resolvedVarId ? [String(resolvedVarId)] : (prod.variantIds || []),
+                selectedVariantId: resolvedVarId || null,
+                selectedVariantTitle: resolvedVarTitle || null,
+                isCollection: false,
+              });
+            });
+
+            pCard.addEventListener('click', function () {
+              // Only click-to-select if no multi-variant select shown
+              if (vArea.querySelector('select')) return;
+              selectProduct(stepIdx, {
+                productId: prod.productId,
+                productTitle: prod.productTitle,
+                productImageUrl: prod.productImageUrl,
+                productHandle: prod.productHandle,
+                productPrice: resolvedPrice,
+                variantIds: resolvedVarId ? [String(resolvedVarId)] : (prod.variantIds || []),
+                selectedVariantId: resolvedVarId || null,
+                selectedVariantTitle: resolvedVarTitle || null,
+                isCollection: false,
+              });
+            });
+          })(product, variantArea, selBtn);
+
+          grid.appendChild(pCard);
+        });
+        body.appendChild(grid);
+      }
+
+      modal.appendChild(body);
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+      document.body.style.overflow = 'hidden';
+      pickerOverlay = overlay;
+    }
+
+    function closePickerModal() {
+      if (pickerOverlay && pickerOverlay.parentNode) pickerOverlay.parentNode.removeChild(pickerOverlay);
+      pickerOverlay = null;
+      document.body.style.overflow = '';
+    }
+
+    function selectProduct(stepIdx, slotData) {
+      slots[stepIdx] = slotData;
+      closePickerModal();
+      renderStepCards();
+      updateCartState();
+    }
+
+    // ── Step 3: Cart action ──
+    function resetSpecificCombo() {
+      setTimeout(function () {
+        for (var i = 0; i < slots.length; i++) slots[i] = null;
+        setBoxCardPrice(box, isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0), ctx.currencySymbol);
+        renderStepCards();
+        updateCartState();
+      }, 0);
+    }
+
+    function doCart() {
+      for (var i = 0; i < slots.length; i++) {
+        if (!slots[i]) {
+          var cards = stepsRow.querySelectorAll('.cb-specific-step-card');
+          if (cards[i]) {
+            cards[i].classList.add('cb-specific-step-card--error');
+            setTimeout(function (c) { return function () { c.classList.remove('cb-specific-step-card--error'); }; }(cards[i]), 700);
+          }
+          return;
+        }
+      }
+      addToCart(box, slots, sessionId, null, inlineCartBtn, _stickyBtn, resolveAddToCartLabel(ctx.settings), ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo);
+    }
+
+    inlineCartBtn.addEventListener('click', doCart);
+    createStickyFooter(box, ctx, doCart);
+    updateCartState();
   }
 
   function cleanupComboCartPresentation(root) {

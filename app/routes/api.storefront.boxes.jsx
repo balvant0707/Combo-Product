@@ -43,6 +43,22 @@ export const loader = async ({ request }) => {
       shopifyVariantId: box.shopifyVariantId ? box.shopifyVariantId.split('/').pop() : null,
       bundlePriceType: box.bundlePriceType || "manual",
       sortOrder: box.sortOrder,
+      comboConfig: (() => {
+        if (!box.config) return null;
+        let steps = [];
+        try { steps = JSON.parse(box.config.stepsJson || '[]'); } catch {}
+        return {
+          comboType: box.config.comboType || 2,
+          title: box.config.title || null,
+          subtitle: box.config.subtitle || null,
+          bundlePriceType: box.config.bundlePriceType || 'manual',
+          bundlePrice: box.config.bundlePrice != null ? parseFloat(box.config.bundlePrice) : 0,
+          showProgressBar: box.config.showProgressBar !== false,
+          showProductImages: box.config.showProductImages !== false,
+          allowReselection: box.config.allowReselection !== false,
+          steps,
+        };
+      })(),
     };
   });
 

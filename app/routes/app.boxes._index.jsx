@@ -187,16 +187,16 @@ export default function ManageBoxesPage() {
     <s-page heading={`All Box Types (${displayBoxes.length})`}>
       <s-button
         slot="primary-action"
-        onClick={() => navigateTo("/app/boxes/new")}
+        onClick={() => navigateTo("/app/boxes/new-combo")}
       >
-        + Create New Box
+        🎯 Create Specific Combo Box
       </s-button>
 
       <s-button
         slot="primary-action"
-        onClick={() => navigateTo("/app/boxes/new-combo")}
+        onClick={() => navigateTo("/app/boxes/new")}
       >
-        🎯 Create Specific Combo Box
+        + Create New Box
       </s-button>
 
       {/* Hero banner */}
@@ -493,24 +493,6 @@ export default function ManageBoxesPage() {
           </div>
         )}
 
-        {/* Footer CTA */}
-        {displayBoxes.length > 0 && (
-          <div style={{ marginTop: "20px", padding: "14px 18px", background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
-            <div>
-              <div style={{ fontSize: "13px", fontWeight: "700", color: "#166534" }}>🎯 Want a step-by-step combo experience?</div>
-              <div style={{ fontSize: "12px", color: "#4b7a5e", marginTop: "2px" }}>Create a Specific Combo Box with per-step collection and product pickers.</div>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigateTo("/app/boxes/new-combo")}
-              style={{ background: "#2A7A4F", color: "#fff", border: "none", borderRadius: "6px", padding: "8px 18px", fontSize: "13px", fontWeight: "700", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#1e5e3a")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "#2A7A4F")}
-            >
-              Create Specific Combo Box →
-            </button>
-          </div>
-        )}
       </s-section>
 
       {/* ── Delete Confirmation Modal ── */}

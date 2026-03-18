@@ -338,6 +338,16 @@ export default function DashboardPage() {
       href: "/app/boxes/new",
     },
     {
+      key: "create-specific-combo",
+      emoji: "🎯",
+      label: "Create Specific Combo Box",
+      sub: "Step-by-step combo experience",
+      accent: "#2A7A4F",
+      bg: "linear-gradient(135deg,#f0fdf4,#dcfce7)",
+      border: "#86efac",
+      href: "/app/boxes/new-combo",
+    },
+    {
       key: "manage-boxes",
       emoji: "🗂️",
       label: "Manage Boxes",
@@ -371,6 +381,13 @@ export default function DashboardPage() {
 
   return (
     <s-page heading="Combo Product">
+      <s-button
+        slot="primary-action"
+        onClick={() => navigateTo("/app/boxes/new-combo")}
+      >
+        🎯 Create Specific Combo Box
+      </s-button>
+
       <s-button
         slot="primary-action"
         onClick={() => navigateTo("/app/boxes/new")}

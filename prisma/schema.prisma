@@ -76,6 +76,8 @@ model ComboBox {
   bannerImageFileName String?           @db.VarChar(255)
   bannerImageMimeType String?           @db.VarChar(100)
   comboStepsConfig    String?           @map("combo_steps_config") @db.LongText
+  scopeType           String            @default("specific_collections") @db.VarChar(30)
+  scopeItemsJson      String?           @db.LongText
   orders              BundleOrder[]
   products            ComboBoxProduct[]
   config              ComboBoxConfig?

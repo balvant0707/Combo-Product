@@ -89,6 +89,8 @@ export const action = async ({ request }) => {
 
   let eligibleProducts = [];
   try { eligibleProducts = JSON.parse(formData.get("eligibleProducts") || "[]"); } catch {}
+  let scopeItems = [];
+  try { scopeItems = JSON.parse(formData.get("scopeItems") || "[]"); } catch {}
 
   const errors = {};
   const bannerImage = await parseBannerImage(formData, errors);
@@ -105,6 +107,8 @@ export const action = async ({ request }) => {
     isActive: formData.get("isActive") !== "false",
     giftMessageEnabled: formData.get("giftMessageEnabled") === "true",
     eligibleProducts,
+    scopeType: formData.get("scope") || "specific_collections",
+    scopeItems,
   };
 
   if (!data.boxName?.trim()) errors.boxName = "Box name is required";

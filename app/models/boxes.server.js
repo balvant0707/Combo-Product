@@ -470,6 +470,8 @@ export async function createBox(shop, data, admin) {
       bundlePriceType: data.bundlePriceType === "dynamic" ? "dynamic" : "manual",
       shopifyProductId,
       shopifyVariantId,
+      scopeType: data.scopeType || "specific_collections",
+      scopeItemsJson: Array.isArray(data.scopeItems) && data.scopeItems.length > 0 ? JSON.stringify(data.scopeItems) : null,
     },
   });
 
@@ -664,6 +666,10 @@ export async function updateBox(id, shop, data, admin) {
         data.bundlePriceType !== undefined
           ? data.bundlePriceType === "dynamic" ? "dynamic" : "manual"
           : existing.bundlePriceType,
+      scopeType: data.scopeType !== undefined ? data.scopeType : existing.scopeType,
+      scopeItemsJson: data.scopeItems !== undefined
+        ? (Array.isArray(data.scopeItems) && data.scopeItems.length > 0 ? JSON.stringify(data.scopeItems) : null)
+        : existing.scopeItemsJson,
     },
   });
 

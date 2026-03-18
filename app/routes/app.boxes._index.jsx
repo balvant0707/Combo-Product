@@ -393,7 +393,7 @@ export default function ManageBoxesPage() {
                           </div>
                         );
                       })() : (
-                        <span style={{ color: "#d1d5db", fontSize: "12px" }}>—</span>
+                        <span style={{ fontSize: "11px", fontWeight: "600", color: "#6b7280" }}>Single Combo Product</span>
                       )}
                     </td>
 

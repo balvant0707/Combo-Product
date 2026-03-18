@@ -193,7 +193,7 @@ export default function ManageBoxesPage() {
       </s-button>
 
       <s-button
-        slot="secondary-action"
+        slot="primary-action"
         onClick={() => navigateTo("/app/boxes/new-combo")}
       >
         🎯 Create Specific Combo Box

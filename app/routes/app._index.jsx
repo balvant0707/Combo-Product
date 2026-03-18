@@ -382,13 +382,29 @@ export default function DashboardPage() {
   return (
     <s-page heading="Combo Product">
       <ui-title-bar title="Combo Product">
-        <button variant="primary" onClick={() => navigateTo("/app/boxes/specific-combo")}>
-          Create Specific Combo Box
+        <button onClick={() => navigateTo("/app/boxes/specific-combo")}>
+          🎯 Create Specific Combo Box
         </button>
         <button variant="primary" onClick={() => navigateTo("/app/boxes/new")}>
-          Create Combo Box
+          + Create Combo Box
         </button>
       </ui-title-bar>
+
+      {/* Custom action buttons inside iframe — supports full custom styling */}
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginBottom: "16px" }}>
+        <button
+          onClick={() => navigateTo("/app/boxes/specific-combo")}
+          style={{ padding: "8px 16px", fontSize: "13px", fontWeight: "600", borderRadius: "6px", border: "none", background: "#303030", color: "#ffffff", cursor: "pointer", whiteSpace: "nowrap" }}
+        >
+          🎯 Create Specific Combo Box
+        </button>
+        <button
+          onClick={() => navigateTo("/app/boxes/new")}
+          style={{ padding: "8px 16px", fontSize: "13px", fontWeight: "600", borderRadius: "6px", border: "none", background: "#2A7A4F", color: "#ffffff", cursor: "pointer", whiteSpace: "nowrap" }}
+        >
+          + Create Combo Box
+        </button>
+      </div>
 
       <ThemeCustomizationCard themeEditorUrl={themeEditorUrl} />
 

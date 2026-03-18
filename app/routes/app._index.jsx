@@ -383,7 +383,7 @@ export default function DashboardPage() {
     <s-page heading="Combo Product">
       <ui-title-bar title="Combo Product">
         <button onClick={() => navigateTo("/app/boxes/specific-combo")} 
-          style={{ background: "#303030", color: "#fff", borderRadius: "5px", padding: "8px 16px", fontSize: "14px", fontWeight: "600", boxShadow: "0 2px 8px rgba(42,122,79,0.24)", transition: "transform 0.12s, box-shadow 0.12s" }}>
+          style={{ background: "#303030 !important", color: "#fff", borderRadius: "5px", padding: "8px 16px", fontSize: "14px", fontWeight: "600", boxShadow: "0 2px 8px rgba(42,122,79,0.24)", transition: "transform 0.12s, box-shadow 0.12s" }}>
             Create Specific Combo Box
         </button>
         <button variant="primary" onClick={() => navigateTo("/app/boxes/new")}>

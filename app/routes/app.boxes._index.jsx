@@ -194,7 +194,7 @@ export default function ManageBoxesPage() {
 
       <s-button
         onClick={() => navigateTo("/app/boxes/specific-combo")}
-        style={{ marginLeft: "8px", background: "#303030", color: "#fff", borderRadius: "5px", padding: "8px 16px", fontSize: "14px", fontWeight: "600", boxShadow: "0 2px 8px rgba(42,122,79,0.24)", transition: "transform 0.12s, box-shadow 0.12s" }}
+        style={{ marginLeft: "8px", background: "#303030 !important", color: "#fff", borderRadius: "5px", padding: "8px 16px", fontSize: "14px", fontWeight: "600", boxShadow: "0 2px 8px rgba(42,122,79,0.24)", transition: "transform 0.12s, box-shadow 0.12s" }}
       >
         🎯 Create Specific Combo Box
       </s-button>

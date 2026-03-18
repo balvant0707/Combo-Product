@@ -383,16 +383,16 @@ export default function DashboardPage() {
     <s-page heading="Combo Product">
       <s-button
         slot="primary-action"
-        onClick={() => navigateTo("/app/boxes/specific-combo")}
+        onClick={() => navigateTo("/app/boxes/new")}
       >
-        🎯 Create Specific Combo Box
+        + Create Combo Box
       </s-button>
 
       <s-button
-        slot="primary-action"
-        onClick={() => navigateTo("/app/boxes/new")}
+        slot="secondary-action"
+        onClick={() => navigateTo("/app/boxes/specific-combo")}
       >
-        + Create Box
+        🎯 Create Specific Combo Box
       </s-button>
 
       <ThemeCustomizationCard themeEditorUrl={themeEditorUrl} />

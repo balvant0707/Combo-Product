@@ -364,7 +364,7 @@ export default function SpecificComboBoxPage() {
       )}
 
       {/* Hidden form for saving */}
-      <comboFetcher.Form id="combo-config-form" method="POST">
+      <comboFetcher.Form id="combo-config-form" method="POST" action={`/app/boxes/${box.id}/combo${location.search}`}>
         <input type="hidden" name="_action" value="save_combo" />
         <input type="hidden" name="comboStepsConfig" value={JSON.stringify({ ...comboConfig, bundlePrice: comboConfig.bundlePriceType === "dynamic" ? comboDynamicPrice : parseFloat(comboConfig.bundlePrice) || 0 })} />
       </comboFetcher.Form>

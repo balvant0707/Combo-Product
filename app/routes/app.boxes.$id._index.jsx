@@ -276,7 +276,7 @@ export default function BoxSettingsPage() {
         </div>
       )}
 
-      <Form id="edit-box-form" method="POST" encType="multipart/form-data">
+      <Form id="edit-box-form" method="POST" action={`/app/boxes/${box.id}${location.search}`} encType="multipart/form-data">
         <input type="hidden" name="_action" value="save" />
         <input type="hidden" name="bundlePrice" value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
         <input type="hidden" name="bundlePriceType" value={priceMode} />
@@ -417,7 +417,7 @@ export default function BoxSettingsPage() {
 
       {/* Delete form */}
       <div style={{ paddingTop: "18px", borderTop: "1.5px solid #f3f4f6" }}>
-        <Form method="POST" id="delete-box-form">
+        <Form method="POST" id="delete-box-form" action={`/app/boxes/${box.id}${location.search}`}>
           <input type="hidden" name="_action" value="delete" />
           <button type="submit" onClick={(e) => { if (!window.confirm(`Delete "${box.boxName}"? This cannot be undone.`)) e.preventDefault(); }} style={{ background: "#fff5f5", border: "1.5px solid #fecaca", borderRadius: "5px", padding: "9px 18px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#dc2626" }} onMouseEnter={(e) => (e.currentTarget.style.background = "#fee2e2")} onMouseLeave={(e) => (e.currentTarget.style.background = "#fff5f5")}>
             Delete Box

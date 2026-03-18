@@ -185,19 +185,19 @@ export default function ManageBoxesPage() {
 
   return (
     <s-page heading={`All Box Types (${displayBoxes.length})`}>
-      <s-button
-        slot="primary-action"
-        onClick={() => navigateTo("/app/boxes/new")}
-      >
-        Create Combo Box
-      </s-button>
-
-      <s-button
-        onClick={() => navigateTo("/app/boxes/specific-combo")}
-        style={{ marginLeft: "8px", background: "#303030 !important", color: "#fff", borderRadius: "5px", padding: "8px 16px", fontSize: "14px", fontWeight: "600", boxShadow: "0 2px 8px rgba(42,122,79,0.24)", transition: "transform 0.12s, box-shadow 0.12s" }}  
-      >
-        Create Specific Combo Box
-      </s-button>
+      <ui-title-bar title={`All Box Types (${displayBoxes.length})`}>
+        <button
+          onClick={() => navigateTo("/app/boxes/specific-combo")}
+        >
+          🎯 Create Specific Combo Box
+        </button>
+        <button
+          variant="primary"
+          onClick={() => navigateTo("/app/boxes/new")}
+        >
+          + Create Combo Box
+        </button>
+      </ui-title-bar>
 
       {/* Hero banner */}
       <div style={{ marginBottom: "10px", borderRadius: "5px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>

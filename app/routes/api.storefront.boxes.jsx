@@ -24,11 +24,7 @@ export const loader = async ({ request }) => {
     getSettings(shop),
   ]);
 
-  const publicBoxes = boxes.filter((box) => {
-    // If the box has a specific combo config, only show it when that config is also active
-    if (box.config && box.config.isActive === false) return false;
-    return true;
-  }).map((box) => {
+  const publicBoxes = boxes.map((box) => {
     const bannerImageUrl = box.bannerImageUrl || null;
     // Flag so the widget can build the URL via the app proxy (avoids cross-origin issues)
     const hasUploadedBanner = !bannerImageUrl && !!box.bannerImageMimeType;

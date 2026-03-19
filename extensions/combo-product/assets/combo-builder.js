@@ -611,13 +611,6 @@
       return;
     }
 
-    // Theme block display settings (from liquid data attributes or __COMBO_BUILDER__ push)
-    var rawMaxBoxes = root.dataset.maxBoxesVisible || config.maxBoxesVisible;
-    var maxBoxesVisible = rawMaxBoxes ? parseInt(rawMaxBoxes, 10) : 4;
-    if (isNaN(maxBoxesVisible) || maxBoxesVisible < 1) maxBoxesVisible = 4;
-    var showBoxCount = root.dataset.showBoxCount === 'true' || config.showBoxCount === true;
-    var showAllLabel = root.dataset.showAllLabel || config.showAllLabel || 'View all';
-
     fetchBoxes(shop, apiBase, function (err, boxes, settings) {
       if (err || !boxes || boxes.length === 0) { root.innerHTML = ''; return; }
       if (boxIdsFilter && boxIdsFilter.length > 0) {
@@ -652,7 +645,7 @@
         }
       }
 
-      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root, maxBoxesVisible: maxBoxesVisible, showBoxCount: showBoxCount, showAllLabel: showAllLabel });
+      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root });
     });
   }
 
@@ -704,45 +697,11 @@
     step1Head.textContent = 'Step 1: Select your box';
     wrapper.appendChild(step1Head);
 
-    // ── Box count badge ──────────────────────────────────────────────────────────
-    var totalBoxes = ctx.boxes.length;
-    if (ctx.showBoxCount && totalBoxes > 0) {
-      var countBadge = document.createElement('div');
-      countBadge.className = 'cb-box-count-badge';
-      countBadge.textContent = totalBoxes + ' combo box' + (totalBoxes !== 1 ? 'es' : '') + ' available';
-      wrapper.appendChild(countBadge);
-    }
-
     // ── Box grid ─────────────────────────────────────────────────────────────────
     var boxGrid = document.createElement('div');
     boxGrid.className = 'cb-box-grid';
     ctx.boxes.forEach(function (box) { boxGrid.appendChild(createBoxCard(box, ctx)); });
     wrapper.appendChild(boxGrid);
-
-    // ── Show/hide cards beyond maxBoxesVisible ────────────────────────────────
-    var maxV = (ctx.maxBoxesVisible > 0) ? ctx.maxBoxesVisible : totalBoxes;
-    var allCards = boxGrid.querySelectorAll('.cb-box-card');
-    var hiddenCards = [];
-    for (var ci = maxV; ci < allCards.length; ci++) {
-      allCards[ci].style.display = 'none';
-      hiddenCards.push(allCards[ci]);
-    }
-
-    // ── "Show all" button (only when some cards are hidden) ───────────────────
-    if (hiddenCards.length > 0) {
-      var showAllBtn = document.createElement('button');
-      showAllBtn.type = 'button';
-      showAllBtn.className = 'cb-show-all-btn';
-      showAllBtn.textContent = (ctx.showAllLabel || 'View all') + ' (' + totalBoxes + ')';
-      showAllBtn.addEventListener('click', function () {
-        hiddenCards.forEach(function (c) { c.style.display = ''; });
-        showAllBtn.style.display = 'none';
-        if (ctx.showBoxCount && totalBoxes > 0) {
-          countBadge.textContent = totalBoxes + ' combo box' + (totalBoxes !== 1 ? 'es' : '') + ' available · showing all';
-        }
-      });
-      wrapper.appendChild(showAllBtn);
-    }
 
     // ── Builder area ──────────────────────────────────────────────────────────
     var builderArea = document.createElement('div');

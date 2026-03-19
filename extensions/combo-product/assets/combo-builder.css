@@ -128,40 +128,6 @@
   font-family: var(--cb-font);
 }
 
-/* ── Box Count Badge ─────────────────────────────────── */
-.cb-box-count-badge {
-  text-align: center;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--cb-text-muted);
-  margin-bottom: 14px;
-  font-family: var(--cb-font);
-  letter-spacing: 0.2px;
-}
-
-/* ── Show All Button ─────────────────────────────────── */
-.cb-show-all-btn {
-  display: block;
-  margin: -8px auto 32px;
-  padding: 10px 28px;
-  border: 1.5px solid var(--cb-primary);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--cb-primary);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.4px;
-  font-family: var(--cb-font);
-  cursor: pointer;
-  transition: background var(--cb-transition), color var(--cb-transition), box-shadow var(--cb-transition);
-}
-
-.cb-show-all-btn:hover {
-  background: var(--cb-primary);
-  color: #fff;
-  box-shadow: 0 4px 14px var(--cb-primary-glow);
-}
-
 /* ── Box Card Grid ────────────────────────────────────── */
 .cb-box-grid {
   display: flex;

@@ -747,6 +747,22 @@
 
   // ─── Box Card ─────────────────────────────────────────────────────────────────
 
+  function getBoxCardBannerSrc(box, ctx) {
+    if (box.bannerImageUrl) return box.bannerImageUrl;
+    if (box.hasUploadedBanner) {
+      return ctx.apiBase + '/api/storefront/boxes/' + box.id + '/banner';
+    }
+
+    var steps = box && box.comboConfig && Array.isArray(box.comboConfig.steps)
+      ? box.comboConfig.steps
+      : [];
+    for (var i = 0; i < steps.length; i++) {
+      if (steps[i] && steps[i].stepImageUrl) return steps[i].stepImageUrl;
+    }
+
+    return null;
+  }
+
   function createBoxCard(box, ctx) {
     var card = document.createElement('div');
     card.className = 'cb-box-card';
@@ -756,8 +772,7 @@
     // Banner image with overlay title
     var banner = document.createElement('div');
     banner.className = 'cb-box-banner';
-    var bannerSrc = box.bannerImageUrl ||
-      (box.hasUploadedBanner ? ctx.apiBase + '/api/storefront/boxes/' + box.id + '/banner' : null);
+    var bannerSrc = getBoxCardBannerSrc(box, ctx);
     if (bannerSrc) {
       banner.style.backgroundImage = 'url("' + bannerSrc + '")';
       banner.style.backgroundSize = 'cover';
@@ -2509,7 +2524,8 @@
       if (box.shopifyProductId) {
         bundleProps['_combo_shopify_product_id'] = String(box.shopifyProductId);
       }
-      if (box.bannerImageUrl) bundleProps['_combo_box_image'] = box.bannerImageUrl;
+      var bundleImageSrc = getBoxCardBannerSrc(box, ctx);
+      if (bundleImageSrc) bundleProps['_combo_box_image'] = bundleImageSrc;
 
       slots.forEach(function (p, idx) {
         if (p) {

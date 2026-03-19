@@ -109,13 +109,13 @@ export default function SettingsPage() {
       )}
 
       {/* Hero banner */}
-      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
-        <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#d1fae5", marginBottom: "10px" }}>
+      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
+        <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(17,24,39,0.04)", pointerEvents: "none" }} />
+        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}>
           ⚙️ Settings
         </div>
-        <div style={{ fontSize: "18px", fontWeight: "800", color: "#fff", letterSpacing: "-0.5px" }}>Widget & Theme Configuration</div>
-        <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.65)", marginTop: "4px" }}>Customize the appearance and behaviour of the combo builder on your storefront.</div>
+        <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>Widget & Theme Configuration</div>
+        <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Customize the appearance and behaviour of the combo builder on your storefront.</div>
       </div>
 
       <Form id="settings-form" method="post">
@@ -207,7 +207,7 @@ export default function SettingsPage() {
                             width: "16px",
                             height: "16px",
                             borderRadius: "50%",
-                            background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)",
+                            background: "#ffffff",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -323,7 +323,7 @@ export default function SettingsPage() {
                           style={{
                             height: "8px",
                             borderRadius: "5px",
-                            background: isActive ? "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)" : "#d1d5db",
+                            background: isActive ? "#ffffff" : "#d1d5db",
                             width: preset.value === 0 ? "100%" :
                                    preset.value <= 860 ? "45%" :
                                    preset.value <= 1140 ? "62%" :
@@ -341,7 +341,7 @@ export default function SettingsPage() {
                         </div>
                       </div>
                       {isActive && (
-                        <div style={{ width: "16px", height: "16px", borderRadius: "50%", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <div style={{ width: "16px", height: "16px", borderRadius: "50%", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
                             <path d="M1 3.5L3.5 6L8 1" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
@@ -434,7 +434,7 @@ export default function SettingsPage() {
                             display: "block",
                             height: "16px",
                             borderRadius: "5px",
-                            background: isActive ? "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)" : "#d1d5db",
+                            background: isActive ? "#ffffff" : "#d1d5db",
                             opacity: isActive ? 1 : 0.85,
                           }}
                         />

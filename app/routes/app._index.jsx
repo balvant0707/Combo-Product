@@ -158,15 +158,16 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
         style={{
           borderRadius: "5px",
           overflow: "hidden",
-          background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)",
-          boxShadow: "0 8px 32px rgba(42,122,79,0.28), 0 2px 8px rgba(0,0,0,0.10)",
+          background: "#ffffff",
+          border: "1px solid #e5e7eb",
+          boxShadow: "0 8px 24px rgba(15,23,42,0.08)",
           position: "relative",
         }}
       >
         {/* decorative circles */}
-        <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "220px", height: "220px", borderRadius: "50%", background: "rgba(255,255,255,0.06)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: "-60px", right: "80px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", top: "20px", right: "200px", width: "80px", height: "80px", borderRadius: "50%", background: "rgba(255,255,255,0.03)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "220px", height: "220px", borderRadius: "50%", background: "rgba(17,24,39,0.06)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "-60px", right: "80px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(17,24,39,0.04)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: "20px", right: "200px", width: "80px", height: "80px", borderRadius: "50%", background: "rgba(17,24,39,0.03)", pointerEvents: "none" }} />
 
         <div
           style={{
@@ -184,14 +185,14 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "6px",
-                background: "rgba(255,255,255,0.15)",
+                background: "#f3f4f6",
                 borderRadius: "999px",
                 padding: "5px 16px",
                 fontSize: "11px",
                 fontWeight: "700",
                 letterSpacing: "0.10em",
                 textTransform: "uppercase",
-                color: "#d1fae5",
+                color: "#000000",
                 marginBottom: "16px",
                 backdropFilter: "blur(4px)",
               }}
@@ -205,7 +206,7 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
                 margin: "0 0 8px",
                 fontSize: "18px",
                 fontWeight: "800",
-                color: "#ffffff",
+                color: "#000000",
                 lineHeight: 1.15,
                 letterSpacing: "-0.5px",
               }}
@@ -216,7 +217,7 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
               style={{
                 margin: "0 0 8px",
                 fontSize: "14px",
-                color: "rgba(255,255,255,0.72)",
+                color: "#4b5563",
                 lineHeight: "normal",
               }}
             >
@@ -236,8 +237,8 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
                 <div
                   key={i}
                   style={{
-                    background: "rgba(255,255,255,0.10)",
-                    border: "1px solid rgba(255,255,255,0.18)",
+                    background: "#f9fafb",
+                    border: "1px solid #e5e7eb",
                     borderRadius: "5px",
                     padding: "16px 14px",
                     display: "flex",
@@ -250,8 +251,8 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
                         width: "24px",
                         height: "24px",
                         borderRadius: "50%",
-                        background: "rgba(255,255,255,0.22)",
-                        color: "#fff",
+                        background: "#e5e7eb",
+                        color: "#000000",
                         fontSize: "11px",
                         fontWeight: "800",
                         display: "flex",
@@ -264,7 +265,7 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
                     </div>
                     <span style={{ fontSize: "20px", lineHeight: 1 }}>{step.icon}</span>
                   </div>
-                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.85)", lineHeight: 1.55 }}>
+                  <div style={{ fontSize: "12px", color: "#374151", lineHeight: 1.55 }}>
                     {step.text}
                   </div>
                 </div>
@@ -383,7 +384,7 @@ export default function DashboardPage() {
     <s-page heading="Combo Product">
       <ui-title-bar title="Combo Product">
         <button onClick={() => navigateTo("/app/boxes/specific-combo")} 
-          style={{ background: "#303030 !important", color: "#fff", borderRadius: "5px", padding: "8px 16px", fontSize: "14px", fontWeight: "600", boxShadow: "0 2px 8px rgba(42,122,79,0.24)", transition: "transform 0.12s, box-shadow 0.12s" }}>
+          style={{ background: "#303030 !important", color: "#000000", borderRadius: "5px", padding: "8px 16px", fontSize: "14px", fontWeight: "600", boxShadow: "0 2px 8px rgba(42,122,79,0.24)", transition: "transform 0.12s, box-shadow 0.12s" }}>
             Create Specific Combo Box
         </button>
         <button variant="primary" onClick={() => navigateTo("/app/boxes/new")}>
@@ -399,10 +400,10 @@ export default function DashboardPage() {
       <div style={{ display: "grid", gridTemplateColumns: "35fr 65fr", gap: "20px", marginBottom: "20px", alignItems: "start" }}>
 
       {/* Quick Actions */}
-      <div style={{ borderRadius: "5px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative" }}>
-        <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
-        <div style={{ padding: "20px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.12)" }}>
-          <div style={{ fontSize: "15px", fontWeight: "800", color: "#fff", letterSpacing: "-0.2px" }}>Quick Actions</div>
+      <div style={{ borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>
+        <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(17,24,39,0.05)", pointerEvents: "none" }} />
+        <div style={{ padding: "20px 20px 14px", borderBottom: "1px solid #e5e7eb" }}>
+          <div style={{ fontSize: "15px", fontWeight: "800", color: "#000000", letterSpacing: "-0.2px" }}>Quick Actions</div>
         </div>
         <div style={{ padding: "12px 12px 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
           {quickActions.map((action) => (
@@ -421,8 +422,8 @@ export default function DashboardPage() {
                 alignItems: "center",
                 gap: "14px",
                 padding: "5px 10px",
-                background: "rgba(255,255,255,0.12)",
-                border: "1.5px solid rgba(255,255,255,0.20)",
+                background: "#f9fafb",
+                border: "1.5px solid #e5e7eb",
                 borderRadius: "5px",
                 textDecoration: "none",
                 cursor: "pointer",
@@ -430,34 +431,34 @@ export default function DashboardPage() {
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateX(3px)";
-                e.currentTarget.style.background = "rgba(255,255,255,0.20)";
+                e.currentTarget.style.background = "#f3f4f6";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "translateX(0)";
-                e.currentTarget.style.background = "rgba(255,255,255,0.12)";
+                e.currentTarget.style.background = "#f9fafb";
               }}
             >
-              <div style={{ width: "42px", height: "42px", borderRadius: "5px", background: "rgba(255,255,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>
+              <div style={{ width: "42px", height: "42px", borderRadius: "5px", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>
                 {action.emoji}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "14px", fontWeight: "700", color: "#fff", lineHeight: 1.3 }}>{action.label}</div>
-                <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.65)", fontWeight: "600", marginTop: "2px" }}>{action.sub}</div>
+                <div style={{ fontSize: "14px", fontWeight: "700", color: "#000000", lineHeight: 1.3 }}>{action.label}</div>
+                <div style={{ fontSize: "12px", color: "#6b7280", fontWeight: "600", marginTop: "2px" }}>{action.sub}</div>
               </div>
-              <div style={{ color: "rgba(255,255,255,0.55)", fontSize: "16px", flexShrink: 0 }}>→</div>
+              <div style={{ color: "#6b7280", fontSize: "16px", flexShrink: 0 }}>→</div>
             </a>
           ))}
         </div>
       </div>
 
       {/* Stats */}
-      <div style={{ borderRadius: "5px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative" }}>
-        <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
-        <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#d1fae5" }}>
+      <div style={{ borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>
+        <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(17,24,39,0.05)", pointerEvents: "none" }} />
+        <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000" }}>
             📊 Performance
           </div>
-          <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.55)" }}>Last 30 days overview</span>
+          <span style={{ fontSize: "13px", color: "#6b7280" }}>Last 30 days overview</span>
         </div>
         <div style={{ padding: "20px 10px 20px;", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px" }}>
           {stats.map((stat) => (
@@ -469,16 +470,16 @@ export default function DashboardPage() {
       </div>{/* end 35/65 row */}
 
       {/* Recent Bundle Orders */}
-      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative" }}>
-        <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "150px", height: "150px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
-        <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#d1fae5" }}>
+      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>
+        <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "150px", height: "150px", borderRadius: "50%", background: "rgba(17,24,39,0.05)", pointerEvents: "none" }} />
+        <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000" }}>
             🧾 Recent Orders
           </div>
-          <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.55)" }}>Latest bundle purchases</span>
+          <span style={{ fontSize: "13px", color: "#6b7280" }}>Latest bundle purchases</span>
         </div>
         <div style={{ padding: "16px 16px 16px" }}>
-        <div style={{ background: "rgba(255,255,255,0.97)", borderRadius: "5px", padding: "0 16px 8px", overflow: "hidden" }}>
+        <div style={{ background: "#ffffff", borderRadius: "5px", padding: "0 16px 8px", overflow: "hidden" }}>
           {recentOrders.length === 0 ? (
             <div style={{ textAlign: "center", padding: "56px 0" }}>
               <div style={{ fontSize: "48px", marginBottom: "14px" }}>📭</div>
@@ -527,14 +528,14 @@ export default function DashboardPage() {
       </div>
 
       {/* Getting Started */}
-      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(42,122,79,0.22)", overflow: "hidden", position: "relative" }}>
-        <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: "-30px", left: "60px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
-        <div style={{ padding: "28px 32px 20px", borderBottom: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#d1fae5" }}>
+      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>
+        <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(17,24,39,0.05)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "-30px", left: "60px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(17,24,39,0.04)", pointerEvents: "none" }} />
+        <div style={{ padding: "28px 32px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000" }}>
             🚀 Getting Started
           </div>
-          <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.55)" }}>Three steps to go live</span>
+          <span style={{ fontSize: "13px", color: "#6b7280" }}>Three steps to go live</span>
         </div>
         <div style={{ padding: "24px 32px 32px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
           {[
@@ -544,14 +545,14 @@ export default function DashboardPage() {
           ].map((item) => (
             <div
               key={item.step}
-              style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: "5px", padding: "22px 20px" }}
+              style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "5px", padding: "22px 20px" }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-                <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(255,255,255,0.22)", color: "#fff", fontSize: "12px", fontWeight: "800", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{item.step}</div>
+                <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#e5e7eb", color: "#000000", fontSize: "12px", fontWeight: "800", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{item.step}</div>
                 <span style={{ fontSize: "22px" }}>{item.emoji}</span>
               </div>
-              <div style={{ fontSize: "14px", fontWeight: "800", color: "#fff", marginBottom: "8px" }}>{item.title}</div>
-              <p style={{ margin: 0, fontSize: "13px", color: "rgba(255,255,255,0.72)", lineHeight: 1.6 }}>{item.text}</p>
+              <div style={{ fontSize: "14px", fontWeight: "800", color: "#000000", marginBottom: "8px" }}>{item.title}</div>
+              <p style={{ margin: 0, fontSize: "13px", color: "#4b5563", lineHeight: 1.6 }}>{item.text}</p>
             </div>
           ))}
         </div>

@@ -308,11 +308,11 @@ export default function BoxSettingsPage() {
       </ui-title-bar>
 
       {/* Hero banner */}
-      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", boxShadow: "0 8px 32px rgba(9,31,214,0.22)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
-        <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", pointerEvents: "none" }} />
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#d1fae5", marginBottom: "10px" }}>📋 Box Settings</div>
-        <div style={{ fontSize: "18px", fontWeight: "800", color: "#fff", letterSpacing: "-0.5px" }}>{box.boxName}</div>
-        <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.65)", marginTop: "4px" }}>Update settings, pricing, and eligible products for this bundle.</div>
+      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
+        <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(17,24,39,0.04)", pointerEvents: "none" }} />
+        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}>📋 Box Settings</div>
+        <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>{box.boxName}</div>
+        <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Update settings, pricing, and eligible products for this bundle.</div>
       </div>
 
 
@@ -473,7 +473,7 @@ export default function BoxSettingsPage() {
         <div style={{ marginBottom: "28px" }}>
           <div style={sectionHeadingStyle}>
             <span style={{ fontSize: "15px" }}>🛍️</span> Eligible Products
-            {selectedProducts.length > 0 && <span style={{ marginLeft: "6px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", color: "#fff", borderRadius: "5px", padding: "2px 8px", fontSize: "10px", fontWeight: "700", fontFamily: "monospace" }}>{selectedProducts.length} selected</span>}
+            {selectedProducts.length > 0 && <span style={{ marginLeft: "6px", background: "#ffffff", color: "#000000", border: "1px solid #d1d5db", borderRadius: "5px", padding: "2px 8px", fontSize: "10px", fontWeight: "700", fontFamily: "monospace" }}>{selectedProducts.length} selected</span>}
           </div>
           {errors.eligibleProducts && <div style={{ color: "#e11d48", fontSize: "12px", marginBottom: "10px", padding: "8px 12px", background: "#fff5f5", borderRadius: "5px", border: "1px solid #fecaca" }}>{errors.eligibleProducts}</div>}
           {selectedProducts.length > 0 && (
@@ -481,7 +481,7 @@ export default function BoxSettingsPage() {
               <div style={{ fontSize: "10px", fontWeight: "700", color: "#091fd6", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.6px" }}>Selected Products</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                 {selectedProducts.map((p) => (
-                  <span key={p.id} onClick={() => toggleProduct(p)} style={{ background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", color: "#fff", borderRadius: "5px", padding: "4px 10px", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", fontWeight: "500" }}>
+                  <span key={p.id} onClick={() => toggleProduct(p)} style={{ background: "#ffffff", color: "#000000", border: "1px solid #d1d5db", borderRadius: "5px", padding: "4px 10px", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", fontWeight: "500" }}>
                     {p.productTitle}<span style={{ opacity: 0.75, fontSize: "10px" }}>✕</span>
                   </span>
                 ))}
@@ -536,7 +536,7 @@ export default function BoxSettingsPage() {
                       <div style={{ fontSize: "11px", color: "#9ca3af", fontFamily: "monospace" }}>{product.handle}</div>
                     </div>
                     {product.price && parseFloat(product.price) > 0 && <div style={{ fontSize: "13px", fontWeight: "700", color: "#374151", fontFamily: "monospace", flexShrink: 0 }}>₹{parseFloat(product.price).toLocaleString("en-IN")}</div>}
-                    {selected && <span style={{ width: "18px", height: "18px", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><span style={{ color: "#fff", fontSize: "10px", fontWeight: "700" }}>✓</span></span>}
+                    {selected && <span style={{ width: "18px", height: "18px", background: "#ffffff", border: "1px solid #111827", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><span style={{ color: "#000000", fontSize: "10px", fontWeight: "700" }}>✓</span></span>}
                   </label>
                 );
               })}
@@ -545,7 +545,7 @@ export default function BoxSettingsPage() {
               <span style={{ fontSize: "12px", color: "#6b7280" }}>{selectedProducts.length > 0 ? `${selectedProducts.length} product${selectedProducts.length !== 1 ? "s" : ""} selected` : "No products selected"}</span>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button type="button" onClick={closePicker} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#374151" }}>Cancel</button>
-                <button type="button" onClick={closePicker} style={{ background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", border: "none", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: "pointer", color: "#fff" }}>
+                <button type="button" onClick={closePicker} style={{ background: "#ffffff", border: "1px solid #d1d5db", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: "pointer", color: "#000000" }}>
                   Done{selectedProducts.length > 0 ? ` (${selectedProducts.length})` : ""}
                 </button>
               </div>

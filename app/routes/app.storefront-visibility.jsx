@@ -54,14 +54,14 @@ export default function StorefrontVisibilityPage() {
         <h1 style={{ fontSize: "22px", fontWeight: "700", color: "#111827", margin: "0 0 6px" }}>
           Frontend Visibility
         </h1>
-        <p style={{ fontSize: "13px", color: "#6b7280", margin: 0 }}>
+        <p style={{ fontSize: "13px", color: "#6a7280", margin: 0 }}>
           Control which combo boxes appear on your storefront.
           <strong style={{ color: "#2A7A4F" }}> {activeCount} of {boxes.length}</strong> boxes visible.
         </p>
       </div>
 
       {/* Box list */}
-      <div style={{ background: "#fff", borderRadius: "10px", border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+      <div style={{ background: "#fff", borderRadius: "10px", border: "1px solid #e5e7ea", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
         {boxes.length === 0 ? (
           <div style={{ padding: "48px 24px", textAlign: "center", color: "#9ca3af", fontSize: "14px" }}>
             No combo boxes found. Create a box first.
@@ -93,7 +93,7 @@ export default function StorefrontVisibilityPage() {
                     width: "8px",
                     height: "8px",
                     borderRadius: "50%",
-                    background: active ? "#2A7A4F" : "#d1d5db",
+                    background: active ? "#2A7A4F" : "#d1d5da",
                     flexShrink: 0,
                     transition: "background 0.2s",
                   }} />
@@ -122,8 +122,9 @@ export default function StorefrontVisibilityPage() {
                     fontWeight: "700",
                     padding: "2px 8px",
                     borderRadius: "5px",
-                    background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)",
-                    color: "#fff",
+                    background: "#ffffff",
+                    color: "#000000",
+                    border: "1px solid #d1d5db",
                     flexShrink: 0,
                   }}>
                     {comboLabel}
@@ -153,7 +154,7 @@ export default function StorefrontVisibilityPage() {
                       width: "44px",
                       height: "24px",
                       borderRadius: "999px",
-                      background: active ? "#2A7A4F" : "#d1d5db",
+                      background: active ? "#2A7A4F" : "#d1d5da",
                       border: "none",
                       cursor: "pointer",
                       padding: 0,

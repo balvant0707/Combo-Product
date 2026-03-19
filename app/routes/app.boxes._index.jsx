@@ -5,7 +5,6 @@ import { authenticate } from "../shopify.server";
 import {
   listBoxes,
   deleteBox,
-  toggleBoxStatus,
   assignBoxPage,
   reorderBoxes,
   activateAllBundleProducts,
@@ -111,13 +110,6 @@ export const action = async ({ request }) => {
     const id = formData.get("id");
     const pageHandle = formData.get("pageHandle") || null;
     await assignBoxPage(id, shop, pageHandle);
-    return { ok: true };
-  }
-
-  if (intent === "toggle_status") {
-    const id = formData.get("id");
-    const isActive = formData.get("isActive") === "true";
-    await toggleBoxStatus(id, shop, isActive);
     return { ok: true };
   }
 
@@ -237,11 +229,6 @@ export default function ManageBoxesPage() {
     fetcher.formData?.get("_action") === "delete"
       ? boxes.filter((b) => b.id !== parseInt(fetcher.formData.get("id")))
       : boxes;
-
-  const toggleBoxId = fetcher.formData?.get("_action") === "toggle_status"
-    ? parseInt(fetcher.formData.get("id")) : null;
-  const toggleNewState = toggleBoxId !== null
-    ? fetcher.formData.get("isActive") === "true" : null;
 
   return (
     <s-page heading={`All Box Types (${displayBoxes.length})`}>
@@ -378,11 +365,9 @@ export default function ManageBoxesPage() {
                       ⠿
                     </td>
 
-                    {/* Box name + page select + toggle */}
+                    {/* Box name + page select */}
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6", minWidth: "240px" }}>
                       {(() => {
-                        const active = box.id === toggleBoxId ? toggleNewState : box.isActive;
-
                         const PAGE_OPTIONS = [
                           { label: "All pages", value: "" },
                           { label: "─────────────", value: "__sep1__", disabled: true },
@@ -396,46 +381,9 @@ export default function ManageBoxesPage() {
 
                         return (
                           <div>
-                            {/* Row 1: name + toggle side by side */}
-                            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
-                              <div style={{ fontWeight: "700", color: active ? "#111827" : "#9ca3af", transition: "color 0.15s", minWidth: 0 }}>
-                                {box.boxName}
-                              </div>
-                              {/* Toggle inline with name */}
-                              <button
-                                type="button"
-                                onClick={() => fetcher.submit(
-                                  { _action: "toggle_status", id: String(box.id), isActive: String(!active) },
-                                  { method: "POST" }
-                                )}
-                                title={active ? "Click to disable" : "Click to enable"}
-                                style={{
-                                  position: "relative",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  width: "38px",
-                                  height: "21px",
-                                  borderRadius: "999px",
-                                  background: active ? "#2A7A4F" : "#d1d5db",
-                                  border: "none",
-                                  cursor: "pointer",
-                                  padding: 0,
-                                  flexShrink: 0,
-                                  transition: "background 0.2s",
-                                  boxShadow: active ? "0 0 0 3px rgba(42,122,79,0.15)" : "none",
-                                }}
-                              >
-                                <span style={{
-                                  position: "absolute",
-                                  width: "17px",
-                                  height: "17px",
-                                  borderRadius: "50%",
-                                  background: "#fff",
-                                  left: active ? "19px" : "2px",
-                                  transition: "left 0.2s",
-                                  boxShadow: "0 1px 4px rgba(0,0,0,0.22)",
-                                }} />
-                              </button>
+                            {/* Row 1: name */}
+                            <div style={{ fontWeight: "700", color: "#111827", marginBottom: "4px" }}>
+                              {box.boxName}
                             </div>
                             {/* Row 2: subtitle */}
                             {box.displayTitle !== box.boxName && (

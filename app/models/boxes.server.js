@@ -821,6 +821,13 @@ export async function toggleBoxStatus(id, shop, isActive) {
   });
 }
 
+export async function toggleComboConfigStatus(boxId, isActive) {
+  return db.comboBoxConfig.updateMany({
+    where: { boxId: parseInt(boxId) },
+    data: { isActive },
+  });
+}
+
 export async function reorderBoxes(shop, orderedIds) {
   const updates = orderedIds.map((id, index) =>
     db.comboBox.updateMany({

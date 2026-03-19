@@ -6,6 +6,7 @@ import {
   listBoxes,
   deleteBox,
   toggleBoxStatus,
+  toggleComboConfigStatus,
   reorderBoxes,
   activateAllBundleProducts,
   repairMissingShopifyProducts,
@@ -91,6 +92,13 @@ export const action = async ({ request }) => {
     const id = formData.get("id");
     const isActive = formData.get("isActive") === "true";
     await toggleBoxStatus(id, shop, isActive);
+    return { ok: true };
+  }
+
+  if (intent === "toggle_combo_status") {
+    const id = formData.get("id");
+    const isActive = formData.get("isActive") === "true";
+    await toggleComboConfigStatus(id, isActive);
     return { ok: true };
   }
 
@@ -187,11 +195,19 @@ export default function ManageBoxesPage() {
       ? boxes.filter((b) => b.id !== parseInt(fetcher.formData.get("id")))
       : boxes;
 
-  // Optimistic toggle: track which box is currently being toggled
+  // Optimistic toggle: track which box is currently being toggled (box-level)
   const toggleBoxId = fetcher.formData?.get("_action") === "toggle_status"
     ? parseInt(fetcher.formData.get("id"))
     : null;
   const toggleNewState = toggleBoxId !== null
+    ? fetcher.formData.get("isActive") === "true"
+    : null;
+
+  // Optimistic toggle: track which combo config is being toggled
+  const toggleComboBoxId = fetcher.formData?.get("_action") === "toggle_combo_status"
+    ? parseInt(fetcher.formData.get("id"))
+    : null;
+  const toggleComboNewState = toggleComboBoxId !== null
     ? fetcher.formData.get("isActive") === "true"
     : null;
 
@@ -428,16 +444,50 @@ export default function ManageBoxesPage() {
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
                       {box.comboConfig && box.comboConfig.comboType > 0 ? (() => {
                         const cfg = box.comboConfig;
-                        const displayLabel = box.displayTitle || box.boxName;
+                        const comboActive = box.id === toggleComboBoxId ? toggleComboNewState : cfg.isActive;
                         return (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                             <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: "700", background: "linear-gradient(135deg, #091fd6 0%, #c11a10 55%, #706cd3 100%)", color: "#fff", padding: "2px 8px", borderRadius: "5px", width: "fit-content" }}>
-                             {displayLabel}
+                              Specific Combo
                             </span>
-                            <span style={{ fontSize: "11px", color: "#6b7280", maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Specific Combo</span>
-                            <span style={{ fontSize: "10px", fontWeight: "600", color: cfg.isActive ? "#059669" : "#9ca3af" }}>
-                              {cfg.isActive ? "● Active" : "● Inactive"}
-                            </span>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <button
+                                type="button"
+                                onClick={() => fetcher.submit(
+                                  { _action: "toggle_combo_status", id: String(box.id), isActive: String(!comboActive) },
+                                  { method: "POST" }
+                                )}
+                                title={comboActive ? "Click to disable combo" : "Click to enable combo"}
+                                style={{
+                                  position: "relative",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  width: "32px",
+                                  height: "18px",
+                                  borderRadius: "999px",
+                                  background: comboActive ? "#2A7A4F" : "#d1d5db",
+                                  border: "none",
+                                  cursor: "pointer",
+                                  padding: 0,
+                                  flexShrink: 0,
+                                  transition: "background 0.2s",
+                                }}
+                              >
+                                <span style={{
+                                  position: "absolute",
+                                  width: "14px",
+                                  height: "14px",
+                                  borderRadius: "50%",
+                                  background: "#fff",
+                                  left: comboActive ? "16px" : "2px",
+                                  transition: "left 0.2s",
+                                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                                }} />
+                              </button>
+                              <span style={{ fontSize: "10px", fontWeight: "600", color: comboActive ? "#059669" : "#9ca3af", transition: "color 0.15s" }}>
+                                {comboActive ? "Active" : "Inactive"}
+                              </span>
+                            </div>
                           </div>
                         );
                       })() : (

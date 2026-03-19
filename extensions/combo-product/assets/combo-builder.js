@@ -2524,7 +2524,7 @@
       if (box.shopifyProductId) {
         bundleProps['_combo_shopify_product_id'] = String(box.shopifyProductId);
       }
-      var bundleImageSrc = getBoxCardBannerSrc(box, ctx);
+      var bundleImageSrc = getBoxCardBannerSrc(box, { apiBase: apiBase });
       if (bundleImageSrc) bundleProps['_combo_box_image'] = bundleImageSrc;
 
       slots.forEach(function (p, idx) {

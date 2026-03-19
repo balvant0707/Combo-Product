@@ -324,12 +324,21 @@ export default function ManageBoxesPage() {
                       ⠿
                     </td>
 
-                    {/* Box name + inline enable/disable toggle */}
+                    {/* Box name — toggle on the right */}
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
                       {(() => {
                         const active = box.id === toggleBoxId ? toggleNewState : box.isActive;
                         return (
-                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+                            {/* Name */}
+                            <div>
+                              <div style={{ fontWeight: "700", color: active ? "#111827" : "#9ca3af", marginBottom: "1px", transition: "color 0.15s" }}>
+                                {box.boxName}
+                              </div>
+                              {box.displayTitle !== box.boxName && (
+                                <div style={{ fontSize: "11px", color: "#9ca3af" }}>{box.displayTitle}</div>
+                              )}
+                            </div>
                             {/* Toggle switch */}
                             <button
                               type="button"
@@ -362,18 +371,6 @@ export default function ManageBoxesPage() {
                                 boxShadow: "0 1px 4px rgba(0,0,0,0.22)",
                               }} />
                             </button>
-                            {/* Name + status label */}
-                            <div>
-                              <div style={{ fontWeight: "700", color: active ? "#111827" : "#9ca3af", marginBottom: "1px", transition: "color 0.15s" }}>
-                                {box.boxName}
-                              </div>
-                              {box.displayTitle !== box.boxName && (
-                                <div style={{ fontSize: "11px", color: "#9ca3af" }}>{box.displayTitle}</div>
-                              )}
-                              <div style={{ fontSize: "10px", fontWeight: "600", color: active ? "#059669" : "#9ca3af", letterSpacing: "0.3px", marginTop: "1px" }}>
-                                {active ? "● Enabled" : "○ Disabled"}
-                              </div>
-                            </div>
                           </div>
                         );
                       })()}

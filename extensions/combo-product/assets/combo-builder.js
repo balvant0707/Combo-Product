@@ -1758,9 +1758,31 @@
       }
     }
 
+    // ── Step image area (above product grid) ──
+    var stepImageEl = document.createElement('div');
+    stepImageEl.className = 'cb-step-image-wrap';
+    stepImageEl.style.display = 'none';
+    productSection.insertBefore(stepImageEl, productLabel);
+
+    function updateStepImage(stepCfg) {
+      var imgUrl = stepCfg && stepCfg.stepImageUrl ? stepCfg.stepImageUrl : null;
+      stepImageEl.innerHTML = '';
+      if (imgUrl) {
+        var img = document.createElement('img');
+        img.src = imgUrl;
+        img.alt = stepCfg.label || 'Step image';
+        img.className = 'cb-step-image';
+        stepImageEl.appendChild(img);
+        stepImageEl.style.display = '';
+      } else {
+        stepImageEl.style.display = 'none';
+      }
+    }
+
     // ── Product Grid rendering ──
     function renderProductGrid(products) {
       var stepCfg = steps[activeSlotIndex];
+      updateStepImage(stepCfg);
       var stepLabelText = stepCfg.label || ('Item ' + (activeSlotIndex + 1));
       productLabel.textContent = 'Choose your ' + stepLabelText;
       productGrid.innerHTML = '';

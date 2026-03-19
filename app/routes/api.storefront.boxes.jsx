@@ -1,4 +1,4 @@
-import { listBoxes } from "../models/boxes.server";
+import { listBoxes, getComboStepImages } from "../models/boxes.server";
 import { getSettings } from "../models/settings.server";
 
 const CORS_HEADERS = {
@@ -20,9 +20,22 @@ export const loader = async ({ request }) => {
   }
 
   const [boxes, settings] = await Promise.all([
-    listBoxes(shop, true, false),  // bannerImageMimeType still returned to detect uploads
+    listBoxes(shop, true, false),
     getSettings(shop),
   ]);
+
+  // Fetch step images for all boxes that have a specific combo config
+  const stepImagesByBox = {};
+  await Promise.all(
+    boxes
+      .filter((b) => b.config)
+      .map(async (b) => {
+        const imgs = await getComboStepImages(b.id);
+        if (imgs.length > 0) stepImagesByBox[b.id] = imgs;
+      })
+  );
+
+  const apiBase = new URL(request.url).origin;
 
   const publicBoxes = boxes.map((box) => {
     const bannerImageUrl = box.bannerImageUrl || null;
@@ -48,6 +61,15 @@ export const loader = async ({ request }) => {
         if (!box.config) return null;
         let steps = [];
         try { steps = JSON.parse(box.config.stepsJson || '[]'); } catch {}
+        // Attach step image URLs (stepIndex 1 = Step 2, stepIndex 2 = Step 3)
+        const boxStepImgs = stepImagesByBox[box.id] || [];
+        steps = steps.map((step, idx) => {
+          const imgRecord = boxStepImgs.find((img) => img.stepIndex === idx + 1);
+          return {
+            ...step,
+            stepImageUrl: imgRecord ? `${apiBase}/api/storefront/boxes/${box.id}/step-image/${idx + 1}` : null,
+          };
+        });
         return {
           comboType: box.config.comboType || 2,
           title: box.config.title || null,

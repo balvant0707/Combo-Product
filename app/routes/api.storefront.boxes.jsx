@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import { listBoxes, getComboStepImages } from "../models/boxes.server";
 import { getSettings } from "../models/settings.server";
 
@@ -35,8 +36,6 @@ export const loader = async ({ request }) => {
       })
   );
 
-  const apiBase = new URL(request.url).origin;
-
   const publicBoxes = boxes.map((box) => {
     const bannerImageUrl = box.bannerImageUrl || null;
     // Flag so the widget can build the URL via the app proxy (avoids cross-origin issues)
@@ -61,13 +60,15 @@ export const loader = async ({ request }) => {
         if (!box.config) return null;
         let steps = [];
         try { steps = JSON.parse(box.config.stepsJson || '[]'); } catch {}
-        // Attach step image URLs — stepIndex is 0-based matching the steps array index
+        // Attach step images as base64 data URIs — stepIndex is 0-based matching the steps array index
         const boxStepImgs = stepImagesByBox[box.id] || [];
         steps = steps.map((step, idx) => {
-          const imgRecord = boxStepImgs.find((img) => img.stepIndex === idx);
+          const imgRecord = boxStepImgs.find((img) => img.stepIndex === idx && img.imageData);
           return {
             ...step,
-            stepImageUrl: imgRecord ? `${apiBase}/api/storefront/boxes/${box.id}/step-image/${idx}` : null,
+            stepImageUrl: imgRecord
+              ? `data:${imgRecord.mimeType};base64,${Buffer.from(imgRecord.imageData).toString("base64")}`
+              : null,
           };
         });
         return {

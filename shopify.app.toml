@@ -5,6 +5,8 @@ name = "Combo Product"
 application_url = "https://combo-products.vercel.app"
 embedded = true
 
+handle = "combo-product-builder"
+
 [build]
 automatically_update_urls_on_dev = true
 

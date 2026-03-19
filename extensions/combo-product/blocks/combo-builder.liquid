@@ -7,6 +7,9 @@
   data-currency="{{ cart.currency.iso_code }}"
   data-currency-symbol="{{ cart.currency.symbol }}"
   data-api-base="https://combo-products.vercel.app"
+  data-max-boxes-visible="{{ block.settings.max_boxes_visible }}"
+  data-show-box-count="{{ block.settings.show_box_count }}"
+  data-show-all-label="{{ block.settings.show_all_btn_label | escape }}"
   {% if block.settings.section_heading != blank %}
   data-heading="{{ block.settings.section_heading | escape }}"
   {% endif %}
@@ -31,13 +34,16 @@
 <script>
   window.__COMBO_BUILDER__ = window.__COMBO_BUILDER__ || [];
   window.__COMBO_BUILDER__.push({
-    mountId:        'combo-builder-widget-{{ block.id }}',
-    shop:           '{{ shop.permanent_domain }}',
-    currency:       '{{ cart.currency.iso_code }}',
-    currencySymbol: '{{ cart.currency.symbol }}',
-    apiBase:        'https://combo-products.vercel.app',
-    productHandle:  '{{ product.handle }}',
-    heading:        '{{ block.settings.section_heading | escape }}'
+    mountId:          'combo-builder-widget-{{ block.id }}',
+    shop:             '{{ shop.permanent_domain }}',
+    currency:         '{{ cart.currency.iso_code }}',
+    currencySymbol:   '{{ cart.currency.symbol }}',
+    apiBase:          'https://combo-products.vercel.app',
+    productHandle:    '{{ product.handle }}',
+    heading:          '{{ block.settings.section_heading | escape }}',
+    maxBoxesVisible:  {{ block.settings.max_boxes_visible }},
+    showBoxCount:     {{ block.settings.show_box_count }},
+    showAllLabel:     '{{ block.settings.show_all_btn_label | escape }}'
   });
 </script>
 <script defer src="{{ 'combo-builder.js' | asset_url }}"></script>
@@ -58,6 +64,33 @@
       "id": "show_on_product_page",
       "label": "Show on product page",
       "default": true
+    },
+    {
+      "type": "header",
+      "content": "Box Display"
+    },
+    {
+      "type": "range",
+      "id": "max_boxes_visible",
+      "label": "Max boxes shown initially",
+      "min": 1,
+      "max": 20,
+      "step": 1,
+      "default": 4,
+      "info": "Extra boxes are hidden behind a 'View all' button. Set to 20 to always show all."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_box_count",
+      "label": "Show total box count",
+      "default": true,
+      "info": "Displays '4 combo boxes available' above the grid"
+    },
+    {
+      "type": "text",
+      "id": "show_all_btn_label",
+      "label": "\"Show all\" button label",
+      "default": "View all"
     },
     {
       "type": "header",

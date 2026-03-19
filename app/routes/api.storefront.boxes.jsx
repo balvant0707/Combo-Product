@@ -61,13 +61,13 @@ export const loader = async ({ request }) => {
         if (!box.config) return null;
         let steps = [];
         try { steps = JSON.parse(box.config.stepsJson || '[]'); } catch {}
-        // Attach step image URLs (stepIndex 1 = Step 2, stepIndex 2 = Step 3)
+        // Attach step image URLs — stepIndex is 0-based matching the steps array index
         const boxStepImgs = stepImagesByBox[box.id] || [];
         steps = steps.map((step, idx) => {
-          const imgRecord = boxStepImgs.find((img) => img.stepIndex === idx + 1);
+          const imgRecord = boxStepImgs.find((img) => img.stepIndex === idx);
           return {
             ...step,
-            stepImageUrl: imgRecord ? `${apiBase}/api/storefront/boxes/${box.id}/step-image/${idx + 1}` : null,
+            stepImageUrl: imgRecord ? `${apiBase}/api/storefront/boxes/${box.id}/step-image/${idx}` : null,
           };
         });
         return {

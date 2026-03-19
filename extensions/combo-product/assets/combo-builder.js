@@ -1772,6 +1772,7 @@
         img.src = imgUrl;
         img.alt = stepCfg.label || 'Step image';
         img.className = 'cb-step-image';
+        img.onerror = function () { stepImageEl.style.display = 'none'; };
         stepImageEl.appendChild(img);
         stepImageEl.style.display = '';
       } else {

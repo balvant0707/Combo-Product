@@ -613,6 +613,9 @@
       visibleBoxNames = String(rawVisible).split('\n').map(function (n) { return n.trim().toLowerCase(); }).filter(Boolean);
     }
 
+    // Current page handle passed from Liquid
+    var currentPageHandle = root.dataset.pageHandle || null;
+
     if (!shop) {
       root.innerHTML = '';
       return;
@@ -628,6 +631,18 @@
         boxes = boxes.filter(function (b) {
           var name = String(b.boxName || b.displayTitle || '').trim().toLowerCase();
           return visibleBoxNames.indexOf(name) !== -1;
+        });
+      }
+      // Filter by page assignment: show box if pageHandle is null (all pages) or matches current page
+      if (currentPageHandle) {
+        boxes = boxes.filter(function (b) {
+          if (!b.pageHandle) return true; // null = show on all pages
+          var ph = String(b.pageHandle).trim();
+          if (ph === currentPageHandle) return true;
+          // "product" matches any product page; "collection" matches any collection page
+          if (ph === 'product' && String(currentPageHandle).indexOf('product:') === 0) return true;
+          if (ph === 'collection' && String(currentPageHandle).indexOf('collection:') === 0) return true;
+          return false;
         });
       }
       if (boxes.length === 0) { root.innerHTML = ''; return; }

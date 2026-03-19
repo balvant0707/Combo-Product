@@ -7,6 +7,19 @@
   data-currency="{{ cart.currency.iso_code }}"
   data-currency-symbol="{{ cart.currency.symbol }}"
   data-api-base="https://combo-products.vercel.app"
+  data-page-template="{{ template.name }}"
+  {% case template.name %}
+    {% when 'page' %}
+    data-page-handle="page:{{ page.handle }}"
+    {% when 'product' %}
+    data-page-handle="product:{{ product.handle }}"
+    {% when 'collection' %}
+    data-page-handle="collection:{{ collection.handle }}"
+    {% when 'index' %}
+    data-page-handle="index"
+    {% else %}
+    data-page-handle="{{ template.name }}"
+  {% endcase %}
   {% if block.settings.visible_boxes != blank %}
   data-visible-boxes="{{ block.settings.visible_boxes | escape }}"
   {% endif %}

@@ -5,6 +5,8 @@ import { authenticate } from "../shopify.server";
 import {
   listBoxes,
   deleteBox,
+  toggleBoxStatus,
+  assignBoxPage,
   reorderBoxes,
   activateAllBundleProducts,
   repairMissingShopifyProducts,
@@ -61,9 +63,27 @@ export const loader = async ({ request }) => {
     boxes = await listBoxes(session.shop);
   }
 
+  // Fetch Shopify pages for the page-assignment dropdown
+  let shopifyPages = [];
+  try {
+    const pagesRes = await admin.graphql(`
+      query {
+        pages(first: 100) {
+          edges { node { id title handle } }
+        }
+      }
+    `);
+    const pagesData = await pagesRes.json();
+    shopifyPages = (pagesData?.data?.pages?.edges || []).map((e) => ({
+      title: e.node.title,
+      handle: `page:${e.node.handle}`,
+    }));
+  } catch {}
+
   // Fire-and-forget: activate any DRAFT bundle products left from before the fix
   activateAllBundleProducts(session.shop, admin).catch(() => {});
   return {
+    shopifyPages,
     boxes: boxes.map((b) => ({
       id: b.id,
       boxName: b.boxName,
@@ -73,6 +93,7 @@ export const loader = async ({ request }) => {
       bundlePriceType: b.bundlePriceType || "manual",
       isGiftBox: b.isGiftBox,
       isActive: b.isActive,
+      pageHandle: b.pageHandle || "",
       sortOrder: b.sortOrder,
       orderCount: b._count?.orders ?? 0,
       comboConfig: getComboConfigSummary(b),
@@ -85,6 +106,20 @@ export const action = async ({ request }) => {
   const shop = session.shop;
   const formData = await request.formData();
   const intent = formData.get("_action");
+
+  if (intent === "assign_page") {
+    const id = formData.get("id");
+    const pageHandle = formData.get("pageHandle") || null;
+    await assignBoxPage(id, shop, pageHandle);
+    return { ok: true };
+  }
+
+  if (intent === "toggle_status") {
+    const id = formData.get("id");
+    const isActive = formData.get("isActive") === "true";
+    await toggleBoxStatus(id, shop, isActive);
+    return { ok: true };
+  }
 
   if (intent === "delete") {
     const id = formData.get("id");
@@ -102,7 +137,7 @@ export const action = async ({ request }) => {
 };
 
 export default function ManageBoxesPage() {
-  const { boxes } = useLoaderData();
+  const { boxes, shopifyPages } = useLoaderData();
   const location = useLocation();
   const navigate = useNavigate();
   const fetcher = useFetcher();
@@ -172,6 +207,11 @@ export default function ManageBoxesPage() {
     fetcher.formData?.get("_action") === "delete"
       ? boxes.filter((b) => b.id !== parseInt(fetcher.formData.get("id")))
       : boxes;
+
+  const toggleBoxId = fetcher.formData?.get("_action") === "toggle_status"
+    ? parseInt(fetcher.formData.get("id")) : null;
+  const toggleNewState = toggleBoxId !== null
+    ? fetcher.formData.get("isActive") === "true" : null;
 
   return (
     <s-page heading={`All Box Types (${displayBoxes.length})`}>
@@ -307,12 +347,97 @@ export default function ManageBoxesPage() {
                       ⠿
                     </td>
 
-                    {/* Box name */}
-                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                      <div style={{ fontWeight: "700", color: "#111827" }}>{box.boxName}</div>
-                      {box.displayTitle !== box.boxName && (
-                        <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>{box.displayTitle}</div>
-                      )}
+                    {/* Box name + page select + toggle */}
+                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6", minWidth: "240px" }}>
+                      {(() => {
+                        const active = box.id === toggleBoxId ? toggleNewState : box.isActive;
+
+                        const PAGE_OPTIONS = [
+                          { label: "All pages", value: "" },
+                          { label: "─────────────", value: "__sep1__", disabled: true },
+                          { label: "Home page", value: "index" },
+                          { label: "All product pages", value: "product" },
+                          { label: "All collection pages", value: "collection" },
+                          { label: "Cart page", value: "cart" },
+                          ...(shopifyPages.length > 0 ? [{ label: "─────────────", value: "__sep2__", disabled: true }] : []),
+                          ...shopifyPages.map((p) => ({ label: p.title, value: p.handle })),
+                        ];
+
+                        return (
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+                            {/* Name + page select */}
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <div style={{ fontWeight: "700", color: active ? "#111827" : "#9ca3af", transition: "color 0.15s", marginBottom: "6px" }}>
+                                {box.boxName}
+                              </div>
+                              {box.displayTitle !== box.boxName && (
+                                <div style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "6px" }}>{box.displayTitle}</div>
+                              )}
+                              {/* Page assignment select */}
+                              <select
+                                value={box.pageHandle || ""}
+                                onChange={(e) => fetcher.submit(
+                                  { _action: "assign_page", id: String(box.id), pageHandle: e.target.value },
+                                  { method: "POST" }
+                                )}
+                                style={{
+                                  width: "100%",
+                                  fontSize: "11px",
+                                  padding: "4px 8px",
+                                  borderRadius: "6px",
+                                  border: "1px solid #e5e7eb",
+                                  background: "#f9fafb",
+                                  color: "#374151",
+                                  cursor: "pointer",
+                                  outline: "none",
+                                  maxWidth: "180px",
+                                }}
+                              >
+                                {PAGE_OPTIONS.map((opt) => (
+                                  <option key={opt.value} value={opt.value} disabled={opt.disabled}>
+                                    {opt.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            {/* Toggle */}
+                            <button
+                              type="button"
+                              onClick={() => fetcher.submit(
+                                { _action: "toggle_status", id: String(box.id), isActive: String(!active) },
+                                { method: "POST" }
+                              )}
+                              title={active ? "Click to disable" : "Click to enable"}
+                              style={{
+                                position: "relative",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                width: "38px",
+                                height: "21px",
+                                borderRadius: "999px",
+                                background: active ? "#2A7A4F" : "#d1d5db",
+                                border: "none",
+                                cursor: "pointer",
+                                padding: 0,
+                                flexShrink: 0,
+                                transition: "background 0.2s",
+                                boxShadow: active ? "0 0 0 3px rgba(42,122,79,0.15)" : "none",
+                              }}
+                            >
+                              <span style={{
+                                position: "absolute",
+                                width: "17px",
+                                height: "17px",
+                                borderRadius: "50%",
+                                background: "#fff",
+                                left: active ? "19px" : "2px",
+                                transition: "left 0.2s",
+                                boxShadow: "0 1px 4px rgba(0,0,0,0.22)",
+                              }} />
+                            </button>
+                          </div>
+                        );
+                      })()}
                     </td>
 
                     {/* Items */}

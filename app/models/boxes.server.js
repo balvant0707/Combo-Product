@@ -821,6 +821,13 @@ export async function toggleBoxStatus(id, shop, isActive) {
   });
 }
 
+export async function assignBoxPage(id, shop, pageHandle) {
+  return db.comboBox.updateMany({
+    where: { id: parseInt(id), shop, deletedAt: null },
+    data: { pageHandle: pageHandle || null },
+  });
+}
+
 export async function toggleComboConfigStatus(boxId, isActive) {
   return db.comboBoxConfig.updateMany({
     where: { boxId: parseInt(boxId) },

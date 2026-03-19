@@ -43,6 +43,7 @@ export const loader = async ({ request }) => {
       shopifyVariantId: box.shopifyVariantId ? box.shopifyVariantId.split('/').pop() : null,
       bundlePriceType: box.bundlePriceType || "manual",
       sortOrder: box.sortOrder,
+      pageHandle: box.pageHandle || null,
       comboConfig: (() => {
         if (!box.config) return null;
         let steps = [];

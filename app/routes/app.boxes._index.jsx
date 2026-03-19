@@ -187,6 +187,14 @@ export default function ManageBoxesPage() {
       ? boxes.filter((b) => b.id !== parseInt(fetcher.formData.get("id")))
       : boxes;
 
+  // Optimistic toggle: track which box is currently being toggled
+  const toggleBoxId = fetcher.formData?.get("_action") === "toggle_status"
+    ? parseInt(fetcher.formData.get("id"))
+    : null;
+  const toggleNewState = toggleBoxId !== null
+    ? fetcher.formData.get("isActive") === "true"
+    : null;
+
   return (
     <s-page heading={`All Box Types (${displayBoxes.length})`}>
       <ui-title-bar title={`All Box Types (${displayBoxes.length})`}>
@@ -259,7 +267,7 @@ export default function ManageBoxesPage() {
             >
               <thead>
                 <tr style={{ background: "#f9fafb" }}>
-                  {["", "Box Name", "Items", "Price", "Gift", "Combo", "Orders", "Status", "Actions"].map(
+                  {["", "Box Name", "Items", "Price", "Gift", "Combo", "Orders", "Actions"].map(
                     (h) => (
                       <th
                         key={h}
@@ -316,16 +324,59 @@ export default function ManageBoxesPage() {
                       ⠿
                     </td>
 
-                    {/* Box name + subtitle */}
+                    {/* Box name + inline enable/disable toggle */}
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                      <div style={{ fontWeight: "700", color: "#111827", marginBottom: "2px" }}>
-                        {box.boxName}
-                      </div>
-                      {box.displayTitle !== box.boxName && (
-                        <div style={{ fontSize: "11px", color: "#9ca3af" }}>
-                          {box.displayTitle}
-                        </div>
-                      )}
+                      {(() => {
+                        const active = box.id === toggleBoxId ? toggleNewState : box.isActive;
+                        return (
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            {/* Toggle switch */}
+                            <button
+                              type="button"
+                              onClick={() => handleToggleStatus(box.id, active)}
+                              title={active ? "Click to disable" : "Click to enable"}
+                              style={{
+                                position: "relative",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                width: "38px",
+                                height: "21px",
+                                borderRadius: "999px",
+                                background: active ? "#2A7A4F" : "#d1d5db",
+                                border: "none",
+                                cursor: "pointer",
+                                padding: 0,
+                                flexShrink: 0,
+                                transition: "background 0.2s",
+                                boxShadow: active ? "0 0 0 3px rgba(42,122,79,0.15)" : "none",
+                              }}
+                            >
+                              <span style={{
+                                position: "absolute",
+                                width: "17px",
+                                height: "17px",
+                                borderRadius: "50%",
+                                background: "#fff",
+                                left: active ? "19px" : "2px",
+                                transition: "left 0.2s",
+                                boxShadow: "0 1px 4px rgba(0,0,0,0.22)",
+                              }} />
+                            </button>
+                            {/* Name + status label */}
+                            <div>
+                              <div style={{ fontWeight: "700", color: active ? "#111827" : "#9ca3af", marginBottom: "1px", transition: "color 0.15s" }}>
+                                {box.boxName}
+                              </div>
+                              {box.displayTitle !== box.boxName && (
+                                <div style={{ fontSize: "11px", color: "#9ca3af" }}>{box.displayTitle}</div>
+                              )}
+                              <div style={{ fontSize: "10px", fontWeight: "600", color: active ? "#059669" : "#9ca3af", letterSpacing: "0.3px", marginTop: "1px" }}>
+                                {active ? "● Enabled" : "○ Disabled"}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </td>
 
                     {/* Items */}
@@ -404,41 +455,6 @@ export default function ManageBoxesPage() {
                       </span>
                     </td>
 
-                    {/* Status toggle */}
-                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                      <button
-                        onClick={() => handleToggleStatus(box.id, box.isActive)}Specific combo Product step 
-                        title={box.isActive ? "Click to deactivate" : "Click to activate"}
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "5px",
-                          padding: "4px 10px",
-                          borderRadius: "5px",
-                          fontSize: "11px",
-                          fontWeight: "600",
-                          cursor: "pointer",
-                          border: "none",
-                          background: box.isActive ? "rgba(5,150,105,0.1)" : "rgba(156,163,175,0.15)",
-                          color: box.isActive ? "#059669" : "#6b7280",
-                          transition: "opacity 0.12s",
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.75")}
-                        onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-                      >
-                        <span
-                          style={{
-                            width: "6px",
-                            height: "6px",
-                            borderRadius: "50%",
-                            background: box.isActive ? "#059669" : "#9ca3af",
-                            display: "inline-block",
-                            flexShrink: 0,
-                          }}
-                        />
-                        {box.isActive ? "Active" : "Inactive"}
-                      </button>
-                    </td>
 
                     {/* Actions */}
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>

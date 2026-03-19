@@ -7,6 +7,9 @@
   data-currency="{{ cart.currency.iso_code }}"
   data-currency-symbol="{{ cart.currency.symbol }}"
   data-api-base="https://combo-products.vercel.app"
+  {% if block.settings.visible_boxes != blank %}
+  data-visible-boxes="{{ block.settings.visible_boxes | escape }}"
+  {% endif %}
   {% if block.settings.section_heading != blank %}
   data-heading="{{ block.settings.section_heading | escape }}"
   {% endif %}
@@ -37,7 +40,8 @@
     currencySymbol:   '{{ cart.currency.symbol }}',
     apiBase:          'https://combo-products.vercel.app',
     productHandle:    '{{ product.handle }}',
-    heading:          '{{ block.settings.section_heading | escape }}'
+    heading:          '{{ block.settings.section_heading | escape }}',
+    visibleBoxes:     '{{ block.settings.visible_boxes | escape }}'
   });
 </script>
 <script defer src="{{ 'combo-builder.js' | asset_url }}"></script>
@@ -58,6 +62,17 @@
       "id": "show_on_product_page",
       "label": "Show on product page",
       "default": true
+    },
+    {
+      "type": "header",
+      "content": "Combo Box Visibility"
+    },
+    {
+      "type": "textarea",
+      "id": "visible_boxes",
+      "label": "Show only these boxes",
+      "info": "Enter one box name per line. Leave blank to show all boxes.",
+      "placeholder": "Gift Box Test\n2 Step Combo\n3 Step Combo Product"
     },
     {
       "type": "header",

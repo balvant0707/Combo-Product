@@ -606,6 +606,13 @@
       boxIdsFilter = String(rawBoxIds).split(',').map(function (id) { return parseInt(id.trim(), 10); }).filter(Boolean);
     }
 
+    // Per-box visibility filter from theme editor (box names, one per line)
+    var visibleBoxNames = null;
+    var rawVisible = root.dataset.visibleBoxes || config.visibleBoxes || null;
+    if (rawVisible && String(rawVisible).trim()) {
+      visibleBoxNames = String(rawVisible).split('\n').map(function (n) { return n.trim().toLowerCase(); }).filter(Boolean);
+    }
+
     if (!shop) {
       root.innerHTML = '';
       return;
@@ -615,6 +622,13 @@
       if (err || !boxes || boxes.length === 0) { root.innerHTML = ''; return; }
       if (boxIdsFilter && boxIdsFilter.length > 0) {
         boxes = boxes.filter(function (b) { return boxIdsFilter.indexOf(b.id) !== -1; });
+      }
+      // Filter by visible box names set in theme editor
+      if (visibleBoxNames && visibleBoxNames.length > 0) {
+        boxes = boxes.filter(function (b) {
+          var name = String(b.boxName || b.displayTitle || '').trim().toLowerCase();
+          return visibleBoxNames.indexOf(name) !== -1;
+        });
       }
       if (boxes.length === 0) { root.innerHTML = ''; return; }
 

@@ -5,7 +5,6 @@ import { authenticate } from "../shopify.server";
 import {
   listBoxes,
   deleteBox,
-  toggleBoxStatus,
   reorderBoxes,
   activateAllBundleProducts,
   repairMissingShopifyProducts,
@@ -87,13 +86,6 @@ export const action = async ({ request }) => {
   const formData = await request.formData();
   const intent = formData.get("_action");
 
-  if (intent === "toggle_status") {
-    const id = formData.get("id");
-    const isActive = formData.get("isActive") === "true";
-    await toggleBoxStatus(id, shop, isActive);
-    return { ok: true };
-  }
-
   if (intent === "delete") {
     const id = formData.get("id");
     await deleteBox(id, shop, admin);
@@ -121,12 +113,6 @@ export default function ManageBoxesPage() {
     navigate(withEmbeddedAppParams(path, location.search));
   }
 
-  function handleToggleStatus(id, currentActive) {
-    fetcher.submit(
-      { _action: "toggle_status", id: String(id), isActive: String(!currentActive) },
-      { method: "POST" },
-    );
-  }
 
   function handleDelete(id, name) {
     setDeleteConfirm({ id, name });
@@ -187,17 +173,14 @@ export default function ManageBoxesPage() {
       ? boxes.filter((b) => b.id !== parseInt(fetcher.formData.get("id")))
       : boxes;
 
-  // Optimistic toggle: track which box is currently being toggled (box-level)
-  const toggleBoxId = fetcher.formData?.get("_action") === "toggle_status"
-    ? parseInt(fetcher.formData.get("id"))
-    : null;
-  const toggleNewState = toggleBoxId !== null
-    ? fetcher.formData.get("isActive") === "true"
-    : null;
-
   return (
     <s-page heading={`All Box Types (${displayBoxes.length})`}>
       <ui-title-bar title={`All Box Types (${displayBoxes.length})`}>
+        <button
+          onClick={() => navigateTo("/app/storefront-visibility")}
+        >
+          👁 Frontend Visibility
+        </button>
         <button
           onClick={() => navigateTo("/app/boxes/specific-combo")}
         >
@@ -324,56 +307,12 @@ export default function ManageBoxesPage() {
                       ⠿
                     </td>
 
-                    {/* Box name — one toggle per box, always */}
+                    {/* Box name */}
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                      {(() => {
-                        const active = box.id === toggleBoxId ? toggleNewState : box.isActive;
-                        return (
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
-                            {/* Name */}
-                            <div style={{ minWidth: 0 }}>
-                              <div style={{ fontWeight: "700", color: active ? "#111827" : "#9ca3af", transition: "color 0.15s" }}>
-                                {box.boxName}
-                              </div>
-                              {box.displayTitle !== box.boxName && (
-                                <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>{box.displayTitle}</div>
-                              )}
-                            </div>
-                            {/* ONE toggle per box */}
-                            <button
-                              type="button"
-                              onClick={() => handleToggleStatus(box.id, active)}
-                              title={active ? "Click to disable" : "Click to enable"}
-                              style={{
-                                position: "relative",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                width: "38px",
-                                height: "21px",
-                                borderRadius: "999px",
-                                background: active ? "#2A7A4F" : "#d1d5db",
-                                border: "none",
-                                cursor: "pointer",
-                                padding: 0,
-                                flexShrink: 0,
-                                transition: "background 0.2s",
-                                boxShadow: active ? "0 0 0 3px rgba(42,122,79,0.15)" : "none",
-                              }}
-                            >
-                              <span style={{
-                                position: "absolute",
-                                width: "17px",
-                                height: "17px",
-                                borderRadius: "50%",
-                                background: "#fff",
-                                left: active ? "19px" : "2px",
-                                transition: "left 0.2s",
-                                boxShadow: "0 1px 4px rgba(0,0,0,0.22)",
-                              }} />
-                            </button>
-                          </div>
-                        );
-                      })()}
+                      <div style={{ fontWeight: "700", color: "#111827" }}>{box.boxName}</div>
+                      {box.displayTitle !== box.boxName && (
+                        <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>{box.displayTitle}</div>
+                      )}
                     </td>
 
                     {/* Items */}

@@ -2,7 +2,8 @@ import { useState, useMemo, useEffect } from "react";
 import { useActionData, useFetcher, useLoaderData, useLocation, useNavigation } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
-import { getBox, upsertComboConfig } from "../models/boxes.server";
+import { Buffer } from "node:buffer";
+import { getBox, upsertComboConfig, addComboStepImagesToProduct, saveComboStepImages, getComboStepImages, deleteComboStepImage } from "../models/boxes.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 import { validateComboConfig } from "../utils/combo-config";
 
@@ -162,33 +163,92 @@ export const loader = async ({ request, params }) => {
     comboStepsConfig = box.comboStepsConfig;
   }
 
+  const rawStepImages = await getComboStepImages(params.id);
+  const stepImagesBase64 = rawStepImages.map((img) => ({
+    stepIndex: img.stepIndex,
+    mimeType: img.mimeType,
+    src: img.imageData ? `data:${img.mimeType};base64,${Buffer.from(img.imageData).toString("base64")}` : null,
+  }));
+
   return {
     box: { ...boxWithoutBinary, comboStepsConfig },
     products,
     collections,
+    stepImagesBase64,
   };
 };
 
+/* ─────────────────────────── Step Image Helpers ─────────────────────────── */
+const MAX_STEP_IMAGE_SIZE = 2 * 1024 * 1024;
+const ALLOWED_STEP_IMAGE_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif", "image/avif"]);
+
+async function parseStepImages(formData) {
+  const images = [];
+  for (let i = 0; i < 3; i++) {
+    const file = formData.get(`stepImage_${i}`);
+    if (!file || typeof file !== "object" || typeof file.arrayBuffer !== "function" || !file.size) { images.push(null); continue; }
+    if (!ALLOWED_STEP_IMAGE_TYPES.has(file.type)) { images.push({ stepIndex: i, error: "Only JPG, PNG, WEBP, GIF, or AVIF files are allowed" }); continue; }
+    if (file.size > MAX_STEP_IMAGE_SIZE) { images.push({ stepIndex: i, error: "Step image must be 2MB or smaller" }); continue; }
+    images.push({ stepIndex: i, bytes: new Uint8Array(await file.arrayBuffer()), mimeType: file.type, fileName: file.name || null });
+  }
+  return images;
+}
+
 /* ─────────────────────────── Action ─────────────────────────── */
 export const action = async ({ request, params }) => {
-  const { session } = await authenticate.admin(request);
+  const { session, admin } = await authenticate.admin(request);
   const formData = await request.formData();
   const intent = formData.get("_action");
 
   if (intent === "save_combo") {
     const comboStepsConfig = formData.get("comboStepsConfig");
     const comboValidation = validateComboConfig(comboStepsConfig);
-    if (comboValidation) {
+
+    // Parse step images
+    const stepImages = await parseStepImages(formData);
+    const stepImgErrors = {};
+    for (const img of stepImages) {
+      if (img?.error) stepImgErrors[`stepImage_${img.stepIndex}`] = img.error;
+    }
+
+    if (comboValidation || Object.keys(stepImgErrors).length > 0) {
       return {
         ok: false,
         errors: {
-          comboConfig: comboValidation.form,
-          comboStepSelections: comboValidation.stepSelections,
+          ...(comboValidation ? { comboConfig: comboValidation.form, comboStepSelections: comboValidation.stepSelections } : {}),
+          ...stepImgErrors,
         },
       };
     }
     await upsertComboConfig(params.id, comboStepsConfig);
+
+    // Save uploaded step images
+    const validStepImages = stepImages.filter((img) => img && !img.error);
+    if (validStepImages.length > 0) {
+      try { await saveComboStepImages(params.id, validStepImages); } catch (e) {
+        console.error("[app.boxes.$id.combo] saveComboStepImages error:", e);
+      }
+    }
+
+    // Sync step product/collection images to the Shopify bundle product
+    const box = await getBox(params.id, session.shop);
+    if (box?.shopifyProductId) {
+      try {
+        await addComboStepImagesToProduct(admin, box.shopifyProductId, comboStepsConfig);
+      } catch (e) {
+        console.error("[app.boxes.$id.combo] addComboStepImagesToProduct error:", e);
+      }
+    }
+
     return { ok: true, comboSaved: true };
+  }
+
+  if (intent === "remove_step_image") {
+    const stepIndex = parseInt(formData.get("stepIndex"));
+    if (!isNaN(stepIndex)) {
+      await deleteComboStepImage(params.id, stepIndex);
+    }
+    return { ok: true, stepImageRemoved: stepIndex };
   }
 
   return { ok: false, errors: { _global: "Unknown action" } };
@@ -208,9 +268,10 @@ const errorStyle = { color: "#dc2626", fontSize: "11px", marginTop: "5px", displ
 
 /* ─────────────────────────── Component ─────────────────────────── */
 export default function SpecificComboBoxPage() {
-  const { box, products, collections } = useLoaderData();
+  const { box, products, collections, stepImagesBase64 } = useLoaderData();
   const actionData = useActionData();
   const comboFetcher = useFetcher();
+  const removeImageFetcher = useFetcher();
   /* One fetcher per step for lazy-loading collection-scoped products */
   const collProdsFetcher0 = useFetcher();
   const collProdsFetcher1 = useFetcher();
@@ -221,7 +282,14 @@ export default function SpecificComboBoxPage() {
   const comboErrors = comboFetcher.data?.errors || {};
   const comboFormError = comboErrors.comboConfig;
   const comboStepErrors = comboErrors.comboStepSelections || {};
+  const comboStepImgErrors = Object.fromEntries(Object.entries(comboErrors).filter(([k]) => k.startsWith("stepImage_")));
   const comboSaved = comboFetcher.data?.comboSaved && !comboFetcher.data?.errors;
+
+  // Sync removed image back into preview state
+  const removedStepIndex = removeImageFetcher.data?.stepImageRemoved;
+  if (removedStepIndex !== undefined && stepImagePreviews[removedStepIndex] !== null) {
+    setStepImagePreviews((p) => { const n = [...p]; n[removedStepIndex] = null; return n; });
+  }
 
   /* ── Combo Config state ── */
   const [comboConfig, setComboConfig] = useState(() => {
@@ -252,6 +320,15 @@ export default function SpecificComboBoxPage() {
     return DEFAULT_COMBO_CONFIG;
   });
   const [comboActiveStep, setComboActiveStep] = useState(0);
+
+  /* Per-step uploaded image previews (data URLs) */
+  const [stepImagePreviews, setStepImagePreviews] = useState(() => {
+    const arr = [null, null, null];
+    for (const img of stepImagesBase64 || []) {
+      if (img.stepIndex >= 0 && img.stepIndex < 3 && img.src) arr[img.stepIndex] = img.src;
+    }
+    return arr;
+  });
 
   /* Per-step scoped product lists: null = use all products (no collection selected) */
   const [stepProducts, setStepProducts] = useState([null, null, null]);
@@ -375,11 +452,18 @@ export default function SpecificComboBoxPage() {
         </div>
       )}
 
-      {/* Hidden form for saving */}
-      <comboFetcher.Form id="combo-config-form" method="POST" action={`/app/boxes/${box.id}/combo${location.search}`}>
+      {/* Hidden form for saving (encType for file uploads) */}
+      <comboFetcher.Form id="combo-config-form" method="POST" encType="multipart/form-data" action={`/app/boxes/${box.id}/combo${location.search}`}>
         <input type="hidden" name="_action" value="save_combo" />
         <input type="hidden" name="comboStepsConfig" value={JSON.stringify({ ...comboConfig, bundlePrice: comboConfig.bundlePriceType === "dynamic" ? comboDynamicPrice : parseFloat(comboConfig.bundlePrice) || 0 })} />
+        {/* Step image file inputs — associated with this form but rendered near their UI via form= attribute */}
       </comboFetcher.Form>
+
+      {/* Remove-image fetcher form (hidden) */}
+      <removeImageFetcher.Form id="remove-step-image-form" method="POST" action={`/app/boxes/${box.id}/combo${location.search}`} style={{ display: "none" }}>
+        <input type="hidden" name="_action" value="remove_step_image" />
+        <input id="remove-step-image-index" type="hidden" name="stepIndex" value="" />
+      </removeImageFetcher.Form>
 
       {/* Save button at top */}
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "20px" }}>
@@ -619,6 +703,63 @@ export default function SpecificComboBoxPage() {
                         <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>CTA label inside the popup drawer</div>
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* ── Step Image Upload card ── */}
+                <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", marginBottom: "16px" }}>
+                  <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#111827", display: "flex", alignItems: "center", gap: "8px" }}>
+                    🖼 Step {ai + 1} — Step Image
+                  </div>
+                  <div style={{ padding: "16px" }}>
+                    {stepImagePreviews[ai] ? (
+                      <div style={{ marginBottom: "14px" }}>
+                        <div style={{ position: "relative", display: "inline-block" }}>
+                          <img src={stepImagePreviews[ai]} alt={`Step ${ai + 1}`} style={{ maxWidth: "100%", maxHeight: "180px", objectFit: "cover", borderRadius: "6px", border: "1.5px solid #e5e7eb", display: "block" }} />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              // Remove from preview
+                              setStepImagePreviews((p) => { const n = [...p]; n[ai] = null; return n; });
+                              // Submit remove request
+                              const idx = document.getElementById("remove-step-image-index");
+                              if (idx) idx.value = String(ai);
+                              const f = document.getElementById("remove-step-image-form");
+                              if (f) f.requestSubmit();
+                            }}
+                            style={{ position: "absolute", top: "6px", right: "6px", background: "rgba(220,38,38,0.9)", border: "none", borderRadius: "50%", width: "22px", height: "22px", color: "#fff", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}
+                          >✕</button>
+                        </div>
+                        <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "6px" }}>Upload a new file below to replace this image.</div>
+                      </div>
+                    ) : (
+                      <div style={{ marginBottom: "10px", padding: "20px", border: "2px dashed #e5e7eb", borderRadius: "6px", textAlign: "center", color: "#9ca3af", fontSize: "12px" }}>
+                        No image uploaded yet
+                      </div>
+                    )}
+                    <label style={labelStyle}>Upload step image (optional)</label>
+                    {/* All 3 inputs — active step shown, others hidden but included via form= */}
+                    {[0, 1, 2].map((si) => (
+                      <input
+                        key={si}
+                        type="file"
+                        name={`stepImage_${si}`}
+                        form="combo-config-form"
+                        accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                        style={{ display: si === ai ? "block" : "none", ...fieldStyle, padding: "7px 12px" }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onload = (ev) => setStepImagePreviews((p) => { const n = [...p]; n[si] = ev.target.result; return n; });
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                    ))}
+                    <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "6px" }}>JPG, PNG, WEBP, GIF, or AVIF — max 2MB. Shown on storefront step card.</div>
+                    {comboStepImgErrors[`stepImage_${ai}`] && (
+                      <div style={{ ...errorStyle, marginTop: "6px" }}>⚠ {comboStepImgErrors[`stepImage_${ai}`]}</div>
+                    )}
                   </div>
                 </div>
 

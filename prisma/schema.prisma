@@ -81,6 +81,7 @@ model ComboBox {
   orders              BundleOrder[]
   products            ComboBoxProduct[]
   config              ComboBoxConfig?
+  stepImages          ComboStepImage[]
 
   @@index([shop])
   @@map("combo_box")
@@ -104,6 +105,21 @@ model ComboBoxConfig {
   box               ComboBox @relation(fields: [boxId], references: [id], onDelete: Cascade)
 
   @@map("combo_box_config")
+}
+
+model ComboStepImage {
+  id        Int      @id @default(autoincrement())
+  boxId     Int
+  stepIndex Int
+  imageData Bytes?   @db.MediumBlob
+  mimeType  String?  @db.VarChar(100)
+  fileName  String?  @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  box       ComboBox @relation(fields: [boxId], references: [id], onDelete: Cascade)
+
+  @@unique([boxId, stepIndex])
+  @@map("combo_step_image")
 }
 
 model ComboBoxProduct {

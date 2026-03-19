@@ -120,6 +120,22 @@ const PRODUCT_CREATE_MEDIA_MUTATION = `#graphql
   }
 `;
 
+const GET_PRODUCT_MEDIA_QUERY = `#graphql
+  query GetProductMedia($id: ID!) {
+    product(id: $id) {
+      media(first: 50) {
+        edges {
+          node {
+            ... on MediaImage {
+              image { url }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
 // Cache the Online Store publication ID within a warm serverless container.
 let _cachedPubId = null;
 
@@ -199,6 +215,72 @@ async function addImageToProduct(admin, productId, imageSource) {
     });
   } catch (e) {
     console.warn("[addImageToProduct] productCreateMedia failed:", e.message);
+  }
+}
+
+/** Collect all unique image URLs from combo step products/collections. */
+function extractStepImageUrls(parsedCombo) {
+  const seen = new Set();
+  const urls = [];
+  for (const step of parsedCombo?.steps || []) {
+    const sources =
+      step.scope === "product"
+        ? (step.selectedProducts || []).map((p) => p.imageUrl)
+        : (step.collections || []).map((c) => c.imageUrl);
+    for (const url of sources) {
+      if (url && !seen.has(url)) {
+        seen.add(url);
+        urls.push(url);
+      }
+    }
+  }
+  return urls;
+}
+
+/** Return the path segment of a URL for dedup comparison. */
+function urlPath(raw) {
+  try { return new URL(raw).pathname; } catch { return raw; }
+}
+
+/** Fetch existing media URLs already attached to a Shopify product. */
+async function getExistingProductMediaUrls(admin, productId) {
+  try {
+    const resp = await admin.graphql(GET_PRODUCT_MEDIA_QUERY, { variables: { id: productId } });
+    const json = await resp.json();
+    return (json?.data?.product?.media?.edges || [])
+      .map((e) => e?.node?.image?.url)
+      .filter(Boolean);
+  } catch (e) {
+    console.warn("[getExistingProductMediaUrls] failed:", e.message);
+    return [];
+  }
+}
+
+/**
+ * Add images from each combo step's selected products / collections to the
+ * Shopify bundle product. Already-present images are skipped to avoid duplicates.
+ */
+export async function addComboStepImagesToProduct(admin, shopifyProductId, comboStepsConfigJson) {
+  if (!admin || !shopifyProductId || !comboStepsConfigJson) return;
+  try {
+    const parsedCombo =
+      typeof comboStepsConfigJson === "string"
+        ? JSON.parse(comboStepsConfigJson)
+        : comboStepsConfigJson;
+
+    const imageUrls = extractStepImageUrls(parsedCombo);
+    if (imageUrls.length === 0) return;
+
+    const existingUrls = await getExistingProductMediaUrls(admin, shopifyProductId);
+    const existingPaths = new Set(existingUrls.map(urlPath));
+
+    for (const imageUrl of imageUrls) {
+      if (!existingPaths.has(urlPath(imageUrl))) {
+        await addImageToProduct(admin, shopifyProductId, imageUrl);
+      }
+    }
+  } catch (e) {
+    console.error("[addComboStepImagesToProduct] error:", e);
   }
 }
 
@@ -846,5 +928,51 @@ export async function repairMissingShopifyVariantIds(shop, admin) {
 export async function getActiveBoxCount(shop) {
   return db.comboBox.count({
     where: { shop, isActive: true, deletedAt: null },
+  });
+}
+
+/**
+ * Upsert per-step images for a combo box.
+ * stepImages: array of { stepIndex, bytes, mimeType, fileName }
+ */
+export async function saveComboStepImages(boxId, stepImages) {
+  if (!boxId || !Array.isArray(stepImages)) return;
+  for (const img of stepImages) {
+    if (!img || !img.bytes) continue;
+    await db.comboStepImage.upsert({
+      where: { boxId_stepIndex: { boxId: parseInt(boxId), stepIndex: img.stepIndex } },
+      create: {
+        boxId: parseInt(boxId),
+        stepIndex: img.stepIndex,
+        imageData: img.bytes,
+        mimeType: img.mimeType || null,
+        fileName: img.fileName || null,
+      },
+      update: {
+        imageData: img.bytes,
+        mimeType: img.mimeType || null,
+        fileName: img.fileName || null,
+      },
+    });
+  }
+}
+
+/**
+ * Retrieve all step images for a box (binary data included).
+ */
+export async function getComboStepImages(boxId) {
+  return db.comboStepImage.findMany({
+    where: { boxId: parseInt(boxId) },
+    orderBy: { stepIndex: "asc" },
+    select: { stepIndex: true, mimeType: true, imageData: true, fileName: true },
+  });
+}
+
+/**
+ * Delete a specific step image.
+ */
+export async function deleteComboStepImage(boxId, stepIndex) {
+  return db.comboStepImage.deleteMany({
+    where: { boxId: parseInt(boxId), stepIndex: parseInt(stepIndex) },
   });
 }

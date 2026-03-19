@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigation } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
-import { createBox, upsertComboConfig } from "../models/boxes.server";
+import { createBox, upsertComboConfig, addComboStepImagesToProduct, saveComboStepImages } from "../models/boxes.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 import { validateComboConfig } from "../utils/combo-config";
 
@@ -45,7 +45,8 @@ const PRODUCTS_QUERY = `#graphql
 
 /* ─────────────────────────── Constants ─────────────────────────── */
 const MAX_BANNER_IMAGE_SIZE = 5 * 1024 * 1024;
-const ALLOWED_BANNER_MIME_TYPES = new Set([
+const MAX_STEP_IMAGE_SIZE = 2 * 1024 * 1024;
+const ALLOWED_IMAGE_MIME_TYPES = new Set([
   "image/jpeg", "image/jpg", "image/png",
   "image/webp", "image/gif", "image/avif",
 ]);
@@ -53,9 +54,32 @@ const ALLOWED_BANNER_MIME_TYPES = new Set([
 async function parseBannerImage(formData, errors) {
   const file = formData.get("bannerImage");
   if (!file || typeof file !== "object" || typeof file.arrayBuffer !== "function" || !file.size) return null;
-  if (!ALLOWED_BANNER_MIME_TYPES.has(file.type)) { errors.bannerImage = "Only JPG, PNG, WEBP, GIF, and AVIF files are allowed"; return null; }
+  if (!ALLOWED_IMAGE_MIME_TYPES.has(file.type)) { errors.bannerImage = "Only JPG, PNG, WEBP, GIF, and AVIF files are allowed"; return null; }
   if (file.size > MAX_BANNER_IMAGE_SIZE) { errors.bannerImage = "Banner image must be 5MB or smaller"; return null; }
   return { bytes: new Uint8Array(await file.arrayBuffer()), mimeType: file.type, fileName: file.name || null };
+}
+
+async function parseStepImages(formData, errors) {
+  const images = [];
+  for (let i = 0; i < 3; i++) {
+    const file = formData.get(`stepImage_${i}`);
+    if (!file || typeof file !== "object" || typeof file.arrayBuffer !== "function" || !file.size) {
+      images.push(null);
+      continue;
+    }
+    if (!ALLOWED_IMAGE_MIME_TYPES.has(file.type)) {
+      errors[`stepImage_${i}`] = "Only JPG, PNG, WEBP, GIF, and AVIF files are allowed";
+      images.push(null);
+      continue;
+    }
+    if (file.size > MAX_STEP_IMAGE_SIZE) {
+      errors[`stepImage_${i}`] = "Step image must be 2MB or smaller";
+      images.push(null);
+      continue;
+    }
+    images.push({ stepIndex: i, bytes: new Uint8Array(await file.arrayBuffer()), mimeType: file.type, fileName: file.name || null });
+  }
+  return images;
 }
 
 const DEFAULT_COMBO = {
@@ -122,6 +146,7 @@ export const action = async ({ request }) => {
   const comboStepsConfig = formData.get("comboStepsConfig");
   const errors = {};
   const bannerImage = await parseBannerImage(formData, errors);
+  const stepImages = await parseStepImages(formData, errors);
   const comboValidation = validateComboConfig(comboStepsConfig);
 
   const comboName = formData.get("comboName")?.trim() || "";
@@ -165,6 +190,19 @@ export const action = async ({ request }) => {
     if (comboStepsConfig) {
       try { await upsertComboConfig(box.id, comboStepsConfig); } catch (e) {
         console.error("[app.boxes.specific-combo] upsertComboConfig error:", e);
+      }
+      // Add step product/collection images to the Shopify bundle product
+      if (box.shopifyProductId) {
+        try { await addComboStepImagesToProduct(admin, box.shopifyProductId, comboStepsConfig); } catch (e) {
+          console.error("[app.boxes.specific-combo] addComboStepImagesToProduct error:", e);
+        }
+      }
+      // Save per-step uploaded images
+      const validStepImages = stepImages.filter(Boolean);
+      if (validStepImages.length > 0) {
+        try { await saveComboStepImages(box.id, validStepImages); } catch (e) {
+          console.error("[app.boxes.specific-combo] saveComboStepImages error:", e);
+        }
       }
     }
   } catch (e) {
@@ -216,6 +254,9 @@ export default function CreateSpecificComboBoxPage() {
     if (collProdsFetcher2.data?.collectionProducts)
       setStepProducts((p) => { const n = [...p]; n[2] = collProdsFetcher2.data.collectionProducts; return n; });
   }, [collProdsFetcher2.data]);
+
+  /* ── Step image previews (data URLs set by FileReader) ── */
+  const [stepImagePreviews, setStepImagePreviews] = useState([null, null, null]);
 
   /* ── Collection modal ── */
   const [showCollModal, setShowCollModal] = useState(false);
@@ -509,7 +550,7 @@ export default function CreateSpecificComboBoxPage() {
                     </div>
 
                     {/* General Settings card */}
-                    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", marginBottom: "16px" }}>
                       <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#111827" }}>Step {ai + 1} — General settings</div>
                       <div style={{ padding: "16px" }}>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
@@ -532,6 +573,41 @@ export default function CreateSpecificComboBoxPage() {
                             <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>CTA label inside the popup drawer</div>
                           </div>
                         </div>
+                      </div>
+                    </div>
+
+                    {/* Step Image Upload card */}
+                    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                      <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#111827", display: "flex", alignItems: "center", gap: "8px" }}>
+                        🖼 Step {ai + 1} — Step Image
+                      </div>
+                      <div style={{ padding: "16px" }}>
+                        {stepImagePreviews[ai] && (
+                          <div style={{ marginBottom: "14px", position: "relative", display: "inline-block" }}>
+                            <img src={stepImagePreviews[ai]} alt={`Step ${ai + 1}`} style={{ maxWidth: "100%", maxHeight: "180px", objectFit: "cover", borderRadius: "6px", border: "1.5px solid #e5e7eb", display: "block" }} />
+                            <button type="button" onClick={() => setStepImagePreviews((p) => { const n = [...p]; n[ai] = null; return n; })} style={{ position: "absolute", top: "6px", right: "6px", background: "rgba(220,38,38,0.9)", border: "none", borderRadius: "50%", width: "22px", height: "22px", color: "#fff", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>✕</button>
+                          </div>
+                        )}
+                        <label style={labelStyle}>Upload step image (optional)</label>
+                        {/* All 3 inputs stay in form; only the active one is visible */}
+                        {[0, 1, 2].map((si) => (
+                          <input
+                            key={si}
+                            type="file"
+                            name={`stepImage_${si}`}
+                            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                            style={{ display: si === ai ? "block" : "none", ...fieldStyle, padding: "7px 12px" }}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const reader = new FileReader();
+                              reader.onload = (ev) => setStepImagePreviews((p) => { const n = [...p]; n[si] = ev.target.result; return n; });
+                              reader.readAsDataURL(file);
+                            }}
+                          />
+                        ))}
+                        <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "6px" }}>JPG, PNG, WEBP, GIF, or AVIF — max 2MB. Shown on storefront step card.</div>
+                        {errors[`stepImage_${ai}`] && <div style={errorStyle}>⚠ {errors[`stepImage_${ai}`]}</div>}
                       </div>
                     </div>
                   </div>

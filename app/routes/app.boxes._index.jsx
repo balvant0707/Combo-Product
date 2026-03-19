@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useFetcher, useLoaderData, useLocation, useNavigate } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -143,6 +143,25 @@ export default function ManageBoxesPage() {
   const fetcher = useFetcher();
 
   const [deleteConfirm, setDeleteConfirm] = useState(null); // { id, name }
+  const [savedPageBoxId, setSavedPageBoxId] = useState(null);
+  const savedTimerRef = useRef(null);
+
+  // Track when assign_page completes → show success badge
+  const prevFetcherState = useRef(fetcher.state);
+  useEffect(() => {
+    if (
+      prevFetcherState.current !== "idle" &&
+      fetcher.state === "idle" &&
+      fetcher.data?.ok &&
+      fetcher.formData?.get("_action") === "assign_page"
+    ) {
+      const id = parseInt(fetcher.formData.get("id"));
+      setSavedPageBoxId(id);
+      clearTimeout(savedTimerRef.current);
+      savedTimerRef.current = setTimeout(() => setSavedPageBoxId(null), 2500);
+    }
+    prevFetcherState.current = fetcher.state;
+  }, [fetcher.state, fetcher.data]);
 
   function navigateTo(path) {
     navigate(withEmbeddedAppParams(path, location.search));
@@ -203,6 +222,17 @@ export default function ManageBoxesPage() {
     );
   }
 
+  function getPageLabel(handle, pages) {
+    if (!handle) return "All pages";
+    if (handle === "index") return "Home page";
+    if (handle === "product") return "All product pages";
+    if (handle === "collection") return "All collection pages";
+    if (handle === "cart") return "Cart page";
+    const found = pages.find((p) => p.handle === handle);
+    if (found) return found.title;
+    return handle;
+  }
+
   const displayBoxes =
     fetcher.formData?.get("_action") === "delete"
       ? boxes.filter((b) => b.id !== parseInt(fetcher.formData.get("id")))
@@ -215,6 +245,7 @@ export default function ManageBoxesPage() {
 
   return (
     <s-page heading={`All Box Types (${displayBoxes.length})`}>
+      <style>{`@keyframes fadeIn { from { opacity:0; transform:scale(0.85); } to { opacity:1; transform:scale(1); } }`}</style>
       <ui-title-bar title={`All Box Types (${displayBoxes.length})`}>
         <button
           onClick={() => navigateTo("/app/storefront-visibility")}
@@ -364,77 +395,103 @@ export default function ManageBoxesPage() {
                         ];
 
                         return (
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
-                            {/* Name + page select */}
-                            <div style={{ minWidth: 0, flex: 1 }}>
-                              <div style={{ fontWeight: "700", color: active ? "#111827" : "#9ca3af", transition: "color 0.15s", marginBottom: "6px" }}>
+                          <div>
+                            {/* Row 1: name + toggle side by side */}
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+                              <div style={{ fontWeight: "700", color: active ? "#111827" : "#9ca3af", transition: "color 0.15s", minWidth: 0 }}>
                                 {box.boxName}
                               </div>
-                              {box.displayTitle !== box.boxName && (
-                                <div style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "6px" }}>{box.displayTitle}</div>
-                              )}
-                              {/* Page assignment select */}
-                              <select
-                                value={box.pageHandle || ""}
-                                onChange={(e) => fetcher.submit(
-                                  { _action: "assign_page", id: String(box.id), pageHandle: e.target.value },
+                              {/* Toggle inline with name */}
+                              <button
+                                type="button"
+                                onClick={() => fetcher.submit(
+                                  { _action: "toggle_status", id: String(box.id), isActive: String(!active) },
                                   { method: "POST" }
                                 )}
+                                title={active ? "Click to disable" : "Click to enable"}
                                 style={{
-                                  width: "100%",
-                                  fontSize: "11px",
-                                  padding: "4px 8px",
-                                  borderRadius: "6px",
-                                  border: "1px solid #e5e7eb",
-                                  background: "#f9fafb",
-                                  color: "#374151",
+                                  position: "relative",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  width: "38px",
+                                  height: "21px",
+                                  borderRadius: "999px",
+                                  background: active ? "#2A7A4F" : "#d1d5db",
+                                  border: "none",
                                   cursor: "pointer",
-                                  outline: "none",
-                                  maxWidth: "180px",
+                                  padding: 0,
+                                  flexShrink: 0,
+                                  transition: "background 0.2s",
+                                  boxShadow: active ? "0 0 0 3px rgba(42,122,79,0.15)" : "none",
                                 }}
                               >
-                                {PAGE_OPTIONS.map((opt) => (
-                                  <option key={opt.value} value={opt.value} disabled={opt.disabled}>
-                                    {opt.label}
-                                  </option>
-                                ))}
-                              </select>
+                                <span style={{
+                                  position: "absolute",
+                                  width: "17px",
+                                  height: "17px",
+                                  borderRadius: "50%",
+                                  background: "#fff",
+                                  left: active ? "19px" : "2px",
+                                  transition: "left 0.2s",
+                                  boxShadow: "0 1px 4px rgba(0,0,0,0.22)",
+                                }} />
+                              </button>
                             </div>
-                            {/* Toggle */}
-                            <button
-                              type="button"
-                              onClick={() => fetcher.submit(
-                                { _action: "toggle_status", id: String(box.id), isActive: String(!active) },
+                            {/* Row 2: subtitle */}
+                            {box.displayTitle !== box.boxName && (
+                              <div style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "6px" }}>{box.displayTitle}</div>
+                            )}
+                            {/* Row 3: page select + current label + success msg */}
+                            <select
+                              value={box.pageHandle || ""}
+                              onChange={(e) => fetcher.submit(
+                                { _action: "assign_page", id: String(box.id), pageHandle: e.target.value },
                                 { method: "POST" }
                               )}
-                              title={active ? "Click to disable" : "Click to enable"}
                               style={{
-                                position: "relative",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                width: "38px",
-                                height: "21px",
-                                borderRadius: "999px",
-                                background: active ? "#2A7A4F" : "#d1d5db",
-                                border: "none",
+                                fontSize: "11px",
+                                padding: "4px 8px",
+                                borderRadius: "6px",
+                                border: "1px solid #e5e7eb",
+                                background: "#f9fafb",
+                                color: "#374151",
                                 cursor: "pointer",
-                                padding: 0,
-                                flexShrink: 0,
-                                transition: "background 0.2s",
-                                boxShadow: active ? "0 0 0 3px rgba(42,122,79,0.15)" : "none",
+                                outline: "none",
+                                maxWidth: "190px",
+                                width: "100%",
                               }}
                             >
+                              {PAGE_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value} disabled={opt.disabled}>
+                                  {opt.label}
+                                </option>
+                              ))}
+                            </select>
+
+                            {/* Current page label */}
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
                               <span style={{
-                                position: "absolute",
-                                width: "17px",
-                                height: "17px",
-                                borderRadius: "50%",
-                                background: "#fff",
-                                left: active ? "19px" : "2px",
-                                transition: "left 0.2s",
-                                boxShadow: "0 1px 4px rgba(0,0,0,0.22)",
-                              }} />
-                            </button>
+                                fontSize: "10px",
+                                color: box.pageHandle ? "#2A7A4F" : "#9ca3af",
+                                fontWeight: "600",
+                              }}>
+                                {box.pageHandle ? `📄 ${getPageLabel(box.pageHandle, shopifyPages)}` : "🌐 Showing on all pages"}
+                              </span>
+                              {/* Success badge */}
+                              {savedPageBoxId === box.id && (
+                                <span style={{
+                                  fontSize: "10px",
+                                  fontWeight: "700",
+                                  color: "#fff",
+                                  background: "#2A7A4F",
+                                  padding: "1px 7px",
+                                  borderRadius: "999px",
+                                  animation: "fadeIn 0.2s ease",
+                                }}>
+                                  ✓ Saved successfully
+                                </span>
+                              )}
+                            </div>
                           </div>
                         );
                       })()}

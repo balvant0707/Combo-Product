@@ -203,14 +203,6 @@ export default function ManageBoxesPage() {
     ? fetcher.formData.get("isActive") === "true"
     : null;
 
-  // Optimistic toggle: track which combo config is being toggled
-  const toggleComboBoxId = fetcher.formData?.get("_action") === "toggle_combo_status"
-    ? parseInt(fetcher.formData.get("id"))
-    : null;
-  const toggleComboNewState = toggleComboBoxId !== null
-    ? fetcher.formData.get("isActive") === "true"
-    : null;
-
   return (
     <s-page heading={`All Box Types (${displayBoxes.length})`}>
       <ui-title-bar title={`All Box Types (${displayBoxes.length})`}>
@@ -340,80 +332,26 @@ export default function ManageBoxesPage() {
                       ⠿
                     </td>
 
-                    {/* Box name — box toggle on the right, combo toggle next to name */}
+                    {/* Box name — one toggle per box, always */}
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
                       {(() => {
                         const active = box.id === toggleBoxId ? toggleNewState : box.isActive;
-                        const hasCombo = box.comboConfig && box.comboConfig.comboType > 0;
-                        const comboActive = box.id === toggleComboBoxId ? toggleComboNewState : (hasCombo ? box.comboConfig.isActive : false);
                         return (
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
-                            {/* Name + optional combo toggle */}
+                            {/* Name */}
                             <div style={{ minWidth: 0 }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                                <span style={{ fontWeight: "700", color: active ? "#111827" : "#9ca3af", transition: "color 0.15s" }}>
-                                  {box.boxName}
-                                </span>
-                                {hasCombo && (
-                                  <button
-                                    type="button"
-                                    onClick={() => fetcher.submit(
-                                      { _action: "toggle_combo_status", id: String(box.id), isActive: String(!comboActive) },
-                                      { method: "POST" }
-                                    )}
-                                    title={comboActive ? "Disable specific combo" : "Enable specific combo"}
-                                    style={{
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      gap: "5px",
-                                      padding: "2px 8px 2px 6px",
-                                      borderRadius: "999px",
-                                      border: `1px solid ${comboActive ? "#2A7A4F" : "#d1d5db"}`,
-                                      background: comboActive ? "rgba(42,122,79,0.08)" : "#f9fafb",
-                                      cursor: "pointer",
-                                      fontSize: "10px",
-                                      fontWeight: "600",
-                                      color: comboActive ? "#2A7A4F" : "#9ca3af",
-                                      transition: "all 0.15s",
-                                      flexShrink: 0,
-                                    }}
-                                  >
-                                    {/* mini pill toggle */}
-                                    <span style={{
-                                      position: "relative",
-                                      display: "inline-block",
-                                      width: "24px",
-                                      height: "13px",
-                                      borderRadius: "999px",
-                                      background: comboActive ? "#2A7A4F" : "#d1d5db",
-                                      transition: "background 0.2s",
-                                      flexShrink: 0,
-                                    }}>
-                                      <span style={{
-                                        position: "absolute",
-                                        width: "9px",
-                                        height: "9px",
-                                        borderRadius: "50%",
-                                        background: "#fff",
-                                        top: "2px",
-                                        left: comboActive ? "13px" : "2px",
-                                        transition: "left 0.2s",
-                                        boxShadow: "0 1px 2px rgba(0,0,0,0.2)",
-                                      }} />
-                                    </span>
-                                    Specific Combo
-                                  </button>
-                                )}
+                              <div style={{ fontWeight: "700", color: active ? "#111827" : "#9ca3af", transition: "color 0.15s" }}>
+                                {box.boxName}
                               </div>
                               {box.displayTitle !== box.boxName && (
                                 <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>{box.displayTitle}</div>
                               )}
                             </div>
-                            {/* Box-level toggle switch */}
+                            {/* ONE toggle per box */}
                             <button
                               type="button"
                               onClick={() => handleToggleStatus(box.id, active)}
-                              title={active ? "Click to disable box" : "Click to enable box"}
+                              title={active ? "Click to disable" : "Click to enable"}
                               style={{
                                 position: "relative",
                                 display: "inline-flex",

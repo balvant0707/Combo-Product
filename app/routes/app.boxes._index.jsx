@@ -333,7 +333,6 @@ export default function ManageBoxesPage() {
                       <td style={{ padding: "14px 14px", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", minWidth: "240px", verticalAlign: "middle" }}>
                         <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
                           {/* Color accent */}
-                          <div style={{ width: "3px", minHeight: "48px", borderRadius: "4px", background: box.isActive ? "#2A7A4F" : "#d1d5db", flexShrink: 0, marginTop: "2px" }} />
                           <div style={{ flex: 1 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px" }}>
                               <span style={{ fontWeight: "700", color: "#111827", fontSize: "13px" }}>{box.boxName}</span>

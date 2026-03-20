@@ -165,12 +165,13 @@ function EmbedBlockCard({ embedBlockUrl, enabled }) {
                 width: "38px",
                 height: "38px",
                 borderRadius: "5px",
-                background: "#000000",
+                background: "#ffffff",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
                 color: "#ffffff",
+                border: "2px solid #000000",
               }}
             >
               <AdminIcon type="apps" size="large" color="#ffffff !important" />

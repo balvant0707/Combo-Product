@@ -153,6 +153,24 @@ function StatCard({ label, value, icon, accent, bg, sub }) {
 }
 
 function EmbedBlockCard({ embedBlockUrl }) {
+  const steps = [
+    {
+      num: "1",
+      label: "Open Apps Panel",
+      text: 'Click the button → theme editor opens on the "App embeds" panel.',
+    },
+    {
+      num: "2",
+      label: 'Toggle "Combo Builder" ON',
+      text: "Find Combo Builder in the list and flip the toggle to the right.",
+    },
+    {
+      num: "3",
+      label: "Save Theme",
+      text: 'Click the green "Save" button at the top-right of the editor.',
+    },
+  ];
+
   return (
     <div style={{ marginBottom: "20px" }}>
       <div
@@ -164,60 +182,60 @@ function EmbedBlockCard({ embedBlockUrl }) {
           boxShadow: "0 8px 24px rgba(15,23,42,0.08)",
         }}
       >
+        {/* Header */}
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "auto 1fr auto",
+            padding: "18px 24px 16px",
+            borderBottom: "1px solid #e5e7eb",
+            display: "flex",
             alignItems: "center",
-            gap: "20px",
-            padding: "20px 24px",
+            justifyContent: "space-between",
+            gap: "16px",
           }}
         >
-          {/* Icon */}
-          <div
-            style={{
-              width: "48px",
-              height: "48px",
-              borderRadius: "12px",
-              background: "linear-gradient(135deg,#f0fdf4,#dcfce7)",
-              border: "1.5px solid #86efac",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <AdminIcon type="apps" size="large" />
-          </div>
-
-          {/* Text */}
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-              <span style={{ fontSize: "15px", fontWeight: "800", color: "#111827" }}>
-                Enable Theme App Embed Block
-              </span>
-              <span
-                style={{
-                  background: "#fef3c7",
-                  border: "1px solid #fde68a",
-                  color: "#92400e",
-                  fontSize: "10px",
-                  fontWeight: "700",
-                  padding: "2px 8px",
-                  borderRadius: "999px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
-                Required
-              </span>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div
+              style={{
+                width: "38px",
+                height: "38px",
+                borderRadius: "8px",
+                background: "linear-gradient(135deg,#f0fdf4,#dcfce7)",
+                border: "1.5px solid #86efac",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <AdminIcon type="apps" size="large" />
             </div>
-            <p style={{ margin: 0, fontSize: "13px", color: "#6b7280", lineHeight: 1.5 }}>
-              Activate the Combo Builder embed block in your theme to enable storefront functionality. Opens the theme editor Apps panel — just toggle it on and save.
-            </p>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "15px", fontWeight: "800", color: "#111827" }}>
+                  Enable Theme App Embed Block
+                </span>
+                <span
+                  style={{
+                    background: "#fef3c7",
+                    border: "1px solid #fde68a",
+                    color: "#92400e",
+                    fontSize: "10px",
+                    fontWeight: "700",
+                    padding: "2px 8px",
+                    borderRadius: "999px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  Required
+                </span>
+              </div>
+              <p style={{ margin: "2px 0 0", fontSize: "12px", color: "#6b7280" }}>
+                The embed block loads Combo Builder scripts globally on your storefront.
+              </p>
+            </div>
           </div>
 
-          {/* CTA */}
           <a
             href={embedBlockUrl}
             target="_blank"
@@ -249,8 +267,57 @@ function EmbedBlockCard({ embedBlockUrl }) {
             }}
           >
             <AdminIcon type="theme" size="small" />
-            Enable Embed Block
+            Open App Embeds
           </a>
+        </div>
+
+        {/* Steps */}
+        <div
+          style={{
+            padding: "16px 24px 18px",
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: "12px",
+          }}
+        >
+          {steps.map((step) => (
+            <div
+              key={step.num}
+              style={{
+                display: "flex",
+                gap: "12px",
+                background: "#f9fafb",
+                border: "1px solid #e5e7eb",
+                borderRadius: "5px",
+                padding: "14px 14px",
+              }}
+            >
+              <div
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  borderRadius: "50%",
+                  background: "#2A7A4F",
+                  color: "#fff",
+                  fontSize: "12px",
+                  fontWeight: "800",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  marginTop: "1px",
+                }}
+              >
+                {step.num}
+              </div>
+              <div>
+                <div style={{ fontSize: "12px", fontWeight: "800", color: "#111827", marginBottom: "3px" }}>
+                  {step.label}
+                </div>
+                <div style={{ fontSize: "11px", color: "#6b7280", lineHeight: 1.5 }}>{step.text}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -1,4 +1,3 @@
-{% if block.settings.enabled %}
 {{- 'combo-builder.css' | asset_url | stylesheet_tag -}}
 <script defer src="{{ 'combo-builder.js' | asset_url }}"></script>
 <script>
@@ -9,20 +8,11 @@
     apiBase:        'https://combo-products.vercel.app'
   };
 </script>
-{% endif %}
 
 {% schema %}
 {
   "name": "Combo Builder",
   "target": "body",
-  "settings": [
-    {
-      "type": "checkbox",
-      "id": "enabled",
-      "label": "Enable Combo Builder",
-      "default": true,
-      "info": "Load Combo Builder scripts and styles across your storefront."
-    }
-  ]
+  "settings": []
 }
 {% endschema %}

@@ -56,7 +56,7 @@ export default function StorefrontVisibilityPage() {
         </h1>
         <p style={{ fontSize: "13px", color: "#6a7280", margin: 0 }}>
           Control which combo boxes appear on your storefront.
-          <strong style={{ color: "#2A7A4F" }}> {activeCount} of {boxes.length}</strong> boxes visible.
+          <strong style={{ color: "#000000" }}> {activeCount} of {boxes.length}</strong> boxes visible.
         </p>
       </div>
 
@@ -93,7 +93,7 @@ export default function StorefrontVisibilityPage() {
                     width: "8px",
                     height: "8px",
                     borderRadius: "50%",
-                    background: active ? "#2A7A4F" : "#d1d5da",
+                    background: active ? "#000000" : "#d1d5da",
                     flexShrink: 0,
                     transition: "background 0.2s",
                   }} />
@@ -136,7 +136,7 @@ export default function StorefrontVisibilityPage() {
                   <span style={{
                     fontSize: "11px",
                     fontWeight: "600",
-                    color: active ? "#2A7A4F" : "#9ca3af",
+                    color: active ? "#000000" : "#9ca3af",
                     transition: "color 0.15s",
                     minWidth: "46px",
                     textAlign: "right",
@@ -154,13 +154,13 @@ export default function StorefrontVisibilityPage() {
                       width: "44px",
                       height: "24px",
                       borderRadius: "999px",
-                      background: active ? "#2A7A4F" : "#d1d5da",
+                      background: active ? "#000000" : "#d1d5da",
                       border: "none",
                       cursor: "pointer",
                       padding: 0,
                       flexShrink: 0,
                       transition: "background 0.2s",
-                      boxShadow: active ? "0 0 0 3px rgba(42,122,79,0.15)" : "none",
+                      boxShadow: active ? "0 0 0 3px rgba(0,0,0,0.15)" : "none",
                     }}
                   >
                     <span style={{

@@ -420,7 +420,7 @@ export default function ManageBoxesPage() {
                             <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
                               <span style={{
                                 fontSize: "10px",
-                                color: box.pageHandle ? "#2A7A4F" : "#9ca3af",
+                                color: box.pageHandle ? "#000000" : "#9ca3af",
                                 fontWeight: "600",
                               }}>
                                 {box.pageHandle ? `📄 ${getPageLabel(box.pageHandle, shopifyPages)}` : "🌐 Showing on all pages"}
@@ -431,7 +431,7 @@ export default function ManageBoxesPage() {
                                   fontSize: "10px",
                                   fontWeight: "700",
                                   color: "#fff",
-                                  background: "#2A7A4F",
+                                  background: "#000000",
                                   padding: "1px 7px",
                                   borderRadius: "999px",
                                   animation: "fadeIn 0.2s ease",
@@ -465,7 +465,7 @@ export default function ManageBoxesPage() {
 
                     {/* Price */}
                     <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                      <span style={{ fontFamily: "monospace", fontWeight: "700", color: "#2A7A4F" }}>
+                      <span style={{ fontFamily: "monospace", fontWeight: "700", color: "#000000" }}>
                         &#8377;{Number(box.bundlePriceType === "dynamic" ? 0 : box.bundlePrice).toLocaleString("en-IN")}
                       </span>
                     </td>

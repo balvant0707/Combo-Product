@@ -301,7 +301,7 @@ export default function CreateBoxPage() {
                 <label style={labelStyle}>Bundle Price (₹) *</label>
                 <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "5px", overflow: "hidden", marginBottom: "10px" }}>
                   {["manual", "dynamic"].map((mode) => (
-                    <button key={mode} type="button" onClick={() => setPriceMode(mode)} style={{ flex: 1, padding: "7px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: priceMode === mode ? "#2A7A4F" : "#f9fafb", color: priceMode === mode ? "#fff" : "#374151", transition: "background 0.15s" }}>
+                    <button key={mode} type="button" onClick={() => setPriceMode(mode)} style={{ flex: 1, padding: "7px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: priceMode === mode ? "#000000" : "#f9fafb", color: priceMode === mode ? "#ffffff" : "#374151", transition: "background 0.15s" }}>
                       {mode === "manual" ? "Manual" : "Dynamic"}
                     </button>
                   ))}
@@ -335,11 +335,11 @@ export default function CreateBoxPage() {
                 { key: "giftMessageEnabled", label: "Gift Message Field", desc: "Show text area for gift message", icon: "✉️" },
                 { key: "isActive", label: "Active on Storefront", desc: "Uncheck to save as draft", icon: "✅" },
               ].map((opt) => (
-                <label key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px 14px", border: options[opt.key] ? "1.5px solid #091fd6" : "1.5px solid #e5e7eb", borderRadius: "5px", background: options[opt.key] ? "#eef1ff" : "#fafafa", transition: "border-color 0.15s, background 0.15s" }}>
-                  <input type="checkbox" checked={options[opt.key]} onChange={() => toggleOption(opt.key)} style={{ marginTop: "3px", width: "14px", height: "14px", accentColor: "#091fd6", flexShrink: 0 }} />
+                <label key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px 14px", border: options[opt.key] ? "1.5px solid #000000" : "1.5px solid #e5e7eb", borderRadius: "5px", background: options[opt.key] ? "#000000" : "#fafafa", transition: "border-color 0.15s, background 0.15s" }}>
+                  <input type="checkbox" checked={options[opt.key]} onChange={() => toggleOption(opt.key)} style={{ marginTop: "3px", width: "14px", height: "14px", accentColor: "#000000", flexShrink: 0 }} />
                   <div>
-                    <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", display: "flex", alignItems: "center", gap: "5px" }}><span>{opt.icon}</span> {opt.label}</div>
-                    <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>{opt.desc}</div>
+                    <div style={{ fontSize: "13px", fontWeight: "600", color: options[opt.key] ? "#ffffff" : "#111827", display: "flex", alignItems: "center", gap: "5px" }}><span>{opt.icon}</span> {opt.label}</div>
+                    <div style={{ fontSize: "11px", color: options[opt.key] ? "rgba(255,255,255,0.72)" : "#9ca3af", marginTop: "2px" }}>{opt.desc}</div>
                   </div>
                 </label>
               ))}
@@ -364,9 +364,9 @@ export default function CreateBoxPage() {
               <button
                 type="button"
                 onClick={() => { setScopeSearch(""); setShowScopePicker(true); }}
-                style={{ padding: "8px 16px", background: "#f9fafb", border: "1.5px solid #e5e7eb", borderRadius: "5px", fontSize: "13px", fontWeight: "600", color: "#374151", cursor: "pointer", transition: "background 0.12s, border-color 0.12s" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "#f3f4f6"; e.currentTarget.style.borderColor = "#d1d5db"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "#f9fafb"; e.currentTarget.style.borderColor = "#e5e7eb"; }}
+                style={{ padding: "8px 16px", background: "#000000", border: "1.5px solid #000000", borderRadius: "5px", fontSize: "13px", fontWeight: "600", color: "#ffffff", cursor: "pointer", transition: "background 0.12s, border-color 0.12s" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#000000"; e.currentTarget.style.borderColor = "#000000"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "#000000"; e.currentTarget.style.borderColor = "#000000"; }}
               >
                 {scope === "specific_collections" ? "Select collections" : "Select products"}
               </button>
@@ -375,10 +375,10 @@ export default function CreateBoxPage() {
               </span>
             </div>
             {scopeItems.length > 0 && (
-              <div style={{ marginTop: "10px", padding: "10px 12px", background: "#f0fdf4", borderRadius: "5px", border: "1px solid #bbf7d0" }}>
+              <div style={{ marginTop: "10px", padding: "10px 12px", background: "#000000", borderRadius: "5px", border: "1px solid #000000" }}>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                   {scopeItems.map((item) => (
-                    <span key={item.id} onClick={() => setScopeItems((prev) => prev.filter((i) => i.id !== item.id))} style={{ background: "#2A7A4F", color: "#fff", borderRadius: "5px", padding: "3px 10px", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", fontWeight: "500" }}>
+                    <span key={item.id} onClick={() => setScopeItems((prev) => prev.filter((i) => i.id !== item.id))} style={{ background: "#000000", color: "#ffffff", border: "1px solid rgba(255,255,255,0.24)", borderRadius: "5px", padding: "3px 10px", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", fontWeight: "500" }}>
                       {item.title}<span style={{ opacity: 0.75, fontSize: "10px" }}>✕</span>
                     </span>
                   ))}
@@ -403,18 +403,18 @@ export default function CreateBoxPage() {
               </div>
             )}
             {selectedProducts.length > 0 && (
-              <div style={{ marginBottom: "12px", padding: "12px 14px", background: "#eef1ff", borderRadius: "5px", border: "1px solid #c7d2fe" }}>
-                <div style={{ fontSize: "10px", fontWeight: "700", color: "#091fd6", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.6px" }}>Selected Products</div>
+              <div style={{ marginBottom: "12px", padding: "12px 14px", background: "#000000", borderRadius: "5px", border: "1px solid #000000" }}>
+                <div style={{ fontSize: "10px", fontWeight: "700", color: "#ffffff", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.6px" }}>Selected Products</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                   {selectedProducts.map((p) => (
-                    <span key={p.id} onClick={() => toggleProduct(p)} style={{ background: "#ffffff", color: "#000000", border: "1px solid #d1d5db", borderRadius: "5px", padding: "4px 10px", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", fontWeight: "500" }}>
+                    <span key={p.id} onClick={() => toggleProduct(p)} style={{ background: "#000000", color: "#ffffff", border: "1px solid rgba(255,255,255,0.24)", borderRadius: "5px", padding: "4px 10px", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", fontWeight: "500" }}>
                       {p.productTitle}<span style={{ opacity: 0.75, fontSize: "10px" }}>✕</span>
                     </span>
                   ))}
                 </div>
               </div>
             )}
-            <button type="button" onClick={openPicker} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 18px", background: "#fff", border: "1.5px dashed #d1d5db", borderRadius: "5px", fontSize: "13px", fontWeight: "600", color: "#091fd6", cursor: "pointer", width: "100%", justifyContent: "center", transition: "border-color 0.15s, background 0.15s" }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#091fd6"; e.currentTarget.style.background = "#eef1ff"; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#d1d5db"; e.currentTarget.style.background = "#fff"; }}>
+            <button type="button" onClick={openPicker} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 18px", background: "#000000", border: "1.5px solid #000000", borderRadius: "5px", fontSize: "13px", fontWeight: "600", color: "#ffffff", cursor: "pointer", width: "100%", justifyContent: "center", transition: "border-color 0.15s, background 0.15s" }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#000000"; e.currentTarget.style.background = "#000000"; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#000000"; e.currentTarget.style.background = "#000000"; }}>
               <span style={{ fontSize: "16px" }}>+</span>
               {selectedProducts.length > 0 ? "Edit Product Selection" : "Select Eligible Products"}
             </button>
@@ -442,12 +442,12 @@ export default function CreateBoxPage() {
               ) : displayProducts.map((product, idx) => {
                 const selected = isSelected(product.id);
                 return (
-                  <label key={product.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < displayProducts.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", background: selected ? "#eef1ff" : "#fff", transition: "background 0.1s" }}>
-                    <input type="checkbox" checked={selected} onChange={() => toggleProduct(product)} style={{ width: "15px", height: "15px", flexShrink: 0, accentColor: "#091fd6" }} />
+                  <label key={product.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < displayProducts.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", background: selected ? "#000000" : "#fff", transition: "background 0.1s" }}>
+                    <input type="checkbox" checked={selected} onChange={() => toggleProduct(product)} style={{ width: "15px", height: "15px", flexShrink: 0, accentColor: "#000000" }} />
                     {product.imageUrl ? <img src={product.imageUrl} alt={product.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} /> : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", border: "1px solid #e5e7eb" }}>📦</div>}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{product.title}</div>
-                      <div style={{ fontSize: "11px", color: "#9ca3af", fontFamily: "monospace" }}>{product.handle}</div>
+                      <div style={{ fontSize: "13px", fontWeight: "600", color: selected ? "#ffffff" : "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{product.title}</div>
+                      <div style={{ fontSize: "11px", color: selected ? "rgba(255,255,255,0.72)" : "#9ca3af", fontFamily: "monospace" }}>{product.handle}</div>
                     </div>
                     {product.price && parseFloat(product.price) > 0 && <div style={{ fontSize: "13px", fontWeight: "700", color: "#374151", fontFamily: "monospace", flexShrink: 0 }}>₹{parseFloat(product.price).toLocaleString("en-IN")}</div>}
                     {selected && <span style={{ width: "18px", height: "18px", background: "#ffffff", border: "1px solid #111827", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><span style={{ color: "#000000", fontSize: "10px", fontWeight: "700" }}>✓</span></span>}
@@ -458,8 +458,8 @@ export default function CreateBoxPage() {
             <div style={modalFooterStyle}>
               <span style={{ fontSize: "12px", color: "#6b7280" }}>{selectedProducts.length > 0 ? `${selectedProducts.length} product${selectedProducts.length !== 1 ? "s" : ""} selected` : "No products selected"}</span>
               <div style={{ display: "flex", gap: "8px" }}>
-                <button type="button" onClick={closePicker} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#374151" }}>Cancel</button>
-                <button type="button" onClick={closePicker} style={{ background: "#ffffff", border: "1px solid #d1d5db", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: "pointer", color: "#000000", boxShadow: "0 1px 4px rgba(15,23,42,0.08)" }}>
+                <button type="button" onClick={closePicker} style={{ background: "#000000", border: "1.5px solid #000000", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#ffffff" }}>Cancel</button>
+                <button type="button" onClick={closePicker} style={{ background: "#000000", border: "1px solid #000000", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: "pointer", color: "#ffffff", boxShadow: "0 1px 4px rgba(15,23,42,0.08)" }}>
                   Done{selectedProducts.length > 0 ? ` (${selectedProducts.length})` : ""}
                 </button>
               </div>
@@ -511,16 +511,16 @@ export default function CreateBoxPage() {
                 ) : filtered.map((item, idx) => {
                   const selected = isScopeSelected(item.id);
                   return (
-                    <label key={item.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filtered.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", background: selected ? "#f0fdf4" : "#fff", transition: "background 0.1s" }}>
-                      <input type="checkbox" checked={selected} onChange={() => toggleScopeItem(item)} style={{ width: "15px", height: "15px", flexShrink: 0, accentColor: "#2A7A4F" }} />
+                    <label key={item.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filtered.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", background: selected ? "#000000" : "#fff", transition: "background 0.1s" }}>
+                      <input type="checkbox" checked={selected} onChange={() => toggleScopeItem(item)} style={{ width: "15px", height: "15px", flexShrink: 0, accentColor: "#000000" }} />
                       {item.imageUrl
                         ? <img src={item.imageUrl} alt={item.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} />
                         : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", border: "1px solid #e5e7eb" }}>{isCollections ? "📂" : "📦"}</div>
                       }
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.title}</div>
+                        <div style={{ fontSize: "13px", fontWeight: "600", color: selected ? "#ffffff" : "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.title}</div>
                       </div>
-                      {selected && <span style={{ width: "18px", height: "18px", background: "#2A7A4F", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><span style={{ color: "#fff", fontSize: "10px", fontWeight: "700" }}>✓</span></span>}
+                      {selected && <span style={{ width: "18px", height: "18px", background: "#000000", border: "1px solid #ffffff", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><span style={{ color: "#ffffff", fontSize: "10px", fontWeight: "700" }}>✓</span></span>}
                     </label>
                   );
                 })}
@@ -530,8 +530,8 @@ export default function CreateBoxPage() {
                   {scopeItems.length > 0 ? `${scopeItems.length} selected` : "None selected"}
                 </span>
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <button type="button" onClick={() => setShowScopePicker(false)} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#374151" }}>Cancel</button>
-                  <button type="button" onClick={() => setShowScopePicker(false)} style={{ background: "#2A7A4F", border: "none", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: "pointer", color: "#fff", boxShadow: "0 1px 6px rgba(42,122,79,0.35)" }}>
+                  <button type="button" onClick={() => setShowScopePicker(false)} style={{ background: "#000000", border: "1.5px solid #000000", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#ffffff" }}>Cancel</button>
+                  <button type="button" onClick={() => setShowScopePicker(false)} style={{ background: "#000000", border: "none", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: "pointer", color: "#ffffff", boxShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>
                     Done{scopeItems.length > 0 ? ` (${scopeItems.length})` : ""}
                   </button>
                 </div>

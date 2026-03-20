@@ -21,6 +21,24 @@ export default function App() {
 
   return (
     <AppProvider embedded apiKey={apiKey}>
+      <style>{`
+        ui-title-bar button {
+          background: #000000;
+          color: #ffffff;
+          border: 1px solid #000000;
+          border-radius: 6px;
+          padding: 8px 16px;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        ui-title-bar button:hover {
+          background: #000000;
+          color: #ffffff;
+          border-color: #000000;
+        }
+      `}</style>
       <s-app-nav>
         {/* <s-link href="/app">Dashboard</s-link> */}
         <s-link href={withEmbeddedAppParams("/app/boxes", location.search)}>Box Settings</s-link>

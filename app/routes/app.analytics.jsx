@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLoaderData, useLocation, useNavigate } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
+import { AdminIcon } from "../components/admin-icons";
 import { getAnalytics } from "../models/orders.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
@@ -437,7 +438,7 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
 }
 
 // ─── KPI Card ────────────────────────────────────────────────────────────────
-function KpiCard({ label, value, subLabel, change, accentColor, icon, subtitle }) {
+function KpiCard({ label, value, subLabel, change, accentColor, iconType, subtitle }) {
   const isUp = change === null ? null : change >= 0;
   return (
     <div
@@ -469,7 +470,7 @@ function KpiCard({ label, value, subLabel, change, accentColor, icon, subtitle }
           marginBottom: "12px",
         }}
       >
-        {icon}
+        <AdminIcon type={iconType} size="base" style={{ color: accentColor }} />
       </div>
 
       <div style={{ fontSize: "11px", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: "600", marginBottom: "6px" }}>
@@ -836,7 +837,7 @@ function TopProductsChart({ data }) {
   if (!data || data.length === 0) {
     return (
       <div style={{ padding: "40px 0", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>
-        <div style={{ fontSize: "28px", marginBottom: "8px" }}>📊</div>
+        <AdminIcon type="chart-line" size="large-100" style={{ marginBottom: "8px", color: "#9ca3af" }} />
         No product selection data yet.
       </div>
     );
@@ -909,7 +910,7 @@ function BoxPerformanceChart({ data }) {
   if (!data || data.length === 0) {
     return (
       <div style={{ padding: "40px 0", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>
-        <div style={{ fontSize: "28px", marginBottom: "8px" }}>📦</div>
+        <AdminIcon type="package" size="large-100" style={{ marginBottom: "8px", color: "#9ca3af" }} />
         No box order data yet.
       </div>
     );
@@ -977,7 +978,7 @@ function ComparisonBanner({ period, prevPeriod }) {
         color: "#374151",
       }}
     >
-      <span style={{ fontSize: "18px" }}>📅</span>
+      <AdminIcon type="calendar" size="base" />
       <div style={{ lineHeight: 1.6 }}>
         <span style={{ fontWeight: "700", color: "#1d4ed8" }}>Current: </span>
         <span style={{ fontFamily: "monospace", color: "#374151" }}>{fmtDate(period.from)} → {fmtDate(period.to)}</span>
@@ -1028,7 +1029,7 @@ export default function AnalyticsPage() {
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
         <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(17,24,39,0.04)", pointerEvents: "none" }} />
         <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}>
-          📊 Analytics
+          <AdminIcon type="chart-line" size="small" /> Analytics
         </div>
         <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>Bundle Performance Overview</div>
         <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Period-over-period comparison of revenue, orders, and top products.</div>
@@ -1065,7 +1066,7 @@ export default function AnalyticsPage() {
             subLabel={prevTotalRevenue ? `prev ₹${(prevTotalRevenue || 0).toLocaleString("en-IN")}` : null}
             change={revenueChange}
             accentColor="#3b82f6"
-            icon="💰"
+            iconType="money"
           />
           <KpiCard
             label="Bundles Sold"
@@ -1073,7 +1074,7 @@ export default function AnalyticsPage() {
             subLabel={prevTotalOrders ? `prev ${prevTotalOrders}` : null}
             change={ordersChange}
             accentColor="#2A7A4F"
-            icon="📦"
+            iconType="package"
           />
           <KpiCard
             label="Avg Bundle Value"
@@ -1081,7 +1082,7 @@ export default function AnalyticsPage() {
             subLabel={null}
             change={avgChange}
             accentColor="#8b5cf6"
-            icon="📊"
+            iconType="chart-line"
           />
           <KpiCard
             label="Active Box Types"
@@ -1089,7 +1090,7 @@ export default function AnalyticsPage() {
             subLabel={null}
             change={null}
             accentColor="#f59e0b"
-            icon="🗂️"
+            iconType="collection-list"
             subtitle="Total live combo boxes"
           />
         </div>

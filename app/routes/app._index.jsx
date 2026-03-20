@@ -8,6 +8,7 @@ import {
   getBundleRevenue,
   getRecentOrders,
 } from "../models/orders.server";
+import { AdminIcon } from "../components/admin-icons";
 import { buildThemeEditorUrl } from "../utils/theme-editor.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
@@ -147,10 +148,10 @@ function StatCard({ label, value, icon, accent, bg, sub }) {
 
 function ThemeCustomizationCard({ themeEditorUrl }) {
   const steps = [
-    { icon: "🖥️", text: "Opens Theme Customization on your live product template." },
-    { icon: "🧩", text: "Combo Builder block is auto-added to the Apps section." },
-    { icon: "↕️", text: "Drag the block to the right position." },
-    { icon: "💾", text: "Click Save — your storefront is live!" },
+    { iconType: "desktop", text: "Opens Theme Customization on your live product template." },
+    { iconType: "apps", text: "Combo Builder block is auto-added to the Apps section." },
+    { iconType: "drag-handle", text: "Drag the block to the right position." },
+    { iconType: "save", text: "Click Save and your storefront is live." },
   ];
   return (
     <div style={{ marginBottom: "20px" }}>
@@ -197,7 +198,7 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
                 backdropFilter: "blur(4px)",
               }}
             >
-              <span style={{ fontSize: "13px" }}>⚡</span> Guided Setup
+              <AdminIcon type="bolt" size="small" /> Guided Setup
             </div>
 
             {/* Headline */}
@@ -245,26 +246,7 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
                     gap: "10px",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div
-                      style={{
-                        width: "24px",
-                        height: "24px",
-                        borderRadius: "50%",
-                        background: "#e5e7eb",
-                        color: "#000000",
-                        fontSize: "11px",
-                        fontWeight: "800",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {i + 1}
-                    </div>
-                    <span style={{ fontSize: "20px", lineHeight: 1 }}>{step.icon}</span>
-                  </div>
+                  <AdminIcon type={step.iconType} size="large" />
                   <div style={{ fontSize: "12px", color: "#374151", lineHeight: 1.55 }}>
                     {step.text}
                   </div>
@@ -301,7 +283,7 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
                 e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.18)";
               }}
             >
-              <span style={{ fontSize: "18px" }}>🎨</span>
+              <AdminIcon type="theme" size="large" />
               Open Theme Editor
             </a>
           </div>
@@ -330,7 +312,7 @@ export default function DashboardPage() {
   const quickActions = [
     {
       key: "create-box",
-      emoji: "📦",
+      iconType: "package",
       label: "Create Combo Box",
       sub: "Add a new bundle",
       accent: "#3b82f6",
@@ -340,7 +322,7 @@ export default function DashboardPage() {
     },
     {
       key: "create-specific-combo",
-      emoji: "🎯",
+      iconType: "target",
       label: "Create Specific Combo Box",
       sub: "Step-by-step combo experience",
       accent: "#2A7A4F",
@@ -350,7 +332,7 @@ export default function DashboardPage() {
     },
     {
       key: "manage-boxes",
-      emoji: "🗂️",
+      iconType: "collection-list",
       label: "Manage Boxes",
       sub: "Edit existing combos",
       accent: "#8b5cf6",
@@ -360,7 +342,7 @@ export default function DashboardPage() {
     },
     {
       key: "analytics",
-      emoji: "📊",
+      iconType: "chart-line",
       label: "View Analytics",
       sub: "Sales & revenue",
       accent: "#f59e0b",
@@ -370,7 +352,7 @@ export default function DashboardPage() {
     },
     {
       key: "settings",
-      emoji: "⚙️",
+      iconType: "settings",
       label: "Widget Settings",
       sub: "Theme & appearance",
       accent: "#6b7280",
@@ -438,7 +420,7 @@ export default function DashboardPage() {
               }}
             >
               <div style={{ width: "42px", height: "42px", borderRadius: "5px", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>
-                {action.emoji}
+                <AdminIcon type={action.iconType} size="large" />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: "14px", fontWeight: "700", color: "#000000", lineHeight: 1.3 }}>{action.label}</div>
@@ -455,7 +437,7 @@ export default function DashboardPage() {
         <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(17,24,39,0.05)", pointerEvents: "none" }} />
         <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000" }}>
-            📊 Performance
+            <AdminIcon type="chart-line" size="small" /> Performance
           </div>
           <span style={{ fontSize: "13px", color: "#6b7280" }}>Last 30 days overview</span>
         </div>
@@ -473,7 +455,7 @@ export default function DashboardPage() {
         <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "150px", height: "150px", borderRadius: "50%", background: "rgba(17,24,39,0.05)", pointerEvents: "none" }} />
         <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000" }}>
-            🧾 Recent Orders
+            <AdminIcon type="order" size="small" /> Recent Orders
           </div>
           <span style={{ fontSize: "13px", color: "#6b7280" }}>Latest bundle purchases</span>
         </div>
@@ -481,7 +463,7 @@ export default function DashboardPage() {
         <div style={{ background: "#ffffff", borderRadius: "5px", padding: "0 16px 8px", overflow: "hidden" }}>
           {recentOrders.length === 0 ? (
             <div style={{ textAlign: "center", padding: "56px 0" }}>
-              <div style={{ fontSize: "48px", marginBottom: "14px" }}>📭</div>
+              <AdminIcon type="order" size="large-300" style={{ marginBottom: "14px", color: "#9ca3af" }} />
               <p style={{ fontSize: "15px", margin: "0 0 6px", color: "#374151", fontWeight: "700" }}>No bundle orders yet</p>
               <p style={{ fontSize: "13px", margin: 0, color: "#9ca3af" }}>Add the Combo Builder block to your theme to start receiving orders.</p>
             </div>
@@ -532,23 +514,22 @@ export default function DashboardPage() {
         <div style={{ position: "absolute", bottom: "-30px", left: "60px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(17,24,39,0.04)", pointerEvents: "none" }} />
         <div style={{ padding: "28px 32px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000" }}>
-            🚀 Getting Started
+            <AdminIcon type="rocket" size="small" /> Getting Started
           </div>
-          <span style={{ fontSize: "13px", color: "#6b7280" }}>Three steps to go live</span>
+          <span style={{ fontSize: "13px", color: "#6b7280" }}>Quick setup to go live</span>
         </div>
         <div style={{ padding: "24px 32px 32px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
           {[
-            { step: "1", emoji: "📦", title: "Create a Combo Box", text: "Create a combo box and add eligible products to offer as a bundle." },
-            { step: "2", emoji: "🎨", title: "Open Theme Editor", text: "Add the Combo Builder block to your product template in one click." },
-            { step: "3", emoji: "✅", title: "Go Live", text: "Save the theme so customers can build their own combo box on the storefront." },
+            { key: "create", iconType: "package", title: "Create a Combo Box", text: "Create a combo box and add eligible products to offer as a bundle." },
+            { key: "theme", iconType: "theme", title: "Open Theme Editor", text: "Add the Combo Builder block to your product template in one click." },
+            { key: "live", iconType: "check-circle", title: "Go Live", text: "Save the theme so customers can build their own combo box on the storefront." },
           ].map((item) => (
             <div
-              key={item.step}
+              key={item.key}
               style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "5px", padding: "22px 20px" }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-                <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#e5e7eb", color: "#000000", fontSize: "12px", fontWeight: "800", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{item.step}</div>
-                <span style={{ fontSize: "22px" }}>{item.emoji}</span>
+                <AdminIcon type={item.iconType} size="large" />
               </div>
               <div style={{ fontSize: "14px", fontWeight: "800", color: "#000000", marginBottom: "8px" }}>{item.title}</div>
               <p style={{ margin: 0, fontSize: "13px", color: "#4b5563", lineHeight: 1.6 }}>{item.text}</p>

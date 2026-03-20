@@ -12,6 +12,7 @@ import {
   repairMissingShopifyVariantIds,
   upsertComboConfig,
 } from "../models/boxes.server";
+import { AdminIcon } from "../components/admin-icons";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
 function getComboConfigSummary(box) {
@@ -237,12 +238,12 @@ export default function ManageBoxesPage() {
         <button
           onClick={() => navigateTo("/app/storefront-visibility")}
         >
-          👁 Frontend Visibility
+          <AdminIcon type="view" size="small" /> Frontend Visibility
         </button>
         <button
           onClick={() => navigateTo("/app/boxes/specific-combo")}
         >
-          🎯 Create Specific Combo Box
+          <AdminIcon type="target" size="small" /> Create Specific Combo Box
         </button>
         <button
           variant="primary"
@@ -256,7 +257,7 @@ export default function ManageBoxesPage() {
       <div style={{ marginBottom: "10px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
         <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(17,24,39,0.04)", pointerEvents: "none" }} />
         <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}>
-          📦 Combo Boxes
+          <AdminIcon type="package" size="small" /> Combo Boxes
         </div>
         <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>Manage your combo box types</div>
         <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Create, activate, and reorder combo boxes shown on your storefront.</div>
@@ -284,7 +285,7 @@ export default function ManageBoxesPage() {
                 margin: "0 auto 16px",
               }}
             >
-              📦
+              <AdminIcon type="package" size="large" />
             </div>
             <p style={{ fontSize: "15px", fontWeight: "600", color: "#374151", margin: "0 0 6px" }}>
               No combo boxes yet
@@ -297,7 +298,7 @@ export default function ManageBoxesPage() {
                 + Create New Box
               </s-button>
               <s-button onClick={() => navigateTo("/app/boxes/specific-combo")}>
-                🎯 Specific Combo Box
+                <AdminIcon type="target" size="small" /> Specific Combo Box
               </s-button>
             </div>
           </div>
@@ -423,7 +424,10 @@ export default function ManageBoxesPage() {
                                 color: box.pageHandle ? "#000000" : "#9ca3af",
                                 fontWeight: "600",
                               }}>
-                                {box.pageHandle ? `📄 ${getPageLabel(box.pageHandle, shopifyPages)}` : "🌐 Showing on all pages"}
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                  <AdminIcon type={box.pageHandle ? "page" : "globe"} size="small" />
+                                  {box.pageHandle ? getPageLabel(box.pageHandle, shopifyPages) : "Showing on all pages"}
+                                </span>
                               </span>
                               {/* Success badge */}
                               {savedPageBoxId === box.id && (
@@ -436,7 +440,7 @@ export default function ManageBoxesPage() {
                                   borderRadius: "999px",
                                   animation: "fadeIn 0.2s ease",
                                 }}>
-                                  ✓ Saved successfully
+                                  Saved successfully
                                 </span>
                               )}
                             </div>
@@ -576,7 +580,7 @@ export default function ManageBoxesPage() {
             <div style={{ padding: "20px 24px 16px", borderBottom: "1px solid #f3f4f6" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <span style={{ fontSize: "18px" }}>🗑️</span>
+                  <AdminIcon type="delete" size="base" />
                 </div>
                 <div>
                   <div style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>Delete Box</div>

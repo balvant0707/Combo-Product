@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigation } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
+import { AdminIcon } from "../components/admin-icons";
 import { getBox, updateBox, deleteBox, getBannerImageSrc } from "../models/boxes.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
@@ -310,7 +311,7 @@ export default function BoxSettingsPage() {
       {/* Hero banner */}
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
         <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(17,24,39,0.04)", pointerEvents: "none" }} />
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}>📋 Box Settings</div>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}><AdminIcon type="clipboard" size="small" /> Box Settings</div>
         <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>{box.boxName}</div>
         <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Update settings, pricing, and eligible products for this bundle.</div>
       </div>
@@ -321,7 +322,7 @@ export default function BoxSettingsPage() {
 
       {errors._global && (
         <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "5px", padding: "12px 16px", marginBottom: "16px", color: "#991b1b", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
-          <span style={{ fontSize: "16px" }}>⚠</span>{errors._global}
+          <AdminIcon type="alert-triangle" size="small" />{errors._global}
         </div>
       )}
 
@@ -340,7 +341,7 @@ export default function BoxSettingsPage() {
 
         {/* Basic Information */}
         <div style={{ marginBottom: "28px" }}>
-          <div style={sectionHeadingStyle}><span style={{ fontSize: "15px" }}>📋</span> Basic Information</div>
+          <div style={sectionHeadingStyle}><AdminIcon type="clipboard" size="small" /> Basic Information</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             <div>
               <label style={labelStyle}>Box Internal Name *</label>
@@ -411,18 +412,18 @@ export default function BoxSettingsPage() {
 
         {/* Options */}
         <div style={{ marginBottom: "28px" }}>
-          <div style={sectionHeadingStyle}><span style={{ fontSize: "15px" }}>⚙️</span> Options</div>
+          <div style={sectionHeadingStyle}><AdminIcon type="settings" size="small" /> Options</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
             {[
-              { key: "isGiftBox", label: "Gift Box Mode", desc: "Enables gift packaging option", icon: "🎁" },
-              { key: "allowDuplicates", label: "Allow Duplicates", desc: "Same product in multiple slots", icon: "🔁" },
-              { key: "giftMessageEnabled", label: "Gift Message Field", desc: "Show text area for gift message", icon: "✉️" },
-              { key: "isActive", label: "Active on Storefront", desc: "Uncheck to hide from customers", icon: "✅" },
+              { key: "isGiftBox", label: "Gift Box Mode", desc: "Enables gift packaging option", iconType: "gift-card" },
+              { key: "allowDuplicates", label: "Allow Duplicates", desc: "Same product in multiple slots", iconType: "duplicate" },
+              { key: "giftMessageEnabled", label: "Gift Message Field", desc: "Show text area for gift message", iconType: "email" },
+              { key: "isActive", label: "Active on Storefront", desc: "Uncheck to hide from customers", iconType: "check-circle" },
             ].map((opt) => (
               <label key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px 14px", border: options[opt.key] ? "1.5px solid #000000" : "1.5px solid #e5e7eb", borderRadius: "5px", background: options[opt.key] ? "#000000" : "#fafafa", transition: "border-color 0.15s, background 0.15s" }}>
                 <input type="checkbox" checked={options[opt.key]} onChange={() => toggleOption(opt.key)} style={{ marginTop: "3px", width: "14px", height: "14px", accentColor: "#000000", flexShrink: 0 }} />
                 <div>
-                  <div style={{ fontSize: "13px", fontWeight: "600", color: options[opt.key] ? "#ffffff" : "#111827", display: "flex", alignItems: "center", gap: "5px" }}><span>{opt.icon}</span>{opt.label}</div>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: options[opt.key] ? "#ffffff" : "#111827", display: "flex", alignItems: "center", gap: "5px" }}><AdminIcon type={opt.iconType} size="small" />{opt.label}</div>
                   <div style={{ fontSize: "11px", color: options[opt.key] ? "rgba(255,255,255,0.72)" : "#9ca3af", marginTop: "2px" }}>{opt.desc}</div>
                 </div>
               </label>
@@ -432,7 +433,7 @@ export default function BoxSettingsPage() {
 
         {/* Scope */}
         <div style={{ marginBottom: "28px" }}>
-          <div style={sectionHeadingStyle}><span style={{ fontSize: "15px" }}>🎯</span> Scope</div>
+          <div style={sectionHeadingStyle}><AdminIcon type="target" size="small" /> Scope</div>
           <div style={{ marginBottom: "12px" }}>
             <label style={labelStyle}>Select Scope</label>
             <select
@@ -461,7 +462,7 @@ export default function BoxSettingsPage() {
               <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                 {scopeItems.map((item) => (
                   <span key={item.id} onClick={() => setScopeItems((prev) => prev.filter((i) => i.id !== item.id))} style={{ background: "#000000", color: "#ffffff", border: "1px solid rgba(255,255,255,0.24)", borderRadius: "5px", padding: "3px 10px", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", fontWeight: "500" }}>
-                    {item.title}<span style={{ opacity: 0.75, fontSize: "10px" }}>✕</span>
+                    {item.title}<AdminIcon type="x" size="small" style={{ opacity: 0.75, color: "#ffffff" }} />
                   </span>
                 ))}
               </div>
@@ -472,7 +473,7 @@ export default function BoxSettingsPage() {
         {/* Eligible Products */}
         <div style={{ marginBottom: "28px" }}>
           <div style={sectionHeadingStyle}>
-            <span style={{ fontSize: "15px" }}>🛍️</span> Eligible Products
+            <AdminIcon type="product" size="small" /> Eligible Products
             {selectedProducts.length > 0 && <span style={{ marginLeft: "6px", background: "#ffffff", color: "#000000", border: "1px solid #d1d5db", borderRadius: "5px", padding: "2px 8px", fontSize: "10px", fontWeight: "700", fontFamily: "monospace" }}>{selectedProducts.length} selected</span>}
           </div>
           {errors.eligibleProducts && <div style={{ color: "#e11d48", fontSize: "12px", marginBottom: "10px", padding: "8px 12px", background: "#fff5f5", borderRadius: "5px", border: "1px solid #fecaca" }}>{errors.eligibleProducts}</div>}
@@ -482,7 +483,7 @@ export default function BoxSettingsPage() {
               <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                 {selectedProducts.map((p) => (
                   <span key={p.id} onClick={() => toggleProduct(p)} style={{ background: "#000000", color: "#ffffff", border: "1px solid rgba(255,255,255,0.24)", borderRadius: "5px", padding: "4px 10px", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", fontWeight: "500" }}>
-                    {p.productTitle}<span style={{ opacity: 0.75, fontSize: "10px" }}>✕</span>
+                    {p.productTitle}<AdminIcon type="x" size="small" style={{ opacity: 0.75, color: "#ffffff" }} />
                   </span>
                 ))}
               </div>
@@ -517,7 +518,7 @@ export default function BoxSettingsPage() {
                 <div style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>Select Products</div>
                 <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>{selectedProducts.length} product{selectedProducts.length !== 1 ? "s" : ""} selected</div>
               </div>
-              <button type="button" onClick={closePicker} style={modalCloseBtn}>✕</button>
+              <button type="button" aria-label="Close product picker" onClick={closePicker} style={{ ...modalCloseBtn, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><AdminIcon type="x" size="small" style={{ color: "#9ca3af" }} /></button>
             </div>
             <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
               <input type="text" placeholder="Search products..." value={productSearch} onChange={handleSearchChange} autoFocus style={searchInputStyle} />
@@ -530,13 +531,13 @@ export default function BoxSettingsPage() {
                 return (
                   <label key={product.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < displayProducts.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", background: selected ? "#000000" : "#fff", transition: "background 0.1s" }}>
                     <input type="checkbox" checked={selected} onChange={() => toggleProduct(product)} style={{ width: "15px", height: "15px", flexShrink: 0, accentColor: "#000000" }} />
-                    {product.imageUrl ? <img src={product.imageUrl} alt={product.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} /> : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", border: "1px solid #e5e7eb" }}>📦</div>}
+                    {product.imageUrl ? <img src={product.imageUrl} alt={product.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} /> : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}><AdminIcon type="product" size="small" /></div>}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: "13px", fontWeight: "600", color: selected ? "#ffffff" : "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{product.title}</div>
                       <div style={{ fontSize: "11px", color: selected ? "rgba(255,255,255,0.72)" : "#9ca3af", fontFamily: "monospace" }}>{product.handle}</div>
                     </div>
                     {product.price && parseFloat(product.price) > 0 && <div style={{ fontSize: "13px", fontWeight: "700", color: "#374151", fontFamily: "monospace", flexShrink: 0 }}>₹{parseFloat(product.price).toLocaleString("en-IN")}</div>}
-                    {selected && <span style={{ width: "18px", height: "18px", background: "#ffffff", border: "1px solid #111827", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><span style={{ color: "#000000", fontSize: "10px", fontWeight: "700" }}>✓</span></span>}
+                    {selected && <span style={{ width: "18px", height: "18px", background: "#ffffff", border: "1px solid #111827", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><AdminIcon type="check" size="small" style={{ color: "#000000" }} /></span>}
                   </label>
                 );
               })}
@@ -579,7 +580,7 @@ export default function BoxSettingsPage() {
                     {scopeItems.length} {isCollections ? "collection" : "product"}{scopeItems.length !== 1 ? "s" : ""} selected
                   </div>
                 </div>
-                <button type="button" onClick={() => setShowScopePicker(false)} style={modalCloseBtn}>✕</button>
+                <button type="button" aria-label="Close scope picker" onClick={() => setShowScopePicker(false)} style={{ ...modalCloseBtn, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><AdminIcon type="x" size="small" style={{ color: "#9ca3af" }} /></button>
               </div>
               <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
                 <input
@@ -601,12 +602,12 @@ export default function BoxSettingsPage() {
                       <input type="checkbox" checked={selected} onChange={() => toggleScopeItem(item)} style={{ width: "15px", height: "15px", flexShrink: 0, accentColor: "#000000" }} />
                       {item.imageUrl
                         ? <img src={item.imageUrl} alt={item.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} />
-                        : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", border: "1px solid #e5e7eb" }}>{isCollections ? "📂" : "📦"}</div>
+                        : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}><AdminIcon type={isCollections ? "folder" : "product"} size="small" /></div>
                       }
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: "13px", fontWeight: "600", color: selected ? "#ffffff" : "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.title}</div>
                       </div>
-                      {selected && <span style={{ width: "18px", height: "18px", background: "#000000", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><span style={{ color: "#ffffff", fontSize: "10px", fontWeight: "700" }}>✓</span></span>}
+                      {selected && <span style={{ width: "18px", height: "18px", background: "#000000", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><AdminIcon type="check" size="small" style={{ color: "#ffffff" }} /></span>}
                     </label>
                   );
                 })}

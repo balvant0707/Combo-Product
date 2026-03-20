@@ -287,9 +287,9 @@ export default function BoxSettingsPage() {
   /* ── Shared modal styles ── */
   const modalOverlayStyle = { position: "fixed", inset: 0, background: "rgba(17,24,39,0.55)", backdropFilter: "blur(3px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" };
   const modalBoxStyle = { background: "#fff", borderRadius: "8px", width: "100%", maxWidth: "560px", maxHeight: "85vh", display: "flex", flexDirection: "column", boxShadow: "0 20px 60px rgba(0,0,0,0.18)", overflow: "hidden" };
-  const modalHeaderStyle = { padding: "16px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fafafa" };
+  const modalHeaderStyle = { padding: "16px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#ffffff" };
   const modalBodyStyle = { flex: 1, overflowY: "auto" };
-  const modalFooterStyle = { padding: "14px 16px", borderTop: "1px solid #f3f4f6", background: "#fafafa", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" };
+  const modalFooterStyle = { padding: "14px 16px", borderTop: "1px solid #f3f4f6", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" };
   const modalCloseBtn = { background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: "#9ca3af", padding: "4px 8px", borderRadius: "5px", lineHeight: 1 };
   const searchInputStyle = { ...fieldStyle, borderColor: "#d1d5db", paddingLeft: "14px", fontSize: "13px" };
 
@@ -370,7 +370,7 @@ export default function BoxSettingsPage() {
                 <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} style={{ ...fieldStyle, borderColor: errors.bundlePrice ? "#e11d48" : "#d1d5db" }} />
               )}
               {priceMode === "dynamic" && (
-                <div style={{ border: "1px solid #d1d5db", borderRadius: "5px", padding: "12px", background: "#f9fafb" }}>
+                <div style={{ border: "1px solid #d1d5db", borderRadius: "5px", padding: "12px", background: "#ffffff" }}>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
                     <div>
                       <label style={{ ...labelStyle, fontSize: "10px" }}>Discount Type</label>
@@ -419,7 +419,7 @@ export default function BoxSettingsPage() {
               { key: "giftMessageEnabled", label: "Gift Message Field", desc: "Show text area for gift message", iconType: "email" },
               { key: "isActive", label: "Active on Storefront", desc: "Uncheck to hide from customers", iconType: "check-circle" },
             ].map((opt) => (
-              <label key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px 14px", border: options[opt.key] ? "1.5px solid #000000" : "1.5px solid #e5e7eb", borderRadius: "5px", background: options[opt.key] ? "#000000" : "#fafafa", transition: "border-color 0.15s, background 0.15s" }}>
+              <label key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px 14px", border: options[opt.key] ? "1.5px solid #000000" : "1.5px solid #e5e7eb", borderRadius: "5px", background: options[opt.key] ? "#000000" : "#ffffff", transition: "border-color 0.15s, background 0.15s" }}>
                 <input type="checkbox" checked={options[opt.key]} onChange={() => toggleOption(opt.key)} style={{ marginTop: "3px", width: "14px", height: "14px", accentColor: "#000000", flexShrink: 0 }} />
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: "600", color: options[opt.key] ? "#ffffff" : "#111827", display: "flex", alignItems: "center", gap: "5px" }}><AdminIcon type={opt.iconType} size="small" />{opt.label}</div>

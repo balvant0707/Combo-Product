@@ -233,338 +233,243 @@ export default function ManageBoxesPage() {
 
   return (
     <s-page heading={`All Box Types (${displayBoxes.length})`}>
-      <style>{`@keyframes fadeIn { from { opacity:0; transform:scale(0.85); } to { opacity:1; transform:scale(1); } }`}</style>
+      <style>{`
+        @keyframes fadeIn { from { opacity:0; transform:scale(0.85); } to { opacity:1; transform:scale(1); } }
+        @keyframes slideUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+        .box-row { transition: box-shadow 0.15s, transform 0.15s; }
+        .box-row:hover { box-shadow: 0 4px 16px rgba(42,122,79,0.10); transform: translateY(-1px); z-index: 1; position: relative; }
+        .icon-btn { transition: background 0.13s, transform 0.1s, box-shadow 0.13s; }
+        .icon-btn:active { transform: scale(0.92) !important; }
+      `}</style>
       <ui-title-bar title={`All Box Types (${displayBoxes.length})`}>
-        <button
-          onClick={() => navigateTo("/app/storefront-visibility")}
-        >
+        <button onClick={() => navigateTo("/app/storefront-visibility")}>
           <AdminIcon type="view" size="small" /> Frontend Visibility
         </button>
-        <button
-          onClick={() => navigateTo("/app/boxes/specific-combo")}
-        >
+        <button onClick={() => navigateTo("/app/boxes/specific-combo")}>
           <AdminIcon type="target" size="small" /> Create Specific Combo Box
         </button>
-        <button
-          variant="primary"
-          onClick={() => navigateTo("/app/boxes/new")}
-        >
+        <button variant="primary" onClick={() => navigateTo("/app/boxes/new")}>
           + Create Combo Box
         </button>
       </ui-title-bar>
 
       {/* Hero banner */}
-      <div style={{ marginBottom: "10px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
-        <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(17,24,39,0.04)", pointerEvents: "none" }} />
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}>
+      <div style={{ marginBottom: "16px", borderRadius: "12px", background: "linear-gradient(135deg, #f0fdf4 0%, #ffffff 60%)", border: "1px solid #bbf7d0", boxShadow: "0 4px 20px rgba(42,122,79,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
+        <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(42,122,79,0.05)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "-30px", right: "80px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(42,122,79,0.04)", pointerEvents: "none" }} />
+        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(42,122,79,0.10)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#2A7A4F", marginBottom: "10px" }}>
           <AdminIcon type="package" size="small" /> Combo Boxes
         </div>
-        <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>Manage your combo box types</div>
+        <div style={{ fontSize: "20px", fontWeight: "800", color: "#111827", letterSpacing: "-0.5px" }}>Manage your combo box types</div>
         <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Create, activate, and reorder combo boxes shown on your storefront.</div>
+        <div style={{ display: "flex", gap: "20px", marginTop: "14px" }}>
+          {[
+            { label: "Total Boxes", value: displayBoxes.length, icon: "package" },
+            { label: "Total Orders", value: displayBoxes.reduce((s, b) => s + b.orderCount, 0), icon: "orders" },
+            { label: "Gift Boxes", value: displayBoxes.filter((b) => b.isGiftBox).length, icon: "gift-card" },
+          ].map((stat) => (
+            <div key={stat.label} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#ffffff", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "8px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+              <AdminIcon type={stat.icon} size="base" tone="success" />
+              <div>
+                <div style={{ fontSize: "16px", fontWeight: "800", color: "#111827", lineHeight: 1 }}>{stat.value}</div>
+                <div style={{ fontSize: "10px", color: "#6b7280", marginTop: "2px", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: "600" }}>{stat.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <s-section>
         {displayBoxes.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "64px 0",
-              color: "#9ca3af",
-            }}
-          >
-            <div
-              style={{
-                width: "64px",
-                height: "64px",
-                borderRadius: "5px",
-                background: "rgba(42,122,79,0.08)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "30px",
-                margin: "0 auto 16px",
-              }}
-            >
-              <AdminIcon type="package" size="large" />
+          <div style={{ textAlign: "center", padding: "72px 0", color: "#9ca3af", animation: "slideUp 0.3s ease" }}>
+            <div style={{ width: "72px", height: "72px", borderRadius: "16px", background: "linear-gradient(135deg, rgba(42,122,79,0.10), rgba(42,122,79,0.04))", border: "1px solid rgba(42,122,79,0.15)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px", boxShadow: "0 4px 12px rgba(42,122,79,0.08)" }}>
+              <AdminIcon type="package" size="large" tone="success" />
             </div>
-            <p style={{ fontSize: "15px", fontWeight: "600", color: "#374151", margin: "0 0 6px" }}>
-              No combo boxes yet
-            </p>
-            <p style={{ fontSize: "13px", margin: "0 0 20px", color: "#9ca3af" }}>
-              Create your first box to let customers build custom combos.
-            </p>
+            <p style={{ fontSize: "16px", fontWeight: "700", color: "#374151", margin: "0 0 6px" }}>No combo boxes yet</p>
+            <p style={{ fontSize: "13px", margin: "0 0 24px", color: "#9ca3af" }}>Create your first box to let customers build custom combos.</p>
             <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
-              <s-button onClick={() => navigateTo("/app/boxes/new")}>
-                + Create New Box
-              </s-button>
-              <s-button onClick={() => navigateTo("/app/boxes/specific-combo")}>
-                <AdminIcon type="target" size="small" /> Specific Combo Box
-              </s-button>
+              <s-button onClick={() => navigateTo("/app/boxes/new")}>+ Create New Box</s-button>
+              <s-button onClick={() => navigateTo("/app/boxes/specific-combo")}><AdminIcon type="target" size="small" /> Specific Combo Box</s-button>
             </div>
           </div>
         ) : (
           <div style={{ overflowX: "auto" }}>
-            <table
-              style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}
-            >
+            <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 4px", fontSize: "13px" }}>
               <thead>
-                <tr style={{ background: "#f9fafb" }}>
-                  {["", "Box Name", "Items", "Price", "Gift", "Combo", "Orders", "Actions"].map(
-                    (h) => (
-                      <th
-                        key={h}
-                        style={{
-                          textAlign: "left",
-                          padding: "10px 16px",
-                          borderBottom: "1.5px solid #e5e7eb",
-                          color: "#6b7280",
-                          fontSize: "10px",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.8px",
-                          fontWeight: "600",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {h}
-                      </th>
-                    ),
-                  )}
+                <tr>
+                  {["", "Box Name", "Items", "Price", "Gift", "Combo", "Orders", "Actions"].map((h, i) => (
+                    <th key={h} style={{ textAlign: i === 7 ? "center" : "left", padding: "8px 14px", color: "#6b7280", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: "700", whiteSpace: "nowrap", borderBottom: "2px solid #e5e7eb", background: "transparent" }}>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {displayBoxes.map((box, idx) => (
-                  <tr
-                    key={box.id}
-                    data-box-id={box.id}
-                    draggable
-                    onDragStart={(e) => onDragStart(e, box.id)}
-                    onDragEnd={onDragEnd}
-                    onDragOver={onDragOver}
-                    onDragLeave={onDragLeave}
-                    onDrop={(e) => onDrop(e, box.id)}
-                    style={{
-                      background: idx % 2 === 0 ? "#fff" : "#fafafa",
-                      transition: "background 0.12s",
-                      cursor: "default",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "#f8faff")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = idx % 2 === 0 ? "#fff" : "#fafafa")}
-                  >
-                    {/* Drag handle */}
-                    <td
-                      style={{
-                        padding: "14px 8px 14px 16px",
-                        borderBottom: "1px solid #f3f4f6",
-                        color: "#d1d5db",
-                        cursor: "grab",
-                        fontSize: "18px",
-                        lineHeight: 1,
-                        userSelect: "none",
-                      }}
-                      title="Drag to reorder"
+                {displayBoxes.map((box, idx) => {
+                  const PAGE_OPTIONS = [
+                    { label: "All pages", value: "" },
+                    { label: "─────────────", value: "__sep1__", disabled: true },
+                    { label: "Home page", value: "index" },
+                    { label: "All product pages", value: "product" },
+                    { label: "All collection pages", value: "collection" },
+                    { label: "Cart page", value: "cart" },
+                    ...(shopifyPages.length > 0 ? [{ label: "─────────────", value: "__sep2__", disabled: true }] : []),
+                    ...shopifyPages.map((p) => ({ label: p.title, value: p.handle })),
+                  ];
+                  return (
+                    <tr
+                      key={box.id}
+                      className="box-row"
+                      data-box-id={box.id}
+                      draggable
+                      onDragStart={(e) => onDragStart(e, box.id)}
+                      onDragEnd={onDragEnd}
+                      onDragOver={onDragOver}
+                      onDragLeave={onDragLeave}
+                      onDrop={(e) => onDrop(e, box.id)}
+                      style={{ background: "#ffffff", cursor: "default" }}
                     >
-                      ⠿
-                    </td>
+                      {/* Drag handle */}
+                      <td style={{ padding: "0 6px 0 14px", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", borderLeft: "1px solid #f0f0f0", borderRadius: "8px 0 0 8px", color: "#c4c4c4", cursor: "grab", fontSize: "16px", lineHeight: 1, userSelect: "none", verticalAlign: "middle", width: "32px" }} title="Drag to reorder">
+                        ⠿
+                      </td>
 
-                    {/* Box name + page select */}
-                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6", minWidth: "240px" }}>
-                      {(() => {
-                        const PAGE_OPTIONS = [
-                          { label: "All pages", value: "" },
-                          { label: "─────────────", value: "__sep1__", disabled: true },
-                          { label: "Home page", value: "index" },
-                          { label: "All product pages", value: "product" },
-                          { label: "All collection pages", value: "collection" },
-                          { label: "Cart page", value: "cart" },
-                          ...(shopifyPages.length > 0 ? [{ label: "─────────────", value: "__sep2__", disabled: true }] : []),
-                          ...shopifyPages.map((p) => ({ label: p.title, value: p.handle })),
-                        ];
-
-                        return (
-                          <div>
-                            {/* Row 1: name */}
-                            <div style={{ fontWeight: "700", color: "#111827", marginBottom: "4px" }}>
-                              {box.boxName}
+                      {/* Status accent bar */}
+                      <td style={{ padding: "14px 14px", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", minWidth: "240px", verticalAlign: "middle" }}>
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                          {/* Color accent */}
+                          <div style={{ width: "3px", minHeight: "48px", borderRadius: "4px", background: box.isActive ? "#2A7A4F" : "#d1d5db", flexShrink: 0, marginTop: "2px" }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px" }}>
+                              <span style={{ fontWeight: "700", color: "#111827", fontSize: "13px" }}>{box.boxName}</span>
+                              {box.isActive ? (
+                                <span style={{ fontSize: "9px", fontWeight: "700", color: "#2A7A4F", background: "rgba(42,122,79,0.10)", padding: "1px 7px", borderRadius: "999px", letterSpacing: "0.05em", textTransform: "uppercase" }}>Live</span>
+                              ) : (
+                                <span style={{ fontSize: "9px", fontWeight: "700", color: "#9ca3af", background: "#f3f4f6", padding: "1px 7px", borderRadius: "999px", letterSpacing: "0.05em", textTransform: "uppercase" }}>Draft</span>
+                              )}
                             </div>
-                            {/* Row 2: subtitle */}
                             {box.displayTitle !== box.boxName && (
                               <div style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "6px" }}>{box.displayTitle}</div>
                             )}
-                            {/* Row 3: page select + current label + success msg */}
-                            <select
-                              value={box.pageHandle || ""}
-                              onChange={(e) => fetcher.submit(
-                                { _action: "assign_page", id: String(box.id), pageHandle: e.target.value },
-                                { method: "POST" }
-                              )}
-                              style={{
-                                fontSize: "11px",
-                                padding: "4px 8px",
-                                borderRadius: "6px",
-                                border: "1px solid #e5e7eb",
-                                background: "#f9fafb",
-                                color: "#374151",
-                                cursor: "pointer",
-                                outline: "none",
-                                maxWidth: "190px",
-                                width: "100%",
-                              }}
-                            >
-                              {PAGE_OPTIONS.map((opt) => (
-                                <option key={opt.value} value={opt.value} disabled={opt.disabled}>
-                                  {opt.label}
-                                </option>
-                              ))}
-                            </select>
-
-                            {/* Current page label */}
-                            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
-                              <span style={{
-                                fontSize: "10px",
-                                color: box.pageHandle ? "#000000" : "#9ca3af",
-                                fontWeight: "600",
-                              }}>
-                                <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                                  <AdminIcon type={box.pageHandle ? "page" : "globe"} size="small" />
-                                  {box.pageHandle ? getPageLabel(box.pageHandle, shopifyPages) : "Showing on all pages"}
-                                </span>
-                              </span>
-                              {/* Success badge */}
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <select
+                                value={box.pageHandle || ""}
+                                onChange={(e) => fetcher.submit(
+                                  { _action: "assign_page", id: String(box.id), pageHandle: e.target.value },
+                                  { method: "POST" }
+                                )}
+                                style={{ fontSize: "11px", padding: "3px 8px", borderRadius: "6px", border: "1px solid #e5e7eb", background: "#f9fafb", color: "#374151", cursor: "pointer", outline: "none", maxWidth: "190px" }}
+                              >
+                                {PAGE_OPTIONS.map((opt) => (
+                                  <option key={opt.value} value={opt.value} disabled={opt.disabled}>{opt.label}</option>
+                                ))}
+                              </select>
                               {savedPageBoxId === box.id && (
-                                <span style={{
-                                  fontSize: "10px",
-                                  fontWeight: "700",
-                                  color: "#fff",
-                                  background: "#000000",
-                                  padding: "1px 7px",
-                                  borderRadius: "999px",
-                                  animation: "fadeIn 0.2s ease",
-                                }}>
-                                  Saved successfully
+                                <span style={{ fontSize: "10px", fontWeight: "700", color: "#fff", background: "#2A7A4F", padding: "1px 8px", borderRadius: "999px", animation: "fadeIn 0.2s ease" }}>
+                                  Saved ✓
                                 </span>
                               )}
                             </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "3px" }}>
+                              <AdminIcon type={box.pageHandle ? "page" : "globe"} size="small" />
+                              <span style={{ fontSize: "10px", color: box.pageHandle ? "#374151" : "#9ca3af", fontWeight: "500" }}>
+                                {box.pageHandle ? getPageLabel(box.pageHandle, shopifyPages) : "All pages"}
+                              </span>
+                            </div>
                           </div>
-                        );
-                      })()}
-                    </td>
+                        </div>
+                      </td>
 
-                    {/* Items */}
-                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                      <span
-                        style={{
-                          display: "inline-block",
-                          background: "#f3f4f6",
-                          borderRadius: "5px",
-                          padding: "2px 8px",
-                          fontSize: "12px",
-                          fontWeight: "600",
-                          color: "#374151",
-                          fontFamily: "monospace",
-                        }}
-                      >
-                        {box.itemCount}
-                      </span>
-                    </td>
+                      {/* Items */}
+                      <td style={{ padding: "14px 14px", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", verticalAlign: "middle" }}>
+                        <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "32px", height: "32px", borderRadius: "8px", background: "linear-gradient(135deg, #f0fdf4, #dcfce7)", border: "1px solid #bbf7d0", fontWeight: "800", fontSize: "13px", color: "#2A7A4F", fontFamily: "monospace" }}>
+                          {box.itemCount}
+                        </div>
+                      </td>
 
-                    {/* Price */}
-                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                      <span style={{ fontFamily: "monospace", fontWeight: "700", color: "#000000" }}>
-                        &#8377;{Number(box.bundlePriceType === "dynamic" ? 0 : box.bundlePrice).toLocaleString("en-IN")}
-                      </span>
-                    </td>
+                      {/* Price */}
+                      <td style={{ padding: "14px 14px", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", verticalAlign: "middle" }}>
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                          <span style={{ fontFamily: "monospace", fontWeight: "800", color: "#111827", fontSize: "14px" }}>
+                            {box.bundlePriceType === "dynamic" ? (
+                              <span style={{ fontSize: "11px", fontWeight: "600", color: "#6b7280", fontFamily: "inherit" }}>Dynamic</span>
+                            ) : (
+                              <>&#8377;{Number(box.bundlePrice).toLocaleString("en-IN")}</>
+                            )}
+                          </span>
+                        </div>
+                      </td>
 
-                    {/* Gift */}
-                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                      {box.isGiftBox ? (
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "4px",
-                            fontSize: "11px",
-                            fontWeight: "600",
-                            color: "#7c3aed",
-                            background: "rgba(124,58,237,0.08)",
-                            padding: "2px 8px",
-                            borderRadius: "5px",
-                          }}
-                        >
-                          Yes
-                        </span>
-                      ) : (
-                        <span style={{ color: "#d1d5db", fontSize: "12px" }}>No</span>
-                      )}
-                    </td>
+                      {/* Gift */}
+                      <td style={{ padding: "14px 14px", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", verticalAlign: "middle" }}>
+                        {box.isGiftBox ? (
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: "600", color: "#7c3aed", background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.15)", padding: "3px 10px", borderRadius: "999px" }}>
+                            <AdminIcon type="gift-card" size="small" />
+                            Gift
+                          </div>
+                        ) : (
+                          <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#f3f4f6", border: "1.5px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <span style={{ color: "#d1d5db", fontSize: "10px", fontWeight: "800" }}>—</span>
+                          </div>
+                        )}
+                      </td>
 
-                    {/* Combo config */}
-                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                      {box.comboConfig && box.comboConfig.comboType > 0 ? (
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: "700", background: "#ffffff", color: "#000000", border: "1px solid #d1d5db", padding: "2px 8px", borderRadius: "5px", width: "fit-content" }}>
-                          {box.comboConfig.comboType} Step
-                        </span>
-                      ) : (
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: "700", background: "#ffffff", color: "#000000", border: "1px solid #d1d5db", padding: "2px 8px", borderRadius: "5px", width: "fit-content" }}>Single</span>
-                      )}
-                    </td>
+                      {/* Combo config */}
+                      <td style={{ padding: "14px 14px", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", verticalAlign: "middle" }}>
+                        {box.comboConfig && box.comboConfig.comboType > 0 ? (
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: "700", background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "3px 10px", borderRadius: "999px" }}>
+                            <AdminIcon type="list-bulleted" size="small" />
+                            {box.comboConfig.comboType} Step
+                          </div>
+                        ) : (
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: "700", background: "#f9fafb", color: "#6b7280", border: "1px solid #e5e7eb", padding: "3px 10px", borderRadius: "999px" }}>
+                            Single
+                          </div>
+                        )}
+                      </td>
 
-                    {/* Orders */}
-                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                      <span style={{ fontFamily: "monospace", fontWeight: "600", color: box.orderCount > 0 ? "#111827" : "#d1d5db" }}>
-                        {box.orderCount > 0 ? box.orderCount : "No"}
-                      </span>
-                    </td>
+                      {/* Orders */}
+                      <td style={{ padding: "14px 14px", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", verticalAlign: "middle" }}>
+                        {box.orderCount > 0 ? (
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontFamily: "monospace", fontWeight: "800", color: "#111827", fontSize: "13px" }}>
+                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#2A7A4F", display: "inline-block" }} />
+                            {box.orderCount}
+                          </div>
+                        ) : (
+                          <span style={{ color: "#d1d5db", fontSize: "12px", fontWeight: "500" }}>0</span>
+                        )}
+                      </td>
 
-
-                    {/* Actions */}
-                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                      <div style={{ display: "flex", gap: "6px" }}>
-                        <button
-                          onClick={() => navigateTo(box.comboConfig ? `/app/boxes/${box.id}/combo` : `/app/boxes/${box.id}`)}
-                          style={{
-                            background: "#f9fafb",
-                            border: "1px solid #e5e7eb",
-                            borderRadius: "5px",
-                            padding: "5px 14px",
-                            fontSize: "12px",
-                            fontWeight: "500",
-                            cursor: "pointer",
-                            color: "#374151",
-                            transition: "background 0.12s, border-color 0.12s",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = "#f3f4f6";
-                            e.currentTarget.style.borderColor = "#d1d5db";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "#f9fafb";
-                            e.currentTarget.style.borderColor = "#e5e7eb";
-                          }}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(box.id, box.boxName)}
-                          style={{
-                            background: "#fff5f5",
-                            border: "1px solid #fecaca",
-                            borderRadius: "5px",
-                            padding: "5px 14px",
-                            fontSize: "12px",
-                            fontWeight: "500",
-                            cursor: "pointer",
-                            color: "#dc2626",
-                            transition: "background 0.12s",
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = "#fee2e2")}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = "#fff5f5")}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      {/* Actions */}
+                      <td style={{ padding: "14px 14px", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", borderRight: "1px solid #f0f0f0", borderRadius: "0 8px 8px 0", verticalAlign: "middle" }}>
+                        <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                          {/* Edit icon button */}
+                          <button
+                            className="icon-btn"
+                            title="Edit box"
+                            onClick={() => navigateTo(box.comboConfig ? `/app/boxes/${box.id}/combo` : `/app/boxes/${box.id}`)}
+                            style={{ width: "34px", height: "34px", border: "1.5px solid #e5e7eb", borderRadius: "8px", background: "#ffffff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#374151", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "#f0fdf4"; e.currentTarget.style.borderColor = "#2A7A4F"; e.currentTarget.style.color = "#2A7A4F"; e.currentTarget.style.boxShadow = "0 3px 8px rgba(42,122,79,0.18)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "#ffffff"; e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.color = "#374151"; e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.06)"; }}
+                          >
+                            <AdminIcon type="edit" size="small" />
+                          </button>
+                          {/* Delete icon button */}
+                          <button
+                            className="icon-btn"
+                            title="Delete box"
+                            onClick={() => handleDelete(box.id, box.boxName)}
+                            style={{ width: "34px", height: "34px", border: "1.5px solid #fecaca", borderRadius: "8px", background: "#fff5f5", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#dc2626", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "#fee2e2"; e.currentTarget.style.borderColor = "#fca5a5"; e.currentTarget.style.boxShadow = "0 3px 8px rgba(220,38,38,0.18)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "#fff5f5"; e.currentTarget.style.borderColor = "#fecaca"; e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)"; }}
+                          >
+                            <AdminIcon type="delete" size="small" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

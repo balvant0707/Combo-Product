@@ -18,30 +18,16 @@ function getComboConfigSummary(box) {
   if (box.config) {
     const comboType = box.config.comboType;
     if (!comboType || comboType <= 0) return null;
-    return {
-      comboType,
-      title: box.config.title,
-      isActive: box.config.isActive,
-      stepsJson: box.config.stepsJson,
-    };
+    return { comboType, title: box.config.title, isActive: box.config.isActive, stepsJson: box.config.stepsJson };
   }
-
   if (!box.comboStepsConfig) return null;
-
   try {
     const parsed = JSON.parse(box.comboStepsConfig);
     const comboType = parseInt(parsed?.type) || 0;
     if (comboType <= 0) return null;
     const steps = Array.isArray(parsed?.steps) ? parsed.steps : [];
-    return {
-      comboType,
-      title: parsed?.title || null,
-      isActive: parsed?.isActive !== false,
-      stepsJson: JSON.stringify(steps),
-    };
-  } catch {
-    return null;
-  }
+    return { comboType, title: parsed?.title || null, isActive: parsed?.isActive !== false, stepsJson: JSON.stringify(steps) };
+  } catch { return null; }
 }
 
 export const loader = async ({ request }) => {
@@ -50,7 +36,6 @@ export const loader = async ({ request }) => {
   await repairMissingShopifyVariantIds(session.shop, admin);
   let boxes = await listBoxes(session.shop);
   const boxesMissingTypedComboConfig = boxes.filter((box) => !box.config && box.comboStepsConfig);
-
   if (boxesMissingTypedComboConfig.length > 0) {
     await Promise.all(
       boxesMissingTypedComboConfig.map((box) =>
@@ -61,7 +46,6 @@ export const loader = async ({ request }) => {
     );
     boxes = await listBoxes(session.shop);
   }
-
   activateAllBundleProducts(session.shop, admin).catch(() => {});
   return {
     boxes: boxes.map((b) => ({
@@ -85,21 +69,34 @@ export const action = async ({ request }) => {
   const shop = session.shop;
   const formData = await request.formData();
   const intent = formData.get("_action");
-
   if (intent === "delete") {
     const id = formData.get("id");
     await deleteBox(id, shop, admin);
     return { ok: true };
   }
-
   if (intent === "reorder") {
     const orderedIds = JSON.parse(formData.get("orderedIds") || "[]");
     await reorderBoxes(shop, orderedIds);
     return { ok: true };
   }
-
   return { ok: false };
 };
+
+// Avatar color palette for box initials
+const AVATAR_COLORS = [
+  { bg: "#dbeafe", color: "#1d4ed8" },
+  { bg: "#dcfce7", color: "#15803d" },
+  { bg: "#ede9fe", color: "#7c3aed" },
+  { bg: "#fce7f3", color: "#be185d" },
+  { bg: "#ffedd5", color: "#c2410c" },
+  { bg: "#ecfeff", color: "#0e7490" },
+  { bg: "#fef9c3", color: "#854d0e" },
+  { bg: "#f0fdf4", color: "#166534" },
+];
+
+function getAvatarColor(id) {
+  return AVATAR_COLORS[id % AVATAR_COLORS.length];
+}
 
 export default function ManageBoxesPage() {
   const { boxes } = useLoaderData();
@@ -109,15 +106,13 @@ export default function ManageBoxesPage() {
 
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all"); // "all" | "active" | "inactive"
+  const [statusFilter, setStatusFilter] = useState("all");
 
   function navigateTo(path) {
     navigate(withEmbeddedAppParams(path, location.search));
   }
 
-  function handleDelete(id, name) {
-    setDeleteConfirm({ id, name });
-  }
+  function handleDelete(id, name) { setDeleteConfirm({ id, name }); }
 
   function confirmDelete() {
     if (deleteConfirm) {
@@ -126,47 +121,24 @@ export default function ManageBoxesPage() {
     setDeleteConfirm(null);
   }
 
-  // Drag & drop
   let dragSrcId = null;
 
-  function onDragStart(e, id) {
-    dragSrcId = id;
-    e.currentTarget.style.opacity = "0.45";
-  }
-
-  function onDragEnd(e) {
-    e.currentTarget.style.opacity = "1";
-  }
-
-  function onDragOver(e) {
-    e.preventDefault();
-    e.currentTarget.style.background = "#f0fdf4";
-  }
-
-  function onDragLeave(e) {
-    e.currentTarget.style.background = "";
-  }
+  function onDragStart(e, id) { dragSrcId = id; e.currentTarget.style.opacity = "0.4"; }
+  function onDragEnd(e) { e.currentTarget.style.opacity = "1"; }
+  function onDragOver(e) { e.preventDefault(); e.currentTarget.style.background = "#f0fdf4"; }
+  function onDragLeave(e) { e.currentTarget.style.background = ""; }
 
   function onDrop(e, targetId) {
     e.preventDefault();
     e.currentTarget.style.background = "";
     if (dragSrcId === targetId) return;
-
-    const rows = Array.from(
-      document.querySelectorAll("tr[data-box-id]"),
-    ).map((r) => parseInt(r.getAttribute("data-box-id")));
-
+    const rows = Array.from(document.querySelectorAll("tr[data-box-id]")).map((r) => parseInt(r.getAttribute("data-box-id")));
     const srcIdx = rows.indexOf(dragSrcId);
     const tgtIdx = rows.indexOf(targetId);
     if (srcIdx === -1 || tgtIdx === -1) return;
-
     rows.splice(srcIdx, 1);
     rows.splice(tgtIdx, 0, dragSrcId);
-
-    fetcher.submit(
-      { _action: "reorder", orderedIds: JSON.stringify(rows) },
-      { method: "POST" },
-    );
+    fetcher.submit({ _action: "reorder", orderedIds: JSON.stringify(rows) }, { method: "POST" });
   }
 
   const baseBoxes =
@@ -181,395 +153,442 @@ export default function ManageBoxesPage() {
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       result = result.filter(
-        (b) =>
-          b.boxName.toLowerCase().includes(q) ||
-          (b.displayTitle && b.displayTitle.toLowerCase().includes(q))
+        (b) => b.boxName.toLowerCase().includes(q) || (b.displayTitle && b.displayTitle.toLowerCase().includes(q))
       );
     }
     return result;
   }, [baseBoxes, statusFilter, search]);
 
-  const COLUMNS = ["", "Box Name", "Items", "Price", "Type", "Orders", "Actions"];
+  const totalOrders = baseBoxes.reduce((s, b) => s + b.orderCount, 0);
+  const activeCount = baseBoxes.filter((b) => b.isActive).length;
+  const inactiveCount = baseBoxes.length - activeCount;
 
   return (
-    <s-page heading={`Combo Boxes (${baseBoxes.length})`}>
+    <s-page heading="Combo Boxes">
       <style>{`
-        .cb-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .cb-table thead th {
-          text-align: left;
-          padding: 10px 16px;
-          font-size: 11px;
-          font-weight: 600;
-          color: #6b7280;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          border-bottom: 1px solid #e5e7eb;
-          background: #f9fafb;
-          white-space: nowrap;
+        /* ── Stats bar ── */
+        .cb-stats {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 16px;
+          flex-wrap: wrap;
         }
-        .cb-table thead th:last-child { text-align: center; }
-        .cb-table tbody tr {
-          border-bottom: 1px solid #f3f4f6;
-          transition: background 0.12s;
-        }
-        .cb-table tbody tr:last-child { border-bottom: none; }
-        .cb-table tbody tr:hover { background: #f9fafb; }
-        .cb-table td { padding: 12px 16px; vertical-align: middle; }
-        .cb-table td:last-child { text-align: center; }
-        .cb-badge {
-          display: inline-flex;
-          align-items: center;
-          padding: 2px 8px;
-          border-radius: 4px;
-          font-size: 11px;
-          font-weight: 600;
-        }
-        .cb-badge-live { color: #166534; background: #dcfce7; }
-        .cb-badge-draft { color: #6b7280; background: #f3f4f6; }
-        .cb-badge-combo { color: #1d4ed8; background: #dbeafe; }
-        .cb-badge-single { color: #6b7280; background: #f3f4f6; }
-        .cb-badge-gift { color: #7c3aed; background: #ede9fe; }
-        .cb-action-btn {
-          width: 32px; height: 32px;
-          border: 1px solid #e5e7eb;
-          border-radius: 6px;
+        .cb-stat-card {
+          flex: 1;
+          min-width: 120px;
           background: #fff;
-          cursor: pointer;
-          display: inline-flex;
+          border: 1px solid #e5e7eb;
+          border-radius: 10px;
+          padding: 14px 18px;
+          display: flex;
           align-items: center;
-          justify-content: center;
-          color: #374151;
-          transition: all 0.12s;
+          gap: 12px;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.04);
         }
-        .cb-action-btn:hover { background: #f0fdf4; border-color: #2A7A4F; color: #2A7A4F; }
-        .cb-action-btn.danger:hover { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
-        .cb-drag-handle {
-          color: #d1d5db;
-          cursor: grab;
-          font-size: 16px;
-          line-height: 1;
-          user-select: none;
-          padding: 0 4px;
+        .cb-stat-icon {
+          width: 38px; height: 38px;
+          border-radius: 8px;
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
         }
-        .cb-filter-bar {
+        .cb-stat-val { font-size: 20px; font-weight: 800; color: #111827; line-height: 1; }
+        .cb-stat-lbl { font-size: 11px; color: #6b7280; margin-top: 2px; font-weight: 500; letter-spacing: 0.03em; }
+
+        /* ── Toolbar ── */
+        .cb-toolbar {
           display: flex;
           align-items: center;
           gap: 10px;
           padding: 12px 16px;
-          border-bottom: 1px solid #e5e7eb;
-          background: #fff;
+          border-bottom: 1px solid #f0f0f0;
+          background: #fafafa;
           flex-wrap: wrap;
         }
-        .cb-search {
+        .cb-search-wrap {
           flex: 1;
-          min-width: 180px;
+          min-width: 200px;
           display: flex;
           align-items: center;
           gap: 8px;
-          border: 1px solid #e5e7eb;
-          border-radius: 6px;
-          padding: 7px 12px;
-          background: #f9fafb;
-        }
-        .cb-search input {
-          border: none;
-          outline: none;
-          background: transparent;
-          font-size: 13px;
-          color: #111827;
-          width: 100%;
-        }
-        .cb-search input::placeholder { color: #9ca3af; }
-        .cb-filter-tabs {
-          display: flex;
-          gap: 4px;
-        }
-        .cb-filter-tab {
-          padding: 6px 14px;
-          border: 1px solid #e5e7eb;
-          border-radius: 6px;
           background: #fff;
-          font-size: 12px;
-          font-weight: 500;
-          color: #6b7280;
-          cursor: pointer;
-          transition: all 0.12s;
-          white-space: nowrap;
+          border: 1.5px solid #e5e7eb;
+          border-radius: 8px;
+          padding: 8px 12px;
+          transition: border-color 0.15s;
         }
-        .cb-filter-tab:hover { background: #f3f4f6; color: #111827; }
-        .cb-filter-tab.active { background: #111827; color: #fff; border-color: #111827; font-weight: 600; }
-        .cb-filter-tab.active-green { background: #dcfce7; color: #166534; border-color: #86efac; font-weight: 600; }
-        .cb-filter-tab.active-gray { background: #f3f4f6; color: #374151; border-color: #d1d5db; font-weight: 600; }
-        .cb-results-count { font-size: 12px; color: #9ca3af; white-space: nowrap; }
+        .cb-search-wrap:focus-within { border-color: #2A7A4F; box-shadow: 0 0 0 3px rgba(42,122,79,0.08); }
+        .cb-search-wrap input {
+          border: none; outline: none; background: transparent;
+          font-size: 13px; color: #111827; width: 100%;
+        }
+        .cb-search-wrap input::placeholder { color: #b0b7c3; }
+        .cb-clear-btn {
+          background: none; border: none; cursor: pointer;
+          color: #9ca3af; padding: 0; line-height: 1; font-size: 18px;
+          display: flex; align-items: center;
+        }
+        .cb-filter-tabs { display: flex; gap: 4px; }
+        .cb-ftab {
+          padding: 7px 14px;
+          border: 1.5px solid #e5e7eb;
+          border-radius: 8px;
+          background: #fff;
+          font-size: 12px; font-weight: 500; color: #6b7280;
+          cursor: pointer; transition: all 0.12s; white-space: nowrap;
+        }
+        .cb-ftab:hover { background: #f3f4f6; border-color: #d1d5db; color: #111827; }
+        .cb-ftab.f-all  { background: #111827; color: #fff; border-color: #111827; font-weight: 600; }
+        .cb-ftab.f-live { background: #dcfce7; color: #166534; border-color: #86efac; font-weight: 600; }
+        .cb-ftab.f-draft{ background: #f3f4f6; color: #374151; border-color: #d1d5db; font-weight: 600; }
+        .cb-count-pill {
+          display: inline-flex; align-items: center; justify-content: center;
+          background: rgba(255,255,255,0.25); border-radius: 99px;
+          padding: 0 6px; font-size: 11px; margin-left: 4px; min-width: 18px; height: 16px;
+        }
+        .cb-ftab.f-all .cb-count-pill { background: rgba(255,255,255,0.2); }
+        .cb-ftab.f-live .cb-count-pill { background: rgba(22,101,52,0.12); }
+        .cb-ftab.f-draft .cb-count-pill { background: rgba(0,0,0,0.07); }
+
+        /* ── Table ── */
+        .cb-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .cb-table thead tr { background: #f9fafb; }
+        .cb-table thead th {
+          text-align: left; padding: 11px 16px;
+          font-size: 10px; font-weight: 700; color: #9ca3af;
+          text-transform: uppercase; letter-spacing: 0.08em;
+          border-bottom: 1px solid #e5e7eb; white-space: nowrap;
+        }
+        .cb-table thead th:last-child { text-align: right; padding-right: 20px; }
+        .cb-table tbody tr {
+          border-bottom: 1px solid #f3f4f6;
+          transition: background 0.1s;
+          cursor: default;
+        }
+        .cb-table tbody tr:last-child { border-bottom: none; }
+        .cb-table tbody tr:hover { background: #f8fffe; }
+        .cb-table td { padding: 13px 16px; vertical-align: middle; }
+        .cb-table td:last-child { text-align: right; padding-right: 20px; }
+
+        /* ── Box avatar ── */
+        .cb-avatar {
+          width: 36px; height: 36px; border-radius: 8px;
+          display: flex; align-items: center; justify-content: center;
+          font-weight: 800; font-size: 14px; flex-shrink: 0;
+          letter-spacing: -0.5px;
+        }
+
+        /* ── Badges ── */
+        .cb-badge {
+          display: inline-flex; align-items: center; gap: 4px;
+          padding: 2px 8px; border-radius: 4px;
+          font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+          text-transform: uppercase;
+        }
+        .b-live   { color: #166534; background: #dcfce7; }
+        .b-draft  { color: #6b7280; background: #f3f4f6; }
+        .b-combo  { color: #1d4ed8; background: #dbeafe; }
+        .b-single { color: #6b7280; background: #f3f4f6; }
+        .b-gift   { color: #7c3aed; background: #ede9fe; }
+
+        /* ── Status dot ── */
+        .cb-dot {
+          width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0;
+        }
+        .dot-live { background: #22c55e; box-shadow: 0 0 0 2px rgba(34,197,94,0.2); }
+        .dot-draft { background: #d1d5db; }
+
+        /* ── Action buttons ── */
+        .cb-actions { display: flex; gap: 6px; justify-content: flex-end; }
+        .cb-btn {
+          width: 32px; height: 32px; border-radius: 7px;
+          border: 1.5px solid #e5e7eb; background: #fff;
+          cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+          color: #6b7280; transition: all 0.13s;
+        }
+        .cb-btn:hover { background: #f0fdf4; border-color: #2A7A4F; color: #2A7A4F; transform: scale(1.05); }
+        .cb-btn.del:hover { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+
+        /* ── Drag handle ── */
+        .cb-drag {
+          color: #d1d5db; cursor: grab; font-size: 15px;
+          line-height: 1; user-select: none; padding: 0 2px;
+          transition: color 0.12s;
+        }
+        .cb-drag:hover { color: #9ca3af; }
+
+        /* ── Price ── */
+        .cb-price { font-family: monospace; font-weight: 700; color: #111827; font-size: 13px; }
+        .cb-price-dynamic { font-size: 11px; color: #9ca3af; font-style: italic; }
+
+        /* ── Orders badge ── */
+        .cb-orders-val {
+          display: inline-flex; align-items: center; gap: 5px;
+          font-weight: 700; color: #111827; font-size: 13px;
+        }
+        .cb-orders-zero { color: #d1d5db; font-size: 13px; font-weight: 500; }
+
+        /* ── Empty state ── */
+        .cb-empty {
+          text-align: center; padding: 72px 24px;
+        }
+        .cb-empty-icon {
+          width: 64px; height: 64px; border-radius: 16px;
+          background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+          border: 1px solid #bbf7d0;
+          display: flex; align-items: center; justify-content: center;
+          margin: 0 auto 20px;
+          box-shadow: 0 4px 12px rgba(42,122,79,0.12);
+        }
+        .cb-empty h3 { font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 6px; }
+        .cb-empty p { font-size: 13px; color: #9ca3af; margin: 0 0 24px; }
+        .cb-empty-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+        /* ── No results ── */
+        .cb-noresults {
+          text-align: center; padding: 40px 24px; color: #9ca3af;
+        }
+        .cb-noresults p { margin: 8px 0 0; font-size: 13px; }
+
+        /* ── Items chip ── */
+        .cb-items-chip {
+          display: inline-flex; align-items: center; justify-content: center;
+          min-width: 28px; height: 24px; padding: 0 8px;
+          background: #f3f4f6; border-radius: 6px;
+          font-size: 12px; font-weight: 700; color: #374151;
+        }
       `}</style>
 
-      <ui-title-bar title={`Combo Boxes (${baseBoxes.length})`}>
+      <ui-title-bar title="Combo Boxes">
         <button onClick={() => navigateTo("/app/storefront-visibility")}>
           Frontend Visibility
         </button>
         <button onClick={() => navigateTo("/app/boxes/specific-combo")}>
-          Create Specific Combo
+          Specific Combo
         </button>
         <button variant="primary" onClick={() => navigateTo("/app/boxes/new")}>
           + Create Box
         </button>
       </ui-title-bar>
 
+      {/* Stats row */}
+      <div className="cb-stats">
+        {[
+          { label: "Total Boxes",  value: baseBoxes.length,  icon: "package",    iconBg: "#eff6ff", iconColor: "#2563eb" },
+          { label: "Active",       value: activeCount,        icon: "checkmark",  iconBg: "#f0fdf4", iconColor: "#16a34a" },
+          { label: "Inactive",     value: inactiveCount,      icon: "hide",       iconBg: "#fafafa", iconColor: "#9ca3af" },
+          { label: "Total Orders", value: totalOrders,        icon: "orders",     iconBg: "#fdf4ff", iconColor: "#9333ea" },
+        ].map((s) => (
+          <div key={s.label} className="cb-stat-card">
+            <div className="cb-stat-icon" style={{ background: s.iconBg }}>
+              <AdminIcon type={s.icon} size="base" />
+            </div>
+            <div>
+              <div className="cb-stat-val">{s.value}</div>
+              <div className="cb-stat-lbl">{s.label}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
       <s-section>
-        {/* Filter bar */}
-        <div className="cb-filter-bar">
-          {/* Search */}
-          <div className="cb-search">
+        {/* Toolbar */}
+        <div className="cb-toolbar">
+          <div className="cb-search-wrap">
             <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0, color: "#9ca3af" }}>
-              <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.8" />
-              <path d="M14.5 14.5L18 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.8"/>
+              <path d="M14.5 14.5L18 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
             </svg>
             <input
               type="text"
-              placeholder="Search boxes…"
+              placeholder="Search by box name…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
             {search && (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", padding: 0, lineHeight: 1, fontSize: "16px" }}
-              >
-                ×
-              </button>
+              <button className="cb-clear-btn" type="button" onClick={() => setSearch("")}>×</button>
             )}
           </div>
 
-          {/* Status filter tabs */}
           <div className="cb-filter-tabs">
-            <button
-              type="button"
-              className={`cb-filter-tab ${statusFilter === "all" ? "active" : ""}`}
-              onClick={() => setStatusFilter("all")}
-            >
-              All ({baseBoxes.length})
+            <button type="button" className={`cb-ftab ${statusFilter === "all" ? "f-all" : ""}`} onClick={() => setStatusFilter("all")}>
+              All <span className="cb-count-pill">{baseBoxes.length}</span>
             </button>
-            <button
-              type="button"
-              className={`cb-filter-tab ${statusFilter === "active" ? "active-green" : ""}`}
-              onClick={() => setStatusFilter("active")}
-            >
-              Active ({baseBoxes.filter((b) => b.isActive).length})
+            <button type="button" className={`cb-ftab ${statusFilter === "active" ? "f-live" : ""}`} onClick={() => setStatusFilter("active")}>
+              Active <span className="cb-count-pill">{activeCount}</span>
             </button>
-            <button
-              type="button"
-              className={`cb-filter-tab ${statusFilter === "inactive" ? "active-gray" : ""}`}
-              onClick={() => setStatusFilter("inactive")}
-            >
-              Inactive ({baseBoxes.filter((b) => !b.isActive).length})
+            <button type="button" className={`cb-ftab ${statusFilter === "inactive" ? "f-draft" : ""}`} onClick={() => setStatusFilter("inactive")}>
+              Inactive <span className="cb-count-pill">{inactiveCount}</span>
             </button>
           </div>
-
-          {/* Result count when filtered */}
-          {(search || statusFilter !== "all") && (
-            <span className="cb-results-count">{displayBoxes.length} result{displayBoxes.length !== 1 ? "s" : ""}</span>
-          )}
         </div>
 
-        {displayBoxes.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "64px 0", color: "#9ca3af" }}>
-            <div style={{ marginBottom: "16px", display: "flex", justifyContent: "center" }}>
-              <AdminIcon type="package" size="large" tone="subdued" />
+        {baseBoxes.length === 0 ? (
+          /* Empty state — no boxes at all */
+          <div className="cb-empty">
+            <div className="cb-empty-icon">
+              <AdminIcon type="package" size="large" tone="success" />
             </div>
-            <p style={{ fontSize: "15px", fontWeight: "600", color: "#374151", margin: "0 0 6px" }}>
-              No combo boxes yet
-            </p>
-            <p style={{ fontSize: "13px", margin: "0 0 20px", color: "#9ca3af" }}>
-              Create your first box to let customers build custom combos.
-            </p>
-            <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+            <h3>No combo boxes yet</h3>
+            <p>Create your first box to let customers build custom combos on your storefront.</p>
+            <div className="cb-empty-actions">
               <s-button onClick={() => navigateTo("/app/boxes/new")}>+ Create Box</s-button>
-              <s-button onClick={() => navigateTo("/app/boxes/specific-combo")}>
-                Specific Combo Box
-              </s-button>
+              <s-button onClick={() => navigateTo("/app/boxes/specific-combo")}>Specific Combo Box</s-button>
             </div>
+          </div>
+        ) : displayBoxes.length === 0 ? (
+          /* No search/filter results */
+          <div className="cb-noresults">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style={{ color: "#d1d5db" }}>
+              <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M17 17L21 21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M8 11h6M11 8v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            <p>No boxes match <strong>&ldquo;{search}&rdquo;</strong></p>
           </div>
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table className="cb-table">
               <thead>
                 <tr>
-                  {COLUMNS.map((col) => (
-                    <th key={col}>{col}</th>
-                  ))}
+                  <th style={{ width: 32, padding: "11px 8px" }}></th>
+                  <th>Box Name</th>
+                  <th>Items</th>
+                  <th>Price</th>
+                  <th>Type</th>
+                  <th>Orders</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {displayBoxes.map((box) => (
-                  <tr
-                    key={box.id}
-                    data-box-id={box.id}
-                    draggable
-                    onDragStart={(e) => onDragStart(e, box.id)}
-                    onDragEnd={onDragEnd}
-                    onDragOver={onDragOver}
-                    onDragLeave={onDragLeave}
-                    onDrop={(e) => onDrop(e, box.id)}
-                  >
-                    {/* Drag handle */}
-                    <td style={{ width: "32px", padding: "12px 8px" }}>
-                      <span className="cb-drag-handle" title="Drag to reorder">⠿</span>
-                    </td>
+                {displayBoxes.map((box) => {
+                  const avatar = getAvatarColor(box.id);
+                  return (
+                    <tr
+                      key={box.id}
+                      data-box-id={box.id}
+                      draggable
+                      onDragStart={(e) => onDragStart(e, box.id)}
+                      onDragEnd={onDragEnd}
+                      onDragOver={onDragOver}
+                      onDragLeave={onDragLeave}
+                      onDrop={(e) => onDrop(e, box.id)}
+                    >
+                      {/* Drag */}
+                      <td style={{ padding: "13px 8px", width: 32 }}>
+                        <span className="cb-drag" title="Drag to reorder">⠿</span>
+                      </td>
 
-                    {/* Box Name */}
-                    <td style={{ minWidth: "200px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                        <span style={{ fontWeight: "600", color: "#111827" }}>{box.boxName}</span>
-                        <span className={`cb-badge ${box.isActive ? "cb-badge-live" : "cb-badge-draft"}`}>
-                          {box.isActive ? "Live" : "Draft"}
-                        </span>
-                        {box.isGiftBox && (
-                          <span className="cb-badge cb-badge-gift">Gift</span>
+                      {/* Box Name */}
+                      <td style={{ minWidth: 220 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <div className="cb-avatar" style={{ background: avatar.bg, color: avatar.color }}>
+                            {box.boxName.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                              <span style={{ fontWeight: 700, color: "#111827", fontSize: 13 }}>{box.boxName}</span>
+                              <span className={`cb-dot ${box.isActive ? "dot-live" : "dot-draft"}`} />
+                              <span className={`cb-badge ${box.isActive ? "b-live" : "b-draft"}`}>
+                                {box.isActive ? "Live" : "Draft"}
+                              </span>
+                              {box.isGiftBox && (
+                                <span className="cb-badge b-gift">🎁 Gift</span>
+                              )}
+                            </div>
+                            {box.displayTitle && box.displayTitle !== box.boxName && (
+                              <div style={{ fontSize: 11, color: "#9ca3af" }}>{box.displayTitle}</div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Items */}
+                      <td>
+                        <span className="cb-items-chip">{box.itemCount}</span>
+                      </td>
+
+                      {/* Price */}
+                      <td>
+                        {box.bundlePriceType === "dynamic" ? (
+                          <span className="cb-price-dynamic">Dynamic</span>
+                        ) : (
+                          <span className="cb-price">
+                            &#8377;{Number(box.bundlePrice).toLocaleString("en-IN")}
+                          </span>
                         )}
-                      </div>
-                      {box.displayTitle && box.displayTitle !== box.boxName && (
-                        <div style={{ fontSize: "12px", color: "#9ca3af" }}>{box.displayTitle}</div>
-                      )}
-                    </td>
+                      </td>
 
-                    {/* Items */}
-                    <td>
-                      <span style={{ fontWeight: "600", color: "#374151" }}>{box.itemCount}</span>
-                    </td>
+                      {/* Type */}
+                      <td>
+                        {box.comboConfig && box.comboConfig.comboType > 0 ? (
+                          <span className="cb-badge b-combo">
+                            {box.comboConfig.comboType}-Step
+                          </span>
+                        ) : (
+                          <span className="cb-badge b-single">Single</span>
+                        )}
+                      </td>
 
-                    {/* Price */}
-                    <td>
-                      {box.bundlePriceType === "dynamic" ? (
-                        <span style={{ fontSize: "12px", color: "#6b7280" }}>Dynamic</span>
-                      ) : (
-                        <span style={{ fontWeight: "600", color: "#111827", fontFamily: "monospace" }}>
-                          &#8377;{Number(box.bundlePrice).toLocaleString("en-IN")}
-                        </span>
-                      )}
-                    </td>
+                      {/* Orders */}
+                      <td>
+                        {box.orderCount > 0 ? (
+                          <span className="cb-orders-val">
+                            <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#2A7A4F", display: "inline-block" }} />
+                            {box.orderCount}
+                          </span>
+                        ) : (
+                          <span className="cb-orders-zero">—</span>
+                        )}
+                      </td>
 
-                    {/* Type */}
-                    <td>
-                      {box.comboConfig && box.comboConfig.comboType > 0 ? (
-                        <span className="cb-badge cb-badge-combo">
-                          {box.comboConfig.comboType} Step
-                        </span>
-                      ) : (
-                        <span className="cb-badge cb-badge-single">Single</span>
-                      )}
-                    </td>
-
-                    {/* Orders */}
-                    <td>
-                      <span style={{ fontWeight: "600", color: box.orderCount > 0 ? "#111827" : "#d1d5db" }}>
-                        {box.orderCount}
-                      </span>
-                    </td>
-
-                    {/* Actions */}
-                    <td>
-                      <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
-                        <button
-                          className="cb-action-btn"
-                          title="Edit box"
-                          onClick={() =>
-                            navigateTo(
-                              box.comboConfig
-                                ? `/app/boxes/${box.id}/combo`
-                                : `/app/boxes/${box.id}`
-                            )
-                          }
-                        >
-                          <AdminIcon type="edit" size="small" />
-                        </button>
-                        <button
-                          className="cb-action-btn danger"
-                          title="Delete box"
-                          onClick={() => handleDelete(box.id, box.boxName)}
-                        >
-                          <AdminIcon type="delete" size="small" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      {/* Actions */}
+                      <td>
+                        <div className="cb-actions">
+                          <button
+                            className="cb-btn"
+                            title="Edit"
+                            onClick={() => navigateTo(box.comboConfig ? `/app/boxes/${box.id}/combo` : `/app/boxes/${box.id}`)}
+                          >
+                            <AdminIcon type="edit" size="small" />
+                          </button>
+                          <button
+                            className="cb-btn del"
+                            title="Delete"
+                            onClick={() => handleDelete(box.id, box.boxName)}
+                          >
+                            <AdminIcon type="delete" size="small" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
       </s-section>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete modal */}
       {deleteConfirm && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(17,24,39,0.5)",
-            backdropFilter: "blur(2px)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "16px",
-          }}
-        >
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: "8px",
-              width: "100%",
-              maxWidth: "400px",
-              boxShadow: "0 16px 48px rgba(0,0,0,0.18)",
-            }}
-          >
-            <div style={{ padding: "20px 24px", borderBottom: "1px solid #f3f4f6" }}>
-              <p style={{ fontSize: "15px", fontWeight: "700", color: "#111827", margin: 0 }}>
-                Delete &ldquo;{deleteConfirm.name}&rdquo;?
-              </p>
-              <p style={{ fontSize: "13px", color: "#6b7280", margin: "4px 0 0" }}>
-                This action cannot be undone. The associated Shopify product will also be removed.
-              </p>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)", backdropFilter: "blur(3px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div style={{ background: "#fff", borderRadius: 12, width: "100%", maxWidth: 400, boxShadow: "0 24px 64px rgba(0,0,0,0.22)", overflow: "hidden" }}>
+            <div style={{ padding: "20px 24px 16px", borderBottom: "1px solid #f3f4f6", display: "flex", gap: 14, alignItems: "flex-start" }}>
+              <div style={{ width: 42, height: 42, borderRadius: "50%", background: "#fef2f2", border: "1.5px solid #fecaca", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <AdminIcon type="delete" size="base" />
+              </div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>Delete box?</div>
+                <div style={{ fontSize: 13, color: "#6b7280", marginTop: 3 }}>
+                  <strong style={{ color: "#111827" }}>&ldquo;{deleteConfirm.name}&rdquo;</strong> and its Shopify product will be permanently removed.
+                </div>
+              </div>
             </div>
-            <div
-              style={{
-                padding: "16px 24px",
-                display: "flex",
-                gap: "8px",
-                justifyContent: "flex-end",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setDeleteConfirm(null)}
-                style={{
-                  background: "#fff",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "6px",
-                  padding: "8px 16px",
-                  fontSize: "13px",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  color: "#374151",
-                }}
-              >
+            <div style={{ padding: "16px 24px", display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button type="button" onClick={() => setDeleteConfirm(null)} style={{ background: "#fff", border: "1.5px solid #e5e7eb", borderRadius: 7, padding: "8px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#374151" }}>
                 Cancel
               </button>
-              <button
-                type="button"
-                onClick={confirmDelete}
-                style={{
-                  background: "#dc2626",
-                  border: "none",
-                  borderRadius: "6px",
-                  padding: "8px 16px",
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  color: "#fff",
-                }}
-              >
+              <button type="button" onClick={confirmDelete} style={{ background: "#dc2626", border: "none", borderRadius: 7, padding: "8px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer", color: "#fff" }}>
                 Delete
               </button>
             </div>

@@ -255,8 +255,6 @@ export default function ManageBoxesPage() {
 
       {/* Hero banner */}
       <div style={{ marginBottom: "16px", borderRadius: "12px", background: "linear-gradient(135deg, #f0fdf4 0%, #ffffff 60%)", border: "1px solid #bbf7d0", boxShadow: "0 4px 20px rgba(42,122,79,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
-        <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(42,122,79,0.05)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: "-30px", right: "80px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(42,122,79,0.04)", pointerEvents: "none" }} />
         <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(42,122,79,0.10)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#2A7A4F", marginBottom: "10px" }}>
           <AdminIcon type="package" size="small" /> Combo Boxes
         </div>
@@ -305,7 +303,7 @@ export default function ManageBoxesPage() {
                 </tr>
               </thead>
               <tbody>
-                {displayBoxes.map((box, idx) => {
+                {displayBoxes.map((box) => {
                   const PAGE_OPTIONS = [
                     { label: "All pages", value: "" },
                     { label: "─────────────", value: "__sep1__", disabled: true },
@@ -408,9 +406,7 @@ export default function ManageBoxesPage() {
                             Gift
                           </div>
                         ) : (
-                          <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#f3f4f6", border: "1.5px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <span style={{ color: "#d1d5db", fontSize: "10px", fontWeight: "800" }}>—</span>
-                          </div>
+                          <span style={{ fontSize: "12px", color: "#9ca3af", fontWeight: "500" }}>No</span>
                         )}
                       </td>
 

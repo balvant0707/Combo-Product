@@ -162,10 +162,9 @@ export default function SettingsPage() {
                         padding: "10px 8px",
                         border: isActive ? "2px solid #000000" : "2px solid #e5e1d8",
                         borderRadius: "5px",
-                        background: isActive ? "#000000" : "#fff",
+                        background: isActive ? "" : "#fff",
                         cursor: "pointer",
                         transition: "border-color 0.15s, background 0.15s",
-                        boxShadow: isActive ? "0 0 0 3px rgba(0,0,0,0.15)" : "none",
                       }}
                     >
                       {/* Split-circle swatch */}

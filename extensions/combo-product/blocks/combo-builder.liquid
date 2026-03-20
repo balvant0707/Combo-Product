@@ -30,6 +30,7 @@
   data-product-handle="{{ product.handle }}"
   {% endif %}
   style="
+    display:none;
     padding-top: {{ block.settings.padding_top }}px;
     padding-bottom: {{ block.settings.padding_bottom }}px;
     {% if block.settings.bg_color != blank %}background-color: {{ block.settings.bg_color }};{% endif %}
@@ -58,6 +59,23 @@
   });
 </script>
 <script defer src="{{ 'combo-builder.js' | asset_url }}"></script>
+
+<script>
+  (function () {
+    var id = 'combo-builder-widget-{{ block.id }}';
+    function reveal() {
+      if (window.__COMBO_BUILDER_EMBED__) {
+        var el = document.getElementById(id);
+        if (el) el.style.display = '';
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', reveal);
+    } else {
+      reveal();
+    }
+  })();
+</script>
 
 {% schema %}
 {

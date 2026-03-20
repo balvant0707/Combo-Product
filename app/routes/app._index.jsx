@@ -247,23 +247,23 @@ function EmbedBlockCard({ embedBlockUrl }) {
               textDecoration: "none",
               borderRadius: "5px",
               padding: "10px 20px",
-              background: "#2A7A4F",
+              background: "#111827",
               color: "#ffffff",
               fontSize: "13px",
               fontWeight: "700",
               cursor: "pointer",
               whiteSpace: "nowrap",
               flexShrink: 0,
-              boxShadow: "0 2px 8px rgba(42,122,79,0.25)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
               transition: "background 0.12s, box-shadow 0.12s",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#1e5c3a";
-              e.currentTarget.style.boxShadow = "0 4px 14px rgba(42,122,79,0.35)";
+              e.currentTarget.style.background = "#000000";
+              e.currentTarget.style.boxShadow = "0 4px 14px rgba(0,0,0,0.30)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = "#2A7A4F";
-              e.currentTarget.style.boxShadow = "0 2px 8px rgba(42,122,79,0.25)";
+              e.currentTarget.style.background = "#111827";
+              e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.18)";
             }}
           >
             <AdminIcon type="theme" size="small" />
@@ -297,7 +297,7 @@ function EmbedBlockCard({ embedBlockUrl }) {
                   width: "24px",
                   height: "24px",
                   borderRadius: "50%",
-                  background: "#2A7A4F",
+                  background: "#111827",
                   color: "#fff",
                   fontSize: "12px",
                   fontWeight: "800",

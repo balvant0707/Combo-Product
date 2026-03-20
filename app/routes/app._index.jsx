@@ -173,7 +173,7 @@ function EmbedBlockCard({ embedBlockUrl, enabled }) {
                 color: "#ffffff",
               }}
             >
-              <AdminIcon type="apps" size="large" color="#ffffff" />
+              <AdminIcon type="apps" size="large" color="#ffffff !important" />
             </div>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>

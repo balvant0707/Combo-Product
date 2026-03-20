@@ -57,7 +57,7 @@ export async function buildEmbedBlockUrl({ shop, admin }) {
     `https://admin.shopify.com/store/${storeHandle}/themes/${themeIdSegment}/editor`,
   );
   destination.searchParams.set("context", "apps");
-  destination.searchParams.set("activateAppId", `${EXTENSION_UUID}/combo-builder`);
+  destination.searchParams.set("activateAppId", `${EXTENSION_UUID}/combo-embed`);
 
   return destination.toString();
 }

@@ -9,7 +9,7 @@ import {
   getRecentOrders,
 } from "../models/orders.server";
 import { AdminIcon } from "../components/admin-icons";
-import { buildThemeEditorUrl, buildEmbedBlockUrl } from "../utils/theme-editor.server";
+import { buildThemeEditorUrl, buildEmbedBlockUrl, getEmbedBlockStatus } from "../utils/theme-editor.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
 export const loader = async ({ request }) => {
@@ -24,9 +24,10 @@ export const loader = async ({ request }) => {
       getRecentOrders(shop, 10),
     ]);
 
-  const [themeEditorUrl, embedBlockUrl] = await Promise.all([
+  const [themeEditorUrl, embedBlockUrl, embedBlockEnabled] = await Promise.all([
     buildThemeEditorUrl({ shop, admin }),
     buildEmbedBlockUrl({ shop, admin }),
+    getEmbedBlockStatus({ shop, admin, session }),
   ]);
 
   return {
@@ -35,6 +36,7 @@ export const loader = async ({ request }) => {
     bundleRevenue,
     themeEditorUrl,
     embedBlockUrl,
+    embedBlockEnabled,
     recentOrders: recentOrders.map((order) => ({
       id: order.id,
       orderId: order.orderId,
@@ -152,25 +154,7 @@ function StatCard({ label, value, icon, accent, bg, sub }) {
   );
 }
 
-function EmbedBlockCard({ embedBlockUrl }) {
-  const steps = [
-    {
-      num: "1",
-      label: "Open Apps Panel",
-      text: 'Click the button → theme editor opens on the "App embeds" panel.',
-    },
-    {
-      num: "2",
-      label: 'Toggle "Combo Builder" ON',
-      text: "Find Combo Builder in the list and flip the toggle to the right.",
-    },
-    {
-      num: "3",
-      label: "Save Theme",
-      text: 'Click the green "Save" button at the top-right of the editor.',
-    },
-  ];
-
+function EmbedBlockCard({ embedBlockUrl, enabled }) {
   return (
     <div style={{ marginBottom: "20px" }}>
       <div
@@ -212,22 +196,32 @@ function EmbedBlockCard({ embedBlockUrl }) {
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ fontSize: "15px", fontWeight: "800", color: "#111827" }}>
-                  Enable Theme App Embed Block
+                  Theme App Embed Block
                 </span>
                 <span
                   style={{
-                    background: "#fef3c7",
-                    border: "1px solid #fde68a",
-                    color: "#92400e",
+                    background: enabled ? "#f0fdf4" : "#fef3c7",
+                    border: `1px solid ${enabled ? "#86efac" : "#fde68a"}`,
+                    color: enabled ? "#166534" : "#92400e",
                     fontSize: "10px",
                     fontWeight: "700",
-                    padding: "2px 8px",
+                    padding: "2px 10px",
                     borderRadius: "999px",
                     textTransform: "uppercase",
                     letterSpacing: "0.08em",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "5px",
                   }}
                 >
-                  Required
+                  <span style={{
+                    width: "6px",
+                    height: "6px",
+                    borderRadius: "50%",
+                    background: enabled ? "#22c55e" : "#f59e0b",
+                    display: "inline-block",
+                  }} />
+                  {enabled ? "Enabled" : "Not Enabled"}
                 </span>
               </div>
               <p style={{ margin: "2px 0 0", fontSize: "12px", color: "#6b7280" }}>
@@ -267,57 +261,8 @@ function EmbedBlockCard({ embedBlockUrl }) {
             }}
           >
             <AdminIcon type="theme" size="small" />
-            Open App Embeds
+            {enabled ? "Manage Embed Block" : "Enable Embed Block"}
           </a>
-        </div>
-
-        {/* Steps */}
-        <div
-          style={{
-            padding: "16px 24px 18px",
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: "12px",
-          }}
-        >
-          {steps.map((step) => (
-            <div
-              key={step.num}
-              style={{
-                display: "flex",
-                gap: "12px",
-                background: "#f9fafb",
-                border: "1px solid #e5e7eb",
-                borderRadius: "5px",
-                padding: "14px 14px",
-              }}
-            >
-              <div
-                style={{
-                  width: "24px",
-                  height: "24px",
-                  borderRadius: "50%",
-                  background: "#111827",
-                  color: "#fff",
-                  fontSize: "12px",
-                  fontWeight: "800",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  marginTop: "1px",
-                }}
-              >
-                {step.num}
-              </div>
-              <div>
-                <div style={{ fontSize: "12px", fontWeight: "800", color: "#111827", marginBottom: "3px" }}>
-                  {step.label}
-                </div>
-                <div style={{ fontSize: "11px", color: "#6b7280", lineHeight: 1.5 }}>{step.text}</div>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </div>
@@ -474,6 +419,7 @@ export default function DashboardPage() {
     bundleRevenue,
     themeEditorUrl,
     embedBlockUrl,
+    embedBlockEnabled,
     recentOrders,
   } = useLoaderData();
   const location = useLocation();
@@ -550,7 +496,7 @@ export default function DashboardPage() {
 
      
 
-      <EmbedBlockCard embedBlockUrl={embedBlockUrl} />
+      <EmbedBlockCard embedBlockUrl={embedBlockUrl} enabled={embedBlockEnabled} />
       <ThemeCustomizationCard themeEditorUrl={themeEditorUrl} />
 
       {/* Row: Quick Actions (35%) + Stats (65%) */}
@@ -678,34 +624,6 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-        </div>
-      </div>
-
-      {/* Getting Started */}
-      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>
-        <div style={{ padding: "28px 32px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000" }}>
-            <AdminIcon type="rocket" size="small" /> Getting Started
-          </div>
-          <span style={{ fontSize: "13px", color: "#6b7280" }}>Quick setup to go live</span>
-        </div>
-        <div style={{ padding: "24px 32px 32px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
-          {[
-            { key: "create", iconType: "package", title: "Create a Combo Box", text: "Create a combo box and add eligible products to offer as a bundle." },
-            { key: "theme", iconType: "theme", title: "Open Theme Editor", text: "Add the Combo Builder block to your product template in one click." },
-            { key: "live", iconType: "check-circle", title: "Go Live", text: "Save the theme so customers can build their own combo box on the storefront." },
-          ].map((item) => (
-            <div
-              key={item.key}
-              style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "5px", padding: "22px 20px" }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-                <AdminIcon type={item.iconType} size="large" />
-              </div>
-              <div style={{ fontSize: "14px", fontWeight: "800", color: "#000000", marginBottom: "8px" }}>{item.title}</div>
-              <p style={{ margin: 0, fontSize: "13px", color: "#4b5563", lineHeight: 1.6 }}>{item.text}</p>
-            </div>
-          ))}
         </div>
       </div>
 

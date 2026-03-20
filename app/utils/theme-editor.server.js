@@ -46,6 +46,29 @@ async function getMainThemeId(admin) {
   return extractNumericId(themeJson?.data?.themes?.nodes?.[0]?.id || null);
 }
 
+export async function getEmbedBlockStatus({ shop, admin, session }) {
+  try {
+    const themeId = await getMainThemeId(admin);
+    if (!themeId) return false;
+
+    const response = await fetch(
+      `https://${shop}/admin/api/2026-04/themes/${themeId}/assets.json?asset[key]=config/settings_data.json`,
+      { headers: { "X-Shopify-Access-Token": session.accessToken } },
+    );
+    if (!response.ok) return false;
+
+    const data = await response.json();
+    const settingsData = JSON.parse(data.asset?.value || "{}");
+    const blocks = settingsData?.current?.blocks || {};
+
+    return Object.values(blocks).some(
+      (block) => block.type?.includes("combo-embed") && block.disabled !== true,
+    );
+  } catch {
+    return false;
+  }
+}
+
 export async function buildEmbedBlockUrl({ shop, admin }) {
   const storeHandle = getStoreHandle(shop);
   const apiKey = process.env.SHOPIFY_API_KEY?.trim();

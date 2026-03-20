@@ -20,20 +20,7 @@
     {% else %}
     data-page-handle="{{ template.name }}"
   {% endcase %}
-  {% if block.settings.visible_boxes != blank %}
-  data-visible-boxes="{{ block.settings.visible_boxes | escape }}"
-  {% endif %}
-  {% if block.settings.section_heading != blank %}
-  data-heading="{{ block.settings.section_heading | escape }}"
-  {% endif %}
-  {% if block.settings.show_on_product_page %}
   data-product-handle="{{ product.handle }}"
-  {% endif %}
-  style="
-    padding-top: {{ block.settings.padding_top }}px;
-    padding-bottom: {{ block.settings.padding_bottom }}px;
-    {% if block.settings.bg_color != blank %}background-color: {{ block.settings.bg_color }};{% endif %}
-  "
   {{ block.shopify_attributes }}
 >
   <div class="combo-builder-loading">
@@ -45,14 +32,12 @@
 <script>
   window.__COMBO_BUILDER__ = window.__COMBO_BUILDER__ || [];
   window.__COMBO_BUILDER__.push({
-    mountId:          'combo-builder-widget-{{ block.id }}',
-    shop:             '{{ shop.permanent_domain }}',
-    currency:         '{{ cart.currency.iso_code }}',
-    currencySymbol:   '{{ cart.currency.symbol }}',
-    apiBase:          'https://combo-products.vercel.app',
-    productHandle:    '{{ product.handle }}',
-    heading:          '{{ block.settings.section_heading | escape }}',
-    visibleBoxes:     '{{ block.settings.visible_boxes | escape }}'
+    mountId:        'combo-builder-widget-{{ block.id }}',
+    shop:           '{{ shop.permanent_domain }}',
+    currency:       '{{ cart.currency.iso_code }}',
+    currencySymbol: '{{ cart.currency.symbol }}',
+    apiBase:        'https://combo-products.vercel.app',
+    productHandle:  '{{ product.handle }}'
   });
 </script>
 
@@ -60,63 +45,6 @@
 {
   "name": "Combo Builder",
   "target": "section",
-  "settings": [
-    {
-      "type": "text",
-      "id": "section_heading",
-      "label": "Section heading",
-      "default": "Build Your Combo"
-    },
-    {
-      "type": "checkbox",
-      "id": "show_on_product_page",
-      "label": "Show on product page",
-      "default": true
-    },
-    {
-      "type": "header",
-      "content": "Combo Box Visibility"
-    },
-    {
-      "type": "textarea",
-      "id": "visible_boxes",
-      "label": "Show only these boxes",
-      "info": "Enter one box name per line. Leave blank to show all boxes.",
-      "placeholder": "Gift Box Test\n2 Step Combo\n3 Step Combo Product"
-    },
-    {
-      "type": "header",
-      "content": "Spacing"
-    },
-    {
-      "type": "range",
-      "id": "padding_top",
-      "label": "Padding top",
-      "min": 0,
-      "max": 80,
-      "step": 4,
-      "unit": "px",
-      "default": 24
-    },
-    {
-      "type": "range",
-      "id": "padding_bottom",
-      "label": "Padding bottom",
-      "min": 0,
-      "max": 80,
-      "step": 4,
-      "unit": "px",
-      "default": 24
-    },
-    {
-      "type": "header",
-      "content": "Colors"
-    },
-    {
-      "type": "color",
-      "id": "bg_color",
-      "label": "Background color"
-    }
-  ]
+  "settings": []
 }
 {% endschema %}

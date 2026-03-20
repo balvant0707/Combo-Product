@@ -1,11 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useFetcher, useLoaderData, useLocation, useNavigate } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import {
   listBoxes,
   deleteBox,
-  assignBoxPage,
   reorderBoxes,
   activateAllBundleProducts,
   repairMissingShopifyProducts,
@@ -63,27 +62,8 @@ export const loader = async ({ request }) => {
     boxes = await listBoxes(session.shop);
   }
 
-  // Fetch Shopify pages for the page-assignment dropdown
-  let shopifyPages = [];
-  try {
-    const pagesRes = await admin.graphql(`
-      query {
-        pages(first: 100) {
-          edges { node { id title handle } }
-        }
-      }
-    `);
-    const pagesData = await pagesRes.json();
-    shopifyPages = (pagesData?.data?.pages?.edges || []).map((e) => ({
-      title: e.node.title,
-      handle: `page:${e.node.handle}`,
-    }));
-  } catch {}
-
-  // Fire-and-forget: activate any DRAFT bundle products left from before the fix
   activateAllBundleProducts(session.shop, admin).catch(() => {});
   return {
-    shopifyPages,
     boxes: boxes.map((b) => ({
       id: b.id,
       boxName: b.boxName,
@@ -93,7 +73,6 @@ export const loader = async ({ request }) => {
       bundlePriceType: b.bundlePriceType || "manual",
       isGiftBox: b.isGiftBox,
       isActive: b.isActive,
-      pageHandle: b.pageHandle || "",
       sortOrder: b.sortOrder,
       orderCount: b._count?.orders ?? 0,
       comboConfig: getComboConfigSummary(b),
@@ -106,13 +85,6 @@ export const action = async ({ request }) => {
   const shop = session.shop;
   const formData = await request.formData();
   const intent = formData.get("_action");
-
-  if (intent === "assign_page") {
-    const id = formData.get("id");
-    const pageHandle = formData.get("pageHandle") || null;
-    await assignBoxPage(id, shop, pageHandle);
-    return { ok: true };
-  }
 
   if (intent === "delete") {
     const id = formData.get("id");
@@ -130,36 +102,16 @@ export const action = async ({ request }) => {
 };
 
 export default function ManageBoxesPage() {
-  const { boxes, shopifyPages } = useLoaderData();
+  const { boxes } = useLoaderData();
   const location = useLocation();
   const navigate = useNavigate();
   const fetcher = useFetcher();
 
-  const [deleteConfirm, setDeleteConfirm] = useState(null); // { id, name }
-  const [savedPageBoxId, setSavedPageBoxId] = useState(null);
-  const savedTimerRef = useRef(null);
-
-  // Track when assign_page completes → show success badge
-  const prevFetcherState = useRef(fetcher.state);
-  useEffect(() => {
-    if (
-      prevFetcherState.current !== "idle" &&
-      fetcher.state === "idle" &&
-      fetcher.data?.ok &&
-      fetcher.formData?.get("_action") === "assign_page"
-    ) {
-      const id = parseInt(fetcher.formData.get("id"));
-      setSavedPageBoxId(id);
-      clearTimeout(savedTimerRef.current);
-      savedTimerRef.current = setTimeout(() => setSavedPageBoxId(null), 2500);
-    }
-    prevFetcherState.current = fetcher.state;
-  }, [fetcher.state, fetcher.data]);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   function navigateTo(path) {
     navigate(withEmbeddedAppParams(path, location.search));
   }
-
 
   function handleDelete(id, name) {
     setDeleteConfirm({ id, name });
@@ -172,7 +124,7 @@ export default function ManageBoxesPage() {
     setDeleteConfirm(null);
   }
 
-  // Drag & drop state
+  // Drag & drop
   let dragSrcId = null;
 
   function onDragStart(e, id) {
@@ -215,303 +167,287 @@ export default function ManageBoxesPage() {
     );
   }
 
-  function getPageLabel(handle, pages) {
-    if (!handle) return "All pages";
-    if (handle === "index") return "Home page";
-    if (handle === "product") return "All product pages";
-    if (handle === "collection") return "All collection pages";
-    if (handle === "cart") return "Cart page";
-    const found = pages.find((p) => p.handle === handle);
-    if (found) return found.title;
-    return handle;
-  }
-
   const displayBoxes =
     fetcher.formData?.get("_action") === "delete"
       ? boxes.filter((b) => b.id !== parseInt(fetcher.formData.get("id")))
       : boxes;
 
+  const COLUMNS = ["", "Box Name", "Items", "Price", "Type", "Orders", "Actions"];
+
   return (
-    <s-page heading={`All Box Types (${displayBoxes.length})`}>
+    <s-page heading={`Combo Boxes (${displayBoxes.length})`}>
       <style>{`
-        @keyframes fadeIn { from { opacity:0; transform:scale(0.85); } to { opacity:1; transform:scale(1); } }
-        @keyframes slideUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-        .box-row { transition: box-shadow 0.15s, transform 0.15s; }
-        .box-row:hover { box-shadow: 0 4px 16px rgba(42,122,79,0.10); transform: translateY(-1px); z-index: 1; position: relative; }
-        .icon-btn { transition: background 0.13s, transform 0.1s, box-shadow 0.13s; }
-        .icon-btn:active { transform: scale(0.92) !important; }
+        .cb-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .cb-table thead th {
+          text-align: left;
+          padding: 10px 16px;
+          font-size: 11px;
+          font-weight: 600;
+          color: #6b7280;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          border-bottom: 1px solid #e5e7eb;
+          background: #f9fafb;
+          white-space: nowrap;
+        }
+        .cb-table thead th:last-child { text-align: center; }
+        .cb-table tbody tr {
+          border-bottom: 1px solid #f3f4f6;
+          transition: background 0.12s;
+        }
+        .cb-table tbody tr:last-child { border-bottom: none; }
+        .cb-table tbody tr:hover { background: #f9fafb; }
+        .cb-table td { padding: 12px 16px; vertical-align: middle; }
+        .cb-table td:last-child { text-align: center; }
+        .cb-badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 2px 8px;
+          border-radius: 4px;
+          font-size: 11px;
+          font-weight: 600;
+        }
+        .cb-badge-live { color: #166534; background: #dcfce7; }
+        .cb-badge-draft { color: #6b7280; background: #f3f4f6; }
+        .cb-badge-combo { color: #1d4ed8; background: #dbeafe; }
+        .cb-badge-single { color: #6b7280; background: #f3f4f6; }
+        .cb-badge-gift { color: #7c3aed; background: #ede9fe; }
+        .cb-action-btn {
+          width: 32px; height: 32px;
+          border: 1px solid #e5e7eb;
+          border-radius: 6px;
+          background: #fff;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: #374151;
+          transition: all 0.12s;
+        }
+        .cb-action-btn:hover { background: #f0fdf4; border-color: #2A7A4F; color: #2A7A4F; }
+        .cb-action-btn.danger:hover { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+        .cb-drag-handle {
+          color: #d1d5db;
+          cursor: grab;
+          font-size: 16px;
+          line-height: 1;
+          user-select: none;
+          padding: 0 4px;
+        }
       `}</style>
-      <ui-title-bar title={`All Box Types (${displayBoxes.length})`}>
+
+      <ui-title-bar title={`Combo Boxes (${displayBoxes.length})`}>
         <button onClick={() => navigateTo("/app/storefront-visibility")}>
-          <AdminIcon type="view" size="small" /> Frontend Visibility
+          Frontend Visibility
         </button>
         <button onClick={() => navigateTo("/app/boxes/specific-combo")}>
-          <AdminIcon type="target" size="small" /> Create Specific Combo Box
+          Create Specific Combo
         </button>
         <button variant="primary" onClick={() => navigateTo("/app/boxes/new")}>
-          + Create Combo Box
+          + Create Box
         </button>
       </ui-title-bar>
 
-      {/* Hero banner */}
-      <div style={{ marginBottom: "16px", borderRadius: "5px", background: "#ffffff", border: "1px solid #ffffff", boxShadow: "0 4px 20px rgba(42,122,79,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
-        <div style={{ fontSize: "20px", fontWeight: "800", color: "#111827", letterSpacing: "-0.5px" }}>Manage your combo box types</div>
-        <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Create, activate, and reorder combo boxes shown on your storefront.</div>
-        <div style={{ display: "flex", gap: "20px", marginTop: "14px" }}>
-          {[
-            { label: "Total Boxes", value: displayBoxes.length, icon: "package" },
-            { label: "Total Orders", value: displayBoxes.reduce((s, b) => s + b.orderCount, 0), icon: "orders" },
-            { label: "Gift Boxes", value: displayBoxes.filter((b) => b.isGiftBox).length, icon: "gift-card" },
-          ].map((stat) => (
-            <div key={stat.label} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#ffffff", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "8px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-              <AdminIcon type={stat.icon} size="base" tone="success" />
-              <div>
-                <div style={{ fontSize: "16px", fontWeight: "800", color: "#111827", lineHeight: 1 }}>{stat.value}</div>
-                <div style={{ fontSize: "10px", color: "#6b7280", marginTop: "2px", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: "600" }}>{stat.label}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       <s-section>
         {displayBoxes.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "72px 0", color: "#9ca3af", animation: "slideUp 0.3s ease" }}>
-            <div style={{ width: "72px", height: "72px", borderRadius: "16px", background: "linear-gradient(135deg, rgba(42,122,79,0.10), rgba(42,122,79,0.04))", border: "1px solid rgba(42,122,79,0.15)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px", boxShadow: "0 4px 12px rgba(42,122,79,0.08)" }}>
-              <AdminIcon type="package" size="large" tone="success" />
+          <div style={{ textAlign: "center", padding: "64px 0", color: "#9ca3af" }}>
+            <div style={{ marginBottom: "16px", display: "flex", justifyContent: "center" }}>
+              <AdminIcon type="package" size="large" tone="subdued" />
             </div>
-            <p style={{ fontSize: "16px", fontWeight: "700", color: "#374151", margin: "0 0 6px" }}>No combo boxes yet</p>
-            <p style={{ fontSize: "13px", margin: "0 0 24px", color: "#9ca3af" }}>Create your first box to let customers build custom combos.</p>
-            <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
-              <s-button onClick={() => navigateTo("/app/boxes/new")}>+ Create New Box</s-button>
-              <s-button onClick={() => navigateTo("/app/boxes/specific-combo")}><AdminIcon type="target" size="small" /> Specific Combo Box</s-button>
+            <p style={{ fontSize: "15px", fontWeight: "600", color: "#374151", margin: "0 0 6px" }}>
+              No combo boxes yet
+            </p>
+            <p style={{ fontSize: "13px", margin: "0 0 20px", color: "#9ca3af" }}>
+              Create your first box to let customers build custom combos.
+            </p>
+            <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+              <s-button onClick={() => navigateTo("/app/boxes/new")}>+ Create Box</s-button>
+              <s-button onClick={() => navigateTo("/app/boxes/specific-combo")}>
+                Specific Combo Box
+              </s-button>
             </div>
           </div>
         ) : (
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 4px", fontSize: "13px" }}>
+            <table className="cb-table">
               <thead>
                 <tr>
-                  {["", "Box Name", "Items", "Price", "Gift", "Combo", "Orders", "Actions"].map((h, i) => (
-                    <th key={h} style={{ textAlign: i === 7 ? "center" : "left", padding: "8px 14px", color: "#6b7280", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: "700", whiteSpace: "nowrap", borderBottom: "2px solid #e5e7eb", background: "transparent" }}>
-                      {h}
-                    </th>
+                  {COLUMNS.map((col) => (
+                    <th key={col}>{col}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {displayBoxes.map((box) => {
-                  const PAGE_OPTIONS = [
-                    { label: "All pages", value: "" },
-                    { label: "─────────────", value: "__sep1__", disabled: true },
-                    { label: "Home page", value: "index" },
-                    { label: "All product pages", value: "product" },
-                    { label: "All collection pages", value: "collection" },
-                    { label: "Cart page", value: "cart" },
-                    ...(shopifyPages.length > 0 ? [{ label: "─────────────", value: "__sep2__", disabled: true }] : []),
-                    ...shopifyPages.map((p) => ({ label: p.title, value: p.handle })),
-                  ];
-                  return (
-                    <tr
-                      key={box.id}
-                      className="box-row"
-                      data-box-id={box.id}
-                      draggable
-                      onDragStart={(e) => onDragStart(e, box.id)}
-                      onDragEnd={onDragEnd}
-                      onDragOver={onDragOver}
-                      onDragLeave={onDragLeave}
-                      onDrop={(e) => onDrop(e, box.id)}
-                      style={{ background: "#ffffff", cursor: "default" }}
-                    >
-                      {/* Drag handle */}
-                      <td style={{ padding: "0 6px 0 14px", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", borderLeft: "1px solid #f0f0f0", borderRadius: "8px 0 0 8px", color: "#c4c4c4", cursor: "grab", fontSize: "16px", lineHeight: 1, userSelect: "none", verticalAlign: "middle", width: "32px" }} title="Drag to reorder">
-                        ⠿
-                      </td>
+                {displayBoxes.map((box) => (
+                  <tr
+                    key={box.id}
+                    data-box-id={box.id}
+                    draggable
+                    onDragStart={(e) => onDragStart(e, box.id)}
+                    onDragEnd={onDragEnd}
+                    onDragOver={onDragOver}
+                    onDragLeave={onDragLeave}
+                    onDrop={(e) => onDrop(e, box.id)}
+                  >
+                    {/* Drag handle */}
+                    <td style={{ width: "32px", padding: "12px 8px" }}>
+                      <span className="cb-drag-handle" title="Drag to reorder">⠿</span>
+                    </td>
 
-                      {/* Status accent bar */}
-                      <td style={{ padding: "14px 14px", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", minWidth: "240px", verticalAlign: "middle" }}>
-                        <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                          {/* Color accent */}
-                          <div style={{ flex: 1 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px" }}>
-                              <span style={{ fontWeight: "700", color: "#111827", fontSize: "13px" }}>{box.boxName}</span>
-                              {box.isActive ? (
-                                <span style={{ fontSize: "9px", fontWeight: "700", color: "#2A7A4F", background: "rgba(42,122,79,0.10)", padding: "1px 7px", borderRadius: "999px", letterSpacing: "0.05em", textTransform: "uppercase" }}>Live</span>
-                              ) : (
-                                <span style={{ fontSize: "9px", fontWeight: "700", color: "#9ca3af", background: "#f3f4f6", padding: "1px 7px", borderRadius: "999px", letterSpacing: "0.05em", textTransform: "uppercase" }}>Draft</span>
-                              )}
-                            </div>
-                            {box.displayTitle !== box.boxName && (
-                              <div style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "6px" }}>{box.displayTitle}</div>
-                            )}
-                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                              <select
-                                value={box.pageHandle || ""}
-                                onChange={(e) => fetcher.submit(
-                                  { _action: "assign_page", id: String(box.id), pageHandle: e.target.value },
-                                  { method: "POST" }
-                                )}
-                                style={{ fontSize: "11px", padding: "3px 8px", borderRadius: "6px", border: "1px solid #e5e7eb", background: "#f9fafb", color: "#374151", cursor: "pointer", outline: "none", maxWidth: "190px" }}
-                              >
-                                {PAGE_OPTIONS.map((opt) => (
-                                  <option key={opt.value} value={opt.value} disabled={opt.disabled}>{opt.label}</option>
-                                ))}
-                              </select>
-                              {savedPageBoxId === box.id && (
-                                <span style={{ fontSize: "10px", fontWeight: "700", color: "#fff", background: "#2A7A4F", padding: "1px 8px", borderRadius: "999px", animation: "fadeIn 0.2s ease" }}>
-                                  Saved ✓
-                                </span>
-                              )}
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "3px" }}>
-                              <AdminIcon type={box.pageHandle ? "page" : "globe"} size="small" />
-                              <span style={{ fontSize: "10px", color: box.pageHandle ? "#374151" : "#9ca3af", fontWeight: "500" }}>
-                                {box.pageHandle ? getPageLabel(box.pageHandle, shopifyPages) : "All pages"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Items */}
-                      <td style={{ padding: "14px 14px", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", verticalAlign: "middle" }}>
-                        <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "32px", height: "32px", borderRadius: "8px",fontWeight: "800", fontSize: "13px", color: "#2A7A4F", fontFamily: "monospace" }}>
-                          {box.itemCount}
-                        </div>
-                      </td>
-
-                      {/* Price */}
-                      <td style={{ padding: "14px 14px", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", verticalAlign: "middle" }}>
-                        <div style={{ display: "flex", flexDirection: "column" }}>
-                          <span style={{ fontFamily: "monospace", fontWeight: "800", color: "#111827", fontSize: "14px" }}>
-                            {box.bundlePriceType === "dynamic" ? (
-                              <span style={{ fontSize: "11px", fontWeight: "600", color: "#6b7280", fontFamily: "inherit" }}>Dynamic</span>
-                            ) : (
-                              <>&#8377;{Number(box.bundlePrice).toLocaleString("en-IN")}</>
-                            )}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Gift */}
-                      <td style={{ padding: "14px 14px", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", verticalAlign: "middle" }}>
-                        {box.isGiftBox ? (
-                          <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: "600", color: "#7c3aed", background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.15)", padding: "3px 10px", borderRadius: "999px" }}>
-                            <AdminIcon type="gift-card" size="small" />
-                            Gift
-                          </div>
-                        ) : (
-                          <span style={{ fontSize: "12px", color: "#9ca3af", fontWeight: "500" }}>No</span>
+                    {/* Box Name */}
+                    <td style={{ minWidth: "200px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                        <span style={{ fontWeight: "600", color: "#111827" }}>{box.boxName}</span>
+                        <span className={`cb-badge ${box.isActive ? "cb-badge-live" : "cb-badge-draft"}`}>
+                          {box.isActive ? "Live" : "Draft"}
+                        </span>
+                        {box.isGiftBox && (
+                          <span className="cb-badge cb-badge-gift">Gift</span>
                         )}
-                      </td>
+                      </div>
+                      {box.displayTitle && box.displayTitle !== box.boxName && (
+                        <div style={{ fontSize: "12px", color: "#9ca3af" }}>{box.displayTitle}</div>
+                      )}
+                    </td>
 
-                      {/* Combo config */}
-                      <td style={{ padding: "14px 14px", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", verticalAlign: "middle" }}>
-                        {box.comboConfig && box.comboConfig.comboType > 0 ? (
-                          <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: "700", background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "3px 10px", borderRadius: "999px" }}>
-                            <AdminIcon type="list-bulleted" size="small" />
-                            {box.comboConfig.comboType} Step
-                          </div>
-                        ) : (
-                          <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: "700", background: "#f9fafb", color: "#6b7280", border: "1px solid #e5e7eb", padding: "3px 10px", borderRadius: "999px" }}>
-                            Single
-                          </div>
-                        )}
-                      </td>
+                    {/* Items */}
+                    <td>
+                      <span style={{ fontWeight: "600", color: "#374151" }}>{box.itemCount}</span>
+                    </td>
 
-                      {/* Orders */}
-                      <td style={{ padding: "14px 14px", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", verticalAlign: "middle" }}>
-                        {box.orderCount > 0 ? (
-                          <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontFamily: "monospace", fontWeight: "800", color: "#111827", fontSize: "13px" }}>
-                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#2A7A4F", display: "inline-block" }} />
-                            {box.orderCount}
-                          </div>
-                        ) : (
-                          <span style={{ color: "#d1d5db", fontSize: "12px", fontWeight: "500" }}>0</span>
-                        )}
-                      </td>
+                    {/* Price */}
+                    <td>
+                      {box.bundlePriceType === "dynamic" ? (
+                        <span style={{ fontSize: "12px", color: "#6b7280" }}>Dynamic</span>
+                      ) : (
+                        <span style={{ fontWeight: "600", color: "#111827", fontFamily: "monospace" }}>
+                          &#8377;{Number(box.bundlePrice).toLocaleString("en-IN")}
+                        </span>
+                      )}
+                    </td>
 
-                      {/* Actions */}
-                      <td style={{ padding: "14px 14px", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", borderRight: "1px solid #f0f0f0", borderRadius: "0 8px 8px 0", verticalAlign: "middle" }}>
-                        <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
-                          {/* Edit icon button */}
-                          <button
-                            className="icon-btn"
-                            title="Edit box"
-                            onClick={() => navigateTo(box.comboConfig ? `/app/boxes/${box.id}/combo` : `/app/boxes/${box.id}`)}
-                            style={{ width: "34px", height: "34px", border: "1.5px solid #e5e7eb", borderRadius: "8px", background: "#ffffff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#374151", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = "#f0fdf4"; e.currentTarget.style.borderColor = "#2A7A4F"; e.currentTarget.style.color = "#2A7A4F"; e.currentTarget.style.boxShadow = "0 3px 8px rgba(42,122,79,0.18)"; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = "#ffffff"; e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.color = "#374151"; e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.06)"; }}
-                          >
-                            <AdminIcon type="edit" size="small" />
-                          </button>
-                          {/* Delete icon button */}
-                          <button
-                            className="icon-btn"
-                            title="Delete box"
-                            onClick={() => handleDelete(box.id, box.boxName)}
-                            style={{ width: "34px", height: "34px", border: "1.5px solid #fecaca", borderRadius: "8px", background: "#fff5f5", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#dc2626", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = "#fee2e2"; e.currentTarget.style.borderColor = "#fca5a5"; e.currentTarget.style.boxShadow = "0 3px 8px rgba(220,38,38,0.18)"; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = "#fff5f5"; e.currentTarget.style.borderColor = "#fecaca"; e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)"; }}
-                          >
-                            <AdminIcon type="delete" size="small" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                    {/* Type */}
+                    <td>
+                      {box.comboConfig && box.comboConfig.comboType > 0 ? (
+                        <span className="cb-badge cb-badge-combo">
+                          {box.comboConfig.comboType} Step
+                        </span>
+                      ) : (
+                        <span className="cb-badge cb-badge-single">Single</span>
+                      )}
+                    </td>
+
+                    {/* Orders */}
+                    <td>
+                      <span style={{ fontWeight: "600", color: box.orderCount > 0 ? "#111827" : "#d1d5db" }}>
+                        {box.orderCount}
+                      </span>
+                    </td>
+
+                    {/* Actions */}
+                    <td>
+                      <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                        <button
+                          className="cb-action-btn"
+                          title="Edit box"
+                          onClick={() =>
+                            navigateTo(
+                              box.comboConfig
+                                ? `/app/boxes/${box.id}/combo`
+                                : `/app/boxes/${box.id}`
+                            )
+                          }
+                        >
+                          <AdminIcon type="edit" size="small" />
+                        </button>
+                        <button
+                          className="cb-action-btn danger"
+                          title="Delete box"
+                          onClick={() => handleDelete(box.id, box.boxName)}
+                        >
+                          <AdminIcon type="delete" size="small" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         )}
-
       </s-section>
 
-      {/* ── Delete Confirmation Modal ── */}
+      {/* Delete Confirmation Modal */}
       {deleteConfirm && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(17,24,39,0.55)", backdropFilter: "blur(3px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
-          <div style={{ background: "#fff", borderRadius: "10px", width: "100%", maxWidth: "420px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", overflow: "hidden" }}>
-            {/* Header */}
-            <div style={{ padding: "20px 24px 16px", borderBottom: "1px solid #f3f4f6" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <AdminIcon type="delete" size="base" />
-                </div>
-                <div>
-                  <div style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>Delete Box</div>
-                  <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "2px" }}>This action cannot be undone</div>
-                </div>
-              </div>
-            </div>
-            {/* Body */}
-            <div style={{ padding: "20px 24px" }}>
-              <p style={{ fontSize: "13px", color: "#374151", margin: 0, lineHeight: "1.6" }}>
-                Are you sure you want to delete <strong style={{ color: "#111827" }}>&ldquo;{deleteConfirm.name}&rdquo;</strong>?
-                <br />
-                <span style={{ color: "#dc2626", fontSize: "12px" }}>The associated Shopify product will also be removed.</span>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(17,24,39,0.5)",
+            backdropFilter: "blur(2px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px",
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: "8px",
+              width: "100%",
+              maxWidth: "400px",
+              boxShadow: "0 16px 48px rgba(0,0,0,0.18)",
+            }}
+          >
+            <div style={{ padding: "20px 24px", borderBottom: "1px solid #f3f4f6" }}>
+              <p style={{ fontSize: "15px", fontWeight: "700", color: "#111827", margin: 0 }}>
+                Delete &ldquo;{deleteConfirm.name}&rdquo;?
+              </p>
+              <p style={{ fontSize: "13px", color: "#6b7280", margin: "4px 0 0" }}>
+                This action cannot be undone. The associated Shopify product will also be removed.
               </p>
             </div>
-            {/* Footer */}
-            <div style={{ padding: "12px 24px 20px", display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+            <div
+              style={{
+                padding: "16px 24px",
+                display: "flex",
+                gap: "8px",
+                justifyContent: "flex-end",
+              }}
+            >
               <button
                 type="button"
                 onClick={() => setDeleteConfirm(null)}
-                style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "6px", padding: "8px 20px", fontSize: "13px", fontWeight: "600", cursor: "pointer", color: "#374151" }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "#f9fafb")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
+                style={{
+                  background: "#fff",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "6px",
+                  padding: "8px 16px",
+                  fontSize: "13px",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                  color: "#374151",
+                }}
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={confirmDelete}
-                style={{ background: "#dc2626", border: "none", borderRadius: "6px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: "pointer", color: "#fff" }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "#b91c1c")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "#dc2626")}
+                style={{
+                  background: "#dc2626",
+                  border: "none",
+                  borderRadius: "6px",
+                  padding: "8px 16px",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  color: "#fff",
+                }}
               >
-                Yes, Delete
+                Delete
               </button>
             </div>
           </div>

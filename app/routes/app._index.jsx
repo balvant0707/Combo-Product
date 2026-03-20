@@ -83,7 +83,7 @@ const STAT_CARDS = (activeBoxCount, bundlesSold, bundleRevenue) => [
   },
 ];
 
-function StatCard({ label, value, icon, accent, bg, sub }) {
+function StatCard({ label, value, accent, sub }) {
   return (
     <div
       style={{
@@ -107,24 +107,6 @@ function StatCard({ label, value, icon, accent, bg, sub }) {
           borderRadius: "5px 5px 0 0",
         }}
       />
-      <div
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "38px",
-          height: "38px",
-          borderRadius: "5px",
-          background: "#000000",
-          fontSize: "12px",
-          fontWeight: "800",
-          color: accent,
-          marginBottom: "14px",
-          letterSpacing: "0.08em",
-        }}
-      >
-        {icon}
-      </div>
       <div
         style={{
           fontSize: "11px",
@@ -188,9 +170,10 @@ function EmbedBlockCard({ embedBlockUrl, enabled }) {
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
+                color: "#ffffff",
               }}
             >
-              <AdminIcon type="apps" size="large" />
+              <AdminIcon type="apps" size="large" color="#ffffff" />
             </div>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -259,8 +242,7 @@ function EmbedBlockCard({ embedBlockUrl, enabled }) {
               e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.18)";
             }}
           >
-            <AdminIcon type="theme" size="small" />
-            {enabled ? "Manage Embed Block" : "Enable Embed Block"}
+            {enabled ? "Active" : "Enable Embed Block"}
           </a>
         </div>
       </div>
@@ -400,7 +382,6 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
                 e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.18)";
               }}
             >
-              <AdminIcon type="theme" size="large" />
               Open Theme Editor
             </a>
           </div>
@@ -580,7 +561,7 @@ export default function DashboardPage() {
         <div style={{ background: "#ffffff", borderRadius: "5px", padding: "0 16px 8px", overflow: "hidden" }}>
           {recentOrders.length === 0 ? (
             <div style={{ textAlign: "center", padding: "56px 0" }}>
-              <AdminIcon type="order" size="large-300" style={{ marginBottom: "14px", color: "#9ca3af" }} />
+              <AdminIcon type="order" size="large" style={{ marginBottom: "14px", color: "#9ca3af" }} />
               <p style={{ fontSize: "15px", margin: "0 0 6px", color: "#374151", fontWeight: "700" }}>No bundle orders yet</p>
               <p style={{ fontSize: "13px", margin: 0, color: "#9ca3af" }}>Add the Combo Builder block to your theme to start receiving orders.</p>
             </div>

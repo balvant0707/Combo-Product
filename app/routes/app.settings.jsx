@@ -187,8 +187,8 @@ export default function SettingsPage() {
                         <div
                           style={{
                             fontSize: "11px",
-                            fontWeight: isActive ? "600" : "500",
-                            color: isActive ? "#ffffff" : "#1a1814",
+                            fontWeight: isActive ? "" : "500",
+                            color: isActive ? "" : "#1a1814",
                             lineHeight: 1.3,
                             wordBreak: "break-word",
                           }}
@@ -242,7 +242,7 @@ export default function SettingsPage() {
                         type="text"
                         value={buttonColor}
                         onChange={(e) => setButtonColor(e.target.value)}
-                        style={{ ...inputStyle, flex: 1, fontFamily: "monospace" }}
+                        style={{ ...inputStyle, flex: 1 }}
                       />
                     </div>
                   </div>
@@ -262,7 +262,7 @@ export default function SettingsPage() {
                         type="text"
                         value={activeSlotColor}
                         onChange={(e) => setActiveSlotColor(e.target.value)}
-                        style={{ ...inputStyle, flex: 1, fontFamily: "monospace" }}
+                        style={{ ...inputStyle, flex: 1}}
                       />
                     </div>
                   </div>
@@ -311,10 +311,9 @@ export default function SettingsPage() {
                         padding: "12px 8px",
                         border: isActive ? "2px solid #000000" : "2px solid #e5e7eb",
                         borderRadius: "5px",
-                        background: isActive ? "#000000" : "#fff",
+                        background: isActive ? "" : "#fff",
                         cursor: "pointer",
                         transition: "border-color 0.15s, background 0.15s",
-                        boxShadow: isActive ? "0 0 0 3px rgba(0,0,0,0.12)" : "none",
                       }}
                     >
                       <div style={{ width: "100%", height: "24px", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -332,10 +331,10 @@ export default function SettingsPage() {
                         />
                       </div>
                       <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: "12px", fontWeight: isActive ? "700" : "600", color: isActive ? "#ffffff" : "#111827" }}>
+                        <div style={{ fontSize: "12px", fontWeight: isActive ? "700" : "600", color: isActive ? "#000000" : "#111827" }}>
                           {preset.label}
                         </div>
-                        <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px", fontFamily: "monospace" }}>
+                        <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>
                           {preset.desc}
                         </div>
                       </div>
@@ -376,11 +375,10 @@ export default function SettingsPage() {
                       fontSize: "13px",
                       color: "#111827",
                       width: "100px",
-                      fontFamily: "monospace",
                       background: "transparent",
                     }}
                   />
-                  <span style={{ padding: "8px 12px 8px 0", fontSize: "13px", color: "#9ca3af", fontFamily: "monospace" }}>
+                  <span style={{ padding: "8px 12px 8px 0", fontSize: "13px", color: "#9ca3af" }}>
                     {widgetMaxWidth === 0 ? "= 100%" : "px"}
                   </span>
                 </div>

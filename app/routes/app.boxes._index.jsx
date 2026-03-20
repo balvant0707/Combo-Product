@@ -255,9 +255,6 @@ export default function ManageBoxesPage() {
 
       {/* Hero banner */}
       <div style={{ marginBottom: "16px", borderRadius: "5px", background: "#ffffff", border: "1px solid #ffffff", boxShadow: "0 4px 20px rgba(42,122,79,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(42,122,79,0.10)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#2A7A4F", marginBottom: "10px" }}>
-          <AdminIcon type="package" size="small" /> Combo Boxes
-        </div>
         <div style={{ fontSize: "20px", fontWeight: "800", color: "#111827", letterSpacing: "-0.5px" }}>Manage your combo box types</div>
         <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Create, activate, and reorder combo boxes shown on your storefront.</div>
         <div style={{ display: "flex", gap: "20px", marginTop: "14px" }}>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useFetcher, useLoaderData, useLocation, useNavigate } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -108,6 +108,8 @@ export default function ManageBoxesPage() {
   const fetcher = useFetcher();
 
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all"); // "all" | "active" | "inactive"
 
   function navigateTo(path) {
     navigate(withEmbeddedAppParams(path, location.search));
@@ -167,15 +169,30 @@ export default function ManageBoxesPage() {
     );
   }
 
-  const displayBoxes =
+  const baseBoxes =
     fetcher.formData?.get("_action") === "delete"
       ? boxes.filter((b) => b.id !== parseInt(fetcher.formData.get("id")))
       : boxes;
 
+  const displayBoxes = useMemo(() => {
+    let result = baseBoxes;
+    if (statusFilter === "active") result = result.filter((b) => b.isActive);
+    if (statusFilter === "inactive") result = result.filter((b) => !b.isActive);
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      result = result.filter(
+        (b) =>
+          b.boxName.toLowerCase().includes(q) ||
+          (b.displayTitle && b.displayTitle.toLowerCase().includes(q))
+      );
+    }
+    return result;
+  }, [baseBoxes, statusFilter, search]);
+
   const COLUMNS = ["", "Box Name", "Items", "Price", "Type", "Orders", "Actions"];
 
   return (
-    <s-page heading={`Combo Boxes (${displayBoxes.length})`}>
+    <s-page heading={`Combo Boxes (${baseBoxes.length})`}>
       <style>{`
         .cb-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .cb-table thead th {
@@ -234,9 +251,59 @@ export default function ManageBoxesPage() {
           user-select: none;
           padding: 0 4px;
         }
+        .cb-filter-bar {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 16px;
+          border-bottom: 1px solid #e5e7eb;
+          background: #fff;
+          flex-wrap: wrap;
+        }
+        .cb-search {
+          flex: 1;
+          min-width: 180px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          border: 1px solid #e5e7eb;
+          border-radius: 6px;
+          padding: 7px 12px;
+          background: #f9fafb;
+        }
+        .cb-search input {
+          border: none;
+          outline: none;
+          background: transparent;
+          font-size: 13px;
+          color: #111827;
+          width: 100%;
+        }
+        .cb-search input::placeholder { color: #9ca3af; }
+        .cb-filter-tabs {
+          display: flex;
+          gap: 4px;
+        }
+        .cb-filter-tab {
+          padding: 6px 14px;
+          border: 1px solid #e5e7eb;
+          border-radius: 6px;
+          background: #fff;
+          font-size: 12px;
+          font-weight: 500;
+          color: #6b7280;
+          cursor: pointer;
+          transition: all 0.12s;
+          white-space: nowrap;
+        }
+        .cb-filter-tab:hover { background: #f3f4f6; color: #111827; }
+        .cb-filter-tab.active { background: #111827; color: #fff; border-color: #111827; font-weight: 600; }
+        .cb-filter-tab.active-green { background: #dcfce7; color: #166534; border-color: #86efac; font-weight: 600; }
+        .cb-filter-tab.active-gray { background: #f3f4f6; color: #374151; border-color: #d1d5db; font-weight: 600; }
+        .cb-results-count { font-size: 12px; color: #9ca3af; white-space: nowrap; }
       `}</style>
 
-      <ui-title-bar title={`Combo Boxes (${displayBoxes.length})`}>
+      <ui-title-bar title={`Combo Boxes (${baseBoxes.length})`}>
         <button onClick={() => navigateTo("/app/storefront-visibility")}>
           Frontend Visibility
         </button>
@@ -249,6 +316,62 @@ export default function ManageBoxesPage() {
       </ui-title-bar>
 
       <s-section>
+        {/* Filter bar */}
+        <div className="cb-filter-bar">
+          {/* Search */}
+          <div className="cb-search">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0, color: "#9ca3af" }}>
+              <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.8" />
+              <path d="M14.5 14.5L18 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search boxes…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", padding: 0, lineHeight: 1, fontSize: "16px" }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+
+          {/* Status filter tabs */}
+          <div className="cb-filter-tabs">
+            <button
+              type="button"
+              className={`cb-filter-tab ${statusFilter === "all" ? "active" : ""}`}
+              onClick={() => setStatusFilter("all")}
+            >
+              All ({baseBoxes.length})
+            </button>
+            <button
+              type="button"
+              className={`cb-filter-tab ${statusFilter === "active" ? "active-green" : ""}`}
+              onClick={() => setStatusFilter("active")}
+            >
+              Active ({baseBoxes.filter((b) => b.isActive).length})
+            </button>
+            <button
+              type="button"
+              className={`cb-filter-tab ${statusFilter === "inactive" ? "active-gray" : ""}`}
+              onClick={() => setStatusFilter("inactive")}
+            >
+              Inactive ({baseBoxes.filter((b) => !b.isActive).length})
+            </button>
+          </div>
+
+          {/* Result count when filtered */}
+          {(search || statusFilter !== "all") && (
+            <span className="cb-results-count">{displayBoxes.length} result{displayBoxes.length !== 1 ? "s" : ""}</span>
+          )}
+        </div>
+
         {displayBoxes.length === 0 ? (
           <div style={{ textAlign: "center", padding: "64px 0", color: "#9ca3af" }}>
             <div style={{ marginBottom: "16px", display: "flex", justifyContent: "center" }}>

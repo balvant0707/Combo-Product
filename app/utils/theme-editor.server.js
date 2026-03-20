@@ -46,10 +46,9 @@ async function getMainThemeId(admin) {
   return extractNumericId(themeJson?.data?.themes?.nodes?.[0]?.id || null);
 }
 
-const EXTENSION_UUID = "36974c12-cb97-9ae2-ba3d-8f81be5ac21bc8a9a0a7";
-
 export async function buildEmbedBlockUrl({ shop, admin }) {
   const storeHandle = getStoreHandle(shop);
+  const apiKey = process.env.SHOPIFY_API_KEY?.trim();
   const themeId = await getMainThemeId(admin);
   const themeIdSegment = themeId || "current";
 
@@ -57,7 +56,9 @@ export async function buildEmbedBlockUrl({ shop, admin }) {
     `https://admin.shopify.com/store/${storeHandle}/themes/${themeIdSegment}/editor`,
   );
   destination.searchParams.set("context", "apps");
-  destination.searchParams.set("activateAppId", `${EXTENSION_UUID}/combo-embed`);
+  if (apiKey) {
+    destination.searchParams.set("activateAppId", `${apiKey}/combo-embed`);
+  }
 
   return destination.toString();
 }

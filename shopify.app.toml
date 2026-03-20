@@ -1,11 +1,11 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "335f2a536c3bcb46c4450e5ecaa080b1"
-name = "Combo Product"
+name = "MixBox – Box & Bundle Builder"
 application_url = "https://combo-products.vercel.app"
 embedded = true
 
-handle = "combo-product-builder"
+handle = "mixbox-box-bundle-builder"
 
 [build]
 automatically_update_urls_on_dev = true

@@ -165,10 +165,6 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
           position: "relative",
         }}
       >
-        {/* decorative circles */}
-        <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "220px", height: "220px", borderRadius: "50%", background: "rgba(17,24,39,0.06)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: "-60px", right: "80px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(17,24,39,0.04)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", top: "20px", right: "200px", width: "80px", height: "80px", borderRadius: "50%", background: "rgba(17,24,39,0.03)", pointerEvents: "none" }} />
 
         <div
           style={{
@@ -382,7 +378,6 @@ export default function DashboardPage() {
 
       {/* Quick Actions */}
       <div style={{ borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>
-        <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(17,24,39,0.05)", pointerEvents: "none" }} />
         <div style={{ padding: "20px 20px 14px", borderBottom: "1px solid #e5e7eb" }}>
           <div style={{ fontSize: "15px", fontWeight: "800", color: "#000000", letterSpacing: "-0.2px" }}>Quick Actions</div>
         </div>
@@ -434,7 +429,6 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <div style={{ borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>
-        <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(17,24,39,0.05)", pointerEvents: "none" }} />
         <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000" }}>
             <AdminIcon type="chart-line" size="small" /> Performance
@@ -452,7 +446,6 @@ export default function DashboardPage() {
 
       {/* Recent Bundle Orders */}
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>
-        <div style={{ position: "absolute", top: "-30px", right: "-30px", width: "150px", height: "150px", borderRadius: "50%", background: "rgba(17,24,39,0.05)", pointerEvents: "none" }} />
         <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000" }}>
             <AdminIcon type="order" size="small" /> Recent Orders
@@ -510,8 +503,6 @@ export default function DashboardPage() {
 
       {/* Getting Started */}
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>
-        <div style={{ position: "absolute", top: "-40px", right: "-40px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(17,24,39,0.05)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: "-30px", left: "60px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(17,24,39,0.04)", pointerEvents: "none" }} />
         <div style={{ padding: "28px 32px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000" }}>
             <AdminIcon type="rocket" size="small" /> Getting Started

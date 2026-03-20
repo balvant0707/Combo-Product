@@ -46,6 +46,22 @@ async function getMainThemeId(admin) {
   return extractNumericId(themeJson?.data?.themes?.nodes?.[0]?.id || null);
 }
 
+const EXTENSION_UUID = "36974c12-cb97-9ae2-ba3d-8f81be5ac21bc8a9a0a7";
+
+export async function buildEmbedBlockUrl({ shop, admin }) {
+  const storeHandle = getStoreHandle(shop);
+  const themeId = await getMainThemeId(admin);
+  const themeIdSegment = themeId || "current";
+
+  const destination = new URL(
+    `https://admin.shopify.com/store/${storeHandle}/themes/${themeIdSegment}/editor`,
+  );
+  destination.searchParams.set("context", "apps");
+  destination.searchParams.set("activateAppId", `${EXTENSION_UUID}/combo-builder`);
+
+  return destination.toString();
+}
+
 export async function buildThemeEditorUrl({ shop, admin }) {
   const storeHandle = getStoreHandle(shop);
   const apiKey = process.env.SHOPIFY_API_KEY?.trim();

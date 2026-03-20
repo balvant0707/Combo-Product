@@ -9,7 +9,7 @@ import {
   getRecentOrders,
 } from "../models/orders.server";
 import { AdminIcon } from "../components/admin-icons";
-import { buildThemeEditorUrl } from "../utils/theme-editor.server";
+import { buildThemeEditorUrl, buildEmbedBlockUrl } from "../utils/theme-editor.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
 export const loader = async ({ request }) => {
@@ -24,11 +24,17 @@ export const loader = async ({ request }) => {
       getRecentOrders(shop, 10),
     ]);
 
+  const [themeEditorUrl, embedBlockUrl] = await Promise.all([
+    buildThemeEditorUrl({ shop, admin }),
+    buildEmbedBlockUrl({ shop, admin }),
+  ]);
+
   return {
     activeBoxCount,
     bundlesSold,
     bundleRevenue,
-    themeEditorUrl: await buildThemeEditorUrl({ shop, admin }),
+    themeEditorUrl,
+    embedBlockUrl,
     recentOrders: recentOrders.map((order) => ({
       id: order.id,
       orderId: order.orderId,
@@ -142,6 +148,111 @@ function StatCard({ label, value, icon, accent, bg, sub }) {
         {value}
       </div>
       <div style={{ fontSize: "11px", color: "#9ca3af" }}>{sub}</div>
+    </div>
+  );
+}
+
+function EmbedBlockCard({ embedBlockUrl }) {
+  return (
+    <div style={{ marginBottom: "20px" }}>
+      <div
+        style={{
+          borderRadius: "5px",
+          overflow: "hidden",
+          background: "#ffffff",
+          border: "1px solid #e5e7eb",
+          boxShadow: "0 8px 24px rgba(15,23,42,0.08)",
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "auto 1fr auto",
+            alignItems: "center",
+            gap: "20px",
+            padding: "20px 24px",
+          }}
+        >
+          {/* Icon */}
+          <div
+            style={{
+              width: "48px",
+              height: "48px",
+              borderRadius: "12px",
+              background: "linear-gradient(135deg,#f0fdf4,#dcfce7)",
+              border: "1.5px solid #86efac",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <AdminIcon type="apps" size="large" />
+          </div>
+
+          {/* Text */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+              <span style={{ fontSize: "15px", fontWeight: "800", color: "#111827" }}>
+                Enable Theme App Embed Block
+              </span>
+              <span
+                style={{
+                  background: "#fef3c7",
+                  border: "1px solid #fde68a",
+                  color: "#92400e",
+                  fontSize: "10px",
+                  fontWeight: "700",
+                  padding: "2px 8px",
+                  borderRadius: "999px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                }}
+              >
+                Required
+              </span>
+            </div>
+            <p style={{ margin: 0, fontSize: "13px", color: "#6b7280", lineHeight: 1.5 }}>
+              Activate the Combo Builder embed block in your theme to enable storefront functionality. Opens the theme editor Apps panel — just toggle it on and save.
+            </p>
+          </div>
+
+          {/* CTA */}
+          <a
+            href={embedBlockUrl}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              textDecoration: "none",
+              borderRadius: "5px",
+              padding: "10px 20px",
+              background: "#2A7A4F",
+              color: "#ffffff",
+              fontSize: "13px",
+              fontWeight: "700",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+              boxShadow: "0 2px 8px rgba(42,122,79,0.25)",
+              transition: "background 0.12s, box-shadow 0.12s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#1e5c3a";
+              e.currentTarget.style.boxShadow = "0 4px 14px rgba(42,122,79,0.35)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "#2A7A4F";
+              e.currentTarget.style.boxShadow = "0 2px 8px rgba(42,122,79,0.25)";
+            }}
+          >
+            <AdminIcon type="theme" size="small" />
+            Enable Embed Block
+          </a>
+        </div>
+      </div>
     </div>
   );
 }
@@ -295,6 +406,7 @@ export default function DashboardPage() {
     bundlesSold,
     bundleRevenue,
     themeEditorUrl,
+    embedBlockUrl,
     recentOrders,
   } = useLoaderData();
   const location = useLocation();
@@ -371,6 +483,7 @@ export default function DashboardPage() {
 
      
 
+      <EmbedBlockCard embedBlockUrl={embedBlockUrl} />
       <ThemeCustomizationCard themeEditorUrl={themeEditorUrl} />
 
       {/* Row: Quick Actions (35%) + Stats (65%) */}

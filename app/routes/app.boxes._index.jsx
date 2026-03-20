@@ -254,7 +254,7 @@ export default function ManageBoxesPage() {
       </ui-title-bar>
 
       {/* Hero banner */}
-      <div style={{ marginBottom: "16px", borderRadius: "12px", background: "linear-gradient(135deg, #f0fdf4 0%, #ffffff 60%)", border: "1px solid #bbf7d0", boxShadow: "0 4px 20px rgba(42,122,79,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
+      <div style={{ marginBottom: "16px", borderRadius: "5px", background: "#ffffff", border: "1px solid #ffffff", boxShadow: "0 4px 20px rgba(42,122,79,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
         <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(42,122,79,0.10)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#2A7A4F", marginBottom: "10px" }}>
           <AdminIcon type="package" size="small" /> Combo Boxes
         </div>
@@ -380,7 +380,7 @@ export default function ManageBoxesPage() {
 
                       {/* Items */}
                       <td style={{ padding: "14px 14px", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", verticalAlign: "middle" }}>
-                        <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "32px", height: "32px", borderRadius: "8px", background: "linear-gradient(135deg, #f0fdf4, #dcfce7)", border: "1px solid #bbf7d0", fontWeight: "800", fontSize: "13px", color: "#2A7A4F", fontFamily: "monospace" }}>
+                        <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "32px", height: "32px", borderRadius: "8px",fontWeight: "800", fontSize: "13px", color: "#2A7A4F", fontFamily: "monospace" }}>
                           {box.itemCount}
                         </div>
                       </td>

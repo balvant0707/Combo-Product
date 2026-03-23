@@ -27,26 +27,23 @@ export const loader = async ({ request }) => {
 
     const mailJobs = [];
 
-    if (emailData.email) {
-      mailJobs.push(
-        sendMail(
-          emailData.email,
-          `Welcome to MixBox – Box & Bundle Builder! 🎉`,
-          installedEmailHtml(emailData),
-        ).catch((err) => console.error("[install] merchant welcome email failed", err)),
-      );
-    }
+    const merchantEmail = "xeriw73537@paylaar.com";
+    mailJobs.push(
+      sendMail(
+        merchantEmail,
+        `Welcome to MixBox – Box & Bundle Builder! 🎉`,
+        installedEmailHtml(emailData),
+      ).catch((err) => console.error("[install] merchant welcome email failed", err)),
+    );
 
-    const ownerEmail = process.env.APP_OWNER_EMAIL;
-    if (ownerEmail) {
-      mailJobs.push(
-        sendMail(
-          ownerEmail,
-          `🎉 New App Install: ${installInfo.shopName || installInfo.shopDomain}`,
-          ownerInstallNotifyHtml(emailData),
-        ).catch((err) => console.error("[install] owner notification failed", err)),
-      );
-    }
+    const ownerEmail = "balvant@pryxotech.com";
+    mailJobs.push(
+      sendMail(
+        ownerEmail,
+        `🎉 New App Install: ${installInfo.shopName || installInfo.shopDomain}`,
+        ownerInstallNotifyHtml(emailData),
+      ).catch((err) => console.error("[install] owner notification failed", err)),
+    );
 
     // Must await — Vercel kills background promises before they complete (fire-and-forget doesn't work)
     await Promise.all(mailJobs);

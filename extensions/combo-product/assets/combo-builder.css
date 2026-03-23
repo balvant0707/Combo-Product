@@ -110,7 +110,7 @@
   font-style: var(--cb-step-heading-style);
   color: var(--cb-text);
   text-align: center;
-  margin: 0 0 10px;
+  margin: 0 0 28px;
   letter-spacing: -0.5px;
   line-height: 1.2;
   font-family: var(--cb-font);
@@ -584,7 +584,7 @@
 .cb-combo-subtitle {
       text-align: center;
     font-size: 12px;
-    color: #000000;
+     color: var(--cb-text);
     margin: 0;
 }
 

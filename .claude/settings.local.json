@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(shopify app:*)",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Read(//tmp/**)",
+      "Read(//c/Users/BALVANT/AppData/Local/Temp/**)"
     ]
   }
 }

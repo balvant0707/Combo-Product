@@ -3,6 +3,7 @@ import db from "../db.server";
 import { markShopUninstalled } from "../models/shop.server";
 import { sendMail } from "../utils/mailer.server";
 import { uninstalledEmailHtml } from "../emails/app-uninstalled";
+import { ownerUninstallNotifyHtml } from "../emails/owner-notify";
 
 export const action = async ({ request }) => {
   const { shop, topic } = await authenticate.webhook(request);
@@ -12,7 +13,7 @@ export const action = async ({ request }) => {
   // Fetch shop details before marking as uninstalled so we have the email
   const shopRecord = await db.shop.findUnique({
     where: { shop },
-    select: { email: true, contactEmail: true, ownerName: true, name: true },
+    select: { email: true, contactEmail: true, ownerName: true, name: true, plan: true, country: true },
   });
 
   await markShopUninstalled(shop);
@@ -21,17 +22,32 @@ export const action = async ({ request }) => {
   // Deleting by shop keeps this idempotent even when webhook retries happen.
   await db.session.deleteMany({ where: { shop } });
 
-  const recipientEmail = shopRecord?.contactEmail || shopRecord?.email;
-  if (recipientEmail) {
+  const emailData = {
+    ownerName:  shopRecord?.ownerName,
+    shopName:   shopRecord?.name,
+    shopDomain: shop,
+    email:      shopRecord?.contactEmail || shopRecord?.email,
+    plan:       shopRecord?.plan,
+    country:    shopRecord?.country,
+  };
+
+  // Email to merchant
+  if (emailData.email) {
     sendMail(
-      recipientEmail,
-      "We're sad to see you go 😢 — Combo Product Builder",
-      uninstalledEmailHtml({
-        ownerName: shopRecord?.ownerName,
-        shopName: shopRecord?.name,
-        shopDomain: shop,
-      }),
-    ).catch((err) => console.error("[uninstall webhook] email failed", err));
+      emailData.email,
+      "We're sad to see you go 😢 — MixBox – Box & Bundle Builder",
+      uninstalledEmailHtml(emailData),
+    ).catch((err) => console.error("[uninstall webhook] merchant email failed", err));
+  }
+
+  // Email to app owner
+  const ownerEmail = process.env.APP_OWNER_EMAIL;
+  if (ownerEmail) {
+    sendMail(
+      ownerEmail,
+      `⚠️ App Uninstalled: ${shopRecord?.name || shop}`,
+      ownerUninstallNotifyHtml(emailData),
+    ).catch((err) => console.error("[uninstall webhook] owner notification failed", err));
   }
 
   return new Response();

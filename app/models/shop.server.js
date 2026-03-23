@@ -144,10 +144,12 @@ export async function upsertShopFromAdmin(session, admin) {
 
   return {
     isNewInstall: !wasInstalled,
-    email: details?.contactEmail || details?.email || null,
-    ownerName: details?.shopOwnerName || null,
-    shopName: details?.name || null,
+    email:      details?.contactEmail || details?.email || null,
+    ownerName:  details?.shopOwnerName || null,
+    shopName:   details?.name || null,
     shopDomain: session.shop,
+    plan:       details?.plan?.displayName || null,
+    country:    details?.billingAddress?.country || null,
   };
 }
 

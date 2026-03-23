@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(shopify app:*)"
+      "Bash(shopify app:*)",
+      "Bash(node -e \":*)"
     ]
   }
 }

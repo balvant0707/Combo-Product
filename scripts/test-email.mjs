@@ -22,7 +22,7 @@ for (const line of envLines) {
 }
 
 // ── Config ────────────────────────────────────────────────────────────────────
-const OWNER_EMAIL = "balvant@pryxotech.com";   // internal / app owner
+const OWNER_EMAIL = "baldevsachiya@gmail.com";   // internal / app owner
 const USER_EMAIL  = "xeriw73537@paylaar.com";   // merchant test account
 
 const secureVal = (process.env.SMTP_SECURE || "").toLowerCase();

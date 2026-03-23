@@ -97,63 +97,90 @@ export async function upsertShopFromAdmin(session, admin) {
   const body = await response.json();
   const details = body?.data?.shop;
 
-  // Snapshot state BEFORE upsert so we can detect genuine installs/reinstalls.
-  // Use `uninstalledAt` (set by the uninstall webhook) as the signal — it is far
-  // more reliable than `installed` which can be flipped by concurrent auth requests.
-  //   • No record yet          → brand-new install
-  //   • uninstalledAt not null → merchant just reinstalled after uninstalling
-  //   • uninstalledAt null     → merchant is re-authing an already-installed app (no email)
-  const existing = await db.shop.findUnique({
-    where: { shop: session.shop },
-    select: { installed: true, uninstalledAt: true },
-  });
-  const isFirstInstall = existing === null;                 // brand-new shop, never seen before
-  const isReinstall    = !isFirstInstall &&
-    (existing.uninstalledAt !== null || existing.installed === false);
-  const isNewInstall   = isFirstInstall || isReinstall;
+  const shopFields = {
+    accessToken:   session.accessToken ?? null,
+    installed:     true,
+    status:        "installed",
+    ownerName:     details?.shopOwnerName ?? null,
+    email:         details?.email ?? null,
+    contactEmail:  details?.contactEmail ?? null,
+    name:          details?.name ?? null,
+    country:       details?.billingAddress?.country ?? null,
+    city:          details?.billingAddress?.city ?? null,
+    currency:      details?.currencyCode ?? null,
+    phone:         details?.billingAddress?.phone ?? null,
+    primaryDomain: details?.primaryDomain?.host ?? null,
+    plan:          details?.plan?.displayName ?? null,
+    uninstalledAt: null,
+  };
 
-  await db.shop.upsert({
-    where: { shop: session.shop },
-    create: {
+  // ── Atomic install detection ──────────────────────────────────────────────
+  // Strategy: perform the DB write and detect the install type in one atomic
+  // step so the "shouldSendEmail" flag is never separated from the write that
+  // clears uninstalledAt (which was the previous race-condition bug).
+  //
+  // 1. Try reinstall:  updateMany WHERE uninstalledAt IS NOT NULL OR installed=false
+  //    → count > 0  means THIS request owns the reinstall event
+  // 2. Try first install: create (catches P2002 if a concurrent request races)
+  //    → success   means THIS request is the very first install
+  // 3. Otherwise it is a normal re-auth of an already-installed shop → no email
+
+  // Step 1 — reinstall
+  const reinstallResult = await db.shop.updateMany({
+    where: {
       shop: session.shop,
-      accessToken: session.accessToken ?? null,
-      installed: true,
-      status: "installed",
-      ownerName: details?.shopOwnerName ?? null,
-      email: details?.email ?? null,
-      contactEmail: details?.contactEmail ?? null,
-      name: details?.name ?? null,
-      country: details?.billingAddress?.country ?? null,
-      city: details?.billingAddress?.city ?? null,
-      currency: details?.currencyCode ?? null,
-      phone: details?.billingAddress?.phone ?? null,
-      primaryDomain: details?.primaryDomain?.host ?? null,
-      plan: details?.plan?.displayName ?? null,
-      onboardedAt: new Date(),
-      uninstalledAt: null,
+      OR: [{ installed: false }, { uninstalledAt: { not: null } }],
     },
-    update: {
-      accessToken: session.accessToken ?? null,
-      installed: true,
-      status: "installed",
-      ownerName: details?.shopOwnerName ?? null,
-      email: details?.email ?? null,
-      contactEmail: details?.contactEmail ?? null,
-      name: details?.name ?? null,
-      country: details?.billingAddress?.country ?? null,
-      city: details?.billingAddress?.city ?? null,
-      currency: details?.currencyCode ?? null,
-      phone: details?.billingAddress?.phone ?? null,
-      primaryDomain: details?.primaryDomain?.host ?? null,
-      plan: details?.plan?.displayName ?? null,
-      uninstalledAt: null,
-    },
+    data: shopFields,
+  });
+
+  if (reinstallResult.count > 0) {
+    console.info("[DB Sync] reinstall detected", { shop: session.shop });
+    return {
+      isNewInstall:   true,
+      isFirstInstall: false,
+      isReinstall:    true,
+      email:      details?.contactEmail || details?.email || null,
+      ownerName:  details?.shopOwnerName || null,
+      shopName:   details?.name || null,
+      shopDomain: session.shop,
+      plan:       details?.plan?.displayName || null,
+      country:    details?.billingAddress?.country || null,
+    };
+  }
+
+  // Step 2 — first install (try to create; ignore P2002 from concurrent races)
+  try {
+    await db.shop.create({
+      data: { shop: session.shop, ...shopFields, onboardedAt: new Date() },
+    });
+    console.info("[DB Sync] first install detected", { shop: session.shop });
+    return {
+      isNewInstall:   true,
+      isFirstInstall: true,
+      isReinstall:    false,
+      email:      details?.contactEmail || details?.email || null,
+      ownerName:  details?.shopOwnerName || null,
+      shopName:   details?.name || null,
+      shopDomain: session.shop,
+      plan:       details?.plan?.displayName || null,
+      country:    details?.billingAddress?.country || null,
+    };
+  } catch (err) {
+    if (err.code !== "P2002") throw err;
+    // Another concurrent request already created the record — fall through to re-auth
+  }
+
+  // Step 3 — re-auth: shop already installed, just refresh fields
+  await db.shop.update({
+    where: { shop: session.shop },
+    data:  shopFields,
   });
 
   return {
-    isNewInstall,
-    isFirstInstall,
-    isReinstall,
+    isNewInstall:   false,
+    isFirstInstall: false,
+    isReinstall:    false,
     email:      details?.contactEmail || details?.email || null,
     ownerName:  details?.shopOwnerName || null,
     shopName:   details?.name || null,

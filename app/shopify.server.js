@@ -45,27 +45,11 @@ const shopify = shopifyApp({
       const shopInfo = await upsertShopFromAdmin(session, admin);
 
       if (shopInfo.isNewInstall) {
-        // For first-time installs the shop record was just created — no prior
-        // uninstalledAt to claim, so send immediately.
-        // For reinstalls use an atomic updateMany that only the first of any
-        // concurrent afterAuth requests can win (prevents duplicate emails).
-        let shouldSend = shopInfo.isFirstInstall;
-
-        if (shopInfo.isReinstall) {
-          const claimed = await prisma.shop.updateMany({
-            where: {
-              shop: session.shop,
-              OR: [
-                { uninstalledAt: { not: null } },
-                { installed: false },
-              ],
-            },
-            data: { uninstalledAt: null, installed: true },
-          });
-          shouldSend = claimed.count > 0;
-        }
-
-        if (shouldSend) {
+        // isNewInstall is set atomically inside upsertShopFromAdmin:
+        //   isFirstInstall → db.shop.create won the race
+        //   isReinstall    → db.shop.updateMany WHERE uninstalledAt IS NOT NULL won the race
+        // No further claim needed here — just send.
+        {
           const emailData = {
             ownerName:  shopInfo.ownerName,
             shopName:   shopInfo.shopName,
@@ -103,11 +87,9 @@ const shopify = shopifyApp({
 
           console.info("[afterAuth] install emails dispatched", {
             shop: session.shop,
+            isFirstInstall: shopInfo.isFirstInstall,
+            isReinstall: shopInfo.isReinstall,
             to: shopInfo.email,
-          });
-        } else {
-          console.info("[afterAuth] install email skipped (already claimed by concurrent request)", {
-            shop: session.shop,
           });
         }
       }

@@ -585,9 +585,8 @@
 .cb-product-grid {
   display: grid;
   grid-template-columns: repeat(var(--cb-products-per-row, 4), 1fr);
-  gap: 1px;
-  background: var(--cb-border);
-  border: 1px solid var(--cb-border);
+  gap: 10px;
+  border: none;
 }
 
 .cb-product-list {

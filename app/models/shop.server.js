@@ -97,12 +97,20 @@ export async function upsertShopFromAdmin(session, admin) {
   const body = await response.json();
   const details = body?.data?.shop;
 
-  // Check previous state so callers can detect a fresh install / reinstall
+  // Snapshot state BEFORE upsert so we can detect genuine installs/reinstalls.
+  // Use `uninstalledAt` (set by the uninstall webhook) as the signal — it is far
+  // more reliable than `installed` which can be flipped by concurrent auth requests.
+  //   • No record yet          → brand-new install
+  //   • uninstalledAt not null → merchant just reinstalled after uninstalling
+  //   • uninstalledAt null     → merchant is re-authing an already-installed app (no email)
   const existing = await db.shop.findUnique({
     where: { shop: session.shop },
-    select: { installed: true },
+    select: { installed: true, uninstalledAt: true },
   });
-  const wasInstalled = existing?.installed === true;
+  const isNewInstall =
+    existing === null ||                    // never installed before
+    existing.uninstalledAt !== null ||      // reinstall after explicit uninstall
+    existing.installed === false;           // installed flag was cleared
 
   await db.shop.upsert({
     where: { shop: session.shop },
@@ -143,7 +151,7 @@ export async function upsertShopFromAdmin(session, admin) {
   });
 
   return {
-    isNewInstall: !wasInstalled,
+    isNewInstall,
     email:      details?.contactEmail || details?.email || null,
     ownerName:  details?.shopOwnerName || null,
     shopName:   details?.name || null,

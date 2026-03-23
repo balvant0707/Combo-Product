@@ -45,30 +45,58 @@ const shopify = shopifyApp({
       const shopInfo = await upsertShopFromAdmin(session, admin);
 
       if (shopInfo.isNewInstall) {
-        const emailData = {
-          ownerName:  shopInfo.ownerName,
-          shopName:   shopInfo.shopName,
-          shopDomain: shopInfo.shopDomain,
-          email:      shopInfo.email,
-          plan:       shopInfo.plan,
-          country:    shopInfo.country,
-        };
+        // Atomic claim: only the first concurrent afterAuth request wins.
+        // We do a conditional update that only succeeds if uninstalledAt is still
+        // non-null OR installed was just set. The winner (count=1) sends the email.
+        const claimed = await prisma.shop.updateMany({
+          where: {
+            shop: session.shop,
+            OR: [
+              { uninstalledAt: { not: null } },
+              { installed: false },
+            ],
+          },
+          data: { uninstalledAt: null, installed: true },
+        });
 
-        if (shopInfo.email) {
-          sendMail(
-            shopInfo.email,
-            "Welcome to MixBox – Box & Bundle Builder 🎁",
-            installedEmailHtml(emailData),
-          ).catch((err) => console.error("[afterAuth] merchant install email failed", err));
-        }
+        // Only send emails if this request won the atomic claim
+        const shouldSend = claimed.count > 0;
 
-        const ownerEmail = process.env.APP_OWNER_EMAIL;
-        if (ownerEmail) {
-          sendMail(
-            ownerEmail,
-            `🎉 New Install: ${shopInfo.shopName || shopInfo.shopDomain}`,
-            ownerInstallNotifyHtml(emailData),
-          ).catch((err) => console.error("[afterAuth] owner install notification failed", err));
+        if (shouldSend) {
+          const emailData = {
+            ownerName:  shopInfo.ownerName,
+            shopName:   shopInfo.shopName,
+            shopDomain: shopInfo.shopDomain,
+            email:      shopInfo.email,
+            plan:       shopInfo.plan,
+            country:    shopInfo.country,
+          };
+
+          if (shopInfo.email) {
+            sendMail(
+              shopInfo.email,
+              "Welcome to MixBox – Box & Bundle Builder 🎁",
+              installedEmailHtml(emailData),
+            ).catch((err) => console.error("[afterAuth] merchant install email failed", err));
+          }
+
+          const ownerEmail = process.env.APP_OWNER_EMAIL;
+          if (ownerEmail) {
+            sendMail(
+              ownerEmail,
+              `🎉 New Install: ${shopInfo.shopName || shopInfo.shopDomain}`,
+              ownerInstallNotifyHtml(emailData),
+            ).catch((err) => console.error("[afterAuth] owner install notification failed", err));
+          }
+
+          console.info("[afterAuth] install emails dispatched", {
+            shop: session.shop,
+            to: shopInfo.email,
+          });
+        } else {
+          console.info("[afterAuth] install email skipped (already claimed by concurrent request)", {
+            shop: session.shop,
+          });
         }
       }
     },

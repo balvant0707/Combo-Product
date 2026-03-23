@@ -23,7 +23,7 @@ for (const line of envLines) {
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const OWNER_EMAIL = "balvant@pryxotech.com";   // internal / app owner
-const USER_EMAIL  = "batiw68936@pazard.com";   // merchant test account
+const USER_EMAIL  = "xeriw73537@paylaar.com";   // merchant test account
 
 const secureVal = (process.env.SMTP_SECURE || "").toLowerCase();
 const port      = parseInt(process.env.SMTP_PORT || "465");

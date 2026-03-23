@@ -2529,7 +2529,7 @@
       items.push({ id: box.shopifyVariantId, quantity: 1, properties: bundleProps });
     } else {
       hidePageLoader(true);
-      setBtns('error', 'Combo product not linked');
+      setBtns('error', 'MixBox – Box & Bundle Builder not linked');
       setTimeout(function () { setBtns('ready', resolvedReadyLabel); }, 2500);
       return;
     }

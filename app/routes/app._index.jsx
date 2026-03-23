@@ -464,8 +464,8 @@ export default function DashboardPage() {
   ];
 
   return (
-    <s-page heading="Combo Product">
-      <ui-title-bar title="Combo Product">
+    <s-page heading="MixBox – Box & Bundle Builder">
+      <ui-title-bar>
         <button onClick={() => navigateTo("/app/boxes/specific-combo")}>
             Create Specific Combo Box
         </button>

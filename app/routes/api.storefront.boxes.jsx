@@ -57,31 +57,54 @@ export const loader = async ({ request }) => {
       sortOrder: box.sortOrder,
       pageHandle: box.pageHandle || null,
       comboConfig: (() => {
-        if (!box.config) return null;
-        let steps = [];
-        try { steps = JSON.parse(box.config.stepsJson || '[]'); } catch {}
-        // Attach step images as base64 data URIs — stepIndex is 0-based matching the steps array index
         const boxStepImgs = stepImagesByBox[box.id] || [];
-        steps = steps.map((step, idx) => {
-          const imgRecord = boxStepImgs.find((img) => img.stepIndex === idx && img.imageData);
+        function attachStepImages(stepsArr) {
+          return stepsArr.map((step, idx) => {
+            const imgRecord = boxStepImgs.find((img) => img.stepIndex === idx && img.imageData);
+            return {
+              ...step,
+              stepImageUrl: imgRecord
+                ? `data:${imgRecord.mimeType};base64,${Buffer.from(imgRecord.imageData).toString("base64")}`
+                : null,
+            };
+          });
+        }
+        if (box.config) {
+          let steps = [];
+          try { steps = JSON.parse(box.config.stepsJson || '[]'); } catch {}
+          steps = attachStepImages(steps);
           return {
-            ...step,
-            stepImageUrl: imgRecord
-              ? `data:${imgRecord.mimeType};base64,${Buffer.from(imgRecord.imageData).toString("base64")}`
-              : null,
+            comboType: box.config.comboType || steps.length || 2,
+            title: box.config.title || null,
+            subtitle: box.config.subtitle || null,
+            bundlePriceType: box.config.bundlePriceType || 'manual',
+            bundlePrice: box.config.bundlePrice != null ? parseFloat(box.config.bundlePrice) : 0,
+            showProgressBar: box.config.showProgressBar !== false,
+            showProductImages: box.config.showProductImages !== false,
+            allowReselection: box.config.allowReselection !== false,
+            steps,
           };
-        });
-        return {
-          comboType: box.config.comboType || 2,
-          title: box.config.title || null,
-          subtitle: box.config.subtitle || null,
-          bundlePriceType: box.config.bundlePriceType || 'manual',
-          bundlePrice: box.config.bundlePrice != null ? parseFloat(box.config.bundlePrice) : 0,
-          showProgressBar: box.config.showProgressBar !== false,
-          showProductImages: box.config.showProductImages !== false,
-          allowReselection: box.config.allowReselection !== false,
-          steps,
-        };
+        }
+        // Fallback: parse raw comboStepsConfig JSON when ComboBoxConfig relation is missing
+        if (box.comboStepsConfig) {
+          try {
+            const parsed = JSON.parse(box.comboStepsConfig);
+            const steps = attachStepImages(Array.isArray(parsed.steps) ? parsed.steps : []);
+            if (steps.length === 0) return null;
+            return {
+              comboType: parseInt(parsed.type) || steps.length,
+              title: parsed.title || null,
+              subtitle: parsed.subtitle || null,
+              bundlePriceType: parsed.bundlePriceType || 'manual',
+              bundlePrice: parsed.bundlePrice != null ? parseFloat(parsed.bundlePrice) : 0,
+              showProgressBar: parsed.showProgressBar !== false,
+              showProductImages: parsed.showProductImages !== false,
+              allowReselection: parsed.allowReselection !== false,
+              steps,
+            };
+          } catch { return null; }
+        }
+        return null;
       })(),
     };
   });

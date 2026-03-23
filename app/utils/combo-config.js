@@ -17,7 +17,7 @@ export function validateComboConfig(configInput) {
   }
 
   const requestedType = parseInt(parsed?.type, 10);
-  const comboType = requestedType === 3 ? 3 : 2;
+  const comboType = (Number.isInteger(requestedType) && requestedType >= 2) ? requestedType : 2;
   const steps = Array.isArray(parsed?.steps) ? parsed.steps : [];
   const stepSelections = {};
 

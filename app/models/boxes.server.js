@@ -614,10 +614,10 @@ export async function upsertComboConfig(boxId, config) {
     stepsJson,
   };
 
-  // Persist raw JSON to ComboBox.comboStepsConfig so the edit page can read it back
+  // Persist raw JSON to ComboBox.comboStepsConfig and sync itemCount to match comboType
   await db.comboBox.update({
     where: { id: parseInt(boxId) },
-    data:  { comboStepsConfig: rawJson },
+    data:  { comboStepsConfig: rawJson, itemCount: payload.comboType },
   });
 
   return db.comboBoxConfig.upsert({

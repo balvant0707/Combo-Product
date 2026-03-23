@@ -1558,8 +1558,8 @@
     container.innerHTML = '';
 
     var comboConfig = box.comboConfig;
-    var numSteps = Math.min(comboConfig.comboType || 2, comboConfig.steps.length);
-    var steps = comboConfig.steps.slice(0, numSteps);
+    var numSteps = comboConfig.steps.length;
+    var steps = comboConfig.steps.slice();
     var sessionId = generateSessionId();
 
     var slots = [];

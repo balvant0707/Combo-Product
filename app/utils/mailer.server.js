@@ -89,7 +89,7 @@ export async function sendMail(to, subject, html) {
 
   try {
     const info = await getTransporter().sendMail({ from, to, subject, html, replyTo, attachments });
-    console.info("[mailer] sent", { to, subject, messageId: info.messageId });
+    console.info("[mailer] sent", { to, subject, messageId: info.messageId, response: info.response, accepted: info.accepted, rejected: info.rejected });
   } catch (err) {
     console.error("[mailer] failed", { to, subject, error: err.message, code: err.code });
     _transporter = null;

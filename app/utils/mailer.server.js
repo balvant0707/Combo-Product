@@ -44,11 +44,17 @@ export async function sendMail(to, subject, html) {
     return;
   }
 
-  const from = `"${process.env.MAIL_FROM_NAME || "Combo Product Builder"}" <${process.env.MAIL_FROM_ADDRESS || process.env.SMTP_USER}>`;
+  // SMTP server only permits sending from the authenticated login address.
+  // If MAIL_FROM_ADDRESS differs, use it as Reply-To instead.
+  const fromAddress = process.env.SMTP_USER;
+  const from = `"${process.env.MAIL_FROM_NAME || "Combo Product Builder"}" <${fromAddress}>`;
+  const replyTo = process.env.MAIL_FROM_ADDRESS && process.env.MAIL_FROM_ADDRESS !== fromAddress
+    ? process.env.MAIL_FROM_ADDRESS
+    : undefined;
 
   try {
     const transporter = getTransporter();
-    const info = await transporter.sendMail({ from, to, subject, html });
+    const info = await transporter.sendMail({ from, to, subject, html, replyTo });
     console.info("[mailer] sent", {
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,

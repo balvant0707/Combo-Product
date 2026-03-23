@@ -769,7 +769,7 @@
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
 
-    // Banner image with overlay title
+    // Banner image (no overlay title)
     var banner = document.createElement('div');
     banner.className = 'cb-box-banner';
     var bannerSrc = getBoxCardBannerSrc(box, ctx);
@@ -779,16 +779,20 @@
       banner.style.backgroundPosition = 'center';
     }
 
-    // Overlay: big title text on top of the banner
+    // Subtle dark scrim (no text)
     var overlay = document.createElement('div');
     overlay.className = 'cb-box-banner-overlay';
-    var bannerTitle = document.createElement('div');
-    bannerTitle.className = 'cb-box-banner-title';
-    bannerTitle.textContent = box.displayTitle || ((box.isGiftBox ? 'Gift ' : 'Buy ') + box.itemCount);
-    overlay.appendChild(bannerTitle);
     banner.appendChild(overlay);
 
     card.appendChild(banner);
+
+    // Gift badge — top-right corner of card
+    if (box.isGiftBox) {
+      var giftTag = document.createElement('span');
+      giftTag.className = 'cb-gift-tag';
+      giftTag.textContent = 'Gift Box';
+      card.appendChild(giftTag);
+    }
 
     // Checkmark badge (shown when selected)
     var check = document.createElement('div');
@@ -799,6 +803,12 @@
     // Body text
     var body = document.createElement('div');
     body.className = 'cb-box-body';
+
+    // Display title moved from banner overlay to body
+    var titleText = document.createElement('div');
+    titleText.className = 'cb-box-display-title';
+    titleText.textContent = box.displayTitle || box.boxName || ('Buy ' + box.itemCount);
+    body.appendChild(titleText);
 
     var buyText = document.createElement('div');
     buyText.className = 'cb-box-buy-text';
@@ -813,13 +823,6 @@
     );
     box._priceTextEl = priceText;
     body.appendChild(priceText);
-
-    if (box.isGiftBox) {
-      var giftTag = document.createElement('span');
-      giftTag.className = 'cb-gift-tag';
-      giftTag.textContent = 'Gift Box';
-      body.appendChild(giftTag);
-    }
 
     // CTA button
     var ctaBtn = document.createElement('button');

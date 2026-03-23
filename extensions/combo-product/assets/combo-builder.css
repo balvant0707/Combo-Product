@@ -627,9 +627,8 @@
 }
 
 .cb-product-card--used {
-  opacity: 0.45;
-  cursor: default;
-  pointer-events: none;
+  opacity: 0.75;
+  cursor: pointer;
 }
 
 .cb-product-img-wrap {
@@ -785,13 +784,11 @@
 
 .cb-add-btn:hover { background: var(--cb-primary); }
 
-.cb-add-btn--used,
 .cb-add-btn--added {
   background: var(--cb-success);
   cursor: default;
 }
 
-.cb-add-btn--used:hover,
 .cb-add-btn--added:hover { background: var(--cb-success); }
 
 .cb-add-btn--remove {

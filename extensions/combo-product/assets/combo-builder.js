@@ -1191,10 +1191,10 @@
         card.className = 'cb-product-card';
         if (isUsed) {
           card.classList.add('cb-product-card--used');
-          card.setAttribute('aria-disabled', 'true');
+          // card stays interactive so the remove button works
         }
         card.setAttribute('role', 'button');
-        card.setAttribute('tabindex', isUsed ? '-1' : '0');
+        card.setAttribute('tabindex', '0');
 
         // Image wrap
         var imgWrap = document.createElement('div');
@@ -1368,11 +1368,7 @@
         // ADD TO BOX / REMOVE FROM BOX button
         var addBtn = document.createElement('button');
         addBtn.type = 'button';
-        if (isUsed) {
-          addBtn.className = 'cb-add-btn cb-add-btn--used';
-          addBtn.innerHTML = '&#10003; Added';
-          addBtn.disabled = true;
-        } else if (isCurrentSlot) {
+        if (isCurrentSlot || isUsed) {
           addBtn.className = 'cb-add-btn cb-add-btn--remove';
           addBtn.innerHTML = '&times; REMOVE FROM BOX';
         } else {
@@ -1397,7 +1393,27 @@
               if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRemove(e); }
             });
           })(addBtn);
-        } else if (!isUsed) {
+        } else if (isUsed) {
+          ;(function (p, aBtn) {
+            function onRemove(e) {
+              e.stopPropagation();
+              for (var si = 0; si < slots.length; si++) {
+                if (slots[si] && slots[si].productId === p.productId) {
+                  slots[si] = null;
+                  break;
+                }
+              }
+              renderSlots();
+              renderProductGrid();
+              updateCartButton();
+            }
+            aBtn.addEventListener('click', onRemove);
+            card.addEventListener('click', onRemove);
+            card.addEventListener('keydown', function (e) {
+              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRemove(e); }
+            });
+          })(product, addBtn);
+        } else {
           ;(function (p, aBtn, blockedVariantIdsForProduct) {
             function doAddToSlot(variantId, variantTitle, variantPrice, variantCompareAtPrice) {
               aBtn.innerHTML = '&#10003; Added';

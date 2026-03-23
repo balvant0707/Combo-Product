@@ -107,10 +107,10 @@ export async function upsertShopFromAdmin(session, admin) {
     where: { shop: session.shop },
     select: { installed: true, uninstalledAt: true },
   });
-  const isNewInstall =
-    existing === null ||                    // never installed before
-    existing.uninstalledAt !== null ||      // reinstall after explicit uninstall
-    existing.installed === false;           // installed flag was cleared
+  const isFirstInstall = existing === null;                 // brand-new shop, never seen before
+  const isReinstall    = !isFirstInstall &&
+    (existing.uninstalledAt !== null || existing.installed === false);
+  const isNewInstall   = isFirstInstall || isReinstall;
 
   await db.shop.upsert({
     where: { shop: session.shop },
@@ -152,6 +152,8 @@ export async function upsertShopFromAdmin(session, admin) {
 
   return {
     isNewInstall,
+    isFirstInstall,
+    isReinstall,
     email:      details?.contactEmail || details?.email || null,
     ownerName:  details?.shopOwnerName || null,
     shopName:   details?.name || null,

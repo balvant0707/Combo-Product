@@ -31,24 +31,31 @@ export const action = async ({ request }) => {
     country:    shopRecord?.country,
   };
 
-  // Email to merchant
+  // Send both emails and await them — fire-and-forget gets killed by Vercel before sending
+  const mailJobs = [];
+
   if (emailData.email) {
-    sendMail(
-      emailData.email,
-      "We're sad to see you go 😢 — MixBox – Box & Bundle Builder",
-      uninstalledEmailHtml(emailData),
-    ).catch((err) => console.error("[uninstall webhook] merchant email failed", err));
+    mailJobs.push(
+      sendMail(
+        emailData.email,
+        "We're sad to see you go 😢 — MixBox – Box & Bundle Builder",
+        uninstalledEmailHtml(emailData),
+      ).catch((err) => console.error("[uninstall webhook] merchant email failed", err)),
+    );
   }
 
-  // Email to app owner
   const ownerEmail = process.env.APP_OWNER_EMAIL;
   if (ownerEmail) {
-    sendMail(
-      ownerEmail,
-      `⚠️ App Uninstalled: ${shopRecord?.name || shop}`,
-      ownerUninstallNotifyHtml(emailData),
-    ).catch((err) => console.error("[uninstall webhook] owner notification failed", err));
+    mailJobs.push(
+      sendMail(
+        ownerEmail,
+        `⚠️ App Uninstalled: ${shopRecord?.name || shop}`,
+        ownerUninstallNotifyHtml(emailData),
+      ).catch((err) => console.error("[uninstall webhook] owner notification failed", err)),
+    );
   }
+
+  await Promise.all(mailJobs);
 
   return new Response();
 };

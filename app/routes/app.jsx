@@ -48,8 +48,8 @@ export const loader = async ({ request }) => {
       );
     }
 
-    // Do not await — install emails must not block the page load / redirect
-    Promise.all(mailJobs);
+    // Must await — Vercel kills background promises before they complete (fire-and-forget doesn't work)
+    await Promise.all(mailJobs);
   }
 
   // eslint-disable-next-line no-undef

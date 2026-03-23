@@ -97,6 +97,13 @@ export async function upsertShopFromAdmin(session, admin) {
   const body = await response.json();
   const details = body?.data?.shop;
 
+  // Check previous state so callers can detect a fresh install / reinstall
+  const existing = await db.shop.findUnique({
+    where: { shop: session.shop },
+    select: { installed: true },
+  });
+  const wasInstalled = existing?.installed === true;
+
   await db.shop.upsert({
     where: { shop: session.shop },
     create: {
@@ -134,6 +141,14 @@ export async function upsertShopFromAdmin(session, admin) {
       uninstalledAt: null,
     },
   });
+
+  return {
+    isNewInstall: !wasInstalled,
+    email: details?.contactEmail || details?.email || null,
+    ownerName: details?.shopOwnerName || null,
+    shopName: details?.name || null,
+    shopDomain: session.shop,
+  };
 }
 
 export async function markShopUninstalled(shop) {

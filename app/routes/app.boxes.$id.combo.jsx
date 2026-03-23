@@ -284,7 +284,21 @@ export default function SpecificComboBoxPage() {
   const comboFormError = comboErrors.comboConfig;
   const comboStepErrors = comboErrors.comboStepSelections || {};
   const comboStepImgErrors = Object.fromEntries(Object.entries(comboErrors).filter(([k]) => k.startsWith("stepImage_")));
-  const comboSaved = comboFetcher.data?.comboSaved && !comboFetcher.data?.errors;
+
+  // Toast state
+  const [toast, setToast] = useState(null); // { type: "success"|"error", message: string }
+  useEffect(() => {
+    if (comboFetcher.data?.comboSaved) {
+      setToast({ type: "success", message: "Combo configuration saved successfully." });
+      const t = setTimeout(() => setToast(null), 3500);
+      return () => clearTimeout(t);
+    }
+    if (comboFetcher.data?.errors?.comboConfig) {
+      setToast({ type: "error", message: comboFetcher.data.errors.comboConfig });
+      const t = setTimeout(() => setToast(null), 4500);
+      return () => clearTimeout(t);
+    }
+  }, [comboFetcher.data]);
 
   // Sync removed image back into preview state
   const removedStepIndex = removeImageFetcher.data?.stepImageRemoved;
@@ -440,15 +454,19 @@ export default function SpecificComboBoxPage() {
       </div>
 
     <s-section>
-      {comboFormError && (
-        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "5px", padding: "10px 16px", marginBottom: "16px", color: "#991b1b", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
-          <span style={{ fontSize: "15px" }}>!</span>
-          {comboFormError}
+      {/* Toast notification */}
+      {toast && (
+        <div style={{ position: "fixed", top: "20px", right: "20px", zIndex: 99999, display: "flex", alignItems: "center", gap: "10px", padding: "13px 18px", borderRadius: "8px", boxShadow: "0 8px 28px rgba(0,0,0,0.18)", fontSize: "13px", fontWeight: "600", color: "#fff", background: toast.type === "success" ? "#166534" : "#991b1b", minWidth: "280px", maxWidth: "380px", animation: "cb-toast-in 0.25s ease" }}>
+          <AdminIcon type={toast.type === "success" ? "check-circle" : "alert-triangle"} size="small" style={{ color: "#fff", flexShrink: 0 }} />
+          <span style={{ flex: 1 }}>{toast.message}</span>
+          <button type="button" onClick={() => setToast(null)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", fontSize: "16px", lineHeight: 1, opacity: 0.7, padding: "0 0 0 4px" }}>×</button>
         </div>
       )}
-      {comboSaved && (
-        <div style={{ background: "#f0fdf4", border: "1px solid #86efac", borderRadius: "5px", padding: "10px 16px", marginBottom: "16px", color: "#166534", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
-          <AdminIcon type="check-circle" size="small" /> Combo configuration saved successfully.
+      <style>{`@keyframes cb-toast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+
+      {comboFormError && (
+        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "5px", padding: "10px 16px", marginBottom: "16px", color: "#991b1b", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ fontSize: "15px" }}>!</span> {comboFormError}
         </div>
       )}
 
@@ -456,7 +474,6 @@ export default function SpecificComboBoxPage() {
       <comboFetcher.Form id="combo-config-form" method="POST" encType="multipart/form-data" action={`/app/boxes/${box.id}/combo${location.search}`}>
         <input type="hidden" name="_action" value="save_combo" />
         <input type="hidden" name="comboStepsConfig" value={JSON.stringify({ ...comboConfig, bundlePrice: comboConfig.bundlePriceType === "dynamic" ? comboDynamicPrice : parseFloat(comboConfig.bundlePrice) || 0 })} />
-        {/* Step image file inputs — associated with this form but rendered near their UI via form= attribute */}
       </comboFetcher.Form>
 
       {/* Remove-image fetcher form (hidden) */}
@@ -465,10 +482,16 @@ export default function SpecificComboBoxPage() {
         <input id="remove-step-image-index" type="hidden" name="stepIndex" value="" />
       </removeImageFetcher.Form>
 
-      {/* Save button at top */}
+      {/* Save button at top right */}
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "20px" }}>
-        <button type="button" onClick={() => { const f = document.getElementById("combo-config-form"); if (f) f.requestSubmit(); }} style={{ background: "#000000", color: "#ffffff", border: "none", borderRadius: "6px", padding: "10px 24px", fontSize: "14px", fontWeight: "700", cursor: "pointer" }}>
-          {comboFetcher.state === "submitting" ? "Saving..." : "Save Combo Config"}
+        <button
+          type="button"
+          onClick={() => { const f = document.getElementById("combo-config-form"); if (f) f.requestSubmit(); }}
+          disabled={comboFetcher.state === "submitting"}
+          style={{ background: comboFetcher.state === "submitting" ? "#374151" : "#000000", color: "#ffffff", border: "none", borderRadius: "7px", padding: "11px 28px", fontSize: "14px", fontWeight: "700", cursor: comboFetcher.state === "submitting" ? "not-allowed" : "pointer", display: "inline-flex", alignItems: "center", gap: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.15)", transition: "background 0.15s" }}
+        >
+          <AdminIcon type="save" size="small" style={{ color: "#fff" }} />
+          {comboFetcher.state === "submitting" ? "Saving…" : "Save Combo Config"}
         </button>
       </div>
 
@@ -545,33 +568,26 @@ export default function SpecificComboBoxPage() {
                 )}
               </div>
             </div>
-            {/* Combo active toggle */}
-            <div style={{ padding: "10px 16px", borderTop: "1px solid #f3f4f6" }}>
-              <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", padding: "8px 10px", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "5px" }}>
-                <div>
-                  <div style={{ fontSize: "12px", fontWeight: "600", color: "#111827" }}>Combo active</div>
-                  <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "1px" }}>Show on storefront</div>
-                </div>
-                <input type="checkbox" checked={comboConfig.isActive} onChange={(e) => updateComboField("isActive", e.target.checked)} style={{ width: "16px", height: "16px", accentColor: "#000000", cursor: "pointer" }} />
-              </label>
             </div>
-          </div>
 
-          {/* Display Settings */}
+          {/* OPTIONS 2×2 grid */}
           <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-            <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#111827" }}>Display settings</div>
-            <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ padding: "11px 16px", borderBottom: "1px solid #f3f4f6", fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", display: "flex", alignItems: "center", gap: "6px" }}>
+              <AdminIcon type="settings" size="small" /> Options
+            </div>
+            <div style={{ padding: "12px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
               {[
-                { key: "showProductImages", label: "Show product images" },
-                { key: "showProgressBar",   label: "Show progress bar" },
-                { key: "allowReselection",  label: "Allow re-selection", hint: "Customers can change selection" },
+                { key: "isActive",          label: "Active on Storefront", desc: "Uncheck to hide from customers" },
+                { key: "showProductImages", label: "Show Product Images",  desc: "Display images in picker" },
+                { key: "showProgressBar",   label: "Show Progress Bar",    desc: "Display step progress indicator" },
+                { key: "allowReselection",  label: "Allow Re-selection",   desc: "Customers can change selection" },
               ].map((opt) => (
-                <label key={opt.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", padding: "8px 10px", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "5px" }}>
+                <label key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "10px 12px", background: comboConfig[opt.key] ? "#f0fdf4" : "#fff", border: `1.5px solid ${comboConfig[opt.key] ? "#86efac" : "#e5e7eb"}`, borderRadius: "7px", transition: "border-color 0.15s, background 0.15s" }}>
+                  <input type="checkbox" checked={comboConfig[opt.key]} onChange={(e) => updateComboField(opt.key, e.target.checked)} style={{ width: "15px", height: "15px", marginTop: "2px", accentColor: "#000", cursor: "pointer", flexShrink: 0 }} />
                   <div>
-                    <div style={{ fontSize: "12px", fontWeight: "600", color: "#111827" }}>{opt.label}</div>
-                    {opt.hint && <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "1px" }}>{opt.hint}</div>}
+                    <div style={{ fontSize: "12px", fontWeight: "600", color: "#111827", lineHeight: 1.3 }}>{opt.label}</div>
+                    <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>{opt.desc}</div>
                   </div>
-                  <input type="checkbox" checked={comboConfig[opt.key]} onChange={(e) => updateComboField(opt.key, e.target.checked)} style={{ width: "16px", height: "16px", accentColor: "#000000", cursor: "pointer" }} />
                 </label>
               ))}
             </div>
@@ -656,23 +672,33 @@ export default function SpecificComboBoxPage() {
                       </div>
                     )}
                     {step.collections.length > 0 && (step.scope || "collection") === "collection" && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "8px" }}>
-                        {step.collections.map((c) => (
-                          <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", background: "#000000", border: "1.5px solid #000000", borderRadius: "5px" }}>
-                            <span style={{ fontSize: "12px", color: "#ffffff", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "6px" }}><AdminIcon type="folder" size="small" style={{ color: "#ffffff" }} /> {c.title}</span>
-                            <button type="button" aria-label={`Remove ${c.title}`} onClick={() => updateComboStep(ai, "collections", step.collections.filter((x) => x.id !== c.id))} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", display: "inline-flex", alignItems: "center", justifyContent: "center" }}><AdminIcon type="x" size="small" style={{ color: "#dc2626" }} /></button>
-                          </div>
-                        ))}
+                      <div style={{ border: "1px solid #e5e7eb", borderRadius: "6px", marginTop: "10px", overflow: "hidden" }}>
+                        <div style={{ padding: "7px 12px", background: "#f9fafb", borderBottom: "1px solid #e5e7eb", fontSize: "10px", fontWeight: "700", color: "#6b7280", letterSpacing: "0.07em", textTransform: "uppercase" }}>
+                          Selected Collections
+                        </div>
+                        <div style={{ padding: "10px 12px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                          {step.collections.map((c) => (
+                            <span key={c.id} style={{ display: "inline-flex", alignItems: "center", gap: "5px", background: "#111827", color: "#fff", padding: "5px 10px", borderRadius: "5px", fontSize: "12px", fontWeight: "600" }}>
+                              {c.title}
+                              <button type="button" aria-label={`Remove ${c.title}`} onClick={() => updateComboStep(ai, "collections", step.collections.filter((x) => x.id !== c.id))} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", fontSize: "14px", lineHeight: 1, padding: "0 0 0 2px", opacity: 0.65, display: "inline-flex", alignItems: "center" }}>×</button>
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     )}
                     {(step.selectedProducts || []).length > 0 && (step.scope || "collection") === "product" && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "6px" }}>
-                        {step.selectedProducts.map((p) => (
-                          <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", background: "#000000", border: "1.5px solid #000000", borderRadius: "5px" }}>
-                            <span style={{ fontSize: "12px", color: "#ffffff", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "6px" }}><AdminIcon type="product" size="small" style={{ color: "#ffffff" }} /> {p.title} — ₹{parseFloat(p.price || 0).toLocaleString("en-IN")}</span>
-                            <button type="button" aria-label={`Remove ${p.title}`} onClick={() => updateComboStep(ai, "selectedProducts", step.selectedProducts.filter((x) => x.id !== p.id))} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", display: "inline-flex", alignItems: "center", justifyContent: "center" }}><AdminIcon type="x" size="small" style={{ color: "#dc2626" }} /></button>
-                          </div>
-                        ))}
+                      <div style={{ border: "1px solid #e5e7eb", borderRadius: "6px", marginTop: "10px", overflow: "hidden" }}>
+                        <div style={{ padding: "7px 12px", background: "#f9fafb", borderBottom: "1px solid #e5e7eb", fontSize: "10px", fontWeight: "700", color: "#6b7280", letterSpacing: "0.07em", textTransform: "uppercase" }}>
+                          Selected Products
+                        </div>
+                        <div style={{ padding: "10px 12px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                          {step.selectedProducts.map((p) => (
+                            <span key={p.id} style={{ display: "inline-flex", alignItems: "center", gap: "5px", background: "#111827", color: "#fff", padding: "5px 10px", borderRadius: "5px", fontSize: "12px", fontWeight: "600" }}>
+                              {p.title}
+                              <button type="button" aria-label={`Remove ${p.title}`} onClick={() => updateComboStep(ai, "selectedProducts", step.selectedProducts.filter((x) => x.id !== p.id))} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", fontSize: "14px", lineHeight: 1, padding: "0 0 0 2px", opacity: 0.65, display: "inline-flex", alignItems: "center" }}>×</button>
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>

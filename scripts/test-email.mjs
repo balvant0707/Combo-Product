@@ -134,21 +134,21 @@ console.log("Sending test emails...\n");
 // 1. Install email → merchant test account
 await send(
   USER_EMAIL,
-  "Welcome to Combo Product Builder 🎁 [TEST]",
+  "Welcome to MixBox – Box & Bundle Builder 🎁 [TEST]",
   installedHtml("Test Merchant", "test-store.myshopify.com"),
 );
 
 // 2. Uninstall email → merchant test account
 await send(
   USER_EMAIL,
-  "We're sad to see you go 😢 — Combo Product Builder [TEST]",
+  "We're sad to see you go 😢 — MixBox – Box & Bundle Builder [TEST]",
   uninstalledHtml("Test Merchant", "test-store.myshopify.com"),
 );
 
 // 3. Owner notification → internal
 await send(
   OWNER_EMAIL,
-  "✅ SMTP Test — Combo Product Builder",
+  "✅ SMTP Test — MixBox – Box & Bundle Builder",
   `<div style="font-family:Arial,sans-serif;padding:24px;background:#f0fdf4;border-radius:8px">
     <h2 style="color:#166534;margin:0 0 12px">SMTP Test Passed</h2>
     <p style="color:#374151;margin:0">Both install and uninstall templates were sent successfully to <strong>${USER_EMAIL}</strong>.</p>

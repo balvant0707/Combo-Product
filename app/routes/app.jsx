@@ -4,12 +4,53 @@ import { AppProvider } from "@shopify/shopify-app-react-router/react";
 import { authenticate } from "../shopify.server";
 import { upsertSessionFromAuth, upsertShopFromAdmin } from "../models/shop.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
+import { sendMail } from "../utils/mailer.server";
+import { installedEmailHtml } from "../emails/app-installed";
+import { ownerInstallNotifyHtml } from "../emails/owner-notify";
 
 export const loader = async ({ request }) => {
   const { session, admin } = await authenticate.admin(request);
 
   await upsertSessionFromAuth(session);
-  await upsertShopFromAdmin(session, admin);
+  const installInfo = await upsertShopFromAdmin(session, admin);
+
+  // Send install emails only on first install or reinstall
+  if (installInfo?.isNewInstall) {
+    const emailData = {
+      ownerName:  installInfo.ownerName,
+      shopName:   installInfo.shopName,
+      shopDomain: installInfo.shopDomain,
+      email:      installInfo.email,
+      plan:       installInfo.plan,
+      country:    installInfo.country,
+    };
+
+    const mailJobs = [];
+
+    if (emailData.email) {
+      mailJobs.push(
+        sendMail(
+          emailData.email,
+          `Welcome to MixBox – Box & Bundle Builder! 🎉`,
+          installedEmailHtml(emailData),
+        ).catch((err) => console.error("[install] merchant welcome email failed", err)),
+      );
+    }
+
+    const ownerEmail = process.env.APP_OWNER_EMAIL;
+    if (ownerEmail) {
+      mailJobs.push(
+        sendMail(
+          ownerEmail,
+          `🎉 New App Install: ${installInfo.shopName || installInfo.shopDomain}`,
+          ownerInstallNotifyHtml(emailData),
+        ).catch((err) => console.error("[install] owner notification failed", err)),
+      );
+    }
+
+    // Do not await — install emails must not block the page load / redirect
+    Promise.all(mailJobs);
+  }
 
   // eslint-disable-next-line no-undef
   return { apiKey: process.env.SHOPIFY_API_KEY || "" };

@@ -49,15 +49,26 @@ const transporter = nodemailer.createTransport({
 });
 
 const fromAddress = process.env.SMTP_USER;
-const from = `"${process.env.MAIL_FROM_NAME || "Combo Product Builder"}" <${fromAddress}>`;
+const from = `"${process.env.MAIL_FROM_NAME || "MixBox – Box & Bundle Builder"}" <${fromAddress}>`;
 const replyTo = process.env.MAIL_FROM_ADDRESS && process.env.MAIL_FROM_ADDRESS !== fromAddress
   ? process.env.MAIL_FROM_ADDRESS
   : undefined;
 
+// Inline logo so email clients always show it regardless of image blocking
+const logoPath = resolve(__dir, "../public/images/Bluk Bundle products 1.jpg");
+const logoBuffer = readFileSync(logoPath);
+const attachments = [{
+  filename: "logo.jpg",
+  content: logoBuffer,
+  cid: "mixbox-logo",
+  contentType: "image/jpeg",
+  contentDisposition: "inline",
+}];
+
 // ── Send ──────────────────────────────────────────────────────────────────────
 async function send(to, subject, html) {
   try {
-    const info = await transporter.sendMail({ from, to, subject, html, replyTo });
+    const info = await transporter.sendMail({ from, to, subject, html, replyTo, attachments });
     console.log(`  ✓ Sent to ${to} — MessageId: ${info.messageId}`);
   } catch (err) {
     console.error(`  ✗ Failed to ${to} — ${err.message} (code: ${err.code})`);

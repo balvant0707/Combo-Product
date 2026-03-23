@@ -1,5 +1,5 @@
 const APP_NAME = "MixBox – Box & Bundle Builder";
-const APP_LOGO = "https://combo-products.vercel.app/images/Bluk%20Bundle%20products%201.jpg";
+const APP_LOGO = "cid:mixbox-logo";
 
 /**
  * Owner alert email — new app install.

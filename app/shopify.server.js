@@ -7,6 +7,9 @@ import {
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import prisma, { ensureAppTables } from "./db.server";
 import { upsertSessionFromAuth, upsertShopFromAdmin } from "./models/shop.server";
+import { sendMail } from "./utils/mailer.server";
+import { installedEmailHtml } from "./emails/app-installed";
+import { ownerInstallNotifyHtml } from "./emails/owner-notify";
 
 const shouldEnsureAppTables =
   process.env.ENSURE_APP_TABLES === "true" ||
@@ -39,7 +42,35 @@ const shopify = shopifyApp({
   hooks: {
     afterAuth: async ({ session, admin }) => {
       await upsertSessionFromAuth(session);
-      await upsertShopFromAdmin(session, admin);
+      const shopInfo = await upsertShopFromAdmin(session, admin);
+
+      if (shopInfo.isNewInstall) {
+        const emailData = {
+          ownerName:  shopInfo.ownerName,
+          shopName:   shopInfo.shopName,
+          shopDomain: shopInfo.shopDomain,
+          email:      shopInfo.email,
+          plan:       shopInfo.plan,
+          country:    shopInfo.country,
+        };
+
+        if (shopInfo.email) {
+          sendMail(
+            shopInfo.email,
+            "Welcome to MixBox – Box & Bundle Builder 🎁",
+            installedEmailHtml(emailData),
+          ).catch((err) => console.error("[afterAuth] merchant install email failed", err));
+        }
+
+        const ownerEmail = process.env.APP_OWNER_EMAIL;
+        if (ownerEmail) {
+          sendMail(
+            ownerEmail,
+            `🎉 New Install: ${shopInfo.shopName || shopInfo.shopDomain}`,
+            ownerInstallNotifyHtml(emailData),
+          ).catch((err) => console.error("[afterAuth] owner install notification failed", err));
+        }
+      }
     },
   },
   ...(process.env.SHOP_CUSTOM_DOMAIN

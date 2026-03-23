@@ -1,12 +1,16 @@
 import nodemailer from "nodemailer";
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 
-// Resolve logo path — works in both dev and Vercel (public/ is at project root)
-const LOGO_PATH = resolve(__dir, "../../public/images/Bluk Bundle products 1.jpg");
+// Try multiple candidate paths so it works locally, on Vercel, and in any build output layout
+const LOGO_CANDIDATES = [
+  resolve(__dir, "../../public/images/Bluk Bundle products 1.jpg"), // local dev
+  resolve(process.cwd(), "public/images/Bluk Bundle products 1.jpg"), // Vercel / build root
+];
+const LOGO_PATH = LOGO_CANDIDATES.find(existsSync) ?? LOGO_CANDIDATES[0];
 
 let _logoBuffer = null;
 function getLogoBuffer() {

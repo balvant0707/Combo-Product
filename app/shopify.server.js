@@ -20,8 +20,8 @@ if (shouldEnsureAppTables) {
 }
 
 const prismaSessionStorage = new PrismaSessionStorage(prisma, {
-  connectionRetries: 10,
-  connectionRetryIntervalMs: 1000,
+  connectionRetries: 5,
+  connectionRetryIntervalMs: 2000,
 });
 
 const shopify = shopifyApp({

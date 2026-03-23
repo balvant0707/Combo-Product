@@ -31,26 +31,27 @@ function applyPrismaPoolParams(databaseUrl, serverless) {
     return databaseUrl;
   }
 
-  const defaultConnectionLimit = serverless ? 5 : null;
+  // Serverless: keep connection pool small to avoid exhausting MySQL max_connections
+  const defaultConnectionLimit = serverless ? 3 : null;
   const defaultPoolTimeout = serverless ? 30 : null;
 
-  const configuredConnectionLimit = asPositiveInt(
-    process.env.PRISMA_CONNECTION_LIMIT,
-  );
-  const configuredPoolTimeout = asPositiveInt(process.env.PRISMA_POOL_TIMEOUT);
+  const configuredConnectionLimit = asPositiveInt(process.env.PRISMA_CONNECTION_LIMIT);
+  const configuredPoolTimeout     = asPositiveInt(process.env.PRISMA_POOL_TIMEOUT);
 
   if (!parsedUrl.searchParams.has("connection_limit")) {
     const connectionLimit = configuredConnectionLimit ?? defaultConnectionLimit;
-    if (connectionLimit) {
-      parsedUrl.searchParams.set("connection_limit", String(connectionLimit));
-    }
+    if (connectionLimit) parsedUrl.searchParams.set("connection_limit", String(connectionLimit));
   }
 
   if (!parsedUrl.searchParams.has("pool_timeout")) {
     const poolTimeout = configuredPoolTimeout ?? defaultPoolTimeout;
-    if (poolTimeout) {
-      parsedUrl.searchParams.set("pool_timeout", String(poolTimeout));
-    }
+    if (poolTimeout) parsedUrl.searchParams.set("pool_timeout", String(poolTimeout));
+  }
+
+  // Always set a TCP connect timeout so Vercel functions fail fast instead of
+  // hanging for 30 s when the DB host is unreachable.
+  if (!parsedUrl.searchParams.has("connect_timeout")) {
+    parsedUrl.searchParams.set("connect_timeout", "10");
   }
 
   return parsedUrl.toString();

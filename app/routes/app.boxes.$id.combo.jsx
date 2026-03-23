@@ -66,7 +66,7 @@ const COLLECTION_PRODUCTS_QUERY = `#graphql
 const DEFAULT_COMBO_CONFIG = {
   type: 2,
   title: "Build Your Perfect Bundle",
-  subtitle: "Choose a product for each step",
+  subtitle: "",
   bundlePrice: 0,
   bundlePriceType: "manual",
   discountType: "percent",

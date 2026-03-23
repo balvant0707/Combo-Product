@@ -86,7 +86,7 @@ async function parseStepImages(formData, errors) {
 const DEFAULT_COMBO = {
   type: 2,
   title: "Build Your Perfect Bundle",
-  subtitle: "Choose a product for each step",
+  subtitle: "",
   bundlePrice: 0,
   bundlePriceType: "dynamic",
   isActive: true,

@@ -16,6 +16,13 @@ export const action = async ({ request }) => {
     select: { email: true, contactEmail: true, ownerName: true, name: true, plan: true, country: true },
   });
 
+  console.log(`[uninstall] shopRecord:`, {
+    found:        !!shopRecord,
+    email:        shopRecord?.email,
+    contactEmail: shopRecord?.contactEmail,
+    ownerEmail:   process.env.APP_OWNER_EMAIL,
+  });
+
   await markShopUninstalled(shop);
 
   // Webhook requests can trigger multiple times and after an app has already been uninstalled.

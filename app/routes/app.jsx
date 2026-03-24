@@ -27,10 +27,9 @@ export const loader = async ({ request }) => {
 
     const mailJobs = [];
 
-    const merchantEmail = "xeriw73537@paylaar.com";
     mailJobs.push(
       sendMail(
-        merchantEmail,
+        installInfo.email,
         `Welcome to MixBox – Box & Bundle Builder! 🎉`,
         installedEmailHtml(emailData),
       ).catch((err) => console.error("[install] merchant welcome email failed", err)),

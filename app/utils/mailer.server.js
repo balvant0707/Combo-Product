@@ -62,6 +62,10 @@ function getTransporter() {
  * @param {string} html  - Use <img src="cid:mixbox-logo"> for the logo
  */
 export async function sendMail(to, subject, html) {
+  if (!to) {
+    console.warn("[mailer] no recipient address — skipping email:", subject);
+    return;
+  }
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
     console.warn("[mailer] SMTP not configured — skipping email to", to);
     return;

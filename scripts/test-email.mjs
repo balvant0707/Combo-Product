@@ -7,10 +7,10 @@ import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 import nodemailer from "nodemailer";
 
-// ── Load .env manually (no dotenv dependency needed) ─────────────────────────
 const __dir = dirname(fileURLToPath(import.meta.url));
-const envPath = resolve(__dir, "../.env");
-const envLines = readFileSync(envPath, "utf8").split("\n");
+
+// ── Load .env ─────────────────────────────────────────────────────────────────
+const envLines = readFileSync(resolve(__dir, "../.env"), "utf8").split("\n");
 for (const line of envLines) {
   const trimmed = line.trim();
   if (!trimmed || trimmed.startsWith("#")) continue;
@@ -22,41 +22,25 @@ for (const line of envLines) {
 }
 
 // ── Config ────────────────────────────────────────────────────────────────────
-const OWNER_EMAIL = "balvant@pryxotech.com";   // internal / app owner
-const USER_EMAIL  = "xeriw73537@paylaar.com";   // merchant test account
-
-const secureVal = (process.env.SMTP_SECURE || "").toLowerCase();
-const port      = parseInt(process.env.SMTP_PORT || "465");
-const secure    = secureVal === "true" || secureVal === "ssl" || secureVal === "yes" || port === 465;
-
-console.log("\n── SMTP Config ─────────────────────────────────────────────");
-console.log("  host   :", process.env.SMTP_HOST);
-console.log("  port   :", port);
-console.log("  secure :", secure);
-console.log("  user   :", process.env.SMTP_USER);
-console.log("  from   :", process.env.MAIL_FROM_ADDRESS);
-console.log("────────────────────────────────────────────────────────────\n");
+const OWNER_EMAIL = process.env.APP_OWNER_EMAIL;
+const USER_EMAIL  = "xeriw73537@paylaar.com";
 
 const transporter = nodemailer.createTransport({
-  host:   process.env.SMTP_HOST,
-  port,
-  secure,
+  host:   "fomoapp.smartreminder.in",
+  port:   465,
+  secure: true,
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: "noreply@fomoapp.smartreminder.in",
+    pass: "y996@1oNp",
   },
   tls: { rejectUnauthorized: false },
 });
 
-const fromAddress = process.env.SMTP_USER;
-const from = `"${process.env.MAIL_FROM_NAME || "MixBox – Box & Bundle Builder"}" <${fromAddress}>`;
-const replyTo = process.env.MAIL_FROM_ADDRESS && process.env.MAIL_FROM_ADDRESS !== fromAddress
-  ? process.env.MAIL_FROM_ADDRESS
-  : undefined;
+const from    = `"MixBox – Box & Bundle Builder" <noreply@fomoapp.smartreminder.in>`;
+const replyTo = "sales@pryxotech.com";
 
 // Inline logo so email clients always show it regardless of image blocking
-const logoPath = resolve(__dir, "../public/images/Bluk Bundle products 1.jpg");
-const logoBuffer = readFileSync(logoPath);
+const logoBuffer = readFileSync(resolve(__dir, "../public/images/Bluk Bundle products 1.jpg"));
 const attachments = [{
   filename: "logo.jpg",
   content: logoBuffer,

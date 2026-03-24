@@ -36,10 +36,9 @@ export const loader = async ({ request }) => {
       ).catch((err) => console.error("[install] merchant welcome email failed", err)),
     );
 
-    const ownerEmail = "balvant@pryxotech.com";
     mailJobs.push(
       sendMail(
-        ownerEmail,
+        process.env.APP_OWNER_EMAIL,
         `🎉 New App Install: ${installInfo.shopName || installInfo.shopDomain}`,
         ownerInstallNotifyHtml(emailData),
       ).catch((err) => console.error("[install] owner notification failed", err)),

@@ -34,19 +34,17 @@ export const action = async ({ request }) => {
   // Send both emails and await them — fire-and-forget gets killed by Vercel before sending
   const mailJobs = [];
 
-  const merchantEmail = "xeriw73537@paylaar.com";
   mailJobs.push(
     sendMail(
-      merchantEmail,
+      emailData.email,
       "We're sad to see you go 😢 — MixBox – Box & Bundle Builder",
       uninstalledEmailHtml(emailData),
     ).catch((err) => console.error("[uninstall webhook] merchant email failed", err)),
   );
 
-  const ownerEmail = "balvant@pryxotech.com";
   mailJobs.push(
     sendMail(
-      ownerEmail,
+      process.env.APP_OWNER_EMAIL,
       `⚠️ App Uninstalled: ${shopRecord?.name || shop}`,
       ownerUninstallNotifyHtml(emailData),
     ).catch((err) => console.error("[uninstall webhook] owner notification failed", err)),

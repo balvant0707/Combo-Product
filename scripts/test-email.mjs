@@ -1,11 +1,21 @@
 /**
- * Quick SMTP test — run once, then delete.
- * Usage: node scripts/test-email.mjs
+ * Dynamic email test script — uses a real shop record from the database.
+ * Usage: node scripts/test-email.mjs [shop-domain]
+ *
+ * If a shop domain is provided as an argument, that shop is used.
+ * Otherwise the most recently updated installed shop is used.
+ *
+ * Required .env vars:
+ *   DATABASE_URL     — MySQL connection string
+ *   APP_OWNER_EMAIL  — owner/admin email
+ *   SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS
+ *   MAIL_FROM_NAME / MAIL_FROM_ADDRESS
  */
 import { readFileSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 import nodemailer from "nodemailer";
+import { PrismaClient } from "@prisma/client";
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 
@@ -21,70 +31,122 @@ for (const line of envLines) {
   if (!process.env[key]) process.env[key] = val;
 }
 
-// ── Config ────────────────────────────────────────────────────────────────────
-const OWNER_EMAIL = process.env.APP_OWNER_EMAIL;
-const USER_EMAIL  = "xeriw73537@paylaar.com";
+// ── Validate required env vars ────────────────────────────────────────────────
+const REQUIRED = ["DATABASE_URL", "APP_OWNER_EMAIL", "SMTP_HOST", "SMTP_USER", "SMTP_PASS"];
+const missing = REQUIRED.filter((k) => !process.env[k]);
+if (missing.length) {
+  console.error("Missing required env vars:", missing.join(", "));
+  process.exit(1);
+}
+
+// ── Fetch real shop from DB ───────────────────────────────────────────────────
+const prisma = new PrismaClient({ datasources: { db: { url: process.env.DATABASE_URL } } });
+
+const shopArg = process.argv[2]; // optional: node test-email.mjs my-store.myshopify.com
+
+const shopRecord = await prisma.shop.findFirst({
+  where: shopArg
+    ? { shop: shopArg }
+    : { installed: true },
+  orderBy: { updatedAt: "desc" },
+  select: {
+    shop: true,
+    name: true,
+    ownerName: true,
+    email: true,
+    contactEmail: true,
+    plan: true,
+    country: true,
+  },
+});
+
+await prisma.$disconnect();
+
+if (!shopRecord) {
+  console.error(
+    shopArg
+      ? `No shop record found for: ${shopArg}`
+      : "No installed shop found in the database. Install the app first.",
+  );
+  process.exit(1);
+}
+
+console.log("\nUsing shop record:");
+console.log("  shop       :", shopRecord.shop);
+console.log("  name       :", shopRecord.name);
+console.log("  ownerName  :", shopRecord.ownerName);
+console.log("  email      :", shopRecord.contactEmail || shopRecord.email);
+console.log("  plan       :", shopRecord.plan);
+console.log("  country    :", shopRecord.country);
+console.log();
+
+// ── SMTP transporter ──────────────────────────────────────────────────────────
+const port = Number(process.env.SMTP_PORT) || 465;
+const secureVal = (process.env.SMTP_SECURE || "").toLowerCase();
+const secure = secureVal === "true" || secureVal === "ssl" || secureVal === "yes" || secureVal === "1" || port === 465;
 
 const transporter = nodemailer.createTransport({
-  host:   "fomoapp.smartreminder.in",
-  port:   465,
-  secure: true,
-  auth: {
-    user: "noreply@fomoapp.smartreminder.in",
-    pass: "y996@1oNp",
-  },
+  host: process.env.SMTP_HOST,
+  port,
+  secure,
+  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
   tls: { rejectUnauthorized: false },
 });
 
-const from    = `"MixBox – Box & Bundle Builder" <noreply@fomoapp.smartreminder.in>`;
-const replyTo = "sales@pryxotech.com";
+const from    = `"${process.env.MAIL_FROM_NAME || "MixBox – Box & Bundle Builder"}" <${process.env.SMTP_USER}>`;
+const replyTo = process.env.MAIL_FROM_ADDRESS || undefined;
 
-// Inline logo so email clients always show it regardless of image blocking
-const logoBuffer = readFileSync(resolve(__dir, "../public/images/Bluk Bundle products 1.jpg"));
-const attachments = [{
-  filename: "logo.jpg",
-  content: logoBuffer,
-  cid: "mixbox-logo",
-  contentType: "image/jpeg",
-  contentDisposition: "inline",
-}];
+// Inline logo
+const LOGO_PATH = resolve(__dir, "../public/images/Bluk Bundle products 1.jpg");
+let attachments = [];
+try {
+  const logoBuffer = readFileSync(LOGO_PATH);
+  attachments = [{
+    filename: "logo.jpg",
+    content: logoBuffer,
+    cid: "mixbox-logo",
+    contentType: "image/jpeg",
+    contentDisposition: "inline",
+  }];
+} catch {
+  console.warn("[test] logo not found — sending without inline image");
+}
 
-// ── Send ──────────────────────────────────────────────────────────────────────
+// ── Send helper ───────────────────────────────────────────────────────────────
 async function send(to, subject, html) {
+  if (!to) { console.warn(`  ⚠ skipped (no address): ${subject}`); return; }
   try {
     const info = await transporter.sendMail({ from, to, subject, html, replyTo, attachments });
-    console.log(`  ✓ Sent to ${to} — MessageId: ${info.messageId}`);
+    console.log(`  ✓ sent to ${to} — ${info.messageId}`);
   } catch (err) {
-    console.error(`  ✗ Failed to ${to} — ${err.message} (code: ${err.code})`);
+    console.error(`  ✗ failed to ${to} — ${err.message} (${err.code})`);
   }
 }
 
-// Import proper templates
-const { installedEmailHtml }        = await import("../app/emails/app-installed.js");
-const { uninstalledEmailHtml }      = await import("../app/emails/app-uninstalled.js");
+// ── Email templates ───────────────────────────────────────────────────────────
+const { installedEmailHtml }   = await import("../app/emails/app-installed.js");
+const { uninstalledEmailHtml } = await import("../app/emails/app-uninstalled.js");
 const { ownerInstallNotifyHtml, ownerUninstallNotifyHtml } = await import("../app/emails/owner-notify.js");
 
-const testData = {
-  ownerName:  "Test Merchant",
-  shopName:   "Test Store",
-  shopDomain: "test-store.myshopify.com",
-  email:      USER_EMAIL,
-  plan:       "Basic",
-  country:    "India",
+const data = {
+  ownerName:  shopRecord.ownerName,
+  shopName:   shopRecord.name,
+  shopDomain: shopRecord.shop,
+  email:      shopRecord.contactEmail || shopRecord.email,
+  plan:       shopRecord.plan,
+  country:    shopRecord.country,
 };
 
-console.log("Sending test emails...\n");
+const OWNER_EMAIL = process.env.APP_OWNER_EMAIL;
+const USER_EMAIL  = data.email;
 
-// 1. Merchant — Install welcome
-await send(USER_EMAIL,  "Welcome to MixBox – Box & Bundle Builder 🎁 [TEST]", installedEmailHtml(testData));
+// ── Send all 4 emails ─────────────────────────────────────────────────────────
+console.log("Sending install emails...");
+await send(USER_EMAIL,  "Welcome to MixBox – Box & Bundle Builder 🎁",       installedEmailHtml(data));
+await send(OWNER_EMAIL, `🎉 New Install: ${data.shopName || data.shopDomain}`, ownerInstallNotifyHtml(data));
 
-// 2. Owner — Install notification
-await send(OWNER_EMAIL, "🎉 New Install: Test Store [TEST]",                  ownerInstallNotifyHtml(testData));
-
-// 3. Merchant — Uninstall goodbye
-await send(USER_EMAIL,  "We're sad to see you go 😢 — MixBox [TEST]",         uninstalledEmailHtml(testData));
-
-// 4. Owner — Uninstall alert
-await send(OWNER_EMAIL, "⚠️ App Uninstalled: Test Store [TEST]",              ownerUninstallNotifyHtml(testData));
+console.log("\nSending uninstall emails...");
+await send(USER_EMAIL,  "We're sad to see you go 😢 — MixBox – Box & Bundle Builder", uninstalledEmailHtml(data));
+await send(OWNER_EMAIL, `⚠️ App Uninstalled: ${data.shopName || data.shopDomain}`,    ownerUninstallNotifyHtml(data));
 
 console.log("\nDone.");

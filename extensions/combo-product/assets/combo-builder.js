@@ -49,6 +49,31 @@
     box._priceTextEl.textContent = formatPrice(amount || 0, currencySymbol);
   }
 
+  function setWizardStep2Preview(ctx, slots) {
+    if (!ctx._wizardDotEls || !ctx._wizardDotEls[1]) return;
+    var dotEl = ctx._wizardDotEls[1];
+    dotEl.innerHTML = '';
+    var filled = (slots || []).filter(Boolean);
+    if (!filled.length) { dotEl.textContent = '2'; return; }
+    var grid = document.createElement('div');
+    grid.className = 'cb-wizard-dot-grid';
+    var show = filled.slice(0, 4);
+    show.forEach(function (p) {
+      var cell = document.createElement('div');
+      cell.className = 'cb-wizard-dot-cell';
+      if (p.productImageUrl) {
+        var img = document.createElement('img');
+        img.src = p.productImageUrl;
+        img.alt = p.productTitle || '';
+        img.className = 'cb-wizard-dot-img';
+        cell.appendChild(img);
+      }
+      grid.appendChild(cell);
+    });
+    if (show.length === 1) grid.classList.add('cb-wizard-dot-grid--single');
+    dotEl.appendChild(grid);
+  }
+
   function resolveAddToCartLabel(settings) {
     var label = settings && settings.addToCartLabel != null
       ? String(settings.addToCartLabel).trim()
@@ -727,15 +752,27 @@
       var wizardEl = document.createElement('div');
       wizardEl.className = 'cb-wizard';
 
+      // Title above the steps row
+      var wizardTitle = document.createElement('div');
+      wizardTitle.className = 'cb-wizard-title';
+      wizardTitle.textContent = 'Build Your Box';
+      wizardEl.appendChild(wizardTitle);
+
+      // Horizontal steps row
+      var stepsRow = document.createElement('div');
+      stepsRow.className = 'cb-wizard-steps-row';
+
       var WIZARD_LABELS = ['Select Box', 'Select Products', 'Add to Cart'];
       var wizardDots = [];
       var wizardLines = [];
+      var wizardDotEls = [];
+      var wizardLabelEls = [];
 
       WIZARD_LABELS.forEach(function (label, i) {
         if (i > 0) {
           var line = document.createElement('div');
           line.className = 'cb-wizard-line';
-          wizardEl.appendChild(line);
+          stepsRow.appendChild(line);
           wizardLines.push(line);
         }
         var stepEl = document.createElement('div');
@@ -751,13 +788,18 @@
         lbl.textContent = label;
         stepEl.appendChild(lbl);
 
-        wizardEl.appendChild(stepEl);
+        stepsRow.appendChild(stepEl);
         wizardDots.push(stepEl);
+        wizardDotEls.push(dot);
+        wizardLabelEls.push(lbl);
       });
 
+      wizardEl.appendChild(stepsRow);
       wrapper.appendChild(wizardEl);
       ctx._wizardDots = wizardDots;
       ctx._wizardLines = wizardLines;
+      ctx._wizardDotEls = wizardDotEls;
+      ctx._wizardLabelEls = wizardLabelEls;
     }
 
     // Step 1 Heading
@@ -926,11 +968,13 @@
           // Reset wizard to Step 1 active
           if (ctx._wizardDots) {
             ctx._wizardDots[0].className = 'cb-wizard-step cb-wizard-step--active';
-            ctx._wizardDots[0].querySelector('.cb-wizard-dot').textContent = '1';
+            if (ctx._wizardDotEls && ctx._wizardDotEls[0]) { ctx._wizardDotEls[0].innerHTML = '1'; }
+            if (ctx._wizardLabelEls && ctx._wizardLabelEls[0]) ctx._wizardLabelEls[0].textContent = 'Select Box';
             ctx._wizardDots[1].className = 'cb-wizard-step';
-            ctx._wizardDots[1].querySelector('.cb-wizard-dot').textContent = '2';
+            if (ctx._wizardDotEls && ctx._wizardDotEls[1]) { ctx._wizardDotEls[1].innerHTML = '2'; }
+            if (ctx._wizardLabelEls && ctx._wizardLabelEls[1]) ctx._wizardLabelEls[1].textContent = 'Select Products';
             ctx._wizardDots[2].className = 'cb-wizard-step';
-            ctx._wizardDots[2].querySelector('.cb-wizard-dot').textContent = '3';
+            if (ctx._wizardDotEls && ctx._wizardDotEls[2]) { ctx._wizardDotEls[2].innerHTML = '3'; }
             if (ctx._wizardLines[0]) ctx._wizardLines[0].className = 'cb-wizard-line';
             if (ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line';
           }
@@ -942,11 +986,31 @@
 
       if (ctx._wizardDots) {
         ctx._wizardDots[0].className = 'cb-wizard-step cb-wizard-step--done';
-        ctx._wizardDots[0].querySelector('.cb-wizard-dot').innerHTML = '&#10003;';
+        // Show box image or checkmark in Step 1 dot
+        if (ctx._wizardDotEls && ctx._wizardDotEls[0]) {
+          ctx._wizardDotEls[0].innerHTML = '';
+          var bannerSrc = getBoxCardBannerSrc(box, ctx);
+          if (bannerSrc) {
+            var boxImg = document.createElement('img');
+            boxImg.src = bannerSrc;
+            boxImg.alt = box.displayTitle || box.boxName || '';
+            boxImg.className = 'cb-wizard-dot-img';
+            ctx._wizardDotEls[0].appendChild(boxImg);
+          } else {
+            ctx._wizardDotEls[0].innerHTML = '&#10003;';
+          }
+        }
+        // Show box name in Step 1 label
+        if (ctx._wizardLabelEls && ctx._wizardLabelEls[0]) {
+          ctx._wizardLabelEls[0].textContent = box.displayTitle || box.boxName || 'Box Selected';
+        }
         ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--active';
+        // Reset Step 2 dot content if returning from a previous completion
+        if (ctx._wizardDotEls && ctx._wizardDotEls[1]) { ctx._wizardDotEls[1].innerHTML = '2'; }
+        if (ctx._wizardLabelEls && ctx._wizardLabelEls[1]) ctx._wizardLabelEls[1].textContent = 'Select Products';
         // Reset Step 3 in case user re-selects a box after completing
         ctx._wizardDots[2].className = 'cb-wizard-step';
-        ctx._wizardDots[2].querySelector('.cb-wizard-dot').textContent = '3';
+        if (ctx._wizardDotEls && ctx._wizardDotEls[2]) { ctx._wizardDotEls[2].innerHTML = '3'; }
         if (ctx._wizardLines[0]) ctx._wizardLines[0].className = 'cb-wizard-line cb-wizard-line--done';
         if (ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line';
       }
@@ -1287,14 +1351,14 @@
         }
         if (allFilled && ctx._wizardDots && ctx._wizardDots[2]) {
           ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--done';
-          ctx._wizardDots[1].querySelector('.cb-wizard-dot').innerHTML = '&#10003;';
+          setWizardStep2Preview(ctx, slots);
           ctx._wizardDots[2].className = 'cb-wizard-step cb-wizard-step--active';
           if (ctx._wizardLines && ctx._wizardLines[1]) {
             ctx._wizardLines[1].className = 'cb-wizard-line cb-wizard-line--done';
           }
         } else if (!allFilled && ctx._wizardDots && ctx._wizardDots[2]) {
           ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--active';
-          ctx._wizardDots[1].querySelector('.cb-wizard-dot').textContent = '2';
+          if (ctx._wizardDotEls && ctx._wizardDotEls[1]) ctx._wizardDotEls[1].innerHTML = '2';
           ctx._wizardDots[2].className = 'cb-wizard-step';
           if (ctx._wizardLines && ctx._wizardLines[1]) {
             ctx._wizardLines[1].className = 'cb-wizard-line';
@@ -2009,12 +2073,12 @@
         }
         if (allFilled && ctx._wizardDots && ctx._wizardDots[2]) {
           ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--done';
-          ctx._wizardDots[1].querySelector('.cb-wizard-dot').innerHTML = '&#10003;';
+          setWizardStep2Preview(ctx, slots);
           ctx._wizardDots[2].className = 'cb-wizard-step cb-wizard-step--active';
           if (ctx._wizardLines && ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line cb-wizard-line--done';
         } else if (!allFilled && ctx._wizardDots && ctx._wizardDots[2]) {
           ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--active';
-          ctx._wizardDots[1].querySelector('.cb-wizard-dot').textContent = '2';
+          if (ctx._wizardDotEls && ctx._wizardDotEls[1]) ctx._wizardDotEls[1].innerHTML = '2';
           ctx._wizardDots[2].className = 'cb-wizard-step';
           if (ctx._wizardLines && ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line';
         }

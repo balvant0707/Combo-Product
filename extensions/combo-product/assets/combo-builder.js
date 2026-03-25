@@ -1676,17 +1676,40 @@
       });
     }
 
+    function doCheckout() {
+      if (slots.filter(Boolean).length < box.itemCount) {
+        var stepEls = slotSteps.querySelectorAll('.cb-slot-step');
+        slots.forEach(function (p, idx) {
+          if (!p && stepEls[idx * 2]) {
+            stepEls[idx * 2].classList.add('cb-slot-step--error');
+            setTimeout(function () { stepEls[idx * 2].classList.remove('cb-slot-step--error'); }, 700);
+          }
+        });
+        return;
+      }
+      var rp = slots.map(function (p) {
+        if (!p || (p.variantIds && p.variantIds.length > 0)) return Promise.resolve();
+        if (!p.productHandle) return Promise.resolve();
+        return new Promise(function (resolve) {
+          fetchProductData(p.productHandle, function (err, productData) {
+            if (!err && productData && productData.variants && productData.variants.length > 0) {
+              p.variantIds = [String(productData.variants[0].id)];
+            }
+            resolve();
+          });
+        });
+      });
+      Promise.all(rp).then(function () {
+        addToCart(box, slots, sessionId, giftInput ? giftInput.value : null, step3CheckoutBtn, null, 'Checkout \u2192', ctx.currencySymbol, ctx.apiBase, ctx.shop, null, '/checkout');
+      });
+    }
+
     inlineCartBtn.addEventListener('click', doAddToCart);
 
-    // Steps mode: wire step3 buttons; checkout goes to /checkout after adding to cart
+    // Steps mode: wire step3 buttons
     if (ctx.layoutMode === 'steps') {
       if (step3CartBtn) step3CartBtn.addEventListener('click', doAddToCart);
-      if (step3CheckoutBtn) {
-        step3CheckoutBtn.addEventListener('click', function () {
-          doAddToCart();
-          setTimeout(function () { window.location.href = '/checkout'; }, 800);
-        });
-      }
+      if (step3CheckoutBtn) step3CheckoutBtn.addEventListener('click', doCheckout);
     }
 
     // Create sticky footer only in grid mode
@@ -2368,7 +2391,7 @@
 
   // ─── Add to Cart ──────────────────────────────────────────────────────────────
 
-  function addToCart(box, slots, sessionId, giftMessage, inlineBtn, stickyBtn, readyLabel, currencySymbol, apiBase, shop, onSuccess) {
+  function addToCart(box, slots, sessionId, giftMessage, inlineBtn, stickyBtn, readyLabel, currencySymbol, apiBase, shop, onSuccess, checkoutUrl) {
     var resolvedReadyLabel = readyLabel || 'Add To Cart';
     var resolvedCurrencySymbol = currencySymbol || '\u20B9';
     var resolvedApiBase = String(apiBase || DEFAULT_API_BASE || '').replace(/\/+$/, '');
@@ -2761,6 +2784,13 @@
         document.dispatchEvent(new CustomEvent('cart:refresh', { bubbles: true }));
         document.dispatchEvent(new CustomEvent('cart:updated', { bubbles: true }));
 
+        if (checkoutUrl) {
+          hidePageLoader(true);
+          if (typeof onSuccess === 'function') onSuccess();
+          setTimeout(function () { window.location.href = checkoutUrl; }, 600);
+          return;
+        }
+
         var opened = tryOpenThemeCartDrawer();
         if (!opened) {
           hidePageLoader(true);
@@ -2773,7 +2803,7 @@
         return waitForComboCartPresentation(selectedItemsCount).then(function () {
           hidePageLoader(true);
           if (typeof onSuccess === 'function') onSuccess();
-          setBtns('success', 'Added to Cart! âœ“');
+          setBtns('success', 'Added to Cart! âœ”');
         });
       })
       .catch(function (err) {

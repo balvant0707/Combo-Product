@@ -1234,36 +1234,37 @@
 /* ── Wizard Progress Bar (Steps Mode) ─────────────────── */
 .cb-wizard {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   gap: 0;
-  margin: 0 auto 28px;
-  padding: 20px 24px 16px;
-  max-width: 480px;
+  margin: 0 auto 32px;
+  padding: 28px 32px 12px;
+  max-width: 560px;
 }
 
 .cb-wizard-step {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-shrink: 0;
+  width: 90px;
 }
 
 .cb-wizard-dot {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 2.5px solid var(--cb-border, #e5e7eb);
   background: var(--cb-bg, #fff);
   color: var(--cb-text-muted, #9ca3af);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 800;
   font-family: var(--cb-font, sans-serif);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  transition: background 0.25s, border-color 0.25s, color 0.25s;
 }
 
 .cb-wizard-label {
@@ -1272,18 +1273,19 @@
   color: var(--cb-text-muted, #9ca3af);
   font-family: var(--cb-font, sans-serif);
   text-align: center;
-  white-space: nowrap;
-  transition: color 0.2s;
+  white-space: normal;
+  line-height: 1.3;
+  max-width: 80px;
+  transition: color 0.25s;
 }
 
 .cb-wizard-line {
   flex: 1;
   height: 2.5px;
   background: var(--cb-border, #e5e7eb);
-  min-width: 40px;
-  margin: 0 4px;
-  margin-bottom: 29px; /* align with dot center */
-  transition: background 0.2s;
+  min-width: 24px;
+  margin: 21px 6px 0; /* top = (44px dot / 2) - (2.5px line / 2) ≈ 21px */
+  transition: background 0.25s;
 }
 
 .cb-wizard-line--done {
@@ -1370,10 +1372,11 @@
 }
 
 @media (max-width: 480px) {
-  .cb-wizard { padding: 16px 12px 12px; }
-  .cb-wizard-dot { width: 34px; height: 34px; font-size: 13px; }
-  .cb-wizard-line { min-width: 24px; margin-bottom: 25px; }
-  .cb-wizard-label { font-size: 10px; }
+  .cb-wizard { padding: 20px 12px 8px; }
+  .cb-wizard-step { width: 72px; }
+  .cb-wizard-dot { width: 36px; height: 36px; font-size: 13px; }
+  .cb-wizard-line { min-width: 16px; margin-top: 17px; } /* (36/2) - (2.5/2) ≈ 17px */
+  .cb-wizard-label { font-size: 10px; max-width: 68px; }
   .cb-step3-buttons { flex-direction: column; }
   .cb-step3-cart-btn, .cb-step3-checkout-btn { width: 100%; }
 }

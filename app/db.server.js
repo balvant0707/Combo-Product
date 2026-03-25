@@ -31,9 +31,11 @@ function applyPrismaPoolParams(databaseUrl, serverless) {
     return databaseUrl;
   }
 
-  // Serverless: keep connection pool small to avoid exhausting MySQL max_connections
-  const defaultConnectionLimit = serverless ? 3 : null;
-  const defaultPoolTimeout = serverless ? 30 : null;
+  // Serverless: each function instance needs only 1 connection.
+  // Multiple concurrent invocations × 3 connections each quickly exhausts MySQL
+  // max_connections. 1 connection per instance + pool_timeout=10 avoids this.
+  const defaultConnectionLimit = serverless ? 1 : null;
+  const defaultPoolTimeout = serverless ? 10 : null;
 
   const configuredConnectionLimit = asPositiveInt(process.env.PRISMA_CONNECTION_LIMIT);
   const configuredPoolTimeout     = asPositiveInt(process.env.PRISMA_POOL_TIMEOUT);
@@ -217,11 +219,11 @@ const ENSURE_APP_SETTINGS_COLUMNS_SQL = [
   "ALTER TABLE `app_settings` ADD COLUMN IF NOT EXISTS `productCardsPerRow` INTEGER NULL DEFAULT 4;",
 ];
 
-let ensureTablesPromise;
-
+// Persist across hot-reloads AND across warm serverless invocations in the
+// same container so the DDL only fires once per process lifetime.
 export function ensureAppTables() {
-  if (!ensureTablesPromise) {
-    ensureTablesPromise = (async () => {
+  if (!globalThis.__ensureTablesPromise) {
+    globalThis.__ensureTablesPromise = (async () => {
       await prisma.$executeRawUnsafe(ENSURE_SESSION_TABLE_SQL);
       await prisma.$executeRawUnsafe(ENSURE_SHOP_TABLE_SQL);
       await prisma.$executeRawUnsafe(ENSURE_COMBO_BOX_TABLE_SQL);
@@ -234,7 +236,7 @@ export function ensureAppTables() {
     })();
   }
 
-  return ensureTablesPromise;
+  return globalThis.__ensureTablesPromise;
 }
 
 export default prisma;

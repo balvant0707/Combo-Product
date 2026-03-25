@@ -731,23 +731,39 @@
       var wizardEl = document.createElement('div');
       wizardEl.className = 'cb-wizard';
 
-      // Title above the steps row
+      // Header row: Change box btn (left) + title
+      var wizardHeader = document.createElement('div');
+      wizardHeader.className = 'cb-wizard-header';
+
+      var wizardChangeBtn = document.createElement('button');
+      wizardChangeBtn.type = 'button';
+      wizardChangeBtn.className = 'cb-change-box-btn';
+      wizardChangeBtn.innerHTML = '&#8592; Change box';
+      wizardChangeBtn.style.display = 'none';
+      wizardHeader.appendChild(wizardChangeBtn);
+      ctx._changeBoxBtn = wizardChangeBtn;
+
       var wizardTitle = document.createElement('div');
       wizardTitle.className = 'cb-wizard-title';
       wizardTitle.textContent = 'Build Your Box';
-      wizardEl.appendChild(wizardTitle);
+      wizardHeader.appendChild(wizardTitle);
+      wizardEl.appendChild(wizardHeader);
 
       // Horizontal steps row
       var stepsRow = document.createElement('div');
       stepsRow.className = 'cb-wizard-steps-row';
 
-      var WIZARD_LABELS = ['Select Box', 'Select Products', 'Add to Cart'];
+      var WIZARD_STEP_DEFS = [
+        { line1: 'SELECT', line2: 'BOX' },
+        { line1: 'SELECT', line2: 'PRODUCT' },
+        { line1: 'ADD TO', line2: 'CART' }
+      ];
       var wizardDots = [];
       var wizardLines = [];
       var wizardDotEls = [];
       var wizardLabelEls = [];
 
-      WIZARD_LABELS.forEach(function (label, i) {
+      WIZARD_STEP_DEFS.forEach(function (def, i) {
         if (i > 0) {
           var line = document.createElement('div');
           line.className = 'cb-wizard-line';
@@ -761,14 +777,31 @@
         indicator.className = 'cb-wizard-indicator';
         stepEl.appendChild(indicator);
 
+        // Step 1: content area for selected box image + name
+        if (i === 0) {
+          var s1Content = document.createElement('div');
+          s1Content.className = 'cb-wizard-step-content';
+          s1Content.style.display = 'none';
+          var s1Img = document.createElement('img');
+          s1Img.className = 'cb-wizard-step-thumb';
+          s1Img.alt = '';
+          s1Content.appendChild(s1Img);
+          var s1Name = document.createElement('div');
+          s1Name.className = 'cb-wizard-step-box-name';
+          s1Content.appendChild(s1Name);
+          stepEl.appendChild(s1Content);
+          ctx._wizardStep1Content = s1Content;
+          ctx._wizardStep1Img = s1Img;
+          ctx._wizardStep1Name = s1Name;
+        }
+
         var stepLbl = document.createElement('div');
         stepLbl.className = 'cb-wizard-step-label';
-        stepLbl.innerHTML = i === 0 ? 'STEP' : 'STEP<br>' + (i + 1);
+        stepLbl.innerHTML = def.line1 + '<br>' + def.line2;
         stepEl.appendChild(stepLbl);
 
-        var lbl = document.createElement('div'); // keep for ctx._wizardLabelEls ref
+        var lbl = document.createElement('div');
         lbl.className = 'cb-wizard-label';
-        lbl.textContent = label;
 
         stepsRow.appendChild(stepEl);
         wizardDots.push(stepEl);
@@ -932,22 +965,17 @@
       if (ctx._step1Head) ctx._step1Head.style.display = 'none';
       if (ctx._boxGrid) ctx._boxGrid.style.display = 'none';
 
-      // Show "← Change box" back link (create once, re-use on re-select)
-      if (!ctx._changeBoxBtn) {
-        var changeBoxBtn = document.createElement('button');
-        changeBoxBtn.type = 'button';
-        changeBoxBtn.className = 'cb-change-box-btn';
-        changeBoxBtn.innerHTML = '\u2190 Change box';
-        wrapper.insertBefore(changeBoxBtn, builderArea);
-        ctx._changeBoxBtn = changeBoxBtn;
-        changeBoxBtn.addEventListener('click', function () {
-          // Show Step 1 again, hide builder
+      // Wire Change box button (pre-created in renderWidget wizard header)
+      if (ctx._changeBoxBtn && !ctx._changeBoxBtnWired) {
+        ctx._changeBoxBtnWired = true;
+        var _cbBtn = ctx._changeBoxBtn;
+        _cbBtn.addEventListener('click', function () {
           if (ctx._step1Head) ctx._step1Head.style.display = '';
           if (ctx._boxGrid) ctx._boxGrid.style.display = '';
           builderArea.style.display = 'none';
           builderArea.innerHTML = '';
-          changeBoxBtn.style.display = 'none';
-          // Reset wizard to Step 1 active
+          _cbBtn.style.display = 'none';
+          if (ctx._wizardStep1Content) ctx._wizardStep1Content.style.display = 'none';
           if (ctx._wizardDots) {
             ctx._wizardDots[0].className = 'cb-wizard-step cb-wizard-step--active';
             ctx._wizardDots[1].className = 'cb-wizard-step';
@@ -955,11 +983,10 @@
             if (ctx._wizardLines[0]) ctx._wizardLines[0].className = 'cb-wizard-line';
             if (ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line';
           }
-          // Clear active box card highlight
           document.querySelectorAll('.cb-box-card').forEach(function (c) { c.classList.remove('cb-box-card--active'); });
         });
       }
-      ctx._changeBoxBtn.style.display = '';
+      if (ctx._changeBoxBtn) ctx._changeBoxBtn.style.display = '';
 
       if (ctx._wizardDots) {
         ctx._wizardDots[0].className = 'cb-wizard-step cb-wizard-step--done';
@@ -967,6 +994,20 @@
         ctx._wizardDots[2].className = 'cb-wizard-step';
         if (ctx._wizardLines[0]) ctx._wizardLines[0].className = 'cb-wizard-line cb-wizard-line--done';
         if (ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line';
+        // Show box image + name in Step 1 box
+        if (ctx._wizardStep1Content) {
+          var bSrc = getBoxCardBannerSrc(box, ctx);
+          if (bSrc && ctx._wizardStep1Img) {
+            ctx._wizardStep1Img.src = bSrc;
+            ctx._wizardStep1Img.style.display = 'block';
+          } else if (ctx._wizardStep1Img) {
+            ctx._wizardStep1Img.style.display = 'none';
+          }
+          if (ctx._wizardStep1Name) {
+            ctx._wizardStep1Name.textContent = box.displayTitle || box.boxName || '';
+          }
+          ctx._wizardStep1Content.style.display = 'flex';
+        }
       }
     }
 

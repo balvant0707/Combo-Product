@@ -4,7 +4,9 @@
       "Bash(shopify app:*)",
       "Bash(node -e \":*)",
       "Read(//tmp/**)",
-      "Read(//c/Users/BALVANT/AppData/Local/Temp/**)"
+      "Read(//c/Users/BALVANT/AppData/Local/Temp/**)",
+      "Bash(node \"c:/shopify apps/combo-product/patch_wizard.js\")",
+      "Bash(node \"c:/shopify apps/combo-product/patch_wizard.cjs\")"
     ]
   }
 }

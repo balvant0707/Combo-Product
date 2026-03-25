@@ -37,6 +37,18 @@
   --cb-transition:   0.15s ease;
 }
 
+/* ── Widget root: isolate from theme grid / flex layouts ── */
+.combo-builder-root,
+.combo-builder-root.cb-loaded {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  flex: none !important;
+  grid-column: 1 / -1 !important;
+  box-sizing: border-box !important;
+}
+
+
 /* ── Loading ──────────────────────────────────────────── */
 .combo-builder-loading {
   display: flex;
@@ -1223,11 +1235,19 @@
 .cb-wizard {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   margin: 0 auto 32px;
-  padding: 20px 16px 16px;
+  padding: 0;
   max-width: 760px;
   overflow: hidden;
+}
+
+/* Header row: Change-box btn left + title */
+.cb-wizard-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 0 16px;
 }
 
 .cb-wizard-title {
@@ -1237,15 +1257,14 @@
   color: var(--cb-text);
   letter-spacing: 2px;
   text-transform: uppercase;
-  margin-bottom: 24px;
+  margin: 0;
 }
 
 .cb-wizard-steps-row {
   display: flex;
-  align-items: center;
+  align-items: stretch; /* lines stretch to box height */
   width: 100%;
-  gap: 0;
-  overflow: hidden;
+  gap: 2rem;
 }
 
 /* Each step: wide rectangular box */
@@ -1255,48 +1274,89 @@
   background: #ede9e5;
   position: relative;
   min-width: 0;
+  z-index: 1;
   transition: background 0.25s;
 }
 
-/* Thin connecting line between boxes */
+/* Line element = white gap with thin line inside via ::after */
 .cb-wizard-line {
-  width: 48px;
   flex-shrink: 0;
+  width: 32px;
+  background: transparent; /* let page background show through */
+  align-self: stretch;     /* same height as step boxes */
+  position: relative;
+  transition: none;
+}
+.cb-wizard-line::after {
+  content: '';
+  position: absolute;
+  bottom: 33px; /* aligns with indicator circle center */
+  left: 0;
+  right: 0;
   height: 1.5px;
   background: #d4c5b0;
-  margin: 0;
   transition: background 0.25s;
 }
-.cb-wizard-line--done {
+.cb-wizard-line--done::after {
   background: var(--cb-primary, #2A7A4F);
 }
 
-/* Indicator circle — left-center of each box */
+/* Indicator circle — sits on the horizontal connecting line (bottom area) */
 .cb-wizard-indicator {
   position: absolute;
-  left: 24px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
+  left: 16px;
+  bottom: 28px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: #c5b9ab;
-  transition: background 0.25s, border 0.25s, box-shadow 0.25s;
+  transition: background 0.25s, width 0.25s, height 0.25s, border 0.25s, box-shadow 0.25s;
+  z-index: 2;
 }
 
-/* STEP N label — bottom-left inside the box */
+/* STEP labels — bottom-left, next to indicator */
 .cb-wizard-step-label {
   position: absolute;
-  left: 16px;
+  left: 34px;
   bottom: 14px;
   font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 1.8px;
+  font-weight: 800 !important;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: #b5a898;
-  line-height: 1.3;
+  color: #b5a898 !important;
+  line-height: 1.25;
   transition: color 0.25s;
 }
+
+/* Step 1 content: box image + name shown when done */
+.cb-wizard-step-content {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+.cb-wizard-step-thumb {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: block;
+}
+.cb-wizard-step-box-name {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--cb-text, #0f172a);
+  line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
 
 /* Hidden — kept for JS reference compatibility */
 .cb-wizard-label { display: none; }
@@ -1312,15 +1372,16 @@
   background: #eae5e0;
 }
 .cb-wizard-step--active .cb-wizard-indicator {
-  width: 20px;
-  height: 20px;
-  left: 23px;
-  background: transparent;
-  border: 3px solid var(--cb-primary, #2A7A4F);
-  box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 6px var(--cb-primary, #2A7A4F);
+  width: 16px;
+  height: 16px;
+  left: 13px;
+  bottom: 26px;
+  background: var(--cb-primary, #2A7A4F);
+  border: 3px solid rgba(255,255,255,0.9);
+  box-shadow: 0 0 0 2px var(--cb-primary, #2A7A4F);
 }
 .cb-wizard-step--active .cb-wizard-step-label {
-  color: var(--cb-primary, #2A7A4F);
+  color: var(--cb-primary, #2A7A4F) !important;
 }
 
 /* Done step */
@@ -1328,19 +1389,25 @@
   background: #e6e2de;
 }
 .cb-wizard-step--done .cb-wizard-indicator {
+  width: 12px;
+  height: 12px;
+  left: 15px;
+  bottom: 27px;
   background: var(--cb-primary, #2A7A4F);
 }
 .cb-wizard-step--done .cb-wizard-step-label {
-  color: var(--cb-primary, #2A7A4F);
+  color: var(--cb-primary, #2A7A4F) !important;
 }
 
 /* Change Box back link */
 .cb-change-box-btn {
-  display: inline-flex;
-  align-items: center;
+  display: inline-flex !important;
+  align-items: center !important;
   gap: 5px;
-  background: none;
-  border: none;
+  background: none !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
   padding: 0 0 16px;
   font-size: 13px;
   font-weight: 600;
@@ -1423,10 +1490,15 @@
 @media (max-width: 540px) {
   .cb-wizard { padding: 16px 8px 10px; }
   .cb-wizard-step { height: 80px; }
-  .cb-wizard-indicator { width: 14px; height: 14px; left: 12px; }
-  .cb-wizard-step--active .cb-wizard-indicator { width: 16px; height: 16px; left: 11px; }
-  .cb-wizard-line { width: 20px; }
-  .cb-wizard-step-label { font-size: 8px; letter-spacing: 1px; left: 10px; bottom: 8px; }
+  .cb-wizard-indicator { width: 8px; height: 8px; left: 10px; bottom: 20px; }
+  .cb-wizard-step--active .cb-wizard-indicator { width: 13px; height: 13px; left: 8px; bottom: 18px; }
+  .cb-wizard-step--done .cb-wizard-indicator { width: 10px; height: 10px; left: 9px; bottom: 19px; }
+  .cb-wizard-line { width: 12px; }
+  .cb-wizard-line::after { bottom: 24px; }
+  .cb-wizard-step-label { font-size: 8px; letter-spacing: 1px; left: 26px; bottom: 8px; }
+  .cb-wizard-step-content { top: 6px; left: 8px; right: 8px; }
+  .cb-wizard-step-thumb { width: 28px; height: 28px; }
+  .cb-wizard-step-box-name { font-size: 8px; }
   .cb-step3-buttons { flex-direction: column; gap: 10px; }
   .cb-step3-cart-btn, .cb-step3-checkout-btn { width: 100%; justify-content: center; }
 }

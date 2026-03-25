@@ -46,7 +46,6 @@
   padding: 56px 48px;
   color: var(--cb-text-muted);
   font-size: 14px;
-  font-family: var(--cb-font);
 }
 
 .combo-builder-spinner {
@@ -91,7 +90,6 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--cb-text);
-  font-family: var(--cb-font);
 }
 
 /* ── Wrapper ──────────────────────────────────────────── */
@@ -114,7 +112,6 @@
   margin: 0 0 28px;
   letter-spacing: -0.5px;
   line-height: 1.2;
-  font-family: var(--cb-font);
 }
 
 /* ── Box Card Grid ────────────────────────────────────── */
@@ -201,14 +198,12 @@
   font-weight: 500;
   color: var(--cb-text-muted);
   margin-bottom: 4px;
-  font-family: var(--cb-font);
 }
 
 .cb-box-price-text {
   font-size: 22px;
   font-weight: 800;
   color: var(--cb-text);
-  font-family: var(--cb-font);
   letter-spacing: -0.5px;
   margin-bottom: 4px;
 }
@@ -217,7 +212,6 @@
   font-size: 15px;
   font-weight: 700;
   color: var(--cb-text);
-  font-family: var(--cb-font);
   line-height: 1.3;
   margin-bottom: 4px;
   word-break: break-word;
@@ -255,7 +249,6 @@
   text-transform: uppercase;
   cursor: pointer;
   transition: background var(--cb-transition);
-  font-family: var(--cb-font);
 }
 
 .cb-box-cta-btn:hover { background: var(--cb-primary); }
@@ -282,7 +275,6 @@
   padding: 48px;
   color: var(--cb-text-muted);
   font-size: 14px;
-  font-family: var(--cb-font);
 }
 
 .cb-error {
@@ -290,7 +282,6 @@
   font-size: 13px;
   text-align: center;
   padding: 24px;
-  font-family: var(--cb-font);
 }
 
 /* ── Slot Steps Row ───────────────────────────────────── */
@@ -366,7 +357,6 @@
   line-height: 1;
   transition: all var(--cb-transition, 0.18s);
   overflow: hidden;
-  font-family: var(--cb-font);
 }
 
 /* Active slot — green dashed border + warm light bg */
@@ -414,13 +404,19 @@
 .cb-slot-step-hint {
   opacity: 0.45;
   filter: grayscale(20%);
+  transition: opacity 0.15s;
+}
+
+/* Live hover preview of a product from the grid in the active slot box */
+.cb-slot-step-preview {
+  opacity: 0.82;
+  transition: opacity 0.15s;
 }
 
 /* Label below each box */
 .cb-slot-step-label {
   text-align: center;
   line-height: 1.4;
-  font-family: var(--cb-font);
 }
 
 .cb-slot-step-small {
@@ -428,7 +424,6 @@
   font-size: 11px;
   font-weight: 400;
   color: var(--cb-text-muted, #6b7280);
-  font-family: var(--cb-font);
 }
 
 /* Active slot label gets primary colour on the item name */
@@ -441,7 +436,6 @@
   color: var(--cb-text, #111827);
   text-decoration: none;
   cursor: default;
-  font-family: var(--cb-font);
   font-size: 12px;
   font-weight: 700;
   line-height: 1.3;
@@ -516,7 +510,6 @@
   margin-top: 28px;
   min-width: 180px;
   min-height: 52px;
-  font-family: var(--cb-font);
   font-weight: 700;
 }
 
@@ -566,7 +559,6 @@
   font-weight: 600;
   color: var(--cb-text);
   margin-bottom: 6px;
-  font-family: var(--cb-font);
 }
 
 .cb-gift-input {
@@ -574,7 +566,6 @@
   padding: 10px 14px;
   border: 1.5px solid var(--cb-border);
   font-size: 13px;
-  font-family: var(--cb-font);
   color: var(--cb-text);
   background: var(--cb-bg);
   resize: vertical;
@@ -598,7 +589,6 @@
   color: var(--cb-text);
   letter-spacing: -0.3px;
   margin-bottom: 18px;
-  font-family: var(--cb-font);
   border-left: 3px solid var(--cb-primary);
   padding-left: 12px;
 }
@@ -683,7 +673,6 @@
   font-weight: 800;
   color: var(--cb-primary);
   background: var(--cb-primary-light);
-  font-family: var(--cb-font);
 }
 
 .cb-product-used-overlay {
@@ -719,7 +708,6 @@
   font-weight: 600;
   color: var(--cb-text);
   line-height: 1.4;
-  font-family: var(--cb-font);
   flex: 1;
   min-width: 0;
   display: -webkit-box;
@@ -747,7 +735,6 @@
   font-size: 13px;
   font-weight: 700;
   color: var(--cb-text);
-  font-family: var(--cb-font);
   letter-spacing: -0.2px;
 }
 
@@ -764,7 +751,6 @@
   font-weight: 500;
   color: var(--cb-text-light);
   text-decoration: line-through;
-  font-family: var(--cb-font);
 }
 
 .cb-product-learn-link {
@@ -778,7 +764,6 @@
   align-items: center;
   gap: 3px;
   transition: color var(--cb-transition);
-  font-family: var(--cb-font);
   flex-shrink: 0;
   cursor: pointer;
   white-space: nowrap;
@@ -802,7 +787,6 @@
   text-transform: uppercase;
   cursor: pointer;
   transition: background var(--cb-transition);
-  font-family: var(--cb-font);
 }
 
 .cb-add-btn:hover { background: var(--cb-primary); }
@@ -865,7 +849,6 @@
   padding: 3px 10px;
   font-size: 11px;
   font-weight: 700;
-  font-family: var(--cb-font);
   letter-spacing: 0.3px;
 }
 
@@ -887,7 +870,6 @@
   padding: 12px 28px;
   gap: 16px;
   min-height: 64px;
-  font-family: var(--cb-font);
 }
 
 .cb-sticky-left {
@@ -903,7 +885,6 @@
   font-size: 14px;
   font-weight: 700;
   color: var(--cb-text);
-  font-family: var(--cb-font);
   letter-spacing: -0.2px;
 }
 
@@ -921,7 +902,6 @@
   font-weight: 600;
   color: var(--cb-text-muted);
   white-space: nowrap;
-  font-family: var(--cb-font);
 }
 
 .cb-sticky-price {
@@ -942,7 +922,6 @@
   font-size: 12px;
   color: var(--cb-error);
   text-decoration: line-through;
-  font-family: var(--cb-font);
 }
 
 .cb-sticky-save {
@@ -952,7 +931,6 @@
   background: rgba(5,150,105,0.08);
   border: 1px solid rgba(5,150,105,0.2);
   padding: 2px 8px;
-  font-family: var(--cb-font);
   white-space: nowrap;
 }
 
@@ -994,7 +972,6 @@
   transition: all var(--cb-transition);
   white-space: nowrap;
   flex-shrink: 0;
-  font-family: var(--cb-font);
 }
 
 .cb-btn-spinner {
@@ -1059,13 +1036,11 @@
   text-transform: uppercase;
   letter-spacing: 0.7px;
   margin-bottom: 8px;
-  font-family: var(--cb-font);
 }
 
 .cb-variant-picker-loading {
   font-size: 12px;
   color: var(--cb-text-muted);
-  font-family: var(--cb-font);
 }
 
 .cb-variant-btns {
@@ -1083,7 +1058,6 @@
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  font-family: var(--cb-font);
   transition: all var(--cb-transition);
   white-space: nowrap;
   line-height: 1.4;
@@ -1119,7 +1093,6 @@
   border: none;
   cursor: pointer;
   padding: 2px 0;
-  font-family: var(--cb-font);
   text-decoration: underline;
 }
 
@@ -1142,7 +1115,6 @@
   color: var(--cb-text);
   font-size: 12px;
   font-weight: 600;
-  font-family: var(--cb-font);
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
@@ -1201,7 +1173,6 @@
   font-size: 17px;
   font-weight: 700;
   line-height: 1.3;
-  font-family: var(--cb-font);
   color: var(--cb-text);
 }
 
@@ -1234,7 +1205,6 @@
   overflow: auto;
   font-size: 14px;
   line-height: 1.6;
-  font-family: var(--cb-font);
   color: var(--cb-text);
 }
 
@@ -1267,12 +1237,12 @@
 
 /* Wizard title */
 .cb-wizard-title {
-  font-family: var(--cb-font, sans-serif);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: var(--cb-step-heading-size);
+  font-weight: var(--cb-step-heading-weight);
+  font-style: var(--cb-step-heading-style);
+  color: var(--cb-text);
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--cb-text-muted, #9ca3af);
   margin-bottom: 18px;
 }
 
@@ -1302,7 +1272,7 @@
   color: var(--cb-text-muted, #9ca3af);
   font-size: 16px;
   font-weight: 800;
-  font-family: var(--cb-font, sans-serif);
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1345,7 +1315,7 @@
   font-size: 11px;
   font-weight: 600;
   color: var(--cb-text-muted, #9ca3af);
-  font-family: var(--cb-font, sans-serif);
+
   text-align: center;
   white-space: normal;
   max-width: 120px;
@@ -1399,7 +1369,7 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--cb-text-muted, #6b7280);
-  font-family: var(--cb-font, sans-serif);
+
   cursor: pointer;
   letter-spacing: 0;
   transition: color 0.18s;
@@ -1442,7 +1412,7 @@
   border-radius: var(--cb-radius, 10px);
   font-size: 15px;
   font-weight: 800;
-  font-family: var(--cb-font, sans-serif);
+
   cursor: pointer;
   letter-spacing: 0.5px;
   box-shadow: 0 4px 14px var(--cb-primary-glow, rgba(42,122,79,0.35));
@@ -1470,7 +1440,7 @@
   border-radius: var(--cb-radius, 10px);
   font-size: 15px;
   font-weight: 800;
-  font-family: var(--cb-font, sans-serif);
+
   cursor: pointer;
   letter-spacing: 0.5px;
   box-shadow: 0 4px 14px rgba(0,0,0,0.18);

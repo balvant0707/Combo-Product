@@ -54,20 +54,41 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
   padding: 56px 48px;
-  color: var(--cb-text-muted);
-  font-size: 14px;
 }
 
-.combo-builder-spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--cb-border);
-  border-top-color: var(--cb-primary);
-  border-radius: 50%;
-  animation: cb-spin 0.7s linear infinite;
-  flex-shrink: 0;
+.spinner-square {
+  display: flex;
+  flex-direction: row;
+  width: 90px;
+  height: 120px;
+}
+
+.spinner-square > .square {
+  width: 17px;
+  height: 80px;
+  margin: auto;
+  border-radius: 4px;
+}
+
+.square-1 {
+  animation: square-anim 1200ms cubic-bezier(0.445, 0.05, 0.55, 0.95) 0s infinite;
+}
+
+.square-2 {
+  animation: square-anim 1200ms cubic-bezier(0.445, 0.05, 0.55, 0.95) 200ms infinite;
+}
+
+.square-3 {
+  animation: square-anim 1200ms cubic-bezier(0.445, 0.05, 0.55, 0.95) 400ms infinite;
+}
+
+@keyframes square-anim {
+  0%   { height: 80px;  background-color: rgb(111, 163, 240); }
+  20%  { height: 80px; }
+  40%  { height: 120px; background-color: rgb(111, 200, 240); }
+  80%  { height: 80px; }
+  100% { height: 80px;  background-color: rgb(111, 163, 240); }
 }
 
 @keyframes cb-spin { to { transform: rotate(360deg); } }
@@ -1241,12 +1262,11 @@
   overflow: hidden;
 }
 
-/* Header row: Change-box btn left + title */
+/* Header: title only */
 .cb-wizard-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 0 0 16px;
+  padding: 0 0 12px;
 }
 
 .cb-wizard-title {
@@ -1259,11 +1279,43 @@
   margin: 0;
 }
 
+/* Body: [change-btn col LEFT] + [steps column RIGHT] */
+.cb-wizard-body {
+  display: flex;
+  align-items: flex-start;
+}
+
+/* Left column: "← Change box" button */
+.cb-wizard-changebtn-col {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding-right: 14px;
+  padding-top: 0;
+}
+
+/* Right column: stepsRow stacked above labelsRow */
+.cb-wizard-steps-col {
+  flex: 1;
+  min-width: 0;
+}
+
 .cb-wizard-steps-row {
   display: flex;
   align-items: stretch; /* lines stretch to box height */
   width: 100%;
-  gap: 2rem;
+}
+
+/* Labels row — below step boxes, aligned to each step */
+.cb-wizard-labels-row {
+  display: flex;
+  align-items: flex-start;
+}
+
+/* Spacer matches the line element width */
+.cb-wizard-labels-spacer {
+  flex-shrink: 0;
+  width: 32px;
 }
 
 /* Each step: wide rectangular box */
@@ -1315,19 +1367,17 @@
   z-index: 3;
 }
 
-/* STEP labels — bottom-left, next to indicator */
+/* STEP labels — below the steps row, centered under each step */
 .cb-wizard-step-label {
-  position: absolute;
-  left: 32px;
-  bottom: 12px;
+  flex: 1;
+  text-align: center;
   font-size: 10px;
   font-weight: 800 !important;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: #b5a898 !important;
   line-height: 1.25;
-  transition: color 0.25s;
-  z-index: 3;
+  padding-top: 8px;
 }
 
 /* Step 1 done: full-size image covers box, name at bottom */
@@ -1396,9 +1446,9 @@
   background: var(--cb-primary, #2A7A4F);
   border-color: var(--cb-primary, #2A7A4F);
 }
-.cb-wizard-steps-row .cb-wizard-step:last-child.cb-wizard-step--active .cb-wizard-step-label,
-.cb-wizard-steps-row .cb-wizard-step:last-child.cb-wizard-step--done .cb-wizard-step-label {
-  color: #fff !important;
+/* step-3 label (below box) turns primary color when active/done */
+.cb-wizard-labels-row .cb-wizard-step-label:last-child {
+  color: var(--cb-primary, #2A7A4F) !important;
 }
 .cb-wizard-steps-row .cb-wizard-step:last-child.cb-wizard-step--active .cb-wizard-indicator,
 .cb-wizard-steps-row .cb-wizard-step:last-child.cb-wizard-step--done .cb-wizard-indicator {
@@ -1430,12 +1480,7 @@
   bottom: 27px;
   background: var(--cb-primary, #2A7A4F);
 }
-.cb-wizard-step--done .cb-wizard-step-label {
-  color: #fff !important;
-}
-.cb-wizard-step--active .cb-wizard-step-label {
-  color: var(--cb-primary, #2A7A4F) !important;
-}
+/* label colors managed via .cb-wizard-labels-row rules (labels live outside step boxes) */
 
 /* Change Box back link — bordered button */
 .cb-change-box-btn {
@@ -1533,8 +1578,8 @@
   .cb-wizard-step--done .cb-wizard-indicator { width: 10px; height: 10px; left: 9px; bottom: 19px; }
   .cb-wizard-line { width: 12px; }
   .cb-wizard-line::after { bottom: 24px; }
-  .cb-wizard-step-label { font-size: 8px; letter-spacing: 1px; left: 26px; bottom: 8px; }
-  .cb-wizard-step-content { top: 6px; left: 8px; right: 8px; }
+  .cb-wizard-step-label { font-size: 8px; letter-spacing: 1px; padding-top: 5px; }
+  .cb-wizard-labels-spacer { width: 12px; }
   .cb-wizard-step-thumb { width: 28px; height: 28px; }
   .cb-wizard-step-box-name { font-size: 8px; }
   .cb-step3-buttons { flex-direction: column; gap: 10px; }

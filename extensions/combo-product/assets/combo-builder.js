@@ -731,27 +731,40 @@
       var wizardEl = document.createElement('div');
       wizardEl.className = 'cb-wizard';
 
-      // Header row: Change box btn (left) + title
+      // Header: title only
       var wizardHeader = document.createElement('div');
       wizardHeader.className = 'cb-wizard-header';
-
-      var wizardChangeBtn = document.createElement('button');
-      wizardChangeBtn.type = 'button';
-      wizardChangeBtn.className = 'cb-change-box-btn';
-      wizardChangeBtn.innerHTML = '&#8592; Change box';
-      wizardChangeBtn.style.display = 'none';
-      wizardHeader.appendChild(wizardChangeBtn);
-      ctx._changeBoxBtn = wizardChangeBtn;
-
       var wizardTitle = document.createElement('div');
       wizardTitle.className = 'cb-wizard-title';
       wizardTitle.textContent = 'Build Your Box';
       wizardHeader.appendChild(wizardTitle);
       wizardEl.appendChild(wizardHeader);
 
-      // Horizontal steps row
+      // Body row: [change-btn col] + [steps column (stepsRow + labelsRow)]
+      var wizardBody = document.createElement('div');
+      wizardBody.className = 'cb-wizard-body';
+
+      // Left col: change box button
+      var changeBtnCol = document.createElement('div');
+      changeBtnCol.className = 'cb-wizard-changebtn-col';
+      var wizardChangeBtn = document.createElement('button');
+      wizardChangeBtn.type = 'button';
+      wizardChangeBtn.className = 'cb-change-box-btn';
+      wizardChangeBtn.innerHTML = '&#8592; Change box';
+      wizardChangeBtn.style.visibility = 'hidden';
+      changeBtnCol.appendChild(wizardChangeBtn);
+      ctx._changeBoxBtn = wizardChangeBtn;
+      wizardBody.appendChild(changeBtnCol);
+
+      // Right col: steps row + labels row
+      var stepsCol = document.createElement('div');
+      stepsCol.className = 'cb-wizard-steps-col';
+
       var stepsRow = document.createElement('div');
       stepsRow.className = 'cb-wizard-steps-row';
+
+      var labelsRow = document.createElement('div');
+      labelsRow.className = 'cb-wizard-labels-row';
 
       var WIZARD_STEP_DEFS = [
         { line1: 'SELECT', line2: 'BOX' },
@@ -769,7 +782,13 @@
           line.className = 'cb-wizard-line';
           stepsRow.appendChild(line);
           wizardLines.push(line);
+
+          // Matching spacer in labels row
+          var lSpacer = document.createElement('div');
+          lSpacer.className = 'cb-wizard-labels-spacer';
+          labelsRow.appendChild(lSpacer);
         }
+
         var stepEl = document.createElement('div');
         stepEl.className = 'cb-wizard-step' + (i === 0 ? ' cb-wizard-step--active' : '');
 
@@ -803,21 +822,23 @@
           stepEl.appendChild(stepNum);
         }
 
+        stepsRow.appendChild(stepEl);
+
+        // Label BELOW the steps row (not inside stepEl)
         var stepLbl = document.createElement('div');
         stepLbl.className = 'cb-wizard-step-label';
         stepLbl.innerHTML = def.line1 + '<br>' + def.line2;
-        stepEl.appendChild(stepLbl);
+        labelsRow.appendChild(stepLbl);
 
-        var lbl = document.createElement('div');
-        lbl.className = 'cb-wizard-label';
-
-        stepsRow.appendChild(stepEl);
         wizardDots.push(stepEl);
         wizardDotEls.push(indicator);
-        wizardLabelEls.push(lbl);
+        wizardLabelEls.push(stepLbl);
       });
 
-      wizardEl.appendChild(stepsRow);
+      stepsCol.appendChild(stepsRow);
+      stepsCol.appendChild(labelsRow);
+      wizardBody.appendChild(stepsCol);
+      wizardEl.appendChild(wizardBody);
       wrapper.appendChild(wizardEl);
       ctx._wizardDots = wizardDots;
       ctx._wizardLines = wizardLines;
@@ -982,7 +1003,7 @@
           if (ctx._boxGrid) ctx._boxGrid.style.display = '';
           builderArea.style.display = 'none';
           builderArea.innerHTML = '';
-          _cbBtn.style.display = 'none';
+          _cbBtn.style.visibility = 'hidden';
           if (ctx._wizardStep1Content) ctx._wizardStep1Content.style.display = 'none';
           if (ctx._wizardDots) {
             ctx._wizardDots[0].className = 'cb-wizard-step cb-wizard-step--active';
@@ -994,7 +1015,7 @@
           document.querySelectorAll('.cb-box-card').forEach(function (c) { c.classList.remove('cb-box-card--active'); });
         });
       }
-      if (ctx._changeBoxBtn) ctx._changeBoxBtn.style.display = '';
+      if (ctx._changeBoxBtn) ctx._changeBoxBtn.style.visibility = 'visible';
 
       if (ctx._wizardDots) {
         ctx._wizardDots[0].className = 'cb-wizard-step cb-wizard-step--done';

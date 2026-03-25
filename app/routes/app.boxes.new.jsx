@@ -403,8 +403,8 @@ export default function CreateBoxPage() {
               </div>
             )}
             {selectedProducts.length > 0 && (
-              <div style={{ marginBottom: "12px", padding: "12px 14px", background: "#000000", borderRadius: "5px", border: "1px solid #000000" }}>
-                <div style={{ fontSize: "10px", fontWeight: "700", color: "#ffffff", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.6px" }}>Selected Products</div>
+              <div style={{ marginBottom: "12px", padding: "12px 14px", borderRadius: "5px", border: "1px solid #000000" }}>
+                <div style={{ fontSize: "10px", fontWeight: "700", color: "#000000", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.6px" }}>Selected Products</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                   {selectedProducts.map((p) => (
                     <span key={p.id} onClick={() => toggleProduct(p)} style={{ background: "#000000", color: "#ffffff", border: "1px solid rgba(255,255,255,0.24)", borderRadius: "5px", padding: "4px 10px", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", fontWeight: "500" }}>

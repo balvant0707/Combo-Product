@@ -1271,7 +1271,7 @@
 .cb-wizard:before {
     content: '';
     position: absolute;
-    top: 5%;
+    top: 15%;
     left: 0;
     right: 0;
     border-top: 1.5px dashed #c8d6e0;

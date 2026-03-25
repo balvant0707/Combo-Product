@@ -1773,8 +1773,8 @@
     container.innerHTML = '';
 
     var comboConfig = box.comboConfig;
-    var numSteps = comboConfig.steps.length;
-    var steps = comboConfig.steps.slice();
+    var numSteps = comboConfig.comboType || comboConfig.steps.length;
+    var steps = comboConfig.steps.slice(0, numSteps);
     var sessionId = generateSessionId();
 
     var slots = [];

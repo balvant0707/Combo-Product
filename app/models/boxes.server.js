@@ -599,10 +599,12 @@ export async function updateComboStepsConfig(id, shop, comboStepsConfig) {
 export async function upsertComboConfig(boxId, config) {
   const parsed = typeof config === "string" ? JSON.parse(config) : config;
   const rawJson = typeof config === "string" ? config : JSON.stringify(config);
-  const stepsJson = JSON.stringify(Array.isArray(parsed.steps) ? parsed.steps : []);
+  const comboType = parseInt(parsed.type) || 2;
+  const allSteps = Array.isArray(parsed.steps) ? parsed.steps : [];
+  const stepsJson = JSON.stringify(allSteps.slice(0, comboType));
 
   const payload = {
-    comboType:         parseInt(parsed.type) || 2,
+    comboType,
     title:             parsed.title            ?? null,
     subtitle:          parsed.subtitle         ?? null,
     bundlePrice:       parsed.bundlePrice != null ? parseFloat(parsed.bundlePrice) : null,

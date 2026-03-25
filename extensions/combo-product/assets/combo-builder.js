@@ -730,10 +730,16 @@
     if (ctx.layoutMode === 'steps') {
       var wizardEl = document.createElement('div');
       wizardEl.className = 'cb-wizard';
+      wizardEl.setAttribute('aria-label', 'Build Your Box progress');
 
-      // Header: change-box btn (left) + title
+      // Header: title + change-box action
       var wizardHeader = document.createElement('div');
       wizardHeader.className = 'cb-wizard-header';
+
+      var wizardTitle = document.createElement('div');
+      wizardTitle.className = 'cb-wizard-title';
+      wizardTitle.textContent = 'Build Your Box';
+      wizardHeader.appendChild(wizardTitle);
 
       var wizardChangeBtn = document.createElement('button');
       wizardChangeBtn.type = 'button';
@@ -743,21 +749,17 @@
       wizardHeader.appendChild(wizardChangeBtn);
       ctx._changeBoxBtn = wizardChangeBtn;
 
-      var wizardTitle = document.createElement('div');
-      wizardTitle.className = 'cb-wizard-title';
-      wizardTitle.textContent = 'Build Your Box';
-      wizardHeader.appendChild(wizardTitle);
       wizardEl.appendChild(wizardHeader);
 
       // Steps row: [step-wrapper] [line] [step-wrapper] [line] [step-wrapper]
-      // Each wrapper = circle indicator + label below
       var stepsRow = document.createElement('div');
       stepsRow.className = 'cb-wizard-steps-row';
+      stepsRow.setAttribute('role', 'list');
 
       var WIZARD_STEP_DEFS = [
-        { line1: 'SELECT', line2: 'BOX' },
-        { line1: 'SELECT', line2: 'PRODUCT' },
-        { line1: 'ADD TO', line2: 'CART' }
+        { label: 'Stage 1', description: 'Choose your box' },
+        { label: 'Stage 2', description: 'Pick your products' },
+        { label: 'Stage 3', description: 'Add your box to cart' }
       ];
       var wizardDots = [];
       var wizardLines = [];
@@ -774,6 +776,9 @@
 
         var stepWrapper = document.createElement('div');
         stepWrapper.className = 'cb-wizard-step-wrapper';
+        stepWrapper.setAttribute('role', 'listitem');
+        stepWrapper.setAttribute('aria-label', def.description);
+        stepWrapper.title = def.description;
 
         var stepEl = document.createElement('div');
         stepEl.className = 'cb-wizard-step' + (i === 0 ? ' cb-wizard-step--active' : '');
@@ -781,7 +786,7 @@
 
         var stepLbl = document.createElement('div');
         stepLbl.className = 'cb-wizard-step-label';
-        stepLbl.innerHTML = def.line1 + '<br>' + def.line2;
+        stepLbl.textContent = def.label;
         stepWrapper.appendChild(stepLbl);
 
         stepsRow.appendChild(stepWrapper);

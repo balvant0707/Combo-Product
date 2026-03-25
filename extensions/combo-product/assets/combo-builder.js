@@ -722,6 +722,44 @@
     var wrapper = document.createElement('div');
     wrapper.className = 'cb-wrapper';
 
+    // ── Steps Mode: 3-stage wizard progress bar ──────────────────────────────
+    if (ctx.layoutMode === 'steps') {
+      var wizardEl = document.createElement('div');
+      wizardEl.className = 'cb-wizard';
+
+      var WIZARD_LABELS = ['Select Box', 'Select Products', 'Add to Cart'];
+      var wizardDots = [];
+      var wizardLines = [];
+
+      WIZARD_LABELS.forEach(function (label, i) {
+        if (i > 0) {
+          var line = document.createElement('div');
+          line.className = 'cb-wizard-line';
+          wizardEl.appendChild(line);
+          wizardLines.push(line);
+        }
+        var stepEl = document.createElement('div');
+        stepEl.className = 'cb-wizard-step' + (i === 0 ? ' cb-wizard-step--active' : '');
+
+        var dot = document.createElement('div');
+        dot.className = 'cb-wizard-dot';
+        dot.textContent = i + 1;
+        stepEl.appendChild(dot);
+
+        var lbl = document.createElement('div');
+        lbl.className = 'cb-wizard-label';
+        lbl.textContent = label;
+        stepEl.appendChild(lbl);
+
+        wizardEl.appendChild(stepEl);
+        wizardDots.push(stepEl);
+      });
+
+      wrapper.appendChild(wizardEl);
+      ctx._wizardDots = wizardDots;
+      ctx._wizardLines = wizardLines;
+    }
+
     // Step 1 Heading
     var step1Head = document.createElement('h2');
     step1Head.className = 'cb-step-heading';
@@ -742,9 +780,11 @@
 
     root.appendChild(wrapper);
 
-    // Auto-select the first box so products show immediately on load
-    var firstCard = boxGrid.firstElementChild;
-    if (firstCard) firstCard.click();
+    // Auto-select the first box in grid mode only; steps mode waits for user click
+    if (ctx.layoutMode !== 'steps') {
+      var firstCard = boxGrid.firstElementChild;
+      if (firstCard) firstCard.click();
+    }
   }
 
   // ─── Box Card ─────────────────────────────────────────────────────────────────
@@ -856,6 +896,18 @@
     if (!wrapper) return;
     var builderArea = wrapper.querySelector('.cb-builder-area');
     if (!builderArea) return;
+
+    // Steps mode: advance wizard → Step 1 done, Step 2 active
+    if (ctx.layoutMode === 'steps' && ctx._wizardDots) {
+      ctx._wizardDots[0].className = 'cb-wizard-step cb-wizard-step--done';
+      ctx._wizardDots[0].querySelector('.cb-wizard-dot').innerHTML = '&#10003;';
+      ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--active';
+      // Reset Step 3 in case user re-selects a box after completing
+      ctx._wizardDots[2].className = 'cb-wizard-step';
+      ctx._wizardDots[2].querySelector('.cb-wizard-dot').textContent = '3';
+      if (ctx._wizardLines[0]) ctx._wizardLines[0].className = 'cb-wizard-line cb-wizard-line--done';
+      if (ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line';
+    }
 
     if (isDynamicBundlePrice(box)) {
       setBoxCardPrice(box, 0, ctx.currencySymbol);
@@ -1039,61 +1091,44 @@
     arrow.innerHTML = '&#8594;';
     slotWrapper.appendChild(arrow);
 
-    slotWrapper.appendChild(inlineCartBtn);
-
-    // ── Steps Mode vs Grid Mode layout ──
-    var stepsCounterEl = null;
-    var stepsBackBtn = null;
-    var stepsNextBtn = null;
-
+    // In steps mode hide the inline cart button — Step 3 section owns the cart action
     if (ctx.layoutMode === 'steps') {
-      // In steps mode: hide the traditional slot progress bar and show a step counter instead
-      slotWrapper.style.display = 'none';
-      container.appendChild(slotWrapper); // keep in DOM for updateCartButton references
+      inlineCartBtn.style.display = 'none';
+    }
+    slotWrapper.appendChild(inlineCartBtn);
+    container.appendChild(slotWrapper);
 
-      var stepsNavEl = document.createElement('div');
-      stepsNavEl.className = 'cb-steps-nav';
+    // ── Steps Mode: Step 3 cart section (hidden until all slots filled) ──
+    var step3CartBtn = null;
+    var step3CheckoutBtn = null;
+    var step3CartSection = null;
+    if (ctx.layoutMode === 'steps') {
+      step3CartSection = document.createElement('div');
+      step3CartSection.className = 'cb-step3-cart';
+      step3CartSection.style.display = 'none';
 
-      stepsBackBtn = document.createElement('button');
-      stepsBackBtn.type = 'button';
-      stepsBackBtn.className = 'cb-steps-back-btn';
-      stepsBackBtn.textContent = '\u2190 Back';
-      stepsBackBtn.style.visibility = 'hidden';
+      var step3Head = document.createElement('h2');
+      step3Head.className = 'cb-step-heading cb-step3-heading';
+      step3Head.textContent = 'Step 3: Complete your order';
+      step3CartSection.appendChild(step3Head);
 
-      stepsCounterEl = document.createElement('div');
-      stepsCounterEl.className = 'cb-steps-counter';
+      var step3Btns = document.createElement('div');
+      step3Btns.className = 'cb-step3-buttons';
 
-      stepsNextBtn = document.createElement('button');
-      stepsNextBtn.type = 'button';
-      stepsNextBtn.className = 'cb-steps-next-btn';
-      stepsNextBtn.disabled = true;
-      stepsNextBtn.textContent = 'Next Step \u2192';
+      step3CartBtn = document.createElement('button');
+      step3CartBtn.type = 'button';
+      step3CartBtn.className = 'cb-step3-cart-btn';
+      step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings);
+      step3Btns.appendChild(step3CartBtn);
 
-      stepsNavEl.appendChild(stepsBackBtn);
-      stepsNavEl.appendChild(stepsCounterEl);
-      stepsNavEl.appendChild(stepsNextBtn);
-      container.appendChild(stepsNavEl);
+      step3CheckoutBtn = document.createElement('button');
+      step3CheckoutBtn.type = 'button';
+      step3CheckoutBtn.className = 'cb-step3-checkout-btn';
+      step3CheckoutBtn.textContent = 'Checkout \u2192';
+      step3Btns.appendChild(step3CheckoutBtn);
 
-      stepsBackBtn.addEventListener('click', function () {
-        if (activeSlotIndex > 0) {
-          activeSlotIndex--;
-          renderSlots();
-          renderProductGrid();
-          updateCartButton();
-        }
-      });
-
-      stepsNextBtn.addEventListener('click', function () {
-        var next = activeSlotIndex + 1;
-        if (next < slots.length) {
-          activeSlotIndex = next;
-          renderSlots();
-          renderProductGrid();
-          updateCartButton();
-        }
-      });
-    } else {
-      container.appendChild(slotWrapper);
+      step3CartSection.appendChild(step3Btns);
+      container.appendChild(step3CartSection);
     }
 
     // ── Gift Message ──
@@ -1197,18 +1232,27 @@
         }
       }
 
-      // Steps mode: update counter + back/next state
-      if (stepsCounterEl) {
-        stepsCounterEl.textContent = 'Item ' + (activeSlotIndex + 1) + ' of ' + box.itemCount;
-      }
-      if (stepsBackBtn) {
-        stepsBackBtn.style.visibility = activeSlotIndex > 0 ? 'visible' : 'hidden';
-      }
-      if (stepsNextBtn) {
-        var currentSlotFilled = !!slots[activeSlotIndex];
-        var isLastSlot = activeSlotIndex === box.itemCount - 1;
-        stepsNextBtn.disabled = !currentSlotFilled || isLastSlot;
-        stepsNextBtn.textContent = isLastSlot ? 'Done \u2713' : 'Next Step \u2192';
+      // Steps mode: show Step 3 cart section when all slots filled; update wizard dot
+      if (ctx.layoutMode === 'steps') {
+        if (step3CartSection) {
+          step3CartSection.style.display = allFilled ? 'block' : 'none';
+          if (allFilled) step3CartSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        if (allFilled && ctx._wizardDots && ctx._wizardDots[2]) {
+          ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--done';
+          ctx._wizardDots[1].querySelector('.cb-wizard-dot').innerHTML = '&#10003;';
+          ctx._wizardDots[2].className = 'cb-wizard-step cb-wizard-step--active';
+          if (ctx._wizardLines && ctx._wizardLines[1]) {
+            ctx._wizardLines[1].className = 'cb-wizard-line cb-wizard-line--done';
+          }
+        } else if (!allFilled && ctx._wizardDots && ctx._wizardDots[2]) {
+          ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--active';
+          ctx._wizardDots[1].querySelector('.cb-wizard-dot').textContent = '2';
+          ctx._wizardDots[2].className = 'cb-wizard-step';
+          if (ctx._wizardLines && ctx._wizardLines[1]) {
+            ctx._wizardLines[1].className = 'cb-wizard-line';
+          }
+        }
       }
     }
 
@@ -1634,8 +1678,21 @@
 
     inlineCartBtn.addEventListener('click', doAddToCart);
 
-    // Create sticky footer
-    createStickyFooter(box, ctx, doAddToCart);
+    // Steps mode: wire step3 buttons; checkout goes to /checkout after adding to cart
+    if (ctx.layoutMode === 'steps') {
+      if (step3CartBtn) step3CartBtn.addEventListener('click', doAddToCart);
+      if (step3CheckoutBtn) {
+        step3CheckoutBtn.addEventListener('click', function () {
+          doAddToCart();
+          setTimeout(function () { window.location.href = '/checkout'; }, 800);
+        });
+      }
+    }
+
+    // Create sticky footer only in grid mode
+    if (ctx.layoutMode !== 'steps') {
+      createStickyFooter(box, ctx, doAddToCart);
+    }
     updateCartButton();
   }
 

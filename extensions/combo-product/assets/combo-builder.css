@@ -1229,68 +1229,152 @@
   .cb-sticky-btn { padding: 12px 20px; font-size: 12px; }
   .cb-sticky-progress { display: none; }
 
-  .cb-steps-nav { flex-wrap: wrap; gap: 8px; }
-  .cb-steps-counter { width: 100%; text-align: center; order: -1; }
 }
 
-/* ── Steps Mode Navigation ────────────────────────────── */
-.cb-steps-nav {
+/* ── Wizard Progress Bar (Steps Mode) ─────────────────── */
+.cb-wizard {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 20px 0 8px;
-  padding: 14px 20px;
-  background: var(--cb-bg, #fff);
-  border: 1.5px solid var(--cb-border, #e5e7eb);
-  border-radius: var(--cb-radius, 10px);
+  justify-content: center;
+  gap: 0;
+  margin: 0 auto 28px;
+  padding: 20px 24px 16px;
+  max-width: 480px;
 }
 
-.cb-steps-counter {
+.cb-wizard-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.cb-wizard-dot {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2.5px solid var(--cb-border, #e5e7eb);
+  background: var(--cb-bg, #fff);
+  color: var(--cb-text-muted, #9ca3af);
   font-size: 15px;
-  font-weight: 700;
-  color: var(--cb-text, #111827);
+  font-weight: 800;
   font-family: var(--cb-font, sans-serif);
-  letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
 }
 
-.cb-steps-back-btn,
-.cb-steps-next-btn {
-  padding: 10px 20px;
-  border-radius: var(--cb-radius, 10px);
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  border: 1.5px solid var(--cb-border, #e5e7eb);
+.cb-wizard-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cb-text-muted, #9ca3af);
   font-family: var(--cb-font, sans-serif);
-  transition: background var(--cb-transition, 0.18s), color var(--cb-transition, 0.18s), border-color var(--cb-transition, 0.18s);
+  text-align: center;
   white-space: nowrap;
+  transition: color 0.2s;
 }
 
-.cb-steps-back-btn {
-  background: var(--cb-bg, #fff);
+.cb-wizard-line {
+  flex: 1;
+  height: 2.5px;
+  background: var(--cb-border, #e5e7eb);
+  min-width: 40px;
+  margin: 0 4px;
+  margin-bottom: 29px; /* align with dot center */
+  transition: background 0.2s;
+}
+
+.cb-wizard-line--done {
+  background: var(--cb-primary, #2A7A4F);
+}
+
+/* Active step */
+.cb-wizard-step--active .cb-wizard-dot {
+  background: var(--cb-primary, #2A7A4F);
+  border-color: var(--cb-primary, #2A7A4F);
+  color: #fff;
+}
+.cb-wizard-step--active .cb-wizard-label {
+  color: var(--cb-primary, #2A7A4F);
+  font-weight: 700;
+}
+
+/* Done step */
+.cb-wizard-step--done .cb-wizard-dot {
+  background: var(--cb-primary, #2A7A4F);
+  border-color: var(--cb-primary, #2A7A4F);
+  color: #fff;
+}
+.cb-wizard-step--done .cb-wizard-label {
   color: var(--cb-text-muted, #6b7280);
 }
 
-.cb-steps-back-btn:hover {
-  background: var(--cb-primary-light, #f3f4f6);
-  color: var(--cb-text, #111827);
-  border-color: var(--cb-primary, #2A7A4F);
+/* ── Steps Mode: Step 3 Cart Section ──────────────────── */
+.cb-step3-cart {
+  margin-top: 28px;
+  padding: 28px 24px;
+  background: var(--cb-bg, #fff);
+  border: 2px solid var(--cb-primary, #2A7A4F);
+  border-radius: var(--cb-radius, 10px);
+  text-align: center;
 }
 
-.cb-steps-next-btn {
+.cb-step3-heading {
+  margin-bottom: 20px !important;
+}
+
+.cb-step3-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.cb-step3-cart-btn {
+  padding: 14px 36px;
   background: var(--cb-primary, #2A7A4F);
   color: #fff;
-  border-color: var(--cb-primary, #2A7A4F);
+  border: none;
+  border-radius: var(--cb-radius, 10px);
+  font-size: 15px;
+  font-weight: 800;
+  font-family: var(--cb-font, sans-serif);
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: background 0.15s;
 }
 
-.cb-steps-next-btn:hover:not(:disabled) {
+.cb-step3-cart-btn:hover {
   background: var(--cb-primary-hover, #1e5c3a);
-  border-color: var(--cb-primary-hover, #1e5c3a);
 }
 
-.cb-steps-next-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.cb-step3-checkout-btn {
+  padding: 14px 36px;
+  background: #111827;
+  color: #fff;
+  border: none;
+  border-radius: var(--cb-radius, 10px);
+  font-size: 15px;
+  font-weight: 800;
+  font-family: var(--cb-font, sans-serif);
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: background 0.15s;
+}
+
+.cb-step3-checkout-btn:hover {
+  background: #000;
+}
+
+@media (max-width: 480px) {
+  .cb-wizard { padding: 16px 12px 12px; }
+  .cb-wizard-dot { width: 34px; height: 34px; font-size: 13px; }
+  .cb-wizard-line { min-width: 24px; margin-bottom: 25px; }
+  .cb-wizard-label { font-size: 10px; }
+  .cb-step3-buttons { flex-direction: column; }
+  .cb-step3-cart-btn, .cb-step3-checkout-btn { width: 100%; }
 }
 

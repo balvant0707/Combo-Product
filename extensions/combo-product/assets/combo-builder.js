@@ -783,6 +783,16 @@
         dot.textContent = i + 1;
         stepEl.appendChild(dot);
 
+        var badge = document.createElement('div');
+        badge.className = 'cb-wizard-badge';
+        badge.textContent = i + 1;
+        stepEl.appendChild(badge);
+
+        var sublabel = document.createElement('div');
+        sublabel.className = 'cb-wizard-step-sublabel';
+        sublabel.textContent = 'STEP ' + (i + 1);
+        stepEl.appendChild(sublabel);
+
         var lbl = document.createElement('div');
         lbl.className = 'cb-wizard-label';
         lbl.textContent = label;
@@ -1194,12 +1204,6 @@
     renderSlots();
 
     slotWrapper.appendChild(slotSteps);
-
-    // Arrow separator
-    var arrow = document.createElement('div');
-    arrow.className = 'cb-slot-arrow';
-    arrow.innerHTML = '&#8594;';
-    slotWrapper.appendChild(arrow);
 
     // In steps mode hide the inline cart button — Step 3 section owns the cart action
     if (ctx.layoutMode === 'steps') {
@@ -1978,11 +1982,6 @@
 
     renderSlots();
     slotWrapper.appendChild(slotSteps);
-
-    var arrow = document.createElement('div');
-    arrow.className = 'cb-slot-arrow';
-    arrow.innerHTML = '&#8594;';
-    slotWrapper.appendChild(arrow);
 
     // In steps mode hide the inline cart button — Step 3 section owns the cart action
     if (ctx.layoutMode === 'steps') {

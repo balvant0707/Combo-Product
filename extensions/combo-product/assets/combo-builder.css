@@ -478,16 +478,6 @@
 
 .cb-slot-remove:hover { transform: scale(1.2); }
 
-.cb-slot-arrow {
-  font-size: 52px;
-  font-weight: 300;
-  color: #cbd5e1;
-  flex-shrink: 0;
-  align-self: flex-start;
-  margin: 0 2px;
-  margin-top: 18px;
-  line-height: 1;
-}
 
 /* Inline ADD TO CART in slot row */
 .cb-inline-cart-btn {
@@ -1262,6 +1252,7 @@
   gap: 10px;
   flex-shrink: 0;
   width: 140px;
+  position: relative;
 }
 
 .cb-wizard-dot {
@@ -1272,12 +1263,14 @@
   color: var(--cb-text-muted, #9ca3af);
   font-size: 16px;
   font-weight: 800;
+  border-radius: 12px;
+  position: relative;
 
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  transition: background 0.25s, border-color 0.25s, color 0.25s;
+  transition: background 0.25s, border-color 0.25s, color 0.25s, box-shadow 0.25s;
 }
 
 /* Box / product image inside a wizard dot */
@@ -1311,6 +1304,39 @@
   object-fit: cover;
 }
 
+/* Step number badge — top-right corner of the dot (positioned on stepEl wrapper) */
+.cb-wizard-badge {
+  position: absolute;
+  top: 5px;
+  right: 25px; /* stepEl 140px, dot 100px centered → dot right edge 20px from stepEl right; +5px inset */
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--cb-border, #e5e7eb);
+  color: var(--cb-text-muted, #9ca3af);
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background 0.25s, color 0.25s;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* "STEP N" sublabel between dot and main label */
+.cb-wizard-step-sublabel {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--cb-text-muted, #9ca3af);
+  text-align: center;
+  transition: color 0.25s;
+  margin-bottom: -4px; /* tighten gap before main label */
+}
+
 .cb-wizard-label {
   font-size: 11px;
   font-weight: 600;
@@ -1341,6 +1367,15 @@
   background: var(--cb-primary, #2A7A4F);
   border-color: var(--cb-primary, #2A7A4F);
   color: #fff;
+  box-shadow: 0 4px 18px var(--cb-primary-glow, rgba(42,122,79,0.35));
+}
+.cb-wizard-step--active .cb-wizard-badge {
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+}
+.cb-wizard-step--active .cb-wizard-step-sublabel {
+  color: var(--cb-primary, #2A7A4F);
+  font-weight: 800;
 }
 .cb-wizard-step--active .cb-wizard-label {
   color: var(--cb-primary, #2A7A4F);
@@ -1351,6 +1386,20 @@
 .cb-wizard-step--done .cb-wizard-dot {
   border-color: var(--cb-primary, #2A7A4F);
   color: #fff;
+  box-shadow: 0 2px 10px var(--cb-primary-glow, rgba(42,122,79,0.18));
+}
+.cb-wizard-step--done .cb-wizard-badge {
+  background: var(--cb-primary, #2A7A4F);
+  color: #fff;
+  font-size: 0;
+}
+.cb-wizard-step--done .cb-wizard-badge::before {
+  content: '✓';
+  font-size: 11px;
+  font-weight: 900;
+}
+.cb-wizard-step--done .cb-wizard-step-sublabel {
+  color: var(--cb-primary, #2A7A4F);
 }
 .cb-wizard-step--done .cb-wizard-label {
   color: var(--cb-text, #374151);
@@ -1381,12 +1430,8 @@
 /* ── Steps Mode: Step 3 Cart Section ──────────────────── */
 .cb-step3-cart {
   margin-top: 28px;
-  padding: 32px 28px;
-  background: var(--cb-bg, #fff);
-  border: 2px solid var(--cb-primary, #2A7A4F);
   border-radius: var(--cb-radius, 10px);
   text-align: center;
-  box-shadow: 0 4px 24px var(--cb-primary-glow, rgba(42,122,79,0.12));
 }
 
 .cb-step3-heading {
@@ -1463,6 +1508,8 @@
   .cb-wizard-dot { width: 70px; height: 70px; font-size: 14px; }
   .cb-wizard-line { min-width: 12px; margin-top: 34px; } /* (70/2) - (2.5/2) ≈ 34px */
   .cb-wizard-label { font-size: 10px; max-width: 80px; }
+  .cb-wizard-step-sublabel { font-size: 8px; letter-spacing: 1px; }
+  .cb-wizard-badge { width: 16px; height: 16px; font-size: 9px; top: 3px; right: 15px; }
   .cb-step3-buttons { flex-direction: column; gap: 10px; }
   .cb-step3-cart-btn, .cb-step3-checkout-btn { width: 100%; justify-content: center; }
 }

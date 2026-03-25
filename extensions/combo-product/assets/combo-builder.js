@@ -50,28 +50,7 @@
   }
 
   function setWizardStep2Preview(ctx, slots) {
-    if (!ctx._wizardDotEls || !ctx._wizardDotEls[1]) return;
-    var dotEl = ctx._wizardDotEls[1];
-    dotEl.innerHTML = '';
-    var filled = (slots || []).filter(Boolean);
-    if (!filled.length) { dotEl.textContent = '2'; return; }
-    var grid = document.createElement('div');
-    grid.className = 'cb-wizard-dot-grid';
-    var show = filled.slice(0, 4);
-    show.forEach(function (p) {
-      var cell = document.createElement('div');
-      cell.className = 'cb-wizard-dot-cell';
-      if (p.productImageUrl) {
-        var img = document.createElement('img');
-        img.src = p.productImageUrl;
-        img.alt = p.productTitle || '';
-        img.className = 'cb-wizard-dot-img';
-        cell.appendChild(img);
-      }
-      grid.appendChild(cell);
-    });
-    if (show.length === 1) grid.classList.add('cb-wizard-dot-grid--single');
-    dotEl.appendChild(grid);
+    // Indicator is styled via CSS class — no content insertion needed
   }
 
   function resolveAddToCartLabel(settings) {
@@ -778,29 +757,22 @@
         var stepEl = document.createElement('div');
         stepEl.className = 'cb-wizard-step' + (i === 0 ? ' cb-wizard-step--active' : '');
 
-        var dot = document.createElement('div');
-        dot.className = 'cb-wizard-dot';
-        dot.textContent = i + 1;
-        stepEl.appendChild(dot);
+        var indicator = document.createElement('div');
+        indicator.className = 'cb-wizard-indicator';
+        stepEl.appendChild(indicator);
 
-        var badge = document.createElement('div');
-        badge.className = 'cb-wizard-badge';
-        badge.textContent = i + 1;
-        stepEl.appendChild(badge);
+        var stepLbl = document.createElement('div');
+        stepLbl.className = 'cb-wizard-step-label';
+        stepLbl.innerHTML = i === 0 ? 'STEP' : 'STEP<br>' + (i + 1);
+        stepEl.appendChild(stepLbl);
 
-        var sublabel = document.createElement('div');
-        sublabel.className = 'cb-wizard-step-sublabel';
-        sublabel.textContent = 'STEP ' + (i + 1);
-        stepEl.appendChild(sublabel);
-
-        var lbl = document.createElement('div');
+        var lbl = document.createElement('div'); // keep for ctx._wizardLabelEls ref
         lbl.className = 'cb-wizard-label';
         lbl.textContent = label;
-        stepEl.appendChild(lbl);
 
         stepsRow.appendChild(stepEl);
         wizardDots.push(stepEl);
-        wizardDotEls.push(dot);
+        wizardDotEls.push(indicator);
         wizardLabelEls.push(lbl);
       });
 
@@ -978,13 +950,8 @@
           // Reset wizard to Step 1 active
           if (ctx._wizardDots) {
             ctx._wizardDots[0].className = 'cb-wizard-step cb-wizard-step--active';
-            if (ctx._wizardDotEls && ctx._wizardDotEls[0]) { ctx._wizardDotEls[0].innerHTML = '1'; }
-            if (ctx._wizardLabelEls && ctx._wizardLabelEls[0]) ctx._wizardLabelEls[0].textContent = 'Select Box';
             ctx._wizardDots[1].className = 'cb-wizard-step';
-            if (ctx._wizardDotEls && ctx._wizardDotEls[1]) { ctx._wizardDotEls[1].innerHTML = '2'; }
-            if (ctx._wizardLabelEls && ctx._wizardLabelEls[1]) ctx._wizardLabelEls[1].textContent = 'Select Products';
             ctx._wizardDots[2].className = 'cb-wizard-step';
-            if (ctx._wizardDotEls && ctx._wizardDotEls[2]) { ctx._wizardDotEls[2].innerHTML = '3'; }
             if (ctx._wizardLines[0]) ctx._wizardLines[0].className = 'cb-wizard-line';
             if (ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line';
           }
@@ -996,31 +963,8 @@
 
       if (ctx._wizardDots) {
         ctx._wizardDots[0].className = 'cb-wizard-step cb-wizard-step--done';
-        // Show box image or checkmark in Step 1 dot
-        if (ctx._wizardDotEls && ctx._wizardDotEls[0]) {
-          ctx._wizardDotEls[0].innerHTML = '';
-          var bannerSrc = getBoxCardBannerSrc(box, ctx);
-          if (bannerSrc) {
-            var boxImg = document.createElement('img');
-            boxImg.src = bannerSrc;
-            boxImg.alt = box.displayTitle || box.boxName || '';
-            boxImg.className = 'cb-wizard-dot-img';
-            ctx._wizardDotEls[0].appendChild(boxImg);
-          } else {
-            ctx._wizardDotEls[0].innerHTML = '&#10003;';
-          }
-        }
-        // Show box name in Step 1 label
-        if (ctx._wizardLabelEls && ctx._wizardLabelEls[0]) {
-          ctx._wizardLabelEls[0].textContent = box.displayTitle || box.boxName || 'Box Selected';
-        }
         ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--active';
-        // Reset Step 2 dot content if returning from a previous completion
-        if (ctx._wizardDotEls && ctx._wizardDotEls[1]) { ctx._wizardDotEls[1].innerHTML = '2'; }
-        if (ctx._wizardLabelEls && ctx._wizardLabelEls[1]) ctx._wizardLabelEls[1].textContent = 'Select Products';
-        // Reset Step 3 in case user re-selects a box after completing
         ctx._wizardDots[2].className = 'cb-wizard-step';
-        if (ctx._wizardDotEls && ctx._wizardDotEls[2]) { ctx._wizardDotEls[2].innerHTML = '3'; }
         if (ctx._wizardLines[0]) ctx._wizardLines[0].className = 'cb-wizard-line cb-wizard-line--done';
         if (ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line';
       }
@@ -1362,8 +1306,7 @@
           }
         } else if (!allFilled && ctx._wizardDots && ctx._wizardDots[2]) {
           ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--active';
-          if (ctx._wizardDotEls && ctx._wizardDotEls[1]) ctx._wizardDotEls[1].innerHTML = '2';
-          ctx._wizardDots[2].className = 'cb-wizard-step';
+                    ctx._wizardDots[2].className = 'cb-wizard-step';
           if (ctx._wizardLines && ctx._wizardLines[1]) {
             ctx._wizardLines[1].className = 'cb-wizard-line';
           }
@@ -1909,16 +1852,7 @@
             numEl.textContent = (slotProduct.productTitle || '?').charAt(0).toUpperCase();
           }
         } else {
-          var hintImg = steps[idx] && steps[idx].stepImageUrl;
-          if (hintImg) {
-            var hintEl = document.createElement('img');
-            hintEl.src = hintImg;
-            hintEl.alt = steps[idx].label || ('Step ' + (idx + 1));
-            hintEl.className = 'cb-slot-step-thumb cb-slot-step-hint';
-            numEl.appendChild(hintEl);
-          } else {
-            numEl.textContent = idx + 1;
-          }
+          numEl.textContent = idx + 1;
         }
         step.appendChild(numEl);
 
@@ -2077,8 +2011,7 @@
           if (ctx._wizardLines && ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line cb-wizard-line--done';
         } else if (!allFilled && ctx._wizardDots && ctx._wizardDots[2]) {
           ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--active';
-          if (ctx._wizardDotEls && ctx._wizardDotEls[1]) ctx._wizardDotEls[1].innerHTML = '2';
-          ctx._wizardDots[2].className = 'cb-wizard-step';
+                    ctx._wizardDots[2].className = 'cb-wizard-step';
           if (ctx._wizardLines && ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line';
         }
       }
@@ -2394,18 +2327,8 @@
             if (slots[activeSlotIndex]) return;
             var numEl = getActiveNumEl();
             if (!numEl) return;
-            // Restore hint image or step number
             numEl.innerHTML = '';
-            var hintSrc = steps[activeSlotIndex] && steps[activeSlotIndex].stepImageUrl;
-            if (hintSrc) {
-              var hint = document.createElement('img');
-              hint.src = hintSrc;
-              hint.alt = (steps[activeSlotIndex].label || '');
-              hint.className = 'cb-slot-step-thumb cb-slot-step-hint';
-              numEl.appendChild(hint);
-            } else {
-              numEl.textContent = activeSlotIndex + 1;
-            }
+            numEl.textContent = activeSlotIndex + 1;
           });
         })(product);
 

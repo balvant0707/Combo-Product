@@ -1,4 +1,4 @@
-import { Outlet } from "react-router";
+import { Outlet, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { getBox } from "../models/boxes.server";
@@ -14,4 +14,6 @@ export default function EditBoxLayout() {
   return <Outlet />;
 }
 
-export const ErrorBoundary = boundary.error;
+export function ErrorBoundary() {
+  return boundary.error(useRouteError());
+}

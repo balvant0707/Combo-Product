@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigation } from "react-router";
+import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { createBox } from "../models/boxes.server";
@@ -548,4 +548,6 @@ export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
 
-export const ErrorBoundary = boundary.error;
+export function ErrorBoundary() {
+  return boundary.error(useRouteError());
+}

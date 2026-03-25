@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigation } from "react-router";
+import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { createBox, upsertComboConfig, addComboStepImagesToProduct, saveComboStepImages } from "../models/boxes.server";
@@ -696,5 +696,7 @@ export default function CreateSpecificComboBoxPage() {
   );
 }
 
-export const ErrorBoundary = boundary.error;
+export function ErrorBoundary() {
+  return boundary.error(useRouteError());
+}
 export const headers = (headersArgs) => boundary.headers(headersArgs);

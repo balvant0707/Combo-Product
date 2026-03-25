@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useActionData, useFetcher, useLoaderData, useLocation, useNavigation } from "react-router";
+import { useActionData, useFetcher, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { Buffer } from "node:buffer";
@@ -906,4 +906,6 @@ export default function SpecificComboBoxPage() {
   );
 }
 
-export const ErrorBoundary = boundary.error;
+export function ErrorBoundary() {
+  return boundary.error(useRouteError());
+}

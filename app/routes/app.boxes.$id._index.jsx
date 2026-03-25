@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigation } from "react-router";
+import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { AdminIcon } from "../components/admin-icons";
@@ -631,4 +631,6 @@ export default function BoxSettingsPage() {
   );
 }
 
-export const ErrorBoundary = boundary.error;
+export function ErrorBoundary() {
+  return boundary.error(useRouteError());
+}

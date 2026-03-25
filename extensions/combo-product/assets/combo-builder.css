@@ -1246,10 +1246,9 @@
 }
 
 /* ── Wizard Progress Bar (Steps Mode) ─────────────────── */
-/* ── Wizard wrapper ─────────────────────────────────────────── */
 /* ══════════════════════════════════════════════════════════════
-   WIZARD STEPS — Reference Design
-   3 wide rectangular boxes, thin connecting line, indicator circles
+   WIZARD STEPS — Circle indicator design
+   Inactive: filled gray  |  Active: outlined ring  |  Done: filled + ✓
    ══════════════════════════════════════════════════════════════ */
 
 .cb-wizard {
@@ -1259,14 +1258,14 @@
   margin: 0 auto 32px;
   padding: 0;
   max-width: 760px;
-  overflow: hidden;
 }
 
-/* Header: title only */
+/* Header: change-box btn (left) + title (right) */
 .cb-wizard-header {
   display: flex;
   align-items: center;
-  padding: 0 0 12px;
+  gap: 12px;
+  padding: 0 0 20px;
 }
 
 .cb-wizard-title {
@@ -1279,97 +1278,71 @@
   margin: 0;
 }
 
-/* Body: [change-btn col LEFT] + [steps column RIGHT] */
-.cb-wizard-body {
-  display: flex;
-  align-items: flex-start;
-}
-
-/* Left column: "← Change box" button */
-.cb-wizard-changebtn-col {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  padding-right: 14px;
-  padding-top: 0;
-}
-
-/* Right column: stepsRow stacked above labelsRow */
-.cb-wizard-steps-col {
-  flex: 1;
-  min-width: 0;
-}
-
+/* Steps row: [wrapper][line][wrapper][line][wrapper] */
 .cb-wizard-steps-row {
   display: flex;
-  align-items: stretch; /* lines stretch to box height */
-  width: 100%;
-}
-
-/* Labels row — below step boxes, aligned to each step */
-.cb-wizard-labels-row {
-  display: flex;
   align-items: flex-start;
+  width: 100%;
+  padding: 4px 0 0;
 }
 
-/* Spacer matches the line element width */
-.cb-wizard-labels-spacer {
+/* Wrapper: stacks circle + label vertically, centered */
+.cb-wizard-step-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   flex-shrink: 0;
-  width: 32px;
 }
 
-/* Each step: wide rectangular box */
+/* Circle indicator — inactive state */
 .cb-wizard-step {
-  flex: 1;
-  height: 110px;
-  background: #ede9e5;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #c8c0b8;
+  border: 3px solid transparent;
   position: relative;
-  min-width: 0;
-  z-index: 1;
-  overflow: hidden;
-  border: 1.5px solid #dbd5cf;
+  flex-shrink: 0;
   transition: background 0.25s, border-color 0.25s;
 }
 
-/* Line element = white gap with thin line inside via ::after */
-.cb-wizard-line {
-  flex-shrink: 0;
-  width: 32px;
-  background: transparent; /* let page background show through */
-  align-self: stretch;     /* same height as step boxes */
-  position: relative;
-  transition: none;
+/* Active: outlined ring in primary color, no fill */
+.cb-wizard-step--active {
+  background: transparent !important;
+  border-color: var(--cb-primary, #2A7A4F) !important;
 }
-.cb-wizard-line::after {
-  content: '';
+
+/* Done: solid filled + white checkmark */
+.cb-wizard-step--done {
+  background: var(--cb-primary, #2A7A4F) !important;
+  border-color: var(--cb-primary, #2A7A4F) !important;
+}
+.cb-wizard-step--done::after {
+  content: '\2713';
   position: absolute;
-  bottom: 33px; /* aligns with indicator circle center */
-  left: 0;
-  right: 0;
-  height: 1.5px;
-  background: #d4c5b0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Connecting line — flex:1 stretches between circles */
+.cb-wizard-line {
+  flex: 1;
+  height: 2px;
+  background: #c8c0b8;
+  margin-top: 23px; /* half of 46px = vertically centered with circle */
   transition: background 0.25s;
 }
-.cb-wizard-line--done::after {
+.cb-wizard-line--done {
   background: var(--cb-primary, #2A7A4F);
 }
 
-/* Indicator circle — sits on the connecting line at bottom of box */
-.cb-wizard-indicator {
-  position: absolute;
-  left: 14px;
-  bottom: 28px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #c5b9ab;
-  transition: background 0.25s, width 0.25s, height 0.25s, border 0.25s, box-shadow 0.25s;
-  z-index: 3;
-}
-
-/* STEP labels — below the steps row, centered under each step */
+/* Step labels — below each circle */
 .cb-wizard-step-label {
-  flex: 1;
   text-align: center;
   font-size: 10px;
   font-weight: 800 !important;
@@ -1377,110 +1350,26 @@
   text-transform: uppercase;
   color: #b5a898 !important;
   line-height: 1.25;
-  padding-top: 8px;
+  padding-top: 10px;
+  min-width: 72px;
 }
-
-/* Step 1 done: full-size image covers box, name at bottom */
-.cb-wizard-step-content {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  overflow: hidden;
-}
-.cb-wizard-step-thumb {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.cb-wizard-step-box-name {
-  position: relative;
-  z-index: 2;
-  font-size: 11px;
-  font-weight: 700;
-  color: #fff;
-  line-height: 1.3;
-  padding: 4px 8px 28px;
-  background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%);
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-/* Step number shown in idle steps 2 and 3 */
-.cb-wizard-step-num {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -60%);
-  font-size: 28px;
-  font-weight: 900;
-  color: rgba(0,0,0,0.10);
-  letter-spacing: -1px;
-  line-height: 1;
-  pointer-events: none;
-}
-
-
-/* Hidden — kept for JS reference compatibility */
-.cb-wizard-label { display: none; }
-.cb-wizard-dot { display: none; }
-.cb-wizard-badge { display: none; }
-.cb-wizard-step-sublabel { display: none; }
-.cb-wizard-dot-img { display: none; }
-.cb-wizard-dot-grid { display: none; }
-.cb-wizard-dot-cell { display: none; }
-
-/* Active step (steps 1 & 2) */
-.cb-wizard-step--active {
-  background: #eae5e0;
-  border-color: var(--cb-primary, #2A7A4F);
-}
-/* Step 3 active: fill with primary color */
-.cb-wizard-steps-row .cb-wizard-step:last-child.cb-wizard-step--active,
-.cb-wizard-steps-row .cb-wizard-step:last-child.cb-wizard-step--done {
-  background: var(--cb-primary, #2A7A4F);
-  border-color: var(--cb-primary, #2A7A4F);
-}
-/* step-3 label (below box) turns primary color when active/done */
-.cb-wizard-labels-row .cb-wizard-step-label:last-child {
+/* Active / done step: label turns primary color */
+.cb-wizard-step-wrapper:has(.cb-wizard-step--active) .cb-wizard-step-label,
+.cb-wizard-step-wrapper:has(.cb-wizard-step--done) .cb-wizard-step-label {
   color: var(--cb-primary, #2A7A4F) !important;
 }
-.cb-wizard-steps-row .cb-wizard-step:last-child.cb-wizard-step--active .cb-wizard-indicator,
-.cb-wizard-steps-row .cb-wizard-step:last-child.cb-wizard-step--done .cb-wizard-indicator {
-  background: rgba(255,255,255,0.6);
-  border-color: rgba(255,255,255,0.9);
-  box-shadow: none;
-}
-.cb-wizard-steps-row .cb-wizard-step:last-child .cb-wizard-step-num {
-  color: rgba(255,255,255,0.15);
-}
-.cb-wizard-step--active .cb-wizard-indicator {
-  width: 16px;
-  height: 16px;
-  left: 13px;
-  bottom: 26px;
-  background: var(--cb-primary, #2A7A4F);
-  border: 3px solid rgba(255,255,255,0.9);
-  box-shadow: 0 0 0 2px var(--cb-primary, #2A7A4F);
-}
-/* Done step */
-.cb-wizard-step--done {
-  background: #e6e2de;
-  border-color: var(--cb-primary, #2A7A4F);
-}
-.cb-wizard-step--done .cb-wizard-indicator {
-  width: 12px;
-  height: 12px;
-  left: 15px;
-  bottom: 27px;
-  background: var(--cb-primary, #2A7A4F);
-}
-/* label colors managed via .cb-wizard-labels-row rules (labels live outside step boxes) */
+
+/* Hidden — kept for JS reference compatibility */
+.cb-wizard-label        { display: none; }
+.cb-wizard-dot          { display: none; }
+.cb-wizard-badge        { display: none; }
+.cb-wizard-step-sublabel{ display: none; }
+.cb-wizard-dot-img      { display: none; }
+.cb-wizard-dot-grid     { display: none; }
+.cb-wizard-dot-cell     { display: none; }
+.cb-wizard-indicator    { display: none; }
+.cb-wizard-step-content { display: none; }
+.cb-wizard-step-num     { display: none; }
 
 /* Change Box back link — bordered button */
 .cb-change-box-btn {

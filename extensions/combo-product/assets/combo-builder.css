@@ -319,7 +319,6 @@
   gap: 0;
   padding: 8px 0 4px;
   flex-wrap: nowrap;
-  overflow-x: auto;
 }
 
 /* Dashed connector line through the centre of all boxes */
@@ -409,6 +408,12 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Configured step image shown as a dim hint before a product is chosen */
+.cb-slot-step-hint {
+  opacity: 0.45;
+  filter: grayscale(20%);
 }
 
 /* Label below each box */

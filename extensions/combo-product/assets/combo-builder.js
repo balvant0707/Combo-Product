@@ -1280,6 +1280,7 @@
 
       // Steps mode: show Step 3 cart section when all slots filled; update wizard dot
       if (ctx.layoutMode === 'steps') {
+        productSection.style.display = allFilled ? 'none' : '';
         if (step3CartSection) {
           step3CartSection.style.display = allFilled ? 'block' : 'none';
           if (allFilled) step3CartSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1840,7 +1841,16 @@
             numEl.textContent = (slotProduct.productTitle || '?').charAt(0).toUpperCase();
           }
         } else {
-          numEl.textContent = idx + 1;
+          var hintImg = steps[idx] && steps[idx].stepImageUrl;
+          if (hintImg) {
+            var hintEl = document.createElement('img');
+            hintEl.src = hintImg;
+            hintEl.alt = steps[idx].label || ('Step ' + (idx + 1));
+            hintEl.className = 'cb-slot-step-thumb cb-slot-step-hint';
+            numEl.appendChild(hintEl);
+          } else {
+            numEl.textContent = idx + 1;
+          }
         }
         step.appendChild(numEl);
 
@@ -1910,6 +1920,10 @@
     arrow.innerHTML = '&#8594;';
     slotWrapper.appendChild(arrow);
 
+    // In steps mode hide the inline cart button — Step 3 section owns the cart action
+    if (ctx.layoutMode === 'steps') {
+      inlineCartBtn.style.display = 'none';
+    }
     slotWrapper.appendChild(inlineCartBtn);
     container.appendChild(slotWrapper);
 
@@ -1927,6 +1941,39 @@
     productGrid.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
     productSection.appendChild(productGrid);
     container.appendChild(productSection);
+
+    // ── Step 3: Cart section (steps mode only, hidden until all slots filled) ──
+    var step3CartSection = null;
+    var step3CartBtn = null;
+    var step3CheckoutBtn = null;
+    if (ctx.layoutMode === 'steps') {
+      step3CartSection = document.createElement('div');
+      step3CartSection.className = 'cb-step3-cart';
+      step3CartSection.style.display = 'none';
+
+      var step3Head = document.createElement('h2');
+      step3Head.className = 'cb-step-heading cb-step3-heading';
+      step3Head.textContent = 'Step 3: Complete your order';
+      step3CartSection.appendChild(step3Head);
+
+      var step3Btns = document.createElement('div');
+      step3Btns.className = 'cb-step3-buttons';
+
+      step3CartBtn = document.createElement('button');
+      step3CartBtn.type = 'button';
+      step3CartBtn.className = 'cb-step3-cart-btn';
+      step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings);
+      step3Btns.appendChild(step3CartBtn);
+
+      step3CheckoutBtn = document.createElement('button');
+      step3CheckoutBtn.type = 'button';
+      step3CheckoutBtn.className = 'cb-step3-checkout-btn';
+      step3CheckoutBtn.textContent = 'Checkout \u2192';
+      step3Btns.appendChild(step3CheckoutBtn);
+
+      step3CartSection.appendChild(step3Btns);
+      container.appendChild(step3CartSection);
+    }
 
     // ── Cart button state ──
     function updateCartButton() {
@@ -1952,6 +1999,26 @@
         renderStickyTotal(_stickyTotalEl, isDynamic ? totalMrp : (parseFloat(box.bundlePrice) || 0), ctx.currencySymbol);
       }
       if (isDynamic) setBoxCardPrice(box, totalMrp, ctx.currencySymbol);
+
+      // Steps mode: hide product grid when done, show Step 3 cart section + update wizard
+      if (ctx.layoutMode === 'steps') {
+        productSection.style.display = allFilled ? 'none' : '';
+        if (step3CartSection) {
+          step3CartSection.style.display = allFilled ? 'block' : 'none';
+          if (allFilled) step3CartSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        if (allFilled && ctx._wizardDots && ctx._wizardDots[2]) {
+          ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--done';
+          ctx._wizardDots[1].querySelector('.cb-wizard-dot').innerHTML = '&#10003;';
+          ctx._wizardDots[2].className = 'cb-wizard-step cb-wizard-step--active';
+          if (ctx._wizardLines && ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line cb-wizard-line--done';
+        } else if (!allFilled && ctx._wizardDots && ctx._wizardDots[2]) {
+          ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--active';
+          ctx._wizardDots[1].querySelector('.cb-wizard-dot').textContent = '2';
+          ctx._wizardDots[2].className = 'cb-wizard-step';
+          if (ctx._wizardLines && ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line';
+        }
+      }
     }
 
     // ── Resolve products for a step ──
@@ -2277,7 +2344,17 @@
     }
 
     inlineCartBtn.addEventListener('click', doCart);
-    createStickyFooter(box, ctx, doCart);
+    if (ctx.layoutMode === 'steps') {
+      if (step3CartBtn) step3CartBtn.addEventListener('click', doCart);
+      if (step3CheckoutBtn) {
+        step3CheckoutBtn.addEventListener('click', function () {
+          if (slots.filter(Boolean).length < numSteps) return;
+          addToCart(box, slots, sessionId, null, step3CheckoutBtn, null, 'Checkout \u2192', ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo, '/checkout');
+        });
+      }
+    } else {
+      createStickyFooter(box, ctx, doCart);
+    }
 
     loadAndRenderGrid();
     updateCartButton();

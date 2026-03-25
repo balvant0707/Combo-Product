@@ -316,17 +316,20 @@
   display: flex;
   align-items: flex-start;
   position: relative;
-  gap: 64px;
-  padding-top: 8px;
+  gap: 0;
+  padding: 8px 0 4px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
 }
 
+/* Dashed connector line through the centre of all boxes */
 .cb-slot-steps::before {
   content: '';
   position: absolute;
-  top: 42px;
-  left: 40px;
-  right: 40px;
-  border-top: 1.5px dashed #cbd5e1;
+  top: 62px; /* padding-top(8) + num-height(100)/2 - line-height(1) */
+  left: 60px;
+  right: 60px;
+  border-top: 1.5px dashed #c8d6e0;
   z-index: 0;
 }
 
@@ -334,42 +337,62 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   position: relative;
-  width: 110px;
+  width: 130px;
   min-width: 110px;
-  padding: 8px 6px 6px;
+  padding: 0 10px;
   z-index: 1;
 }
 
+/* Wrapper: no background/border — all visual weight lives on cb-slot-step-num */
 .cb-slot-step--active {
-  background: var(--cb-primary-light);
-  border: 1.5px solid rgba(42,122,79,0.3);
+  background: transparent;
+  border: none;
 }
 
-/* The numbered dashed box */
+/* The numbered dashed square box */
 .cb-slot-step-num {
-  width: 88px;
-  height: 88px;
-  border: 2px dashed #cbd5e1;
-  background: #f8fafc;
+  width: 100px;
+  height: 100px;
+  border: 2px dashed #c8d6e0;
+  background: #eef3f8;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 42px;
+  font-size: 44px;
   font-weight: 700;
-  color: #cbd5e1;
+  color: #a8bfcc;
   line-height: 1;
-  transition: all var(--cb-transition);
+  transition: all var(--cb-transition, 0.18s);
   overflow: hidden;
   font-family: var(--cb-font);
 }
 
+/* Active slot — green dashed border + warm light bg */
 .cb-slot-step--active .cb-slot-step-num {
   border-style: dashed;
-  border-color: rgba(42,122,79,0.4);
-  background: transparent;
-  color: rgba(42,122,79,0.5);
+  border-width: 2.5px;
+  border-color: var(--cb-primary, #2A7A4F);
+  background: var(--cb-primary-light, #eaf6ee);
+  color: var(--cb-primary, #2A7A4F);
+}
+
+/* Filled slot — product thumbnail */
+.cb-slot-step--filled .cb-slot-step-num {
+  border-style: solid;
+  border-width: 2px;
+  border-color: var(--cb-primary, #2A7A4F);
+  background: #fff;
+  color: var(--cb-primary, #2A7A4F);
+}
+
+.cb-slot-step--error .cb-slot-step-num {
+  border-color: var(--cb-error, #dc2626) !important;
+  border-style: solid !important;
+  background: rgba(220,38,38,0.05) !important;
+  animation: cb-error-flash 0.7s ease;
 }
 
 @keyframes cb-slot-pulse {
@@ -377,23 +400,8 @@
   50%       { box-shadow: 0 0 0 6px rgba(42,122,79,0.06); }
 }
 
-.cb-slot-step--filled .cb-slot-step-num {
-  border-style: solid;
-  border-width: 2px;
-  border-color: var(--cb-primary);
-  background: #fff;
-  color: var(--cb-primary);
-}
-
-.cb-slot-step--error .cb-slot-step-num {
-  border-color: var(--cb-error) !important;
-  border-style: solid !important;
-  background: rgba(220,38,38,0.05) !important;
-  animation: cb-error-flash 0.7s ease;
-}
-
 @keyframes cb-error-flash {
-  0%, 100% { border-color: var(--cb-error); }
+  0%, 100% { border-color: var(--cb-error, #dc2626); }
   50%       { border-color: #b91c1c; }
 }
 
@@ -403,33 +411,43 @@
   object-fit: cover;
 }
 
+/* Label below each box */
 .cb-slot-step-label {
   text-align: center;
-  line-height: 1.5;
-  font-size: 12px !important;
+  line-height: 1.4;
   font-family: var(--cb-font);
 }
 
 .cb-slot-step-small {
   display: block;
   font-size: 11px;
-  color: var(--cb-text-muted);
+  font-weight: 400;
+  color: var(--cb-text-muted, #6b7280);
   font-family: var(--cb-font);
+}
+
+/* Active slot label gets primary colour on the item name */
+.cb-slot-step--active .cb-slot-step-small {
+  color: var(--cb-text-muted, #6b7280);
 }
 
 .cb-slot-step-item {
   display: block;
-  color: var(--cb-text);
+  color: var(--cb-text, #111827);
   text-decoration: none;
   cursor: default;
   font-family: var(--cb-font);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.3;
 }
 
+.cb-slot-step--active .cb-slot-step-item {
+  color: var(--cb-primary, #2A7A4F);
+}
+
 .cb-slot-step-item--filled {
-  color: var(--cb-primary);
+  color: var(--cb-primary, #2A7A4F);
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -1221,9 +1239,9 @@
     grid-template-columns: repeat(2, 1fr) !important;
   }
 
-  .cb-slot-steps { gap: 40px; }
-  .cb-slot-step { width: 88px; min-width: 88px; }
-  .cb-slot-step-num { width: 72px; height: 72px; font-size: 34px; }
+  .cb-slot-steps::before { top: 48px; left: 44px; right: 44px; }
+  .cb-slot-step { width: 96px; min-width: 88px; padding: 0 6px; }
+  .cb-slot-step-num { width: 76px; height: 76px; font-size: 34px; }
 
   .cb-sticky-footer { padding: 10px 16px; }
   .cb-sticky-btn { padding: 12px 20px; font-size: 12px; }

@@ -1331,6 +1331,26 @@
   color: var(--cb-text-muted, #6b7280);
 }
 
+/* ── Steps Mode: Change Box back link ─────────────────── */
+.cb-change-box-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 0 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cb-text-muted, #6b7280);
+  font-family: var(--cb-font, sans-serif);
+  cursor: pointer;
+  letter-spacing: 0;
+  transition: color 0.18s;
+}
+.cb-change-box-btn:hover {
+  color: var(--cb-primary, #2A7A4F);
+}
+
 /* ── Steps Mode: Step 3 Cart Section ──────────────────── */
 .cb-step3-cart {
   margin-top: 28px;

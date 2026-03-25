@@ -772,6 +772,12 @@
     ctx.boxes.forEach(function (box) { boxGrid.appendChild(createBoxCard(box, ctx)); });
     wrapper.appendChild(boxGrid);
 
+    // Store refs so openBuilder can show/hide Step 1 in steps mode
+    if (ctx.layoutMode === 'steps') {
+      ctx._step1Head = step1Head;
+      ctx._boxGrid = boxGrid;
+    }
+
     // ── Builder area ──────────────────────────────────────────────────────────
     var builderArea = document.createElement('div');
     builderArea.className = 'cb-builder-area';
@@ -897,16 +903,53 @@
     var builderArea = wrapper.querySelector('.cb-builder-area');
     if (!builderArea) return;
 
-    // Steps mode: advance wizard → Step 1 done, Step 2 active
-    if (ctx.layoutMode === 'steps' && ctx._wizardDots) {
-      ctx._wizardDots[0].className = 'cb-wizard-step cb-wizard-step--done';
-      ctx._wizardDots[0].querySelector('.cb-wizard-dot').innerHTML = '&#10003;';
-      ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--active';
-      // Reset Step 3 in case user re-selects a box after completing
-      ctx._wizardDots[2].className = 'cb-wizard-step';
-      ctx._wizardDots[2].querySelector('.cb-wizard-dot').textContent = '3';
-      if (ctx._wizardLines[0]) ctx._wizardLines[0].className = 'cb-wizard-line cb-wizard-line--done';
-      if (ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line';
+    // Steps mode: hide Step 1 (box grid) and advance wizard
+    if (ctx.layoutMode === 'steps') {
+      if (ctx._step1Head) ctx._step1Head.style.display = 'none';
+      if (ctx._boxGrid) ctx._boxGrid.style.display = 'none';
+
+      // Show "← Change box" back link (create once, re-use on re-select)
+      if (!ctx._changeBoxBtn) {
+        var changeBoxBtn = document.createElement('button');
+        changeBoxBtn.type = 'button';
+        changeBoxBtn.className = 'cb-change-box-btn';
+        changeBoxBtn.innerHTML = '\u2190 Change box';
+        wrapper.insertBefore(changeBoxBtn, builderArea);
+        ctx._changeBoxBtn = changeBoxBtn;
+        changeBoxBtn.addEventListener('click', function () {
+          // Show Step 1 again, hide builder
+          if (ctx._step1Head) ctx._step1Head.style.display = '';
+          if (ctx._boxGrid) ctx._boxGrid.style.display = '';
+          builderArea.style.display = 'none';
+          builderArea.innerHTML = '';
+          changeBoxBtn.style.display = 'none';
+          // Reset wizard to Step 1 active
+          if (ctx._wizardDots) {
+            ctx._wizardDots[0].className = 'cb-wizard-step cb-wizard-step--active';
+            ctx._wizardDots[0].querySelector('.cb-wizard-dot').textContent = '1';
+            ctx._wizardDots[1].className = 'cb-wizard-step';
+            ctx._wizardDots[1].querySelector('.cb-wizard-dot').textContent = '2';
+            ctx._wizardDots[2].className = 'cb-wizard-step';
+            ctx._wizardDots[2].querySelector('.cb-wizard-dot').textContent = '3';
+            if (ctx._wizardLines[0]) ctx._wizardLines[0].className = 'cb-wizard-line';
+            if (ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line';
+          }
+          // Clear active box card highlight
+          document.querySelectorAll('.cb-box-card').forEach(function (c) { c.classList.remove('cb-box-card--active'); });
+        });
+      }
+      ctx._changeBoxBtn.style.display = '';
+
+      if (ctx._wizardDots) {
+        ctx._wizardDots[0].className = 'cb-wizard-step cb-wizard-step--done';
+        ctx._wizardDots[0].querySelector('.cb-wizard-dot').innerHTML = '&#10003;';
+        ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--active';
+        // Reset Step 3 in case user re-selects a box after completing
+        ctx._wizardDots[2].className = 'cb-wizard-step';
+        ctx._wizardDots[2].querySelector('.cb-wizard-dot').textContent = '3';
+        if (ctx._wizardLines[0]) ctx._wizardLines[0].className = 'cb-wizard-line cb-wizard-line--done';
+        if (ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line';
+      }
     }
 
     if (isDynamicBundlePrice(box)) {

@@ -956,6 +956,8 @@
       setBoxCardPrice(box, 0, ctx.currencySymbol);
     }
 
+    ctx._openBoxId = box.id;
+
     builderArea.style.display = 'block';
     builderArea.innerHTML = '<div class="cb-section-loading"><div class="combo-builder-spinner"></div> Loading products…</div>';
 
@@ -965,6 +967,7 @@
       builderArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else {
       fetchProducts(box.id, ctx.shop, ctx.apiBase, function (err, products) {
+        if (ctx._openBoxId !== box.id) return;
         if (err || !products || products.length === 0) {
           builderArea.innerHTML = '<p class="cb-error">Failed to load products. Please reload and try again.</p>';
           return;

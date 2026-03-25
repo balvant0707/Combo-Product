@@ -795,6 +795,14 @@
           ctx._wizardStep1Name = s1Name;
         }
 
+        // Steps 2 & 3: large ghost number in center
+        if (i > 0) {
+          var stepNum = document.createElement('div');
+          stepNum.className = 'cb-wizard-step-num';
+          stepNum.textContent = '0' + (i + 1);
+          stepEl.appendChild(stepNum);
+        }
+
         var stepLbl = document.createElement('div');
         stepLbl.className = 'cb-wizard-step-label';
         stepLbl.innerHTML = def.line1 + '<br>' + def.line2;
@@ -1811,10 +1819,7 @@
       if (step3CheckoutBtn) step3CheckoutBtn.addEventListener('click', doCheckout);
     }
 
-    // Create sticky footer only in grid mode
-    if (ctx.layoutMode !== 'steps') {
-      createStickyFooter(box, ctx, doAddToCart);
-    }
+    createStickyFooter(box, ctx, doAddToCart);
     updateCartButton();
   }
 
@@ -2420,9 +2425,8 @@
           addToCart(box, slots, sessionId, null, step3CheckoutBtn, null, 'Checkout \u2192', ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo, '/checkout');
         });
       }
-    } else {
-      createStickyFooter(box, ctx, doCart);
     }
+    createStickyFooter(box, ctx, doCart);
 
     loadAndRenderGrid();
     updateCartButton();

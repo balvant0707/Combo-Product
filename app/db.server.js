@@ -221,6 +221,32 @@ const ENSURE_APP_SETTINGS_COLUMNS_SQL = [
 
 // Persist across hot-reloads AND across warm serverless invocations in the
 // same container so the DDL only fires once per process lifetime.
+// Retry a DB operation with exponential backoff for transient connection errors.
+export async function withDbRetry(fn, { retries = 3, delayMs = 500 } = {}) {
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      const isTransient =
+        err?.message?.includes("Can't reach database") ||
+        err?.message?.includes("Connection refused") ||
+        err?.message?.includes("ECONNREFUSED") ||
+        err?.message?.includes("ETIMEDOUT") ||
+        err?.errorCode === "P1001" ||   // Prisma: unreachable
+        err?.errorCode === "P1002";     // Prisma: timed out
+      if (!isTransient || attempt === retries) break;
+      const wait = delayMs * 2 ** attempt;
+      console.warn(`[DB] transient error (attempt ${attempt + 1}/${retries + 1}), retrying in ${wait}ms…`, err?.message);
+      await new Promise((r) => setTimeout(r, wait));
+      // Reset the cached promise so ensureAppTables re-runs after reconnect
+      globalThis.__ensureTablesPromise = null;
+    }
+  }
+  throw lastErr;
+}
+
 export function ensureAppTables() {
   if (!globalThis.__ensureTablesPromise) {
     globalThis.__ensureTablesPromise = (async () => {
@@ -233,7 +259,11 @@ export function ensureAppTables() {
       for (const sql of ENSURE_APP_SETTINGS_COLUMNS_SQL) {
         await prisma.$executeRawUnsafe(sql);
       }
-    })();
+    })().catch((err) => {
+      // Allow retry on next request
+      globalThis.__ensureTablesPromise = null;
+      throw err;
+    });
   }
 
   return globalThis.__ensureTablesPromise;

@@ -598,6 +598,7 @@
     var shop = root.dataset.shop || config.shop;
     var currencySymbol = root.dataset.currencySymbol || config.currencySymbol || '\u20B9';
     var layout = root.dataset.layout || config.layout || 'grid';
+    var layoutMode = root.dataset.layoutMode || config.layoutMode || 'grid';
     var apiBase = root.dataset.apiBase || config.apiBase || DEFAULT_API_BASE;
 
     var boxIdsFilter = null;
@@ -674,7 +675,7 @@
         }
       }
 
-      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root });
+      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, layoutMode: layoutMode, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root });
     });
   }
 
@@ -686,6 +687,7 @@
       apiBase: el.dataset.apiBase || DEFAULT_API_BASE,
       currencySymbol: el.dataset.currencySymbol || (window.Shopify && window.Shopify.currency && window.Shopify.currency.symbol) || '\u20B9',
       layout: el.dataset.layout || 'grid',
+      layoutMode: el.dataset.layoutMode || 'grid',
       heading: el.dataset.heading || 'Build Your Own Box!',
       boxIds: el.dataset.boxIds || null,
     });
@@ -1038,7 +1040,61 @@
     slotWrapper.appendChild(arrow);
 
     slotWrapper.appendChild(inlineCartBtn);
-    container.appendChild(slotWrapper);
+
+    // ── Steps Mode vs Grid Mode layout ──
+    var stepsCounterEl = null;
+    var stepsBackBtn = null;
+    var stepsNextBtn = null;
+
+    if (ctx.layoutMode === 'steps') {
+      // In steps mode: hide the traditional slot progress bar and show a step counter instead
+      slotWrapper.style.display = 'none';
+      container.appendChild(slotWrapper); // keep in DOM for updateCartButton references
+
+      var stepsNavEl = document.createElement('div');
+      stepsNavEl.className = 'cb-steps-nav';
+
+      stepsBackBtn = document.createElement('button');
+      stepsBackBtn.type = 'button';
+      stepsBackBtn.className = 'cb-steps-back-btn';
+      stepsBackBtn.textContent = '\u2190 Back';
+      stepsBackBtn.style.visibility = 'hidden';
+
+      stepsCounterEl = document.createElement('div');
+      stepsCounterEl.className = 'cb-steps-counter';
+
+      stepsNextBtn = document.createElement('button');
+      stepsNextBtn.type = 'button';
+      stepsNextBtn.className = 'cb-steps-next-btn';
+      stepsNextBtn.disabled = true;
+      stepsNextBtn.textContent = 'Next Step \u2192';
+
+      stepsNavEl.appendChild(stepsBackBtn);
+      stepsNavEl.appendChild(stepsCounterEl);
+      stepsNavEl.appendChild(stepsNextBtn);
+      container.appendChild(stepsNavEl);
+
+      stepsBackBtn.addEventListener('click', function () {
+        if (activeSlotIndex > 0) {
+          activeSlotIndex--;
+          renderSlots();
+          renderProductGrid();
+          updateCartButton();
+        }
+      });
+
+      stepsNextBtn.addEventListener('click', function () {
+        var next = activeSlotIndex + 1;
+        if (next < slots.length) {
+          activeSlotIndex = next;
+          renderSlots();
+          renderProductGrid();
+          updateCartButton();
+        }
+      });
+    } else {
+      container.appendChild(slotWrapper);
+    }
 
     // ── Gift Message ──
     var giftInput = null;
@@ -1139,6 +1195,20 @@
         } else {
           _stickySavingsEl.style.display = 'none';
         }
+      }
+
+      // Steps mode: update counter + back/next state
+      if (stepsCounterEl) {
+        stepsCounterEl.textContent = 'Item ' + (activeSlotIndex + 1) + ' of ' + box.itemCount;
+      }
+      if (stepsBackBtn) {
+        stepsBackBtn.style.visibility = activeSlotIndex > 0 ? 'visible' : 'hidden';
+      }
+      if (stepsNextBtn) {
+        var currentSlotFilled = !!slots[activeSlotIndex];
+        var isLastSlot = activeSlotIndex === box.itemCount - 1;
+        stepsNextBtn.disabled = !currentSlotFilled || isLastSlot;
+        stepsNextBtn.textContent = isLastSlot ? 'Done \u2713' : 'Next Step \u2192';
       }
     }
 

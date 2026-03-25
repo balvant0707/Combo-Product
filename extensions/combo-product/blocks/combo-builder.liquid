@@ -7,6 +7,7 @@
   data-currency="{{ cart.currency.iso_code }}"
   data-currency-symbol="{{ cart.currency.symbol }}"
   data-api-base="https://combo-products.vercel.app"
+  data-layout-mode="{{ block.settings.layout_mode | default: 'grid' }}"
   data-page-template="{{ template.name }}"
   {% case template.name %}
     {% when 'page' %}
@@ -37,7 +38,8 @@
     currency:       '{{ cart.currency.iso_code }}',
     currencySymbol: '{{ cart.currency.symbol }}',
     apiBase:        'https://combo-products.vercel.app',
-    productHandle:  '{{ product.handle }}'
+    productHandle:  '{{ product.handle }}',
+    layoutMode:     '{{ block.settings.layout_mode | default: "grid" }}'
   });
 </script>
 
@@ -45,6 +47,18 @@
 {
   "name": "Combo Builder",
   "target": "section",
-  "settings": []
+  "settings": [
+    {
+      "type": "select",
+      "id": "layout_mode",
+      "label": "Product Selection Layout",
+      "info": "Grid shows all products at once. Steps guides the customer one item at a time.",
+      "options": [
+        { "value": "grid", "label": "Grid (all at once)" },
+        { "value": "steps", "label": "Steps (one at a time)" }
+      ],
+      "default": "grid"
+    }
+  ]
 }
 {% endschema %}

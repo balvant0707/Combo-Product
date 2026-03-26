@@ -79,6 +79,7 @@ model ComboBox {
   scopeType           String            @default("specific_collections") @db.VarChar(30)
   scopeItemsJson      String?           @db.LongText
   pageHandle          String?           @db.VarChar(255)
+  boxCode             String?           @unique @db.VarChar(10)
   orders              BundleOrder[]
   products            ComboBoxProduct[]
   config              ComboBoxConfig?

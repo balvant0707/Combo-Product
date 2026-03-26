@@ -1,4 +1,4 @@
-import db from "../db.server";
+import db, { ensureAppTables } from "../db.server";
 import { Buffer } from "node:buffer";
 
 // Generate a 5-character unique box code (uppercase alphanumeric, no I/O/1/0 ambiguity)
@@ -470,6 +470,7 @@ export function getBannerImageSrc(box) {
 }
 
 export async function listBoxes(shop, activeOnly = false, includeBannerBinary = false) {
+  await ensureAppTables();
   const where = {
     shop,
     deletedAt: null,

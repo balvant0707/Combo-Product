@@ -93,6 +93,31 @@
 
 @keyframes cb-spin { to { transform: rotate(360deg); } }
 
+/* Circular spinner used in page loader panel and initial load */
+.combo-builder-spinner {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--cb-border, #e5e7eb);
+  border-top-color: var(--cb-primary, #2A7A4F);
+  border-radius: 50%;
+  animation: cb-spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+/* Initial box-grid loading placeholder shown while boxes are being fetched */
+.cb-initial-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 200px;
+  padding: 48px;
+  color: var(--cb-text-muted, #6b7280);
+  font-size: 14px;
+  font-family: var(--cb-font);
+}
+
 .cb-page-loader[hidden] { display: none !important; }
 
 .cb-page-loader {
@@ -1330,16 +1355,20 @@
 .cb-wizard-step--done {
   background: var(--cb-primary) !important;
   border-color: var(--cb-primary) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   box-shadow:
     0 6px 16px var(--cb-primary-glow),
     inset 0 0 0 1px rgba(255,255,255,0.08);
 }
 .cb-wizard-step--done::after {
-  content: '';
-  position: absolute;
-  inset: 10px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.2);
+  content: '\2713';
+  position: static;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 /* Connecting line — flex:1 stretches between circles */
@@ -1360,14 +1389,20 @@
 /* Step labels — below each circle */
 .cb-wizard-step-label {
   text-align: center;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500 !important;
   letter-spacing: 0;
   text-transform: none;
   color: var(--cb-text-muted) !important;
   line-height: 1.2;
   min-width: 72px;
-  transition: color 0.25s ease;
+  max-width: 100px;
+  word-break: break-word;
+  transition: color 0.25s ease, font-weight 0.25s ease;
+}
+.cb-wizard-step-wrapper:has(.cb-wizard-step--done) .cb-wizard-step-label {
+  font-weight: 700 !important;
+  font-size: 12px;
 }
 /* Active / done step: label turns primary color */
 .cb-wizard-step-wrapper:has(.cb-wizard-step--active) .cb-wizard-step-label,

@@ -628,8 +628,11 @@
       return;
     }
 
+    root.innerHTML = '<div class="cb-initial-loader"><span class="combo-builder-spinner" aria-hidden="true"></span><span>Loading\u2026</span></div>';
+
     fetchBoxes(shop, apiBase, function (err, boxes, settings) {
-      if (err || !boxes || boxes.length === 0) { root.innerHTML = ''; return; }
+      root.innerHTML = '';
+      if (err || !boxes || boxes.length === 0) { return; }
       if (boxIdsFilter && boxIdsFilter.length > 0) {
         boxes = boxes.filter(function (b) { return boxIdsFilter.indexOf(b.id) !== -1; });
       }
@@ -759,9 +762,9 @@
       stepsRow.setAttribute('role', 'list');
 
       var WIZARD_STEP_DEFS = [
-        { label: 'Stage 1', description: 'Choose your box' },
-        { label: 'Stage 2', description: 'Pick your products' },
-        { label: 'Stage 3', description: 'Add your box to cart' }
+        { label: 'Select Box',  description: 'Choose your box',        doneLabel: 'Box Selected' },
+        { label: 'Pick Items',  description: 'Pick your products',     doneLabel: 'Items Selected' },
+        { label: 'Add to Cart', description: 'Add your box to cart',   doneLabel: 'Added to Cart' }
       ];
       var wizardDots = [];
       var wizardLines = [];
@@ -803,6 +806,7 @@
       ctx._wizardLines = wizardLines;
       ctx._wizardDotEls = wizardDotEls;
       ctx._wizardLabelEls = wizardLabelEls;
+      ctx._wizardStepDefs = WIZARD_STEP_DEFS;
     }
 
     // Step 1 Heading
@@ -970,6 +974,9 @@
             ctx._wizardDots[2].className = 'cb-wizard-step';
             if (ctx._wizardLines[0]) ctx._wizardLines[0].className = 'cb-wizard-line';
             if (ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line';
+            if (ctx._wizardLabelEls && ctx._wizardStepDefs) {
+              ctx._wizardLabelEls.forEach(function (el, i) { el.textContent = ctx._wizardStepDefs[i].label; });
+            }
           }
           document.querySelectorAll('.cb-box-card').forEach(function (c) { c.classList.remove('cb-box-card--active'); });
         });
@@ -982,6 +989,12 @@
         ctx._wizardDots[2].className = 'cb-wizard-step';
         if (ctx._wizardLines[0]) ctx._wizardLines[0].className = 'cb-wizard-line cb-wizard-line--done';
         if (ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line';
+        if (ctx._wizardLabelEls) {
+          var boxTitle = (box.displayTitle || box.boxName || '').slice(0, 20);
+          ctx._wizardLabelEls[0].textContent = boxTitle || (ctx._wizardStepDefs ? ctx._wizardStepDefs[0].doneLabel : 'Box Selected');
+          if (ctx._wizardStepDefs) ctx._wizardLabelEls[1].textContent = ctx._wizardStepDefs[1].label;
+          if (ctx._wizardStepDefs) ctx._wizardLabelEls[2].textContent = ctx._wizardStepDefs[2].label;
+        }
         // Show box image + name in Step 1 box
         if (ctx._wizardStep1Content) {
           var bSrc = getBoxCardBannerSrc(box, ctx);
@@ -1338,11 +1351,18 @@
           if (ctx._wizardLines && ctx._wizardLines[1]) {
             ctx._wizardLines[1].className = 'cb-wizard-line cb-wizard-line--done';
           }
+          if (ctx._wizardLabelEls && ctx._wizardStepDefs) {
+            ctx._wizardLabelEls[1].textContent = ctx._wizardStepDefs[1].doneLabel;
+            ctx._wizardLabelEls[2].textContent = ctx._wizardStepDefs[2].label;
+          }
         } else if (!allFilled && ctx._wizardDots && ctx._wizardDots[2]) {
           ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--active';
                     ctx._wizardDots[2].className = 'cb-wizard-step';
           if (ctx._wizardLines && ctx._wizardLines[1]) {
             ctx._wizardLines[1].className = 'cb-wizard-line';
+          }
+          if (ctx._wizardLabelEls && ctx._wizardStepDefs) {
+            ctx._wizardLabelEls[1].textContent = ctx._wizardStepDefs[1].label;
           }
         }
       }
@@ -1737,6 +1757,15 @@
         return;
       }
 
+      // Immediately show loading state on buttons before async resolve
+      [inlineCartBtn, _stickyBtn].forEach(function (btn) {
+        if (!btn) return;
+        btn.disabled = true;
+        btn.className = btn === _stickyBtn ? 'cb-sticky-btn cb-sticky-btn--loading' : 'cb-inline-cart-btn cb-inline-cart-btn--loading';
+        btn.innerHTML = '<span class="cb-btn-spinner" aria-hidden="true"></span><span class="cb-btn-label">Adding\u2026</span>';
+      });
+      showPageLoader('Adding products to cart\u2026');
+
       // Resolve missing variantIds (existing boxes created before the fix)
       var resolvePromises = slots.map(function (p) {
         if (!p || (p.variantIds && p.variantIds.length > 0)) return Promise.resolve();
@@ -1779,6 +1808,11 @@
         });
         return;
       }
+      if (step3CheckoutBtn) {
+        step3CheckoutBtn.disabled = true;
+        step3CheckoutBtn.innerHTML = '<span class="cb-btn-spinner" aria-hidden="true"></span><span class="cb-btn-label">Processing\u2026</span>';
+      }
+      showPageLoader('Processing\u2026');
       var rp = slots.map(function (p) {
         if (!p || (p.variantIds && p.variantIds.length > 0)) return Promise.resolve();
         if (!p.productHandle) return Promise.resolve();
@@ -2040,10 +2074,17 @@
           setWizardStep2Preview(ctx, slots);
           ctx._wizardDots[2].className = 'cb-wizard-step cb-wizard-step--active';
           if (ctx._wizardLines && ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line cb-wizard-line--done';
+          if (ctx._wizardLabelEls && ctx._wizardStepDefs) {
+            ctx._wizardLabelEls[1].textContent = ctx._wizardStepDefs[1].doneLabel;
+            ctx._wizardLabelEls[2].textContent = ctx._wizardStepDefs[2].label;
+          }
         } else if (!allFilled && ctx._wizardDots && ctx._wizardDots[2]) {
           ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--active';
                     ctx._wizardDots[2].className = 'cb-wizard-step';
           if (ctx._wizardLines && ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line';
+          if (ctx._wizardLabelEls && ctx._wizardStepDefs) {
+            ctx._wizardLabelEls[1].textContent = ctx._wizardStepDefs[1].label;
+          }
         }
       }
     }

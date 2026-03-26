@@ -219,6 +219,11 @@ const ENSURE_APP_SETTINGS_COLUMNS_SQL = [
   "ALTER TABLE `app_settings` ADD COLUMN IF NOT EXISTS `productCardsPerRow` INTEGER NULL DEFAULT 4;",
 ];
 
+const ENSURE_COMBO_BOX_COLUMNS_SQL = [
+  "ALTER TABLE `combo_box` ADD COLUMN IF NOT EXISTS `boxCode` VARCHAR(10) NULL;",
+  "ALTER TABLE `combo_box` ADD UNIQUE INDEX IF NOT EXISTS `combo_box_boxCode_key` (`boxCode`);",
+];
+
 // Persist across hot-reloads AND across warm serverless invocations in the
 // same container so the DDL only fires once per process lifetime.
 // Retry a DB operation with exponential backoff for transient connection errors.
@@ -259,6 +264,9 @@ export function ensureAppTables() {
       await prisma.$executeRawUnsafe(ENSURE_BUNDLE_ORDER_TABLE_SQL);
       await prisma.$executeRawUnsafe(ENSURE_APP_SETTINGS_TABLE_SQL);
       for (const sql of ENSURE_APP_SETTINGS_COLUMNS_SQL) {
+        await prisma.$executeRawUnsafe(sql);
+      }
+      for (const sql of ENSURE_COMBO_BOX_COLUMNS_SQL) {
         await prisma.$executeRawUnsafe(sql);
       }
     })().catch((err) => {

@@ -614,17 +614,21 @@
       boxIdsFilter = String(rawBoxIds).split(',').map(function (id) { return parseInt(id.trim(), 10); }).filter(Boolean);
     }
 
-    // Per-box visibility filter from theme editor (box names or IDs, comma/newline separated)
+    // Per-box visibility filter from theme editor (box names, codes, or numeric IDs — comma/newline separated)
     var visibleBoxNames = null;
+    var visibleBoxCodes = null;
     var rawVisible = root.dataset.visibleBoxes || config.visibleBoxes || null;
     if (rawVisible && String(rawVisible).trim()) {
       var visTokens = String(rawVisible).split(/[\n,]+/)
         .map(function (t) { return t.trim(); }).filter(Boolean);
-      var visIdTokens = [], visNameTokens = [];
+      var visIdTokens = [], visNameTokens = [], visCodeTokens = [];
       visTokens.forEach(function (t) {
         var n = parseInt(t, 10);
         if (!isNaN(n) && String(n) === t) {
           visIdTokens.push(n);
+        } else if (/^[A-Z0-9]{5}$/.test(t.toUpperCase()) && t.length === 5) {
+          // 5-char alphanumeric → treat as boxCode
+          visCodeTokens.push(t.toUpperCase());
         } else {
           visNameTokens.push(t.toLowerCase());
         }
@@ -634,6 +638,9 @@
       }
       if (visNameTokens.length > 0) {
         visibleBoxNames = visNameTokens;
+      }
+      if (visCodeTokens.length > 0) {
+        visibleBoxCodes = visCodeTokens;
       }
     }
 
@@ -658,6 +665,12 @@
         boxes = boxes.filter(function (b) {
           var name = String(b.boxName || b.displayTitle || '').trim().toLowerCase();
           return visibleBoxNames.indexOf(name) !== -1;
+        });
+      }
+      // Filter by box code (5-char unique code)
+      if (visibleBoxCodes && visibleBoxCodes.length > 0) {
+        boxes = boxes.filter(function (b) {
+          return b.boxCode && visibleBoxCodes.indexOf(String(b.boxCode).toUpperCase()) !== -1;
         });
       }
       // Filter by page assignment: show box if pageHandle is null (all pages) or matches current page
@@ -953,6 +966,14 @@
     ctaBtn.type = 'button';
     ctaBtn.textContent = (ctx.settings && ctx.settings.ctaButtonLabel) || 'BUILD YOUR BOX';
     body.appendChild(ctaBtn);
+
+    // Box code badge — shows the short code merchants use in block settings
+    if (box.boxCode) {
+      var idBadge = document.createElement('div');
+      idBadge.className = 'cb-box-id-badge';
+      idBadge.textContent = 'Code: ' + box.boxCode;
+      body.appendChild(idBadge);
+    }
 
     card.appendChild(body);
 

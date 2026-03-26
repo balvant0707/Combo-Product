@@ -42,6 +42,7 @@ export const loader = async ({ request }) => {
     const hasUploadedBanner = !bannerImageUrl && !!box.bannerImageMimeType;
     return {
       id: box.id,
+      boxCode: box.boxCode || null,
       boxName: box.boxName,
       displayTitle: box.displayTitle,
       itemCount: box.itemCount,

@@ -316,6 +316,17 @@
   background: var(--cb-primary);
 }
 
+/* Box ID badge — shown at foot of box card for merchant reference */
+.cb-box-id-badge {
+  margin-top: 8px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #94a3b8;
+  letter-spacing: 0.04em;
+  text-align: center;
+  user-select: all;
+}
+
 /* ── Builder Area ─────────────────────────────────────── */
 .cb-builder-area {
   animation: cb-fade-in 0.2s ease;

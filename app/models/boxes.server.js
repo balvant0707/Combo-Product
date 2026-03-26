@@ -1,6 +1,25 @@
 import db from "../db.server";
 import { Buffer } from "node:buffer";
 
+// Generate a 5-character unique box code (uppercase alphanumeric, no I/O/1/0 ambiguity)
+const BOX_CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+function generateBoxCode() {
+  let code = "";
+  for (let i = 0; i < 5; i++) {
+    code += BOX_CODE_CHARS[Math.floor(Math.random() * BOX_CODE_CHARS.length)];
+  }
+  return code;
+}
+
+async function getUniqueBoxCode() {
+  let code, exists;
+  do {
+    code = generateBoxCode();
+    exists = await db.comboBox.findFirst({ where: { boxCode: code } });
+  } while (exists);
+  return code;
+}
+
 const CREATE_BUNDLE_PRODUCT_MUTATION = `#graphql
   mutation productCreate($product: ProductCreateInput!) {
     productCreate(product: $product) {
@@ -467,6 +486,18 @@ export async function listBoxes(shop, activeOnly = false, includeBannerBinary = 
     orderBy: { sortOrder: "asc" },
   });
 
+  // Lazy backfill: assign a boxCode to any existing box that doesn't have one
+  const noCode = boxes.filter((b) => !b.boxCode);
+  if (noCode.length > 0) {
+    await Promise.all(
+      noCode.map(async (b) => {
+        const code = await getUniqueBoxCode();
+        await db.comboBox.update({ where: { id: b.id }, data: { boxCode: code } });
+        b.boxCode = code;
+      })
+    );
+  }
+
   if (includeBannerBinary) return boxes;
 
   return boxes.map((box) => {
@@ -528,12 +559,14 @@ export async function createBox(shop, data, admin) {
   }
 
   const nextSortOrder = await getNextSortOrder(shop);
+  const boxCode = await getUniqueBoxCode();
 
   const hasUploadedBanner = Boolean(data.bannerImage?.bytes);
 
   const box = await db.comboBox.create({
     data: {
       shop,
+      boxCode,
       boxName: data.boxName,
       displayTitle: data.displayTitle,
       itemCount,

@@ -50,6 +50,7 @@ export const loader = async ({ request }) => {
   return {
     boxes: boxes.map((b) => ({
       id: b.id,
+      boxCode: b.boxCode || null,
       boxName: b.boxName,
       displayTitle: b.displayTitle,
       itemCount: b.itemCount,
@@ -96,6 +97,29 @@ const AVATAR_COLORS = [
 
 function getAvatarColor(id) {
   return AVATAR_COLORS[id % AVATAR_COLORS.length];
+}
+
+function CopyCodeBtn({ code }) {
+  const [copied, setCopied] = useState(false);
+  function handleCopy() {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
+  return (
+    <div className="cb-code-cell">
+      <span className="cb-code-chip">{code}</span>
+      <button
+        type="button"
+        className={`cb-copy-btn${copied ? " copied" : ""}`}
+        title={copied ? "Copied!" : "Copy code"}
+        onClick={handleCopy}
+      >
+        {copied ? "✓" : "⎘"}
+      </button>
+    </div>
+  );
 }
 
 export default function ManageBoxesPage() {
@@ -356,6 +380,24 @@ export default function ManageBoxesPage() {
           background: #f3f4f6; border-radius: 6px;
           font-size: 12px; font-weight: 700; color: #374151;
         }
+
+        /* ── Box Code chip ── */
+        .cb-code-cell { display: flex; align-items: center; gap: 6px; }
+        .cb-code-chip {
+          font-family: monospace; font-size: 12px; font-weight: 700;
+          letter-spacing: 0.1em; color: #1d4ed8;
+          background: #eff6ff; border: 1px solid #bfdbfe;
+          border-radius: 5px; padding: 3px 8px;
+          user-select: all;
+        }
+        .cb-copy-btn {
+          width: 24px; height: 24px; border-radius: 5px;
+          border: 1px solid #e5e7eb; background: #fff;
+          cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+          color: #9ca3af; font-size: 12px; transition: all 0.13s; flex-shrink: 0;
+        }
+        .cb-copy-btn:hover { background: #f0fdf4; border-color: #2A7A4F; color: #2A7A4F; }
+        .cb-copy-btn.copied { background: #dcfce7; border-color: #86efac; color: #16a34a; }
       `}</style>
 
       <ui-title-bar title="Combo Boxes">
@@ -452,6 +494,7 @@ export default function ManageBoxesPage() {
                 <tr>
                   <th style={{ width: 32, padding: "11px 8px" }}></th>
                   <th>Box Name</th>
+                  <th>Code</th>
                   <th>Items</th>
                   <th>Price</th>
                   <th>Type</th>
@@ -500,6 +543,11 @@ export default function ManageBoxesPage() {
                             )}
                           </div>
                         </div>
+                      </td>
+
+                      {/* Code */}
+                      <td>
+                        {box.boxCode ? <CopyCodeBtn code={box.boxCode} /> : <span style={{ color: "#d1d5db", fontSize: 12 }}>—</span>}
                       </td>
 
                       {/* Items */}

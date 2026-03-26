@@ -883,7 +883,6 @@
   background: rgba(255,255,255,0.98);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border-top: 2px solid var(--cb-text);
   box-shadow: 0 -4px 24px rgba(0,0,0,0.08);
   display: flex;
   align-items: center;
@@ -1261,7 +1260,6 @@
   max-width: 820px;
   background: var(--cb-bg);
   border: 1px solid var(--cb-border);
-  border-radius: 24px;
   box-shadow: var(--cb-shadow);
 }
 /* Header: change-box btn (left) + title (right) */

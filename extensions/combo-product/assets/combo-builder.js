@@ -482,7 +482,7 @@
 
     var text = document.createElement('span');
     text.className = 'cb-page-loader-text';
-    text.textContent = 'Adding products to cart...';
+    text.id = 'cb-page-loader-text';
     panel.appendChild(text);
 
     overlay.appendChild(panel);
@@ -491,8 +491,10 @@
     return _pageLoaderEl;
   }
 
-  function showPageLoader() {
+  function showPageLoader(text) {
     var overlay = ensurePageLoader();
+    var textEl = overlay.querySelector('#cb-page-loader-text');
+    if (textEl) textEl.textContent = text || '';
     _pageLoaderActiveCount++;
     overlay.hidden = false;
     overlay.setAttribute('aria-hidden', 'false');
@@ -1004,14 +1006,19 @@
     ctx._openBoxId = box.id;
 
     builderArea.style.display = 'block';
-    builderArea.innerHTML = '<div class="cb-section-loading"><div class="combo-builder-spinner"></div> Loading products…</div>';
+    builderArea.innerHTML = '';
 
     if (box.comboConfig && Array.isArray(box.comboConfig.steps) && box.comboConfig.steps.length > 0) {
-      builderArea.innerHTML = '';
-      renderSpecificComboBuilder(builderArea, box, ctx);
-      builderArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      showPageLoader('Loading products…');
+      setTimeout(function () {
+        hidePageLoader(true);
+        renderSpecificComboBuilder(builderArea, box, ctx);
+        builderArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 0);
     } else {
+      showPageLoader('Loading products…');
       fetchProducts(box.id, ctx.shop, ctx.apiBase, function (err, products) {
+        hidePageLoader(true);
         if (ctx._openBoxId !== box.id) return;
         if (err || !products || products.length === 0) {
           builderArea.innerHTML = '<p class="cb-error">Failed to load products. Please reload and try again.</p>';
@@ -2083,7 +2090,7 @@
       productGrid.innerHTML = '';
 
       if (!products) {
-        productGrid.innerHTML = '<div class="combo-builder-loading"><div class="combo-builder-spinner"></div><span>Loading products\u2026</span></div>';
+        productGrid.innerHTML = '';
         return;
       }
       if (products.length === 0) {
@@ -2362,8 +2369,10 @@
 
     // Load products for active slot then render grid
     function loadAndRenderGrid() {
-      renderProductGrid(null); // show loading spinner
+      renderProductGrid(null);
+      showPageLoader('Loading products…');
       getStepProducts(activeSlotIndex, function (err, products) {
+        hidePageLoader(true);
         renderProductGrid(err ? [] : products);
       });
     }
@@ -2615,7 +2624,7 @@
 
     setBtns('loading', 'Adding…');
 
-    showPageLoader();
+    showPageLoader('Adding products to cart…');
 
     function postCartItems(items) {
       return fetch('/cart/add.js', {

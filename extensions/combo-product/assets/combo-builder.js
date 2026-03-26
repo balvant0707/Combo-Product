@@ -709,7 +709,8 @@
       var step1Heading = root.dataset.step1Heading || config.step1Heading || 'Step 1: Select your box';
       var step2Heading = root.dataset.step2Heading || config.step2Heading || 'Step 2: Select your products';
       var step3Heading = root.dataset.step3Heading || config.step3Heading || 'Step 3: Complete your order';
-      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, layoutMode: layoutMode, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root, step1Label: step1Label, step2Label: step2Label, step3Label: step3Label, cartBtnLabel: cartBtnLabel, checkoutBtnLabel: checkoutBtnLabel, step1Heading: step1Heading, step2Heading: step2Heading, step3Heading: step3Heading });
+      var step3Buttons = root.dataset.step3Buttons || config.step3Buttons || 'both';
+      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, layoutMode: layoutMode, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root, step1Label: step1Label, step2Label: step2Label, step3Label: step3Label, cartBtnLabel: cartBtnLabel, checkoutBtnLabel: checkoutBtnLabel, step1Heading: step1Heading, step2Heading: step2Heading, step3Heading: step3Heading, step3Buttons: step3Buttons });
     });
   }
 
@@ -1245,17 +1246,24 @@
       var step3Btns = document.createElement('div');
       step3Btns.className = 'cb-step3-buttons';
 
-      step3CartBtn = document.createElement('button');
-      step3CartBtn.type = 'button';
-      step3CartBtn.className = 'cb-step3-cart-btn';
-      step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
-      step3Btns.appendChild(step3CartBtn);
+      var showCart     = ctx.step3Buttons !== 'checkout_only';
+      var showCheckout = ctx.step3Buttons !== 'cart_only';
 
-      step3CheckoutBtn = document.createElement('button');
-      step3CheckoutBtn.type = 'button';
-      step3CheckoutBtn.className = 'cb-step3-checkout-btn';
-      step3CheckoutBtn.textContent = ctx.checkoutBtnLabel || 'Checkout';
-      step3Btns.appendChild(step3CheckoutBtn);
+      if (showCart) {
+        step3CartBtn = document.createElement('button');
+        step3CartBtn.type = 'button';
+        step3CartBtn.className = 'cb-step3-cart-btn';
+        step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
+        step3Btns.appendChild(step3CartBtn);
+      }
+
+      if (showCheckout) {
+        step3CheckoutBtn = document.createElement('button');
+        step3CheckoutBtn.type = 'button';
+        step3CheckoutBtn.className = 'cb-step3-checkout-btn';
+        step3CheckoutBtn.textContent = ctx.checkoutBtnLabel || 'Checkout';
+        step3Btns.appendChild(step3CheckoutBtn);
+      }
 
       step3CartSection.appendChild(step3Btns);
       container.appendChild(step3CartSection);
@@ -2050,17 +2058,24 @@
       var step3Btns = document.createElement('div');
       step3Btns.className = 'cb-step3-buttons';
 
-      step3CartBtn = document.createElement('button');
-      step3CartBtn.type = 'button';
-      step3CartBtn.className = 'cb-step3-cart-btn';
-      step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
-      step3Btns.appendChild(step3CartBtn);
+      var showCart     = ctx.step3Buttons !== 'checkout_only';
+      var showCheckout = ctx.step3Buttons !== 'cart_only';
 
-      step3CheckoutBtn = document.createElement('button');
-      step3CheckoutBtn.type = 'button';
-      step3CheckoutBtn.className = 'cb-step3-checkout-btn';
-      step3CheckoutBtn.textContent = ctx.checkoutBtnLabel || 'Checkout';
-      step3Btns.appendChild(step3CheckoutBtn);
+      if (showCart) {
+        step3CartBtn = document.createElement('button');
+        step3CartBtn.type = 'button';
+        step3CartBtn.className = 'cb-step3-cart-btn';
+        step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
+        step3Btns.appendChild(step3CartBtn);
+      }
+
+      if (showCheckout) {
+        step3CheckoutBtn = document.createElement('button');
+        step3CheckoutBtn.type = 'button';
+        step3CheckoutBtn.className = 'cb-step3-checkout-btn';
+        step3CheckoutBtn.textContent = ctx.checkoutBtnLabel || 'Checkout';
+        step3Btns.appendChild(step3CheckoutBtn);
+      }
 
       step3CartSection.appendChild(step3Btns);
       container.appendChild(step3CartSection);

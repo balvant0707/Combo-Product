@@ -1500,8 +1500,9 @@
   transform: translateY(-1px);
 }
 
-/* Step 3 Cart Section */
-/* Container sits inline after slot steps — transparent wrapper */
+/* ══ Step 3 — Add to Cart / Checkout buttons ══════════════════════════════ */
+
+/* Transparent wrapper that sits inline after the slot steps */
 .cb-step3-cart {
   display: flex;
   align-items: center;
@@ -1512,7 +1513,8 @@
   position: relative;
   flex-shrink: 0;
 }
-/* Dashed connector from last slot into button group — fills the slotWrapper gap (14px) */
+
+/* Dashed connector from last slot → button group (fills the 14px slotWrapper gap) */
 .cb-step3-cart::before {
   content: '';
   position: absolute;
@@ -1522,110 +1524,140 @@
   border-top: 1.5px dashed #c8d6e0;
   z-index: 0;
 }
-/* Hide step heading — buttons are self-descriptive */
+
+/* Hide the step heading — buttons are self-descriptive */
 .cb-step3-heading { display: none !important; }
 
+/* Flex row — buttons sit side-by-side with a gap */
 .cb-step3-buttons {
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  gap: 0;
+  gap: 8px;
 }
 
-/* ── Shared button base (disabled = slots not all filled) ── */
+/* ── Shared disabled base (not all slots filled yet) ── */
 .cb-step3-cart-btn,
 .cb-step3-checkout-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 130px;
-  min-width: 110px;
-  min-height: 130px;
-  padding: 12px 14px;
+  width: 120px;
+  min-width: 100px;
+  min-height: 120px;
+  padding: 14px 12px;
+  gap: 8px;
   border: 2px dashed #c8d6e0;
-  background: #eef3f8;
-  color: #a8bfcc;
-  font-size: 12px;
+  background: #f1f5f9;
+  color: #b0c4ce;
+  font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.8px;
+  letter-spacing: 1px;
   text-transform: uppercase;
-  border-radius: 0;
+  border-radius: 12px;
   box-shadow: none;
   cursor: not-allowed;
-  transition: border-color 0.18s, background 0.18s, color 0.18s, box-shadow 0.18s;
+  transition: background 0.2s, border-color 0.2s, color 0.2s,
+              box-shadow 0.2s, transform 0.15s;
   position: relative;
   z-index: 1;
-  gap: 6px;
+  overflow: hidden;
 }
 
-/* Dashed separator between the two buttons */
-.cb-step3-checkout-btn {
-  border-left: none;
-}
+/* Icon above the label (SVG-like circles in disabled state) */
+.cb-step3-cart-btn::before,
 .cb-step3-checkout-btn::before {
   content: '';
-  position: absolute;
-  top: 50%;
-  left: -1px;
-  height: 60%;
-  transform: translateY(-50%);
-  border-left: 1.5px dashed #c8d6e0;
+  display: block;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #dde6ef;
+  flex-shrink: 0;
+  transition: background 0.2s;
 }
 
-/* ── Enabled: Add to Cart (green) ── */
+/* ── Enabled: Add to Cart ── */
 .cb-step3-cart-btn:not(:disabled) {
   border: 2px solid var(--cb-primary, #2A7A4F);
   background: var(--cb-primary, #2A7A4F);
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 4px 20px var(--cb-primary-glow, rgba(42,122,79,0.35));
+  box-shadow: 0 6px 24px var(--cb-primary-glow, rgba(42,122,79,0.38));
+}
+.cb-step3-cart-btn:not(:disabled)::before {
+  background: rgba(255,255,255,0.2);
+  /* Cart bag icon via clip-path */
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z'/%3E%3Cline x1='3' y1='6' x2='21' y2='6'/%3E%3Cpath d='M16 10a4 4 0 01-8 0'/%3E%3C/svg%3E") center/20px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z'/%3E%3Cline x1='3' y1='6' x2='21' y2='6'/%3E%3Cpath d='M16 10a4 4 0 01-8 0'/%3E%3C/svg%3E") center/20px no-repeat;
+  background: rgba(255,255,255,0.9);
+  border-radius: 0;
+  width: 28px;
+  height: 28px;
 }
 .cb-step3-cart-btn:not(:disabled):hover {
   background: var(--cb-primary-hover, #1e5c3a);
+  box-shadow: 0 8px 28px var(--cb-primary-glow, rgba(42,122,79,0.5));
+  transform: translateY(-2px);
 }
+.cb-step3-cart-btn:not(:disabled):active { transform: translateY(0); }
 
-/* ── Enabled: Checkout (dark) ── */
+/* ── Enabled: Checkout ── */
 .cb-step3-checkout-btn:not(:disabled) {
-  border: 2px solid #111827;
-  border-left: none;
-  background: #111827;
+  border: 2px solid #1a1a2e;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.3);
 }
 .cb-step3-checkout-btn:not(:disabled)::before {
-  border-left-color: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.9);
+  border-radius: 0;
+  width: 28px;
+  height: 28px;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M12 5l7 7-7 7'/%3E%3C/svg%3E") center/20px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M12 5l7 7-7 7'/%3E%3C/svg%3E") center/20px no-repeat;
 }
 .cb-step3-checkout-btn:not(:disabled):hover {
-  background: #000;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+  transform: translateY(-2px);
 }
+.cb-step3-checkout-btn:not(:disabled):active { transform: translateY(0); }
 
-/* Arrow icon on checkout */
+/* Arrow text under the label */
 .cb-step3-checkout-btn::after {
   content: '\2192';
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1;
-  opacity: 0.8;
+  opacity: 0.5;
+  margin-top: -4px;
 }
+.cb-step3-checkout-btn:not(:disabled)::after { opacity: 0.7; }
 .cb-step3-checkout-btn:disabled::after { display: none; }
 
-/* ── Loading states (after clicking) ── */
+/* ── Loading states ── */
 .cb-step3-cart-btn--loading {
   background: #e2e8f0 !important;
   border-color: #e2e8f0 !important;
   color: #94a3b8 !important;
   cursor: not-allowed !important;
   box-shadow: none !important;
-  animation: cb-pulse 1s ease-in-out infinite;
+  transform: none !important;
+  animation: cb-pulse 1.2s ease-in-out infinite;
 }
+.cb-step3-cart-btn--loading::before { background: #c8d6e0 !important; -webkit-mask: none; mask: none; border-radius: 50%; }
+
 .cb-step3-checkout-btn--loading {
   background: #374151 !important;
   border-color: #374151 !important;
   cursor: not-allowed !important;
   box-shadow: none !important;
+  transform: none !important;
   opacity: 0.85;
 }
+.cb-step3-checkout-btn--loading::before { background: #4b5563 !important; -webkit-mask: none; mask: none; border-radius: 50%; }
 .cb-step3-checkout-btn--loading::after { display: none !important; }
 
 @media (max-width: 640px) {
@@ -1661,12 +1693,13 @@
   .cb-wizard-step-label {
     font-size: 12px;
   }
-  .cb-step3-buttons { flex-direction: column; gap: 10px; }
-  .cb-step3-checkout-btn { border-left: 2px dashed #c8d6e0; border-top: none; }
-  .cb-step3-checkout-btn::before { top: -1px; left: 50%; height: auto; width: 60%; border-left: none; border-top: 1.5px dashed #c8d6e0; transform: none; }
-  .cb-step3-checkout-btn:not(:disabled) { border-left: 2px solid #111827; border-top: none; }
-  .cb-step3-cart-btn, .cb-step3-checkout-btn { 
-    width: 100%; 
-    min-height: 44px; 
+  .cb-step3-buttons { flex-direction: column; gap: 8px; }
+  .cb-step3-cart-btn, .cb-step3-checkout-btn {
+    width: 100%;
+    min-height: 80px;
+    flex-direction: row;
+    justify-content: center;
+    gap: 12px;
+    border-radius: 10px;
   }
 }

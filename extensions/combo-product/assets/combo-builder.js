@@ -1266,7 +1266,7 @@
       }
 
       step3CartSection.appendChild(step3Btns);
-      container.appendChild(step3CartSection);
+      slotWrapper.appendChild(step3CartSection);
     }
 
     // ── Gift Message ──
@@ -2078,7 +2078,7 @@
       }
 
       step3CartSection.appendChild(step3Btns);
-      container.appendChild(step3CartSection);
+      slotWrapper.appendChild(step3CartSection);
     }
 
     // ── Product Section ──

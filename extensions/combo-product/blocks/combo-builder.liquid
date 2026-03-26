@@ -13,6 +13,9 @@
   data-step1-label="{{ block.settings.step1_label | default: 'Select Box' | escape }}"
   data-step2-label="{{ block.settings.step2_label | default: 'Pick Items' | escape }}"
   data-step3-label="{{ block.settings.step3_label | default: 'Add to Cart' | escape }}"
+  data-step1-heading="{{ block.settings.step1_heading | default: 'Step 1: Select your box' | escape }}"
+  data-step2-heading="{{ block.settings.step2_heading | default: 'Step 2: Select your products' | escape }}"
+  data-step3-heading="{{ block.settings.step3_heading | default: 'Step 3: Complete your order' | escape }}"
   {% if block.settings.box_filter == 'specific' and block.settings.box_names != blank %}
   data-visible-boxes="{{ block.settings.box_names }}"
   {% endif %}
@@ -55,7 +58,10 @@
     checkoutBtnLabel:  '{{ block.settings.checkout_btn_label | default: "Checkout" | escape }}',
     step1Label:        '{{ block.settings.step1_label | default: "Select Box" | escape }}',
     step2Label:     '{{ block.settings.step2_label | default: "Pick Items" | escape }}',
-    step3Label:     '{{ block.settings.step3_label | default: "Add to Cart" | escape }}'{% if block.settings.box_filter == 'specific' and block.settings.box_names != blank %},
+    step3Label:     '{{ block.settings.step3_label | default: "Add to Cart" | escape }}',
+    step1Heading:   '{{ block.settings.step1_heading | default: "Step 1: Select your box" | escape }}',
+    step2Heading:   '{{ block.settings.step2_heading | default: "Step 2: Select your products" | escape }}',
+    step3Heading:   '{{ block.settings.step3_heading | default: "Step 3: Complete your order" | escape }}'{% if block.settings.box_filter == 'specific' and block.settings.box_names != blank %},
     visibleBoxes:   '{{ block.settings.box_names | escape }}'{% endif %}
   });
 </script>
@@ -134,6 +140,31 @@
       "label": "Step 3 label",
       "default": "Add to Cart",
       "placeholder": "Add to Cart"
+    },
+    {
+      "type": "header",
+      "content": "Step Headings (Steps layout only)"
+    },
+    {
+      "type": "text",
+      "id": "step1_heading",
+      "label": "Step 1 heading",
+      "default": "Step 1: Select your box",
+      "placeholder": "Step 1: Select your box"
+    },
+    {
+      "type": "text",
+      "id": "step2_heading",
+      "label": "Step 2 heading",
+      "default": "Step 2: Select your products",
+      "placeholder": "Step 2: Select your products"
+    },
+    {
+      "type": "text",
+      "id": "step3_heading",
+      "label": "Step 3 heading",
+      "default": "Step 3: Complete your order",
+      "placeholder": "Step 3: Complete your order"
     }
   ]
 }

@@ -706,7 +706,10 @@
       var step3Label = root.dataset.step3Label || config.step3Label || 'Add to Cart';
       var cartBtnLabel = root.dataset.cartBtnLabel || config.cartBtnLabel || '';
       var checkoutBtnLabel = root.dataset.checkoutBtnLabel || config.checkoutBtnLabel || 'Checkout';
-      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, layoutMode: layoutMode, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root, step1Label: step1Label, step2Label: step2Label, step3Label: step3Label, cartBtnLabel: cartBtnLabel, checkoutBtnLabel: checkoutBtnLabel });
+      var step1Heading = root.dataset.step1Heading || config.step1Heading || 'Step 1: Select your box';
+      var step2Heading = root.dataset.step2Heading || config.step2Heading || 'Step 2: Select your products';
+      var step3Heading = root.dataset.step3Heading || config.step3Heading || 'Step 3: Complete your order';
+      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, layoutMode: layoutMode, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root, step1Label: step1Label, step2Label: step2Label, step3Label: step3Label, cartBtnLabel: cartBtnLabel, checkoutBtnLabel: checkoutBtnLabel, step1Heading: step1Heading, step2Heading: step2Heading, step3Heading: step3Heading });
     });
   }
 
@@ -834,7 +837,7 @@
     // Step 1 Heading
     var step1Head = document.createElement('h2');
     step1Head.className = 'cb-step-heading';
-    step1Head.textContent = 'Step 1: Select your box';
+    step1Head.textContent = ctx.step1Heading || 'Step 1: Select your box';
     wrapper.appendChild(step1Head);
 
     // ── Box grid ─────────────────────────────────────────────────────────────────
@@ -1078,7 +1081,7 @@
     // ── Step 2 Heading ──
     var step2Head = document.createElement('h2');
     step2Head.className = 'cb-step-heading';
-    step2Head.textContent = 'Step 2: Select your products';
+    step2Head.textContent = ctx.step2Heading || 'Step 2: Select your products';
     container.appendChild(step2Head);
 
     // ── Slot Steps Row ──
@@ -1236,7 +1239,7 @@
 
       var step3Head = document.createElement('h2');
       step3Head.className = 'cb-step-heading cb-step3-heading';
-      step3Head.textContent = 'Step 3: Complete your order';
+      step3Head.textContent = ctx.step3Heading || 'Step 3: Complete your order';
       step3CartSection.appendChild(step3Head);
 
       var step3Btns = document.createElement('div');
@@ -1904,7 +1907,7 @@
     // ── Step 2 Heading ──
     var step2Head = document.createElement('h2');
     step2Head.className = 'cb-step-heading';
-    step2Head.textContent = 'Step 2: ' + (comboConfig.title || 'Select your products');
+    step2Head.textContent = ctx.step2Heading || ('Step 2: ' + (comboConfig.title || 'Select your products'));
     container.appendChild(step2Head);
 
     if (comboConfig.subtitle) {
@@ -2029,22 +2032,8 @@
     slotWrapper.appendChild(inlineCartBtn);
     container.appendChild(slotWrapper);
 
-    // ── Product Section ──
-    var productSection = document.createElement('div');
-    productSection.className = 'cb-product-section';
-
-    var productLabel = document.createElement('div');
-    productLabel.className = 'cb-product-label';
-    productSection.appendChild(productLabel);
-
-    var productGrid = document.createElement('div');
-    productGrid.className = 'cb-product-grid';
-    var cols = normalizeProductCardsPerRow(ctx.settings && ctx.settings.productCardsPerRow);
-    productGrid.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
-    productSection.appendChild(productGrid);
-    container.appendChild(productSection);
-
     // ── Step 3: Cart section (steps mode only, hidden until all slots filled) ──
+    // Placed immediately after slotWrapper so buttons appear below selected products
     var step3CartSection = null;
     var step3CartBtn = null;
     var step3CheckoutBtn = null;
@@ -2055,7 +2044,7 @@
 
       var step3Head = document.createElement('h2');
       step3Head.className = 'cb-step-heading cb-step3-heading';
-      step3Head.textContent = 'Step 3: Complete your order';
+      step3Head.textContent = ctx.step3Heading || 'Step 3: Complete your order';
       step3CartSection.appendChild(step3Head);
 
       var step3Btns = document.createElement('div');
@@ -2076,6 +2065,21 @@
       step3CartSection.appendChild(step3Btns);
       container.appendChild(step3CartSection);
     }
+
+    // ── Product Section ──
+    var productSection = document.createElement('div');
+    productSection.className = 'cb-product-section';
+
+    var productLabel = document.createElement('div');
+    productLabel.className = 'cb-product-label';
+    productSection.appendChild(productLabel);
+
+    var productGrid = document.createElement('div');
+    productGrid.className = 'cb-product-grid';
+    var cols = normalizeProductCardsPerRow(ctx.settings && ctx.settings.productCardsPerRow);
+    productGrid.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+    productSection.appendChild(productGrid);
+    container.appendChild(productSection);
 
     // ── Cart button state ──
     function updateCartButton() {

@@ -1532,132 +1532,90 @@
 .cb-step3-buttons {
   display: flex;
   flex-direction: row;
-  align-items: stretch;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 10px;
 }
 
-/* ── Shared disabled base (not all slots filled yet) ── */
+/* ── Shared base for both buttons ── */
 .cb-step3-cart-btn,
 .cb-step3-checkout-btn {
-  display: flex;
-  flex-direction: column;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 120px;
-  min-width: 100px;
-  min-height: 120px;
-  padding: 14px 12px;
   gap: 8px;
-  border: 2px dashed #c8d6e0;
-  background: #f1f5f9;
-  color: #b0c4ce;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 1px;
+  padding: 0 28px;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
-  border-radius: 12px;
-  box-shadow: none;
   cursor: not-allowed;
-  transition: background 0.2s, border-color 0.2s, color 0.2s,
-              box-shadow 0.2s, transform 0.15s;
+  background: #e2e8f0;
+  color: #94a3b8;
+  transition: all var(--cb-transition);
+  white-space: nowrap;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 28px;
+  min-width: 180px;
+  min-height: 52px;
+  border-radius: var(--cb-radius, 10px);
   position: relative;
   z-index: 1;
-  overflow: hidden;
 }
 
-/* Icon above the label (SVG-like circles in disabled state) */
-.cb-step3-cart-btn::before,
-.cb-step3-checkout-btn::before {
-  content: '';
-  display: block;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #dde6ef;
-  flex-shrink: 0;
-  transition: background 0.2s;
-}
-
-/* ── Enabled: Add to Cart ── */
+/* ── Enabled: Add to Cart (primary green) ── */
 .cb-step3-cart-btn:not(:disabled) {
-  border: 2px solid var(--cb-primary, #2A7A4F);
   background: var(--cb-primary, #2A7A4F);
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 6px 24px var(--cb-primary-glow, rgba(42,122,79,0.38));
-}
-.cb-step3-cart-btn:not(:disabled)::before {
-  background: rgba(255,255,255,0.2);
-  /* Cart bag icon via clip-path */
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z'/%3E%3Cline x1='3' y1='6' x2='21' y2='6'/%3E%3Cpath d='M16 10a4 4 0 01-8 0'/%3E%3C/svg%3E") center/20px no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z'/%3E%3Cline x1='3' y1='6' x2='21' y2='6'/%3E%3Cpath d='M16 10a4 4 0 01-8 0'/%3E%3C/svg%3E") center/20px no-repeat;
-  background: rgba(255,255,255,0.9);
-  border-radius: 0;
-  width: 28px;
-  height: 28px;
+  box-shadow: 0 4px 14px var(--cb-primary-glow, rgba(42,122,79,0.35));
 }
 .cb-step3-cart-btn:not(:disabled):hover {
   background: var(--cb-primary-hover, #1e5c3a);
-  box-shadow: 0 8px 28px var(--cb-primary-glow, rgba(42,122,79,0.5));
-  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--cb-primary-glow, rgba(42,122,79,0.45));
+  transform: translateY(-1px);
 }
 .cb-step3-cart-btn:not(:disabled):active { transform: translateY(0); }
 
-/* ── Enabled: Checkout ── */
+/* ── Enabled: Checkout (dark) ── */
 .cb-step3-checkout-btn:not(:disabled) {
-  border: 2px solid #1a1a2e;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background: #111827;
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.3);
-}
-.cb-step3-checkout-btn:not(:disabled)::before {
-  background: rgba(255,255,255,0.9);
-  border-radius: 0;
-  width: 28px;
-  height: 28px;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M12 5l7 7-7 7'/%3E%3C/svg%3E") center/20px no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M12 5l7 7-7 7'/%3E%3C/svg%3E") center/20px no-repeat;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
 }
 .cb-step3-checkout-btn:not(:disabled):hover {
-  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
-  box-shadow: 0 8px 28px rgba(0,0,0,0.45);
-  transform: translateY(-2px);
+  background: #000;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  transform: translateY(-1px);
 }
 .cb-step3-checkout-btn:not(:disabled):active { transform: translateY(0); }
 
-/* Arrow text under the label */
-.cb-step3-checkout-btn::after {
+/* Arrow on checkout */
+.cb-step3-checkout-btn:not(:disabled)::after {
   content: '\2192';
   font-size: 16px;
   line-height: 1;
-  opacity: 0.5;
-  margin-top: -4px;
 }
-.cb-step3-checkout-btn:not(:disabled)::after { opacity: 0.7; }
-.cb-step3-checkout-btn:disabled::after { display: none; }
 
 /* ── Loading states ── */
 .cb-step3-cart-btn--loading {
   background: #e2e8f0 !important;
-  border-color: #e2e8f0 !important;
   color: #94a3b8 !important;
   cursor: not-allowed !important;
   box-shadow: none !important;
   transform: none !important;
   animation: cb-pulse 1.2s ease-in-out infinite;
 }
-.cb-step3-cart-btn--loading::before { background: #c8d6e0 !important; -webkit-mask: none; mask: none; border-radius: 50%; }
-
 .cb-step3-checkout-btn--loading {
   background: #374151 !important;
-  border-color: #374151 !important;
+  color: #9ca3af !important;
   cursor: not-allowed !important;
   box-shadow: none !important;
   transform: none !important;
   opacity: 0.85;
 }
-.cb-step3-checkout-btn--loading::before { background: #4b5563 !important; -webkit-mask: none; mask: none; border-radius: 50%; }
 .cb-step3-checkout-btn--loading::after { display: none !important; }
 
 @media (max-width: 640px) {
@@ -1696,10 +1654,7 @@
   .cb-step3-buttons { flex-direction: column; gap: 8px; }
   .cb-step3-cart-btn, .cb-step3-checkout-btn {
     width: 100%;
-    min-height: 80px;
-    flex-direction: row;
+    min-width: unset;
     justify-content: center;
-    gap: 12px;
-    border-radius: 10px;
   }
 }

@@ -36,6 +36,15 @@
     return total;
   }
 
+  function applyComboDiscount(totalMrp, comboConfig) {
+    if (!comboConfig || String(comboConfig.bundlePriceType) !== 'dynamic') return totalMrp;
+    var discountType = comboConfig.discountType || 'none';
+    var discountValue = parseFloat(comboConfig.discountValue) || 0;
+    if (discountType === 'percent') return Math.max(0, totalMrp * (1 - discountValue / 100));
+    if (discountType === 'fixed') return Math.max(0, totalMrp - discountValue);
+    return totalMrp;
+  }
+
   function renderStickyTotal(totalEl, amount, currencySymbol) {
     if (!totalEl) return;
     totalEl.innerHTML =
@@ -1364,22 +1373,34 @@
       });
       var totalMrp = getSelectedProductsTotal(slots);
       var isDynamic = isDynamicBundlePrice(box);
+      var dynamicEffectivePrice = isDynamic ? applyComboDiscount(totalMrp, box.comboConfig) : 0;
 
       if (_stickyTotalEl) {
         renderStickyTotal(
           _stickyTotalEl,
-          isDynamic ? totalMrp : (parseFloat(box.bundlePrice) || 0),
+          isDynamic ? dynamicEffectivePrice : (parseFloat(box.bundlePrice) || 0),
           ctx.currencySymbol
         );
       }
 
       if (isDynamic) {
-        setBoxCardPrice(box, totalMrp, ctx.currencySymbol);
+        setBoxCardPrice(box, dynamicEffectivePrice, ctx.currencySymbol);
       }
 
       if (_stickySavingsEl) {
         if (isDynamic) {
-          _stickySavingsEl.style.display = 'none';
+          var dynSavings = totalMrp - dynamicEffectivePrice;
+          if (hasSelected && dynSavings > 0.005) {
+            var dynSavingsBadge = (ctx.settings && ctx.settings.showSavingsBadge)
+              ? '<span class="cb-sticky-save">Save ' + formatPrice(dynSavings, ctx.currencySymbol) + '</span>'
+              : '';
+            _stickySavingsEl.innerHTML =
+              '<span class="cb-sticky-mrp">MRP: ' + formatPrice(totalMrp, ctx.currencySymbol) + '</span>' +
+              dynSavingsBadge;
+            _stickySavingsEl.style.display = 'flex';
+          } else {
+            _stickySavingsEl.style.display = 'none';
+          }
         } else if (hasSelected) {
           var bundlePrice = parseFloat(box.bundlePrice);
           var savingsAmt = totalMrp - bundlePrice;
@@ -2159,10 +2180,11 @@
 
       var totalMrp = getSelectedProductsTotal(slots);
       var isDynamic = isDynamicBundlePrice(box);
+      var dynamicEffectivePrice = isDynamic ? applyComboDiscount(totalMrp, box.comboConfig) : 0;
       if (_stickyTotalEl) {
-        renderStickyTotal(_stickyTotalEl, isDynamic ? totalMrp : (parseFloat(box.bundlePrice) || 0), ctx.currencySymbol);
+        renderStickyTotal(_stickyTotalEl, isDynamic ? dynamicEffectivePrice : (parseFloat(box.bundlePrice) || 0), ctx.currencySymbol);
       }
-      if (isDynamic) setBoxCardPrice(box, totalMrp, ctx.currencySymbol);
+      if (isDynamic) setBoxCardPrice(box, dynamicEffectivePrice, ctx.currencySymbol);
 
       // Steps mode: hide product grid when done; enable/disable cart buttons; update wizard
       if (ctx.layoutMode === 'steps') {
@@ -3053,9 +3075,9 @@
         }
       });
 
-      // For dynamic mode, the effective cart price = sum of selected product prices.
+      // For dynamic mode, effective cart price = sum of selected products minus any discount.
       // For manual mode, it is the fixed bundlePrice set by the merchant.
-      var effectivePrice = isDynamic ? totalMrp : (parseFloat(box.bundlePrice) || 0);
+      var effectivePrice = isDynamic ? applyComboDiscount(totalMrp, box.comboConfig) : (parseFloat(box.bundlePrice) || 0);
 
       var bundleProps = {
         '_bundle_price_item': 'true',
@@ -3084,8 +3106,8 @@
         bundleProps['_combo_bundle_price'] = effectivePrice.toFixed(2);
       }
 
-      // Show savings only for manual mode (dynamic price = MRP, no discount)
-      if (!isDynamic && totalMrp > effectivePrice && totalMrp > 0) {
+      // Show savings for both manual and dynamic modes when there's a discount
+      if (totalMrp > effectivePrice && totalMrp > 0) {
         var savingsAmt = totalMrp - effectivePrice;
         var savingsPct = Math.round((savingsAmt / totalMrp) * 100);
         bundleProps['_combo_savings_amount'] = savingsAmt.toFixed(2);
@@ -3113,6 +3135,8 @@
       if (dynamicTotal <= 0) {
         return Promise.reject(new Error('No product prices available for dynamic pricing'));
       }
+      var discountedTotal = applyComboDiscount(dynamicTotal, box.comboConfig);
+      if (discountedTotal <= 0) discountedTotal = dynamicTotal;
 
       var updateUrl = resolvedApiBase +
         '/api/storefront/boxes/' + encodeURIComponent(String(box.id)) +
@@ -3121,7 +3145,7 @@
       return fetch(updateUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ price: dynamicTotal }),
+        body: JSON.stringify({ price: discountedTotal }),
       }).then(function (r) {
         if (!r.ok) return r.json().then(function (d) {
           throw new Error(d.error || 'Price update failed');

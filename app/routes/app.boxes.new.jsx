@@ -102,6 +102,8 @@ export const action = async ({ request }) => {
     itemCount: formData.get("itemCount"),
     bundlePrice: formData.get("bundlePrice"),
     bundlePriceType: formData.get("bundlePriceType"),
+    discountType: formData.get("discountType") || "none",
+    discountValue: formData.get("discountValue") || "0",
     isGiftBox: formData.get("isGiftBox") === "true",
     allowDuplicates: formData.get("allowDuplicates") === "true",
     bannerImage,
@@ -175,6 +177,8 @@ export default function CreateBoxPage() {
   const [itemCount, setItemCount] = useState("4");
   const [priceMode, setPriceMode] = useState("manual");
   const [manualPrice, setManualPrice] = useState("");
+  const [discountType, setDiscountType] = useState("percent");
+  const [discountValue, setDiscountValue] = useState("10");
 
   const errors = actionData?.errors || {};
   const displayProducts = searchFetcher.data?.products || products;
@@ -184,7 +188,14 @@ export default function CreateBoxPage() {
     ? selectedProducts.reduce((s, p) => s + (parseFloat(p.price) || 0), 0) / selectedProducts.length
     : 0;
   const estimatedTotal = avgProductPrice * numItemCount;
-  const bundlePrice = priceMode === "manual" ? parseFloat(manualPrice) || 0 : estimatedTotal;
+  const dynamicPrice = (() => {
+    if (estimatedTotal <= 0) return 0;
+    const val = parseFloat(discountValue) || 0;
+    if (discountType === "percent") return Math.max(0, estimatedTotal * (1 - val / 100));
+    if (discountType === "fixed") return Math.max(0, estimatedTotal - val);
+    return estimatedTotal;
+  })();
+  const bundlePrice = priceMode === "manual" ? parseFloat(manualPrice) || 0 : dynamicPrice;
 
   function handleSearchChange(e) {
     const val = e.target.value;
@@ -266,6 +277,8 @@ export default function CreateBoxPage() {
       <Form id="create-box-form" method="POST" encType="multipart/form-data">
         <input type="hidden" name="bundlePrice" value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
         <input type="hidden" name="bundlePriceType" value={priceMode} />
+        <input type="hidden" name="discountType" value={discountType} />
+        <input type="hidden" name="discountValue" value={discountValue} />
         <input type="hidden" name="itemCount" value={itemCount} />
         <input type="hidden" name="eligibleProducts" value={JSON.stringify(selectedProducts)} />
         <input type="hidden" name="scope" value={scope} />
@@ -310,8 +323,29 @@ export default function CreateBoxPage() {
                   <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} style={{ ...fieldStyle, borderColor: errors.bundlePrice ? "#e11d48" : "#d1d5db" }} />
                 )}
                 {priceMode === "dynamic" && (
-                  <div style={{ border: "1px solid #d1d5db", borderRadius: "5px", padding: "10px", background: "#f9fafb", fontSize: "12px", color: "#6b7280" }}>
-                    Dynamic price: ₹{estimatedTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })} (avg × items)
+                  <div style={{ border: "1px solid #d1d5db", borderRadius: "5px", padding: "10px", background: "#f9fafb" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "8px" }}>
+                      <div>
+                        <label style={{ ...labelStyle, fontSize: "10px" }}>Discount Type</label>
+                        <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }}>
+                          <option value="percent">% Off Total</option>
+                          <option value="fixed">₹ Fixed Discount</option>
+                          <option value="none">No Discount</option>
+                        </select>
+                      </div>
+                      {discountType !== "none" && (
+                        <div>
+                          <label style={{ ...labelStyle, fontSize: "10px" }}>{discountType === "percent" ? "Discount %" : "Amount (₹)"}</label>
+                          <input type="number" min="0" step={discountType === "percent" ? "1" : "0.01"} max={discountType === "percent" ? "99" : undefined} value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ fontSize: "11px", color: "#6b7280" }}>
+                      MRP est: ₹{estimatedTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      {discountType !== "none" && dynamicPrice < estimatedTotal && (
+                        <> → <strong style={{ color: "#166534" }}>₹{dynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></>
+                      )}
+                    </div>
                   </div>
                 )}
                 {errors.bundlePrice && <div style={errorStyle}>{errors.bundlePrice}</div>}

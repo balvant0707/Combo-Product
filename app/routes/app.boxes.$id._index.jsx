@@ -118,15 +118,19 @@ export const loader = async ({ request, params }) => {
   }
 
   let effectiveBundlePrice = parseFloat(box.bundlePrice) || 0;
-  if (effectiveBundlePrice === 0 && comboStepsConfig) {
+  let savedDiscountType = "percent";
+  let savedDiscountValue = "10";
+  if (comboStepsConfig) {
     try {
       const parsed = JSON.parse(comboStepsConfig);
-      effectiveBundlePrice = parseFloat(parsed.bundlePrice) || 0;
+      if (effectiveBundlePrice === 0) effectiveBundlePrice = parseFloat(parsed.bundlePrice) || 0;
+      if (parsed.discountType) savedDiscountType = parsed.discountType;
+      if (parsed.discountValue != null) savedDiscountValue = String(parsed.discountValue);
     } catch {}
   }
 
   return {
-    box: { ...boxWithoutBinary, bundlePrice: effectiveBundlePrice, bannerImageSrc },
+    box: { ...boxWithoutBinary, bundlePrice: effectiveBundlePrice, bannerImageSrc, discountType: savedDiscountType, discountValue: savedDiscountValue },
     products,
     collections,
   };
@@ -159,6 +163,8 @@ export const action = async ({ request, params }) => {
     itemCount: formData.get("itemCount"),
     bundlePrice: formData.get("bundlePrice"),
     bundlePriceType: formData.get("bundlePriceType"),
+    discountType: formData.get("discountType") || "none",
+    discountValue: formData.get("discountValue") || "0",
     isGiftBox: formData.get("isGiftBox") === "true",
     allowDuplicates: formData.get("allowDuplicates") === "true",
     bannerImage,
@@ -243,8 +249,8 @@ export default function BoxSettingsPage() {
   const [itemCount, setItemCount] = useState(String(box.itemCount));
   const [priceMode, setPriceMode] = useState(box.bundlePriceType || "manual");
   const [manualPrice, setManualPrice] = useState(String(box.bundlePrice));
-  const [discountType, setDiscountType] = useState("percent");
-  const [discountValue, setDiscountValue] = useState("10");
+  const [discountType, setDiscountType] = useState(box.discountType || "percent");
+  const [discountValue, setDiscountValue] = useState(box.discountValue || "10");
   const [scope, setScope] = useState(box.scopeType || "specific_collections");
   const [scopeItems, setScopeItems] = useState(() => {
     try { return JSON.parse(box.scopeItemsJson || "[]"); } catch { return []; }
@@ -329,6 +335,8 @@ export default function BoxSettingsPage() {
         <input type="hidden" name="_action" value="save" />
         <input type="hidden" name="bundlePrice" value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
         <input type="hidden" name="bundlePriceType" value={priceMode} />
+        <input type="hidden" name="discountType" value={discountType} />
+        <input type="hidden" name="discountValue" value={discountValue} />
         <input type="hidden" name="itemCount" value={itemCount} />
         <input type="hidden" name="eligibleProducts" value={JSON.stringify(selectedProducts)} />
         <input type="hidden" name="isGiftBox" value={String(options.isGiftBox)} />

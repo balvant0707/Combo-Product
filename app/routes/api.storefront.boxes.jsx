@@ -74,12 +74,23 @@ export const loader = async ({ request }) => {
           let steps = [];
           try { steps = JSON.parse(box.config.stepsJson || '[]'); } catch {}
           steps = attachStepImages(steps);
+          // discountType/discountValue live only in the raw JSON blob (ComboBoxConfig lacks these columns)
+          let discountType = 'none', discountValue = '0';
+          if (box.comboStepsConfig) {
+            try {
+              const raw = JSON.parse(box.comboStepsConfig);
+              discountType = raw.discountType || 'none';
+              discountValue = String(raw.discountValue || '0');
+            } catch {}
+          }
           return {
             comboType: box.config.comboType || steps.length || 2,
             title: box.config.title || null,
             subtitle: box.config.subtitle || null,
             bundlePriceType: box.config.bundlePriceType || 'manual',
             bundlePrice: box.config.bundlePrice != null ? parseFloat(box.config.bundlePrice) : 0,
+            discountType,
+            discountValue,
             showProgressBar: box.config.showProgressBar !== false,
             showProductImages: box.config.showProductImages !== false,
             allowReselection: box.config.allowReselection !== false,
@@ -98,6 +109,8 @@ export const loader = async ({ request }) => {
               subtitle: parsed.subtitle || null,
               bundlePriceType: parsed.bundlePriceType || 'manual',
               bundlePrice: parsed.bundlePrice != null ? parseFloat(parsed.bundlePrice) : 0,
+              discountType: parsed.discountType || 'none',
+              discountValue: String(parsed.discountValue || '0'),
               showProgressBar: parsed.showProgressBar !== false,
               showProductImages: parsed.showProductImages !== false,
               allowReselection: parsed.allowReselection !== false,

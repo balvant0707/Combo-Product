@@ -588,6 +588,14 @@ export async function createBox(shop, data, admin) {
       shopifyVariantId,
       scopeType: data.scopeType || "specific_collections",
       scopeItemsJson: Array.isArray(data.scopeItems) && data.scopeItems.length > 0 ? JSON.stringify(data.scopeItems) : null,
+      comboStepsConfig: data.bundlePriceType === "dynamic"
+        ? JSON.stringify({
+            bundlePriceType: "dynamic",
+            discountType: data.discountType || "none",
+            discountValue: data.discountValue || "0",
+            bundlePrice: bundlePrice,
+          })
+        : null,
     },
   });
 
@@ -857,6 +865,22 @@ export async function updateBox(id, shop, data, admin) {
     if (productRows.length > 0) {
       await db.comboBoxProduct.createMany({ data: productRows });
     }
+  }
+
+  // Persist discount settings into comboStepsConfig (merge, preserve existing steps/config)
+  if (data.discountType !== undefined || data.discountValue !== undefined) {
+    let rawConfig = {};
+    if (existing.comboStepsConfig) {
+      try { rawConfig = JSON.parse(existing.comboStepsConfig); } catch {}
+    }
+    rawConfig.bundlePriceType = data.bundlePriceType === "dynamic" ? "dynamic" : (rawConfig.bundlePriceType || "manual");
+    rawConfig.discountType = data.discountType || "none";
+    rawConfig.discountValue = data.discountValue || "0";
+    rawConfig.bundlePrice = bundlePrice;
+    await db.comboBox.update({
+      where: { id: parseInt(id) },
+      data: { comboStepsConfig: JSON.stringify(rawConfig) },
+    });
   }
 
   return db.comboBox.findUnique({

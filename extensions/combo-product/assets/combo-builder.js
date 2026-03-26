@@ -1225,14 +1225,8 @@
           ;(function (i) {
             removeBtn.addEventListener('click', function (e) {
               e.stopPropagation();
-              // Shift remaining products left to fill the gap
-              for (var j = i; j < slots.length - 1; j++) {
-                slots[j] = slots[j + 1];
-              }
-              slots[slots.length - 1] = null;
-              // Active slot becomes the first empty slot
-              activeSlotIndex = slots.indexOf(null);
-              if (activeSlotIndex === -1) activeSlotIndex = slots.length - 1;
+              slots[i] = null;
+              activeSlotIndex = i;
               renderSlots();
               renderProductGrid();
               updateCartButton();
@@ -1403,7 +1397,9 @@
 
       // Steps mode: hide product grid when all filled; enable/disable cart buttons; update wizard dot
       if (ctx.layoutMode === 'steps') {
+        var savedScrollY = window.scrollY;
         productSection.style.display = allFilled ? 'none' : '';
+        if (window.scrollY !== savedScrollY) window.scrollTo(0, savedScrollY);
         if (step3CartBtn) {
           step3CartBtn.disabled = !allFilled;
           if (!allFilled) {
@@ -1701,6 +1697,7 @@
               for (var si = 0; si < slots.length; si++) {
                 if (slots[si] && slots[si].productId === p.productId) {
                   slots[si] = null;
+                  activeSlotIndex = si;
                   break;
                 }
               }
@@ -2165,7 +2162,9 @@
 
       // Steps mode: hide product grid when done; enable/disable cart buttons; update wizard
       if (ctx.layoutMode === 'steps') {
+        var savedScrollY = window.scrollY;
         productSection.style.display = allFilled ? 'none' : '';
+        if (window.scrollY !== savedScrollY) window.scrollTo(0, savedScrollY);
         if (step3CartBtn) {
           step3CartBtn.disabled = !allFilled;
           if (!allFilled) {

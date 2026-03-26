@@ -700,7 +700,10 @@
         }
       }
 
-      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, layoutMode: layoutMode, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root });
+      var step1Label = root.dataset.step1Label || config.step1Label || 'Select Box';
+      var step2Label = root.dataset.step2Label || config.step2Label || 'Pick Items';
+      var step3Label = root.dataset.step3Label || config.step3Label || 'Add to Cart';
+      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, layoutMode: layoutMode, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root, step1Label: step1Label, step2Label: step2Label, step3Label: step3Label });
     });
   }
 
@@ -778,9 +781,9 @@
       stepsRow.setAttribute('role', 'list');
 
       var WIZARD_STEP_DEFS = [
-        { label: 'Select Box',  description: 'Choose your box',        doneLabel: 'Box Selected' },
-        { label: 'Pick Items',  description: 'Pick your products',     doneLabel: 'Items Selected' },
-        { label: 'Add to Cart', description: 'Add your box to cart',   doneLabel: 'Added to Cart' }
+        { label: ctx.step1Label || 'Select Box',  description: 'Choose your box',      doneLabel: (ctx.step1Label || 'Select Box') + ' \u2713' },
+        { label: ctx.step2Label || 'Pick Items',  description: 'Pick your products',   doneLabel: (ctx.step2Label || 'Pick Items') + ' \u2713' },
+        { label: ctx.step3Label || 'Add to Cart', description: 'Add your box to cart', doneLabel: (ctx.step3Label || 'Add to Cart') + ' \u2713' }
       ];
       var wizardDots = [];
       var wizardLines = [];

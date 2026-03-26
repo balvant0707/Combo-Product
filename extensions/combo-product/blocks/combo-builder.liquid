@@ -8,6 +8,9 @@
   data-currency-symbol="{{ cart.currency.symbol }}"
   data-api-base="https://combo-products.vercel.app"
   data-layout-mode="{{ block.settings.layout_mode | default: 'grid' }}"
+  data-step1-label="{{ block.settings.step1_label | default: 'Select Box' | escape }}"
+  data-step2-label="{{ block.settings.step2_label | default: 'Pick Items' | escape }}"
+  data-step3-label="{{ block.settings.step3_label | default: 'Add to Cart' | escape }}"
   {% if block.settings.box_filter == 'specific' and block.settings.box_names != blank %}
   data-visible-boxes="{{ block.settings.box_names }}"
   {% endif %}
@@ -45,7 +48,10 @@
     currencySymbol: '{{ cart.currency.symbol }}',
     apiBase:        'https://combo-products.vercel.app',
     productHandle:  '{{ product.handle }}',
-    layoutMode:     '{{ block.settings.layout_mode | default: "grid" }}'{% if block.settings.box_filter == 'specific' and block.settings.box_names != blank %},
+    layoutMode:     '{{ block.settings.layout_mode | default: "grid" }}',
+    step1Label:     '{{ block.settings.step1_label | default: "Select Box" | escape }}',
+    step2Label:     '{{ block.settings.step2_label | default: "Pick Items" | escape }}',
+    step3Label:     '{{ block.settings.step3_label | default: "Add to Cart" | escape }}'{% if block.settings.box_filter == 'specific' and block.settings.box_names != blank %},
     visibleBoxes:   '{{ block.settings.box_names | escape }}'{% endif %}
   });
 </script>
@@ -81,6 +87,31 @@
       "id": "box_names",
       "label": "Box(es) — name or ID",
       "info": "Used when 'Specific box(es)' is selected above. Enter box names or numeric IDs, comma-separated. E.g: Snack Box, 42, Gift Box"
+    },
+    {
+      "type": "header",
+      "content": "Step Labels (Steps layout only)"
+    },
+    {
+      "type": "text",
+      "id": "step1_label",
+      "label": "Step 1 label",
+      "default": "Select Box",
+      "placeholder": "Select Box"
+    },
+    {
+      "type": "text",
+      "id": "step2_label",
+      "label": "Step 2 label",
+      "default": "Pick Items",
+      "placeholder": "Pick Items"
+    },
+    {
+      "type": "text",
+      "id": "step3_label",
+      "label": "Step 3 label",
+      "default": "Add to Cart",
+      "placeholder": "Add to Cart"
     }
   ]
 }

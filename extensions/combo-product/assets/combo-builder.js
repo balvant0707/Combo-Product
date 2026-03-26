@@ -53,7 +53,8 @@
     // Indicator is styled via CSS class — no content insertion needed
   }
 
-  function resolveAddToCartLabel(settings) {
+  function resolveAddToCartLabel(settings, ctxOverride) {
+    if (ctxOverride && String(ctxOverride).trim()) return String(ctxOverride).trim();
     var label = settings && settings.addToCartLabel != null
       ? String(settings.addToCartLabel).trim()
       : '';
@@ -558,7 +559,7 @@
     btn.className = 'cb-sticky-btn';
     btn.type = 'button';
     btn.disabled = true;
-    btn.textContent = resolveAddToCartLabel(ctx.settings);
+    btn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
     btn.addEventListener('click', onCartClick);
     footer.appendChild(btn);
 
@@ -703,7 +704,9 @@
       var step1Label = root.dataset.step1Label || config.step1Label || 'Select Box';
       var step2Label = root.dataset.step2Label || config.step2Label || 'Pick Items';
       var step3Label = root.dataset.step3Label || config.step3Label || 'Add to Cart';
-      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, layoutMode: layoutMode, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root, step1Label: step1Label, step2Label: step2Label, step3Label: step3Label });
+      var cartBtnLabel = root.dataset.cartBtnLabel || config.cartBtnLabel || '';
+      var checkoutBtnLabel = root.dataset.checkoutBtnLabel || config.checkoutBtnLabel || 'Checkout';
+      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, layoutMode: layoutMode, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root, step1Label: step1Label, step2Label: step2Label, step3Label: step3Label, cartBtnLabel: cartBtnLabel, checkoutBtnLabel: checkoutBtnLabel });
     });
   }
 
@@ -1090,7 +1093,7 @@
     inlineCartBtn.className = 'cb-inline-cart-btn';
     inlineCartBtn.type = 'button';
     inlineCartBtn.disabled = true;
-    inlineCartBtn.textContent = resolveAddToCartLabel(ctx.settings);
+    inlineCartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
 
     function hydrateProductPricing(done) {
       var tasks = products.map(function (p) {
@@ -1242,13 +1245,13 @@
       step3CartBtn = document.createElement('button');
       step3CartBtn.type = 'button';
       step3CartBtn.className = 'cb-step3-cart-btn';
-      step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings);
+      step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
       step3Btns.appendChild(step3CartBtn);
 
       step3CheckoutBtn = document.createElement('button');
       step3CheckoutBtn.type = 'button';
       step3CheckoutBtn.className = 'cb-step3-checkout-btn';
-      step3CheckoutBtn.textContent = 'Checkout \u2192';
+      step3CheckoutBtn.textContent = ctx.checkoutBtnLabel || 'Checkout';
       step3Btns.appendChild(step3CheckoutBtn);
 
       step3CartSection.appendChild(step3Btns);
@@ -1292,7 +1295,7 @@
       var filled = slots.filter(Boolean).length;
       var remaining = box.itemCount - filled;
       var allFilled = remaining === 0;
-      var addLabel = resolveAddToCartLabel(ctx.settings);
+      var addLabel = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
 
       // Inline button
       inlineCartBtn.disabled = !allFilled;
@@ -1807,7 +1810,7 @@
           giftInput ? giftInput.value : null,
           inlineCartBtn,
           _stickyBtn,
-          resolveAddToCartLabel(ctx.settings),
+          resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel),
           ctx.currencySymbol,
           ctx.apiBase,
           ctx.shop,
@@ -1922,7 +1925,7 @@
     inlineCartBtn.className = 'cb-inline-cart-btn';
     inlineCartBtn.type = 'button';
     inlineCartBtn.disabled = true;
-    inlineCartBtn.textContent = resolveAddToCartLabel(ctx.settings);
+    inlineCartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
 
     function renderSlots() {
       slotSteps.innerHTML = '';
@@ -2061,13 +2064,13 @@
       step3CartBtn = document.createElement('button');
       step3CartBtn.type = 'button';
       step3CartBtn.className = 'cb-step3-cart-btn';
-      step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings);
+      step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
       step3Btns.appendChild(step3CartBtn);
 
       step3CheckoutBtn = document.createElement('button');
       step3CheckoutBtn.type = 'button';
       step3CheckoutBtn.className = 'cb-step3-checkout-btn';
-      step3CheckoutBtn.textContent = 'Checkout \u2192';
+      step3CheckoutBtn.textContent = ctx.checkoutBtnLabel || 'Checkout';
       step3Btns.appendChild(step3CheckoutBtn);
 
       step3CartSection.appendChild(step3Btns);
@@ -2078,7 +2081,7 @@
     function updateCartButton() {
       var filled = slots.filter(Boolean).length;
       var allFilled = filled === numSteps;
-      var addLabel = resolveAddToCartLabel(ctx.settings);
+      var addLabel = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
 
       inlineCartBtn.disabled = !allFilled;
       if (allFilled) inlineCartBtn.classList.add('cb-inline-cart-btn--ready');
@@ -2478,7 +2481,7 @@
         });
         return;
       }
-      addToCart(box, slots, sessionId, null, inlineCartBtn, _stickyBtn, resolveAddToCartLabel(ctx.settings), ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo);
+      addToCart(box, slots, sessionId, null, inlineCartBtn, _stickyBtn, resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel), ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo);
     }
 
     inlineCartBtn.addEventListener('click', doCart);
@@ -2491,7 +2494,7 @@
           step3CartBtn.innerHTML = '<span class="cb-btn-spinner" aria-hidden="true"></span><span>Adding\u2026</span>';
           if (step3CheckoutBtn) step3CheckoutBtn.disabled = true;
           showPageLoader('Adding products to cart\u2026');
-          addToCart(box, slots, sessionId, null, inlineCartBtn, _stickyBtn, resolveAddToCartLabel(ctx.settings), ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo);
+          addToCart(box, slots, sessionId, null, inlineCartBtn, _stickyBtn, resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel), ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo);
         });
       }
       if (step3CheckoutBtn) {

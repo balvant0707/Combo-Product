@@ -8,6 +8,8 @@
   data-currency-symbol="{{ cart.currency.symbol }}"
   data-api-base="https://combo-products.vercel.app"
   data-layout-mode="{{ block.settings.layout_mode | default: 'grid' }}"
+  data-cart-btn-label="{{ block.settings.cart_btn_label | default: 'Add To Cart' | escape }}"
+  data-checkout-btn-label="{{ block.settings.checkout_btn_label | default: 'Checkout' | escape }}"
   data-step1-label="{{ block.settings.step1_label | default: 'Select Box' | escape }}"
   data-step2-label="{{ block.settings.step2_label | default: 'Pick Items' | escape }}"
   data-step3-label="{{ block.settings.step3_label | default: 'Add to Cart' | escape }}"
@@ -48,8 +50,10 @@
     currencySymbol: '{{ cart.currency.symbol }}',
     apiBase:        'https://combo-products.vercel.app',
     productHandle:  '{{ product.handle }}',
-    layoutMode:     '{{ block.settings.layout_mode | default: "grid" }}',
-    step1Label:     '{{ block.settings.step1_label | default: "Select Box" | escape }}',
+    layoutMode:        '{{ block.settings.layout_mode | default: "grid" }}',
+    cartBtnLabel:      '{{ block.settings.cart_btn_label | default: "Add To Cart" | escape }}',
+    checkoutBtnLabel:  '{{ block.settings.checkout_btn_label | default: "Checkout" | escape }}',
+    step1Label:        '{{ block.settings.step1_label | default: "Select Box" | escape }}',
     step2Label:     '{{ block.settings.step2_label | default: "Pick Items" | escape }}',
     step3Label:     '{{ block.settings.step3_label | default: "Add to Cart" | escape }}'{% if block.settings.box_filter == 'specific' and block.settings.box_names != blank %},
     visibleBoxes:   '{{ block.settings.box_names | escape }}'{% endif %}
@@ -87,6 +91,24 @@
       "id": "box_names",
       "label": "Box(es) — name or ID",
       "info": "Used when 'Specific box(es)' is selected above. Enter box names or numeric IDs, comma-separated. E.g: Snack Box, 42, Gift Box"
+    },
+    {
+      "type": "header",
+      "content": "Button Labels (Steps layout only)"
+    },
+    {
+      "type": "text",
+      "id": "cart_btn_label",
+      "label": "Add to Cart button text",
+      "default": "Add To Cart",
+      "placeholder": "Add To Cart"
+    },
+    {
+      "type": "text",
+      "id": "checkout_btn_label",
+      "label": "Checkout button text",
+      "default": "Checkout",
+      "placeholder": "Checkout"
     },
     {
       "type": "header",

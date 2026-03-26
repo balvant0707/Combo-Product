@@ -775,9 +775,9 @@
       var wizardChangeBtn = document.createElement('button');
       wizardChangeBtn.type = 'button';
       wizardChangeBtn.className = 'cb-change-box-btn';
-      wizardChangeBtn.innerHTML = '&#8592; Change box';
+      wizardChangeBtn.innerHTML = '&#8592; Back';
       wizardChangeBtn.style.visibility = 'hidden';
-      wizardHeader.appendChild(wizardChangeBtn);
+      wizardHeader.insertBefore(wizardChangeBtn, wizardTitle);
       ctx._changeBoxBtn = wizardChangeBtn;
 
       wizardEl.appendChild(wizardHeader);

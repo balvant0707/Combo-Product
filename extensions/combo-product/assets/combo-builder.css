@@ -1339,12 +1339,11 @@
 }
 /* Header: change-box btn (left) + title (right) */
 .cb-wizard-header {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
 }
-
 .cb-wizard-title {
   font-size: clamp(18px, 2vw, 24px);
   font-weight: 700;
@@ -1472,8 +1471,10 @@
 .cb-wizard-step-content { display: none; }
 .cb-wizard-step-num     { display: none; }
 
-/* Change Box back link — bordered button */
+/* Change Box back link — bordered button, anchored to left of wizard header */
 .cb-change-box-btn {
+  position: absolute;
+  left: 0;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center;

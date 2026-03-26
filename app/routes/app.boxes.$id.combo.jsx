@@ -4,7 +4,7 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { Buffer } from "node:buffer";
 import { AdminIcon } from "../components/admin-icons";
-import { getBox, upsertComboConfig, addComboStepImagesToProduct, saveComboStepImages, getComboStepImages, deleteComboStepImage } from "../models/boxes.server";
+import { getBox, upsertComboConfig, addComboStepImagesToProduct, saveComboStepImages, getComboStepImages, deleteComboStepImage, syncShopifyBundleProduct } from "../models/boxes.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 import { validateComboConfig } from "../utils/combo-config";
 
@@ -231,9 +231,17 @@ export const action = async ({ request, params }) => {
       }
     }
 
-    // Sync step product/collection images to the Shopify bundle product
+    // Sync title, price and step images to the Shopify bundle product
     const box = await getBox(params.id, session.shop);
     if (box?.shopifyProductId) {
+      try {
+        const parsedConfig = typeof comboStepsConfig === "string" ? JSON.parse(comboStepsConfig) : comboStepsConfig;
+        const bundleTitle = box.boxName || box.displayTitle || parsedConfig.title;
+        const bundlePrice = parsedConfig.bundlePrice != null ? parseFloat(parsedConfig.bundlePrice) : null;
+        await syncShopifyBundleProduct(admin, box.shopifyProductId, box.shopifyVariantId, { title: bundleTitle, bundlePrice });
+      } catch (e) {
+        console.error("[app.boxes.$id.combo] syncShopifyBundleProduct error:", e);
+      }
       try {
         await addComboStepImagesToProduct(admin, box.shopifyProductId, comboStepsConfig);
       } catch (e) {

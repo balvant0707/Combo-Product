@@ -1399,7 +1399,11 @@
       if (ctx.layoutMode === 'steps') {
         var savedScrollY = window.scrollY;
         productSection.style.display = allFilled ? 'none' : '';
-        if (window.scrollY !== savedScrollY) window.scrollTo(0, savedScrollY);
+        if (allFilled) {
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () { window.scrollTo(0, savedScrollY); });
+          });
+        }
         if (step3CartBtn) {
           step3CartBtn.disabled = !allFilled;
           if (!allFilled) {
@@ -2164,7 +2168,11 @@
       if (ctx.layoutMode === 'steps') {
         var savedScrollY = window.scrollY;
         productSection.style.display = allFilled ? 'none' : '';
-        if (window.scrollY !== savedScrollY) window.scrollTo(0, savedScrollY);
+        if (allFilled) {
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () { window.scrollTo(0, savedScrollY); });
+          });
+        }
         if (step3CartBtn) {
           step3CartBtn.disabled = !allFilled;
           if (!allFilled) {

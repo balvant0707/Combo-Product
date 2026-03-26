@@ -663,6 +663,44 @@ export async function upsertComboConfig(boxId, config) {
   });
 }
 
+/**
+ * Sync a combo box's title and price to its associated Shopify bundle product.
+ * Call this whenever combo config is saved (price or title may have changed).
+ */
+export async function syncShopifyBundleProduct(admin, shopifyProductId, shopifyVariantId, { title, bundlePrice }) {
+  if (!admin || !shopifyProductId) return;
+
+  try {
+    await admin.graphql(ACTIVATE_BUNDLE_PRODUCT_MUTATION, {
+      variables: {
+        product: {
+          id: shopifyProductId,
+          status: "ACTIVE",
+          title,
+        },
+      },
+    });
+  } catch (e) {
+    console.error("[syncShopifyBundleProduct] Failed to update product title/status:", e);
+  }
+
+  if (bundlePrice != null) {
+    const variantId = shopifyVariantId || (await resolveDefaultVariantId(admin, shopifyProductId));
+    if (variantId) {
+      try {
+        await admin.graphql(UPDATE_BUNDLE_PRODUCT_PRICE_MUTATION, {
+          variables: {
+            productId: shopifyProductId,
+            variants: [{ id: variantId, price: String(bundlePrice) }],
+          },
+        });
+      } catch (e) {
+        console.error("[syncShopifyBundleProduct] Failed to update product price:", e);
+      }
+    }
+  }
+}
+
 export async function updateBox(id, shop, data, admin) {
   const existing = await db.comboBox.findFirst({
     where: { id: parseInt(id), shop, deletedAt: null },

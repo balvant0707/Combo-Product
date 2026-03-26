@@ -988,10 +988,20 @@
         ctx._changeBoxBtnWired = true;
         var _cbBtn = ctx._changeBoxBtn;
         _cbBtn.addEventListener('click', function () {
+          // Two-level back: if product grid is currently hidden (all slots filled),
+          // first go back to showing the product grid. If product grid is already
+          // visible, go all the way back to Step 1 (box selection).
+          if (ctx._productSection && ctx._productSection.style.display === 'none') {
+            ctx._productSection.style.display = '';
+            return;
+          }
+
           if (ctx._step1Head) ctx._step1Head.style.display = '';
           if (ctx._boxGrid) ctx._boxGrid.style.display = '';
           builderArea.style.display = 'none';
           builderArea.innerHTML = '';
+          ctx._productSection = null;
+          ctx._openBoxId = null;
           _cbBtn.style.visibility = 'hidden';
           if (ctx._wizardStep1Content) ctx._wizardStep1Content.style.display = 'none';
           if (ctx._wizardDots) {
@@ -1299,6 +1309,7 @@
     productGrid.className = ctx.layout === 'list' ? 'cb-product-list' : 'cb-product-grid';
     productSection.appendChild(productGrid);
     container.appendChild(productSection);
+    ctx._productSection = productSection;
 
     // ── Update cart button state ──
     function updateCartButton() {
@@ -2104,6 +2115,7 @@
     productGrid.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
     productSection.appendChild(productGrid);
     container.appendChild(productSection);
+    ctx._productSection = productSection;
 
     // ── Cart button state ──
     function updateCartButton() {

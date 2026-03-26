@@ -31,11 +31,11 @@ function applyPrismaPoolParams(databaseUrl, serverless) {
     return databaseUrl;
   }
 
-  // Serverless: each function instance needs only 1 connection.
-  // Multiple concurrent invocations × 3 connections each quickly exhausts MySQL
-  // max_connections. 1 connection per instance + pool_timeout=10 avoids this.
-  const defaultConnectionLimit = serverless ? 1 : null;
-  const defaultPoolTimeout = serverless ? 10 : null;
+  // Serverless: allow 3 connections per instance so Promise.all() loaders that
+  // fire 2-3 concurrent queries don't time out waiting for a single slot.
+  // pool_timeout raised to 20s to handle cold-start latency on shared hosting.
+  const defaultConnectionLimit = serverless ? 3 : null;
+  const defaultPoolTimeout = serverless ? 20 : null;
 
   const configuredConnectionLimit = asPositiveInt(process.env.PRISMA_CONNECTION_LIMIT);
   const configuredPoolTimeout     = asPositiveInt(process.env.PRISMA_POOL_TIMEOUT);
@@ -234,8 +234,10 @@ export async function withDbRetry(fn, { retries = 3, delayMs = 500 } = {}) {
         err?.message?.includes("Connection refused") ||
         err?.message?.includes("ECONNREFUSED") ||
         err?.message?.includes("ETIMEDOUT") ||
+        err?.message?.includes("Timed out fetching a new connection") ||
         err?.errorCode === "P1001" ||   // Prisma: unreachable
-        err?.errorCode === "P1002";     // Prisma: timed out
+        err?.errorCode === "P1002" ||   // Prisma: timed out
+        err?.errorCode === "P2024";     // Prisma: connection pool timeout
       if (!isTransient || attempt === retries) break;
       const wait = delayMs * 2 ** attempt;
       console.warn(`[DB] transient error (attempt ${attempt + 1}/${retries + 1}), retrying in ${wait}ms…`, err?.message);

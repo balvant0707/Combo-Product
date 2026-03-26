@@ -1236,7 +1236,6 @@
     if (ctx.layoutMode === 'steps') {
       step3CartSection = document.createElement('div');
       step3CartSection.className = 'cb-step3-cart';
-      step3CartSection.style.display = 'none';
 
       var step3Head = document.createElement('h2');
       step3Head.className = 'cb-step-heading cb-step3-heading';
@@ -1370,13 +1369,11 @@
         }
       }
 
-      // Steps mode: show Step 3 cart section when all slots filled; update wizard dot
+      // Steps mode: hide product grid when all filled; enable/disable cart buttons; update wizard dot
       if (ctx.layoutMode === 'steps') {
         productSection.style.display = allFilled ? 'none' : '';
-        if (step3CartSection) {
-          step3CartSection.style.display = allFilled ? 'block' : 'none';
-          if (allFilled) step3CartSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
+        if (step3CartBtn) step3CartBtn.disabled = !allFilled;
+        if (step3CheckoutBtn) step3CheckoutBtn.disabled = !allFilled;
         if (allFilled && ctx._wizardDots && ctx._wizardDots[2]) {
           ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--done';
           setWizardStep2Preview(ctx, slots);
@@ -2048,7 +2045,6 @@
     if (ctx.layoutMode === 'steps') {
       step3CartSection = document.createElement('div');
       step3CartSection.className = 'cb-step3-cart';
-      step3CartSection.style.display = 'none';
 
       var step3Head = document.createElement('h2');
       step3Head.className = 'cb-step-heading cb-step3-heading';
@@ -2121,13 +2117,11 @@
       }
       if (isDynamic) setBoxCardPrice(box, totalMrp, ctx.currencySymbol);
 
-      // Steps mode: hide product grid when done, show Step 3 cart section + update wizard
+      // Steps mode: hide product grid when done; enable/disable cart buttons; update wizard
       if (ctx.layoutMode === 'steps') {
         productSection.style.display = allFilled ? 'none' : '';
-        if (step3CartSection) {
-          step3CartSection.style.display = allFilled ? 'block' : 'none';
-          if (allFilled) step3CartSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
+        if (step3CartBtn) step3CartBtn.disabled = !allFilled;
+        if (step3CheckoutBtn) step3CheckoutBtn.disabled = !allFilled;
         if (allFilled && ctx._wizardDots && ctx._wizardDots[2]) {
           ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--done';
           setWizardStep2Preview(ctx, slots);
@@ -2198,11 +2192,29 @@
         return;
       }
 
+      // Build used-product tracking from all OTHER slots (for allowDuplicates = false)
+      var usedIds = [];
+      var usedVariantIdsByProduct = {};
+      if (!box.allowDuplicates) {
+        slots.forEach(function (p, si) {
+          if (!p || si === activeSlotIndex) return;
+          usedIds.push(p.productId);
+          if (p.selectedVariantId) {
+            var key = String(p.productId);
+            if (!usedVariantIdsByProduct[key]) usedVariantIdsByProduct[key] = [];
+            var sid = String(p.selectedVariantId);
+            if (usedVariantIdsByProduct[key].indexOf(sid) === -1) usedVariantIdsByProduct[key].push(sid);
+          }
+        });
+      }
+
       products.forEach(function (product) {
         var isCurrentSlot = slots[activeSlotIndex] && slots[activeSlotIndex].productId === product.productId;
+        var isUsed = !box.allowDuplicates && usedIds.indexOf(product.productId) !== -1 && !isCurrentSlot;
 
         var card = document.createElement('div');
         card.className = 'cb-product-card';
+        if (isUsed) card.classList.add('cb-product-card--used');
         card.setAttribute('role', 'button');
         card.setAttribute('tabindex', '0');
 
@@ -2348,7 +2360,7 @@
         // ADD TO BOX / REMOVE FROM BOX button
         var addBtn = document.createElement('button');
         addBtn.type = 'button';
-        if (isCurrentSlot) {
+        if (isCurrentSlot || isUsed) {
           addBtn.className = 'cb-add-btn cb-add-btn--remove';
           addBtn.innerHTML = '&times; REMOVE FROM BOX';
         } else {
@@ -2372,6 +2384,26 @@
               if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRemove(e); }
             });
           })(addBtn);
+        } else if (isUsed) {
+          ;(function (p, aBtn) {
+            function onRemove(e) {
+              e.stopPropagation();
+              for (var si = 0; si < slots.length; si++) {
+                if (slots[si] && slots[si].productId === p.productId) {
+                  slots[si] = null;
+                  break;
+                }
+              }
+              renderSlots();
+              loadAndRenderGrid();
+              updateCartButton();
+            }
+            aBtn.addEventListener('click', onRemove);
+            card.addEventListener('click', onRemove);
+            card.addEventListener('keydown', function (e) {
+              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRemove(e); }
+            });
+          })(product, addBtn);
         } else {
           ;(function (p, aBtn) {
             function doAddToSlot(variantId, variantTitle, variantPrice, variantCompareAtPrice) {

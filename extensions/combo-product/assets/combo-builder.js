@@ -1832,10 +1832,28 @@
 
     inlineCartBtn.addEventListener('click', doAddToCart);
 
-    // Steps mode: wire step3 buttons
+    // Steps mode: wire step3 buttons with immediate spinner
     if (ctx.layoutMode === 'steps') {
-      if (step3CartBtn) step3CartBtn.addEventListener('click', doAddToCart);
-      if (step3CheckoutBtn) step3CheckoutBtn.addEventListener('click', doCheckout);
+      if (step3CartBtn) {
+        step3CartBtn.addEventListener('click', function () {
+          if (slots.filter(Boolean).length < box.itemCount) return;
+          step3CartBtn.disabled = true;
+          step3CartBtn.classList.add('cb-step3-cart-btn--loading');
+          step3CartBtn.innerHTML = '<span class="cb-btn-spinner" aria-hidden="true"></span><span>Adding\u2026</span>';
+          if (step3CheckoutBtn) step3CheckoutBtn.disabled = true;
+          doAddToCart();
+        });
+      }
+      if (step3CheckoutBtn) {
+        step3CheckoutBtn.addEventListener('click', function () {
+          if (slots.filter(Boolean).length < box.itemCount) return;
+          step3CheckoutBtn.disabled = true;
+          step3CheckoutBtn.classList.add('cb-step3-checkout-btn--loading');
+          step3CheckoutBtn.innerHTML = '<span class="cb-btn-spinner" aria-hidden="true"></span><span>Checkout\u2026</span>';
+          if (step3CartBtn) step3CartBtn.disabled = true;
+          doCheckout();
+        });
+      }
     }
 
     createStickyFooter(box, ctx, doAddToCart);
@@ -2446,11 +2464,26 @@
 
     inlineCartBtn.addEventListener('click', doCart);
     if (ctx.layoutMode === 'steps') {
-      if (step3CartBtn) step3CartBtn.addEventListener('click', doCart);
+      if (step3CartBtn) {
+        step3CartBtn.addEventListener('click', function () {
+          if (slots.filter(Boolean).length < numSteps) return;
+          step3CartBtn.disabled = true;
+          step3CartBtn.classList.add('cb-step3-cart-btn--loading');
+          step3CartBtn.innerHTML = '<span class="cb-btn-spinner" aria-hidden="true"></span><span>Adding\u2026</span>';
+          if (step3CheckoutBtn) step3CheckoutBtn.disabled = true;
+          showPageLoader('Adding products to cart\u2026');
+          addToCart(box, slots, sessionId, null, inlineCartBtn, _stickyBtn, resolveAddToCartLabel(ctx.settings), ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo);
+        });
+      }
       if (step3CheckoutBtn) {
         step3CheckoutBtn.addEventListener('click', function () {
           if (slots.filter(Boolean).length < numSteps) return;
-          addToCart(box, slots, sessionId, null, step3CheckoutBtn, null, 'Checkout \u2192', ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo, '/checkout');
+          step3CheckoutBtn.disabled = true;
+          step3CheckoutBtn.classList.add('cb-step3-checkout-btn--loading');
+          step3CheckoutBtn.innerHTML = '<span class="cb-btn-spinner" aria-hidden="true"></span><span>Checkout\u2026</span>';
+          if (step3CartBtn) step3CartBtn.disabled = true;
+          showPageLoader('Processing your order\u2026');
+          addToCart(box, slots, sessionId, null, null, null, 'Checkout \u2192', ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo, '/checkout');
         });
       }
     }

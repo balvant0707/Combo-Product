@@ -1445,9 +1445,10 @@
 
         var card = document.createElement('div');
         card.className = 'cb-product-card';
-        if (isUsed) {
+        if (isCurrentSlot) {
+          card.classList.add('cb-product-card--current');
+        } else if (isUsed) {
           card.classList.add('cb-product-card--used');
-          // card stays interactive so the remove button works
         }
         card.setAttribute('role', 'button');
         card.setAttribute('tabindex', '0');
@@ -2214,7 +2215,11 @@
 
         var card = document.createElement('div');
         card.className = 'cb-product-card';
-        if (isUsed) card.classList.add('cb-product-card--used');
+        if (isCurrentSlot) {
+          card.classList.add('cb-product-card--current');
+        } else if (isUsed) {
+          card.classList.add('cb-product-card--used');
+        }
         card.setAttribute('role', 'button');
         card.setAttribute('tabindex', '0');
 

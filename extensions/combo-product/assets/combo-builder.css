@@ -674,20 +674,59 @@
   position: relative;
 }
 
-.cb-product-card:hover:not(.cb-product-card--used) {
+.cb-product-card:hover:not(.cb-product-card--used):not(.cb-product-card--current) {
   background: #f8fafc;
   box-shadow: none;
   transform: none;
 }
 
-.cb-product-card:focus-visible:not(.cb-product-card--used) {
+.cb-product-card:focus-visible:not(.cb-product-card--used):not(.cb-product-card--current) {
   outline: 2px solid var(--cb-primary);
   outline-offset: -2px;
 }
 
-.cb-product-card--used {
-  opacity: 0.75;
+/* Current active slot — subtle primary border highlight */
+.cb-product-card--current {
+  outline: 2.5px solid var(--cb-primary, #2A7A4F);
+  outline-offset: -2px;
   cursor: pointer;
+}
+
+/* Used in another slot — dimmed with checkmark overlay */
+.cb-product-card--used {
+  cursor: pointer;
+}
+
+/* Checkmark overlay on used-product images */
+.cb-product-card--used .cb-product-img-wrap::after {
+  content: '\2713';
+  position: absolute;
+  inset: 0;
+  background: rgba(42, 122, 79, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 48px;
+  font-weight: 900;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Checkmark overlay on current-slot images (lighter, primary tint) */
+.cb-product-card--current .cb-product-img-wrap::after {
+  content: '\2713';
+  position: absolute;
+  inset: 0;
+  background: rgba(42, 122, 79, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 48px;
+  font-weight: 900;
+  pointer-events: none;
+  z-index: 2;
 }
 
 .cb-product-img-wrap {
@@ -845,12 +884,23 @@
 .cb-add-btn--added:hover { background: var(--cb-success); }
 
 .cb-add-btn--remove {
-  background: var(--cb-primary);
+  background: var(--cb-primary, #2A7A4F);
   color: #fff;
   cursor: pointer;
+  letter-spacing: 1.2px;
+  font-size: 12px;
+  padding: 13px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background var(--cb-transition), opacity var(--cb-transition);
 }
 
-.cb-add-btn--remove:hover { background: var(--cb-error); }
+.cb-add-btn--remove:hover {
+  background: var(--cb-primary-hover, #1e5c3a);
+  opacity: 0.92;
+}
 
 /* List layout overrides */
 .cb-product-list .cb-product-card {
@@ -1611,9 +1661,12 @@
   .cb-wizard-step-label {
     font-size: 12px;
   }
-  .cb-step3-buttons { flex-direction: column; gap: 0; }
+  .cb-step3-buttons { flex-direction: column; gap: 10px; }
   .cb-step3-checkout-btn { border-left: 2px dashed #c8d6e0; border-top: none; }
   .cb-step3-checkout-btn::before { top: -1px; left: 50%; height: auto; width: 60%; border-left: none; border-top: 1.5px dashed #c8d6e0; transform: none; }
   .cb-step3-checkout-btn:not(:disabled) { border-left: 2px solid #111827; border-top: none; }
-  .cb-step3-cart-btn, .cb-step3-checkout-btn { width: 100%; min-height: 90px; }
+  .cb-step3-cart-btn, .cb-step3-checkout-btn { 
+    width: 100%; 
+    min-height: 44px; 
+  }
 }

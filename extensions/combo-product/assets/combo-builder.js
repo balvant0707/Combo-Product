@@ -1085,18 +1085,6 @@
     step2Head.textContent = ctx.step2Heading || 'Step 2: Select your products';
     container.appendChild(step2Head);
 
-    // ── Back button (Steps layout only) ──
-    if (ctx.layoutMode === 'steps' && ctx._changeBoxBtn) {
-      var backBtn = document.createElement('button');
-      backBtn.type = 'button';
-      backBtn.className = 'cb-back-btn';
-      backBtn.innerHTML = '&#8592; Change Box';
-      backBtn.addEventListener('click', function () {
-        ctx._changeBoxBtn.click();
-      });
-      container.appendChild(backBtn);
-    }
-
     // ── Slot Steps Row ──
     var slotWrapper = document.createElement('div');
     slotWrapper.className = 'cb-slot-wrapper';
@@ -1939,18 +1927,6 @@
     step2Head.className = 'cb-step-heading';
     step2Head.textContent = ctx.step2Heading || ('Step 2: ' + (comboConfig.title || 'Select your products'));
     container.appendChild(step2Head);
-
-    // ── Back button (Steps layout only) ──
-    if (ctx.layoutMode === 'steps' && ctx._changeBoxBtn) {
-      var backBtn = document.createElement('button');
-      backBtn.type = 'button';
-      backBtn.className = 'cb-back-btn';
-      backBtn.innerHTML = '&#8592; Change Box';
-      backBtn.addEventListener('click', function () {
-        ctx._changeBoxBtn.click();
-      });
-      container.appendChild(backBtn);
-    }
 
     if (comboConfig.subtitle) {
       var subEl = document.createElement('p');

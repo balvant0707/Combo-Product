@@ -1500,29 +1500,6 @@
   transform: translateY(-1px);
 }
 
-/* Back button inside builder area (Steps layout) */
-.cb-back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 12px;
-  padding: 6px 14px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #64748b;
-  background: transparent;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: border-color 0.18s, color 0.18s, background 0.18s;
-  line-height: 1;
-}
-.cb-back-btn:hover {
-  border-color: var(--cb-primary);
-  color: var(--cb-primary);
-  background: var(--cb-primary-light, rgba(42,122,79,0.06));
-}
-
 /* ══ Step 3 — Add to Cart / Checkout buttons ══════════════════════════════ */
 
 /* Transparent wrapper that sits inline after the slot steps */

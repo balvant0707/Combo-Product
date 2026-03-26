@@ -496,7 +496,7 @@ export default function SpecificComboBoxPage() {
           type="button"
           onClick={() => { const f = document.getElementById("combo-config-form"); if (f) f.requestSubmit(); }}
           disabled={comboFetcher.state === "submitting"}
-          style={{ background: comboFetcher.state === "submitting" ? "#374151" : "#000000", color: "#ffffff", border: "none", borderRadius: "7px", padding: "11px 28px", fontSize: "14px", fontWeight: "700", cursor: comboFetcher.state === "submitting" ? "not-allowed" : "pointer", display: "inline-flex", alignItems: "center", gap: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.15)", transition: "background 0.15s" }}
+          style={{ background: comboFetcher.state === "submitting" ? "#1e5e3c" : "#2A7A4F", color: "#ffffff", border: "none", borderRadius: "7px", padding: "11px 28px", fontSize: "14px", fontWeight: "700", cursor: comboFetcher.state === "submitting" ? "not-allowed" : "pointer", display: "inline-flex", alignItems: "center", gap: "8px", boxShadow: "0 2px 8px rgba(42,122,79,0.25)", transition: "background 0.15s" }}
         >
           <AdminIcon type="save" size="small" style={{ color: "#fff" }} />
           {comboFetcher.state === "submitting" ? "Saving…" : "Save Combo Config"}
@@ -523,7 +523,7 @@ export default function SpecificComboBoxPage() {
                 <label style={labelStyle}>Combo type</label>
                 <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
                   {[2, 3].map((n) => (
-                    <button key={n} type="button" onClick={() => { updateComboField("type", n); if (comboActiveStep >= n) setComboActiveStep(0); }} style={{ flex: 1, padding: "7px 0", fontSize: "12px", fontWeight: "600", border: "none", borderRadius: "5px", cursor: "pointer", background: comboConfig.type === n ? "#000000" : "#f3f4f6", color: comboConfig.type === n ? "#ffffff" : "#374151", transition: "background 0.15s" }}>
+                    <button key={n} type="button" onClick={() => { updateComboField("type", n); if (comboActiveStep >= n) setComboActiveStep(0); }} style={{ flex: 1, padding: "7px 0", fontSize: "12px", fontWeight: "600", border: "none", borderRadius: "5px", cursor: "pointer", background: comboConfig.type === n ? "#2A7A4F" : "#f3f4f6", color: comboConfig.type === n ? "#ffffff" : "#374151", transition: "background 0.15s" }}>
                       {n}-step
                     </button>
                   ))}
@@ -545,7 +545,7 @@ export default function SpecificComboBoxPage() {
                 <label style={labelStyle}>Bundle Price (₹) *</label>
                 <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "5px", overflow: "hidden", marginBottom: "8px" }}>
                   {["manual", "dynamic"].map((mode) => (
-                    <button key={mode} type="button" onClick={() => updateComboField("bundlePriceType", mode)} style={{ flex: 1, padding: "6px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: comboConfig.bundlePriceType === mode ? "#000000" : "#f9fafb", color: comboConfig.bundlePriceType === mode ? "#ffffff" : "#374151", transition: "background 0.15s" }}>
+                    <button key={mode} type="button" onClick={() => updateComboField("bundlePriceType", mode)} style={{ flex: 1, padding: "6px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: comboConfig.bundlePriceType === mode ? "#2A7A4F" : "#f9fafb", color: comboConfig.bundlePriceType === mode ? "#ffffff" : "#374151", transition: "background 0.15s" }}>
                       {mode === "manual" ? "Manual" : "Dynamic"}
                     </button>
                   ))}
@@ -607,7 +607,7 @@ export default function SpecificComboBoxPage() {
           {/* Step tabs */}
           <div style={{ display: "flex", borderBottom: "1px solid #e5e7eb", marginBottom: "16px" }}>
             {Array.from({ length: comboConfig.type }, (_, i) => (
-              <button key={i} type="button" onClick={() => setComboActiveStep(i)} style={{ padding: "8px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none", borderRadius: "6px 6px 0 0", background: comboActiveStep === i ? "#000000" : comboStepErrors[i] ? "#fff5f5" : "#f9fafb", borderBottom: comboActiveStep === i ? "2px solid #000000" : comboStepErrors[i] ? "2px solid #dc2626" : "2px solid transparent", marginBottom: "-1px", color: comboStepErrors[i] ? "#dc2626" : comboActiveStep === i ? "#ffffff" : "#6b7280", transition: "color 0.15s, border-color 0.15s, background 0.15s" }}>
+              <button key={i} type="button" onClick={() => setComboActiveStep(i)} style={{ padding: "8px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none", borderRadius: "6px 6px 0 0", background: comboActiveStep === i ? "#2A7A4F" : comboStepErrors[i] ? "#fff5f5" : "#f9fafb", borderBottom: comboActiveStep === i ? "2px solid #2A7A4F" : comboStepErrors[i] ? "2px solid #dc2626" : "2px solid transparent", marginBottom: "-1px", color: comboStepErrors[i] ? "#dc2626" : comboActiveStep === i ? "#ffffff" : "#6b7280", transition: "color 0.15s, border-color 0.15s, background 0.15s" }}>
                 {comboConfig.steps[i].label || "Untitled step"}
               </button>
             ))}
@@ -655,7 +655,7 @@ export default function SpecificComboBoxPage() {
                         <button
                           type="button"
                           onClick={() => { setCollModalStepIdx(ai); setTempColls([...step.collections]); setCollSearch(""); setShowCollModal(true); }}
-                          style={{ padding: "7px 16px", border: "1px solid #000000", borderRadius: "5px", background: "#000000", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}
+                          style={{ padding: "7px 16px", border: "1px solid #2A7A4F", borderRadius: "5px", background: "#2A7A4F", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}
                         >
                           Select collections
                         </button>
@@ -663,7 +663,7 @@ export default function SpecificComboBoxPage() {
                         <button
                           type="button"
                           onClick={() => { setStepProdModalIdx(ai); setTempStepProds([...(step.selectedProducts || [])]); setStepProdSearch(""); setShowStepProdModal(true); }}
-                          style={{ padding: "7px 16px", border: "1px solid #000000", borderRadius: "5px", background: "#000000", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}
+                          style={{ padding: "7px 16px", border: "1px solid #2A7A4F", borderRadius: "5px", background: "#2A7A4F", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}
                         >
                           Select products
                         </button>
@@ -686,7 +686,7 @@ export default function SpecificComboBoxPage() {
                         </div>
                         <div style={{ padding: "10px 12px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
                           {step.collections.map((c) => (
-                            <span key={c.id} style={{ display: "inline-flex", alignItems: "center", gap: "5px", background: "#111827", color: "#fff", padding: "5px 10px", borderRadius: "5px", fontSize: "12px", fontWeight: "600" }}>
+                            <span key={c.id} style={{ display: "inline-flex", alignItems: "center", gap: "5px", background: "#f3f4f6", color: "#000000", padding: "5px 10px", borderRadius: "5px", fontSize: "12px", fontWeight: "600", border: "1px solid #d1d5db" }}>
                               {c.title}
                               <button type="button" aria-label={`Remove ${c.title}`} onClick={() => updateComboStep(ai, "collections", step.collections.filter((x) => x.id !== c.id))} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", fontSize: "14px", lineHeight: 1, padding: "0 0 0 2px", opacity: 0.65, display: "inline-flex", alignItems: "center" }}>×</button>
                             </span>
@@ -701,7 +701,7 @@ export default function SpecificComboBoxPage() {
                         </div>
                         <div style={{ padding: "10px 12px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
                           {step.selectedProducts.map((p) => (
-                            <span key={p.id} style={{ display: "inline-flex", alignItems: "center", gap: "5px", background: "#111827", color: "#fff", padding: "5px 10px", borderRadius: "5px", fontSize: "12px", fontWeight: "600" }}>
+                            <span key={p.id} style={{ display: "inline-flex", alignItems: "center", gap: "5px", background: "#f3f4f6", color: "#000000", padding: "5px 10px", borderRadius: "5px", fontSize: "12px", fontWeight: "600", border: "1px solid #d1d5db" }}>
                               {p.title}
                               <button type="button" aria-label={`Remove ${p.title}`} onClick={() => updateComboStep(ai, "selectedProducts", step.selectedProducts.filter((x) => x.id !== p.id))} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", fontSize: "14px", lineHeight: 1, padding: "0 0 0 2px", opacity: 0.65, display: "inline-flex", alignItems: "center" }}>×</button>
                             </span>
@@ -832,15 +832,15 @@ export default function SpecificComboBoxPage() {
                   step.collections.some((selectedColl) => selectedColl.id === coll.id)
                 );
                 return (
-                  <div key={coll.id} onClick={() => setTempColls(isSelected ? tempColls.filter((c) => c.id !== coll.id) : [...tempColls, coll])} onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = "#f3f4f6"; }} onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = "#fff"; }} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filteredColls.length - 1 ? "1px solid #f3f4f6" : "none", borderLeft: isSelected ? "3px solid #000000" : "3px solid transparent", cursor: "pointer", background: isSelected ? "#000000" : "#fff", transition: "background 0.1s, border-color 0.1s", userSelect: "none" }}>
+                  <div key={coll.id} onClick={() => setTempColls(isSelected ? tempColls.filter((c) => c.id !== coll.id) : [...tempColls, coll])} onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = "#f3f4f6"; }} onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = "#fff"; }} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filteredColls.length - 1 ? "1px solid #f3f4f6" : "none", borderLeft: isSelected ? "3px solid #2A7A4F" : "3px solid transparent", cursor: "pointer", background: isSelected ? "#f0fdf4" : "#fff", transition: "background 0.1s, border-color 0.1s", userSelect: "none" }}>
                     {coll.imageUrl ? <img src={coll.imageUrl} alt={coll.title} style={{ width: "38px", height: "38px", objectFit: "cover", borderRadius: "5px", border: "1px solid #e5e7eb", flexShrink: 0 }} /> : <div style={{ width: "38px", height: "38px", borderRadius: "5px", background: "#f3f4f6", border: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><AdminIcon type="folder" size="small" /></div>}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "13px", fontWeight: "600", color: isSelected ? "#ffffff" : "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{coll.title}</div>
-                      <div style={{ fontSize: "11px", color: isSelected ? "rgba(255,255,255,0.7)" : "#9ca3af" }}>{coll.handle}</div>
+                      <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{coll.title}</div>
+                      <div style={{ fontSize: "11px", color: "#9ca3af" }}>{coll.handle}</div>
                     </div>
                     {alreadyAdded && <span style={{ fontSize: "10px", fontWeight: "600", background: "#d1fae5", color: "#065f46", padding: "2px 8px", borderRadius: "10px", flexShrink: 0 }}>Added</span>}
-                    <div style={{ width: "18px", height: "18px", borderRadius: "50%", border: `2px solid ${isSelected ? "#000000" : "#d1d5db"}`, background: isSelected ? "#ffffff" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.1s" }}>
-                      {isSelected && <AdminIcon type="check" size="small" style={{ color: "#000000" }} />}
+                    <div style={{ width: "18px", height: "18px", borderRadius: "50%", border: `2px solid ${isSelected ? "#2A7A4F" : "#d1d5db"}`, background: isSelected ? "#2A7A4F" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.1s" }}>
+                      {isSelected && <AdminIcon type="check" size="small" style={{ color: "#ffffff" }} />}
                     </div>
                   </div>
                 );
@@ -849,8 +849,8 @@ export default function SpecificComboBoxPage() {
             <div style={modalFooterStyle}>
               <span style={{ fontSize: "12px", color: "#6b7280" }}>{tempColls.length > 0 ? `${tempColls.length} selected` : "No collection selected"}</span>
               <div style={{ display: "flex", gap: "8px" }}>
-                <button type="button" onClick={() => setShowCollModal(false)} style={{ background: "#000000", border: "1.5px solid #000000", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#ffffff" }}>Cancel</button>
-                <button type="button" disabled={tempColls.length === 0} onClick={confirmColl} style={{ background: tempColls.length > 0 ? "#000000" : "#d1d5db", border: tempColls.length > 0 ? "1px solid #000000" : "1px solid #d1d5db", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: tempColls.length > 0 ? "pointer" : "not-allowed", color: tempColls.length > 0 ? "#ffffff" : "#6b7280" }}>Confirm ({tempColls.length})</button>
+                <button type="button" onClick={() => setShowCollModal(false)} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#111827" }}>Cancel</button>
+                <button type="button" disabled={tempColls.length === 0} onClick={confirmColl} style={{ background: tempColls.length > 0 ? "#2A7A4F" : "#d1d5db", border: tempColls.length > 0 ? "1px solid #2A7A4F" : "1px solid #d1d5db", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: tempColls.length > 0 ? "pointer" : "not-allowed", color: tempColls.length > 0 ? "#ffffff" : "#6b7280" }}>Confirm ({tempColls.length})</button>
               </div>
             </div>
           </div>
@@ -885,16 +885,16 @@ export default function SpecificComboBoxPage() {
               ) : filteredStepProds.map((product, idx) => {
                 const isSel = tempStepProds.some((p) => p.id === product.id);
                 return (
-                  <div key={product.id} onClick={() => setTempStepProds(isSel ? tempStepProds.filter((p) => p.id !== product.id) : [...tempStepProds, { id: product.id, title: product.title, handle: product.handle, imageUrl: product.imageUrl, price: product.price }])} onMouseEnter={(e) => { if (!isSel) e.currentTarget.style.background = "#f3f4f6"; }} onMouseLeave={(e) => { if (!isSel) e.currentTarget.style.background = "#fff"; }} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filteredStepProds.length - 1 ? "1px solid #f3f4f6" : "none", borderLeft: isSel ? "3px solid #000000" : "3px solid transparent", cursor: "pointer", background: isSel ? "#000000" : "#fff", transition: "background 0.1s, border-color 0.1s", userSelect: "none" }}>
-                    <div style={{ width: "18px", height: "18px", borderRadius: "4px", border: `2px solid ${isSel ? "#000000" : "#d1d5db"}`, background: isSel ? "#ffffff" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.1s" }}>
-                      {isSel && <AdminIcon type="check" size="small" style={{ color: "#000000" }} />}
+                  <div key={product.id} onClick={() => setTempStepProds(isSel ? tempStepProds.filter((p) => p.id !== product.id) : [...tempStepProds, { id: product.id, title: product.title, handle: product.handle, imageUrl: product.imageUrl, price: product.price }])} onMouseEnter={(e) => { if (!isSel) e.currentTarget.style.background = "#f3f4f6"; }} onMouseLeave={(e) => { if (!isSel) e.currentTarget.style.background = "#fff"; }} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filteredStepProds.length - 1 ? "1px solid #f3f4f6" : "none", borderLeft: isSel ? "3px solid #2A7A4F" : "3px solid transparent", cursor: "pointer", background: isSel ? "#f0fdf4" : "#fff", transition: "background 0.1s, border-color 0.1s", userSelect: "none" }}>
+                    <div style={{ width: "18px", height: "18px", borderRadius: "4px", border: `2px solid ${isSel ? "#2A7A4F" : "#d1d5db"}`, background: isSel ? "#2A7A4F" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.1s" }}>
+                      {isSel && <AdminIcon type="check" size="small" style={{ color: "#ffffff" }} />}
                     </div>
                     {product.imageUrl ? <img src={product.imageUrl} alt={product.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} /> : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}><AdminIcon type="product" size="small" /></div>}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "13px", fontWeight: "600", color: isSel ? "#ffffff" : "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{product.title}</div>
-                      <div style={{ fontSize: "11px", color: isSel ? "rgba(255,255,255,0.7)" : "#9ca3af", fontFamily: "monospace" }}>{product.handle}</div>
+                      <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{product.title}</div>
+                      <div style={{ fontSize: "11px", color: "#9ca3af", fontFamily: "monospace" }}>{product.handle}</div>
                     </div>
-                    {product.price && parseFloat(product.price) > 0 && <div style={{ fontSize: "13px", fontWeight: "700", color: isSel ? "#ffffff" : "#374151", fontFamily: "monospace", flexShrink: 0 }}>₹{parseFloat(product.price).toLocaleString("en-IN")}</div>}
+                    {product.price && parseFloat(product.price) > 0 && <div style={{ fontSize: "13px", fontWeight: "700", color: "#374151", fontFamily: "monospace", flexShrink: 0 }}>₹{parseFloat(product.price).toLocaleString("en-IN")}</div>}
                   </div>
                 );
               })}
@@ -902,8 +902,8 @@ export default function SpecificComboBoxPage() {
             <div style={modalFooterStyle}>
               <span style={{ fontSize: "12px", color: "#6b7280" }}>{tempStepProds.length > 0 ? `${tempStepProds.length} product${tempStepProds.length !== 1 ? "s" : ""} selected` : "No product selected"}</span>
               <div style={{ display: "flex", gap: "8px" }}>
-                <button type="button" onClick={() => setShowStepProdModal(false)} style={{ background: "#000000", border: "1.5px solid #000000", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#ffffff" }}>Cancel</button>
-                <button type="button" disabled={tempStepProds.length === 0} onClick={confirmStepProd} style={{ background: tempStepProds.length > 0 ? "#000000" : "#d1d5db", border: tempStepProds.length > 0 ? "1px solid #000000" : "1px solid #d1d5db", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: tempStepProds.length > 0 ? "pointer" : "not-allowed", color: tempStepProds.length > 0 ? "#ffffff" : "#6b7280" }}>Confirm ({tempStepProds.length})</button>
+                <button type="button" onClick={() => setShowStepProdModal(false)} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#111827" }}>Cancel</button>
+                <button type="button" disabled={tempStepProds.length === 0} onClick={confirmStepProd} style={{ background: tempStepProds.length > 0 ? "#2A7A4F" : "#d1d5db", border: tempStepProds.length > 0 ? "1px solid #2A7A4F" : "1px solid #d1d5db", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: tempStepProds.length > 0 ? "pointer" : "not-allowed", color: tempStepProds.length > 0 ? "#ffffff" : "#6b7280" }}>Confirm ({tempStepProds.length})</button>
               </div>
             </div>
           </div>

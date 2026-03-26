@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
+import { useState } from "react";
+import { Form, useActionData, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { AdminIcon } from "../components/admin-icons";
@@ -149,8 +149,6 @@ export const action = async ({ request, params }) => {
   }
 
   // Default: save box settings only (ComboBox table)
-  let eligibleProducts = [];
-  try { eligibleProducts = JSON.parse(formData.get("eligibleProducts") || "[]"); } catch {}
   let scopeItems = [];
   try { scopeItems = JSON.parse(formData.get("scopeItems") || "[]"); } catch {}
   const errors = {};
@@ -171,7 +169,6 @@ export const action = async ({ request, params }) => {
     removeBannerImage,
     isActive: formData.get("isActive") === "true",
     giftMessageEnabled: formData.get("giftMessageEnabled") === "true",
-    eligibleProducts,
     scopeType: formData.get("scope") || "specific_collections",
     scopeItems,
   };
@@ -213,35 +210,12 @@ const sectionHeadingStyle = {
 export default function BoxSettingsPage() {
   const { box, products, collections } = useLoaderData();
   const actionData = useActionData();
-  const searchFetcher = useFetcher();
   const location = useLocation();
   const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
 
   const errors = actionData?.errors || {};
-  const productLookup = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
 
-  const initialSelected = useMemo(() =>
-    (box.products || []).map((p) => {
-      const matched = productLookup.get(p.productId);
-      let variantIds = [];
-      if (Array.isArray(p.variantIds)) { variantIds = p.variantIds; }
-      else if (typeof p.variantIds === "string" && p.variantIds.trim()) {
-        try { const parsed = JSON.parse(p.variantIds); if (Array.isArray(parsed)) variantIds = parsed; } catch {}
-      }
-      if (variantIds.length === 0) variantIds = Array.isArray(matched?.variantIds) && matched.variantIds.length > 0 ? matched.variantIds : (matched?.variantId ? [matched.variantId] : []);
-      return {
-        id: p.productId, productId: p.productId,
-        productTitle: p.productTitle || matched?.title || "",
-        productImageUrl: p.productImageUrl || matched?.imageUrl || null,
-        productHandle: p.productHandle || matched?.handle || null,
-        variantIds, price: parseFloat(matched?.price) || parseFloat(p.productPrice) || 0,
-      };
-    }), [box.products, productLookup]);
-
-  const [selectedProducts, setSelectedProducts] = useState(initialSelected);
-  const [productSearch, setProductSearch] = useState("");
-  const [showPicker, setShowPicker] = useState(false);
   const [options, setOptions] = useState({
     isGiftBox: box.isGiftBox, allowDuplicates: box.allowDuplicates,
     giftMessageEnabled: box.giftMessageEnabled, isActive: box.isActive,
@@ -258,37 +232,12 @@ export default function BoxSettingsPage() {
   const [showScopePicker, setShowScopePicker] = useState(false);
   const [scopeSearch, setScopeSearch] = useState("");
 
-  const displayProducts = searchFetcher.data?.products || (productSearch ? products.filter((p) => p.title.toLowerCase().includes(productSearch.toLowerCase())) : products);
   const numItemCount = Math.max(1, parseInt(itemCount) || 1);
-  const avgProductPrice = selectedProducts.length > 0 ? selectedProducts.reduce((s, p) => s + (parseFloat(p.price) || 0), 0) / selectedProducts.length : 0;
-  const estimatedTotal = avgProductPrice * numItemCount;
-  const dynamicPrice = useMemo(() => {
-    if (estimatedTotal <= 0) return 0;
-    const val = parseFloat(discountValue) || 0;
-    if (discountType === "percent") return Math.max(0, estimatedTotal * (1 - val / 100));
-    if (discountType === "fixed") return Math.max(0, estimatedTotal - val);
-    return estimatedTotal;
-  }, [estimatedTotal, discountType, discountValue]);
+  const dynamicPrice = 0;
   const bundlePrice = priceMode === "manual" ? parseFloat(manualPrice) || 0 : dynamicPrice;
 
   /* ── Box Settings helpers ── */
-  function handleSearchChange(e) {
-    const val = e.target.value;
-    setProductSearch(val);
-    if (val.length > 1) searchFetcher.load(withEmbeddedAppParams(`/app/boxes/${box.id}?q=${encodeURIComponent(val)}`, location.search));
-    else if (val.length === 0) searchFetcher.load(withEmbeddedAppParams(`/app/boxes/${box.id}`, location.search));
-  }
-  function toggleProduct(product) {
-    setSelectedProducts((prev) => {
-      const exists = prev.find((p) => p.id === product.id);
-      if (exists) return prev.filter((p) => p.id !== product.id);
-      return [...prev, { id: product.id, productId: product.id, productTitle: product.title, productImageUrl: product.imageUrl, productHandle: product.handle, variantIds: Array.isArray(product.variantIds) && product.variantIds.length > 0 ? product.variantIds : (product.variantId ? [product.variantId] : []), price: parseFloat(product.price) || 0 }];
-    });
-  }
   function toggleOption(name) { setOptions((prev) => ({ ...prev, [name]: !prev[name] })); }
-  const isSelected = (id) => selectedProducts.some((p) => p.id === id);
-  function openPicker() { setProductSearch(""); searchFetcher.load(withEmbeddedAppParams(`/app/boxes/${box.id}`, location.search)); setShowPicker(true); }
-  function closePicker() { setShowPicker(false); setProductSearch(""); }
 
   /* ── Shared modal styles ── */
   const modalOverlayStyle = { position: "fixed", inset: 0, background: "rgba(17,24,39,0.55)", backdropFilter: "blur(3px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" };
@@ -338,7 +287,6 @@ export default function BoxSettingsPage() {
         <input type="hidden" name="discountType" value={discountType} />
         <input type="hidden" name="discountValue" value={discountValue} />
         <input type="hidden" name="itemCount" value={itemCount} />
-        <input type="hidden" name="eligibleProducts" value={JSON.stringify(selectedProducts)} />
         <input type="hidden" name="isGiftBox" value={String(options.isGiftBox)} />
         <input type="hidden" name="allowDuplicates" value={String(options.allowDuplicates)} />
         <input type="hidden" name="giftMessageEnabled" value={String(options.giftMessageEnabled)} />
@@ -369,7 +317,7 @@ export default function BoxSettingsPage() {
               <label style={labelStyle}>Bundle Price (₹) *</label>
               <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "5px", overflow: "hidden", marginBottom: "10px" }}>
                 {["manual", "dynamic"].map((mode) => (
-                  <button key={mode} type="button" onClick={() => setPriceMode(mode)} style={{ flex: 1, padding: "7px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: priceMode === mode ? "#000000" : "#f9fafb", color: priceMode === mode ? "#ffffff" : "#374151", transition: "background 0.15s" }}>
+                  <button key={mode} type="button" onClick={() => setPriceMode(mode)} style={{ flex: 1, padding: "7px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: priceMode === mode ? "#2A7A4F" : "#f9fafb", color: priceMode === mode ? "#ffffff" : "#374151", transition: "background 0.15s" }}>
                     {mode === "manual" ? "Manual" : "Dynamic"}
                   </button>
                 ))}
@@ -427,11 +375,11 @@ export default function BoxSettingsPage() {
               { key: "giftMessageEnabled", label: "Gift Message Field", desc: "Show text area for gift message", iconType: "email" },
               { key: "isActive", label: "Active on Storefront", desc: "Uncheck to hide from customers", iconType: "check-circle" },
             ].map((opt) => (
-              <label key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px 14px", border: options[opt.key] ? "1.5px solid #000000" : "1.5px solid #e5e7eb", borderRadius: "5px", background: options[opt.key] ? "#000000" : "#ffffff", transition: "border-color 0.15s, background 0.15s" }}>
-                <input type="checkbox" checked={options[opt.key]} onChange={() => toggleOption(opt.key)} style={{ marginTop: "3px", width: "14px", height: "14px", accentColor: "#000000", flexShrink: 0 }} />
+              <label key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px 14px", border: options[opt.key] ? "1.5px solid #86efac" : "1.5px solid #e5e7eb", borderRadius: "5px", background: options[opt.key] ? "#f0fdf4" : "#fafafa", transition: "border-color 0.15s, background 0.15s" }}>
+                <input type="checkbox" checked={options[opt.key]} onChange={() => toggleOption(opt.key)} style={{ marginTop: "3px", width: "14px", height: "14px", accentColor: "#2A7A4F", flexShrink: 0 }} />
                 <div>
-                  <div style={{ fontSize: "13px", fontWeight: "600", color: options[opt.key] ? "#ffffff" : "#111827", display: "flex", alignItems: "center", gap: "5px" }}><AdminIcon type={opt.iconType} size="small" />{opt.label}</div>
-                  <div style={{ fontSize: "11px", color: options[opt.key] ? "rgba(255,255,255,0.72)" : "#9ca3af", marginTop: "2px" }}>{opt.desc}</div>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#000000", display: "flex", alignItems: "center", gap: "5px" }}><AdminIcon type={opt.iconType} size="small" />{opt.label}</div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>{opt.desc}</div>
                 </div>
               </label>
             ))}
@@ -456,50 +404,25 @@ export default function BoxSettingsPage() {
             <button
               type="button"
               onClick={() => { setScopeSearch(""); setShowScopePicker(true); }}
-              style={{ padding: "8px 16px", background: "#000000", border: "1.5px solid #000000", borderRadius: "5px", fontSize: "13px", fontWeight: "600", color: "#ffffff", cursor: "pointer", transition: "background 0.12s, border-color 0.12s" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "#000000"; e.currentTarget.style.borderColor = "#000000"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "#000000"; e.currentTarget.style.borderColor = "#000000"; }}
+              style={{ padding: "8px 16px", background: "#2A7A4F", border: "1.5px solid #2A7A4F", borderRadius: "5px", fontSize: "13px", fontWeight: "600", color: "#ffffff", cursor: "pointer", transition: "background 0.12s, border-color 0.12s" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "#1e5e3c"; e.currentTarget.style.borderColor = "#1e5e3c"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "#2A7A4F"; e.currentTarget.style.borderColor = "#2A7A4F"; }}
             >
               {scope === "specific_collections" ? "Select collections" : "Select products"}
             </button>
             <span style={{ fontSize: "12px", color: "#6b7280", fontWeight: "500" }}>{scopeItems.length} selected</span>
           </div>
           {scopeItems.length > 0 && (
-            <div style={{ marginTop: "10px", padding: "10px 12px", background: "#000000", borderRadius: "5px", border: "1px solid #000000" }}>
+            <div style={{ marginTop: "10px", padding: "10px 12px", background: "#f9fafb", borderRadius: "5px", border: "1px solid #e5e7eb" }}>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                 {scopeItems.map((item) => (
-                  <span key={item.id} onClick={() => setScopeItems((prev) => prev.filter((i) => i.id !== item.id))} style={{ background: "#000000", color: "#ffffff", border: "1px solid rgba(255,255,255,0.24)", borderRadius: "5px", padding: "3px 10px", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", fontWeight: "500" }}>
-                    {item.title}<AdminIcon type="x" size="small" style={{ opacity: 0.75, color: "#ffffff" }} />
+                  <span key={item.id} onClick={() => setScopeItems((prev) => prev.filter((i) => i.id !== item.id))} style={{ background: "#f3f4f6", color: "#000000", border: "1px solid #d1d5db", borderRadius: "5px", padding: "3px 10px", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", fontWeight: "500" }}>
+                    {item.title}<AdminIcon type="x" size="small" style={{ opacity: 0.75, color: "#000000" }} />
                   </span>
                 ))}
               </div>
             </div>
           )}
-        </div>
-
-        {/* Eligible Products */}
-        <div style={{ marginBottom: "28px" }}>
-          <div style={sectionHeadingStyle}>
-            <AdminIcon type="product" size="small" /> Eligible Products
-            {selectedProducts.length > 0 && <span style={{ marginLeft: "6px", background: "#ffffff", color: "#000000", border: "1px solid #d1d5db", borderRadius: "5px", padding: "2px 8px", fontSize: "10px", fontWeight: "700", fontFamily: "monospace" }}>{selectedProducts.length} selected</span>}
-          </div>
-          {errors.eligibleProducts && <div style={{ color: "#e11d48", fontSize: "12px", marginBottom: "10px", padding: "8px 12px", background: "#fff5f5", borderRadius: "5px", border: "1px solid #fecaca" }}>{errors.eligibleProducts}</div>}
-          {selectedProducts.length > 0 && (
-            <div style={{ marginBottom: "12px", padding: "12px 14px", borderRadius: "5px", border: "1px solid #000000" }}>
-              <div style={{ fontSize: "10px", fontWeight: "700", color: "#000000", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.6px" }}>Selected Products</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                {selectedProducts.map((p) => (
-                  <span key={p.id} onClick={() => toggleProduct(p)} style={{ background: "#000000", color: "#ffffff", border: "1px solid rgba(255,255,255,0.24)", borderRadius: "5px", padding: "4px 10px", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", fontWeight: "500" }}>
-                    {p.productTitle}<AdminIcon type="x" size="small" style={{ opacity: 0.75, color: "#ffffff" }} />
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-          <button type="button" onClick={openPicker} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 18px", background: "#000000", border: "1.5px solid #000000", borderRadius: "5px", fontSize: "13px", fontWeight: "600", color: "#ffffff", cursor: "pointer", width: "100%", justifyContent: "center", transition: "border-color 0.15s, background 0.15s" }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#000000"; e.currentTarget.style.background = "#000000"; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#000000"; e.currentTarget.style.background = "#000000"; }}>
-            <span style={{ fontSize: "16px" }}>+</span>
-            {selectedProducts.length > 0 ? "Edit Product Selection" : "Select Eligible Products"}
-          </button>
         </div>
 
       </Form>
@@ -508,59 +431,12 @@ export default function BoxSettingsPage() {
       <div style={{ paddingTop: "18px", borderTop: "1.5px solid #f3f4f6" }}>
         <Form method="POST" id="delete-box-form" action={`/app/boxes/${box.id}${location.search ? location.search + '&index' : '?index'}`}>
           <input type="hidden" name="_action" value="delete" />
-          <button type="submit" onClick={(e) => { if (!window.confirm(`Delete "${box.boxName}"? This cannot be undone.`)) e.preventDefault(); }} style={{ background: "#000000", border: "1.5px solid #000000", borderRadius: "5px", padding: "9px 18px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#ffffff" }} onMouseEnter={(e) => (e.currentTarget.style.background = "#000000")} onMouseLeave={(e) => (e.currentTarget.style.background = "#000000")}>
+          <button type="submit" onClick={(e) => { if (!window.confirm(`Delete "${box.boxName}"? This cannot be undone.`)) e.preventDefault(); }} style={{ background: "#dc2626", border: "1.5px solid #dc2626", borderRadius: "5px", padding: "9px 18px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#ffffff" }} onMouseEnter={(e) => (e.currentTarget.style.background = "#b91c1c")} onMouseLeave={(e) => (e.currentTarget.style.background = "#dc2626")}>
             Delete Box
           </button>
         </Form>
       </div>
 
-      {/* ════════════════════════════════════════
-          MODAL: Box Settings — Product Picker
-      ════════════════════════════════════════ */}
-      {showPicker && (
-        <div style={modalOverlayStyle} onClick={(e) => { if (e.target === e.currentTarget) closePicker(); }}>
-          <div style={modalBoxStyle}>
-            <div style={modalHeaderStyle}>
-              <div>
-                <div style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>Select Products</div>
-                <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>{selectedProducts.length} product{selectedProducts.length !== 1 ? "s" : ""} selected</div>
-              </div>
-              <button type="button" aria-label="Close product picker" onClick={closePicker} style={{ ...modalCloseBtn, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><AdminIcon type="x" size="small" style={{ color: "#9ca3af" }} /></button>
-            </div>
-            <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
-              <input type="text" placeholder="Search products..." value={productSearch} onChange={handleSearchChange} autoFocus style={searchInputStyle} />
-            </div>
-            <div style={modalBodyStyle}>
-              {displayProducts.length === 0 ? (
-                <div style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>No products found</div>
-              ) : displayProducts.map((product, idx) => {
-                const selected = isSelected(product.id);
-                return (
-                  <label key={product.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < displayProducts.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", background: selected ? "#000000" : "#fff", transition: "background 0.1s" }}>
-                    <input type="checkbox" checked={selected} onChange={() => toggleProduct(product)} style={{ width: "15px", height: "15px", flexShrink: 0, accentColor: "#000000" }} />
-                    {product.imageUrl ? <img src={product.imageUrl} alt={product.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} /> : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}><AdminIcon type="product" size="small" /></div>}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "13px", fontWeight: "600", color: selected ? "#ffffff" : "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{product.title}</div>
-                      <div style={{ fontSize: "11px", color: selected ? "rgba(255,255,255,0.72)" : "#9ca3af", fontFamily: "monospace" }}>{product.handle}</div>
-                    </div>
-                    {product.price && parseFloat(product.price) > 0 && <div style={{ fontSize: "13px", fontWeight: "700", color: "#374151", fontFamily: "monospace", flexShrink: 0 }}>₹{parseFloat(product.price).toLocaleString("en-IN")}</div>}
-                    {selected && <span style={{ width: "18px", height: "18px", background: "#ffffff", border: "1px solid #111827", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><AdminIcon type="check" size="small" style={{ color: "#000000" }} /></span>}
-                  </label>
-                );
-              })}
-            </div>
-            <div style={modalFooterStyle}>
-              <span style={{ fontSize: "12px", color: "#6b7280" }}>{selectedProducts.length > 0 ? `${selectedProducts.length} product${selectedProducts.length !== 1 ? "s" : ""} selected` : "No products selected"}</span>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button type="button" onClick={closePicker} style={{ background: "#000000", border: "1.5px solid #000000", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#ffffff" }}>Cancel</button>
-                <button type="button" onClick={closePicker} style={{ background: "#000000", border: "1px solid #000000", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: "pointer", color: "#ffffff" }}>
-                  Done{selectedProducts.length > 0 ? ` (${selectedProducts.length})` : ""}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
       {/* Scope Picker Modal */}
       {showScopePicker && (() => {
         const isCollections = scope === "specific_collections";
@@ -605,16 +481,16 @@ export default function BoxSettingsPage() {
                 ) : filtered.map((item, idx) => {
                   const selected = isScopeSelected(item.id);
                   return (
-                    <label key={item.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filtered.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", background: selected ? "#000000" : "#fff", transition: "background 0.1s" }}>
-                      <input type="checkbox" checked={selected} onChange={() => toggleScopeItem(item)} style={{ width: "15px", height: "15px", flexShrink: 0, accentColor: "#000000" }} />
+                    <label key={item.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filtered.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", background: selected ? "#f0fdf4" : "#fff", transition: "background 0.1s" }}>
+                      <input type="checkbox" checked={selected} onChange={() => toggleScopeItem(item)} style={{ width: "15px", height: "15px", flexShrink: 0, accentColor: "#2A7A4F" }} />
                       {item.imageUrl
                         ? <img src={item.imageUrl} alt={item.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} />
                         : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}><AdminIcon type={isCollections ? "folder" : "product"} size="small" /></div>
                       }
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: "13px", fontWeight: "600", color: selected ? "#ffffff" : "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.title}</div>
+                        <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.title}</div>
                       </div>
-                      {selected && <span style={{ width: "18px", height: "18px", background: "#000000", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><AdminIcon type="check" size="small" style={{ color: "#ffffff" }} /></span>}
+                      {selected && <span style={{ width: "18px", height: "18px", background: "#2A7A4F", border: "1px solid #2A7A4F", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><AdminIcon type="check" size="small" style={{ color: "#ffffff" }} /></span>}
                     </label>
                   );
                 })}
@@ -624,8 +500,8 @@ export default function BoxSettingsPage() {
                   {scopeItems.length > 0 ? `${scopeItems.length} selected` : "None selected"}
                 </span>
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <button type="button" onClick={() => setShowScopePicker(false)} style={{ background: "#000000", border: "1.5px solid #000000", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#ffffff" }}>Cancel</button>
-                  <button type="button" onClick={() => setShowScopePicker(false)} style={{ background: "#000000", border: "none", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: "pointer", color: "#ffffff", boxShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>
+                  <button type="button" onClick={() => setShowScopePicker(false)} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#111827" }}>Cancel</button>
+                  <button type="button" onClick={() => setShowScopePicker(false)} style={{ background: "#2A7A4F", border: "none", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: "pointer", color: "#ffffff", boxShadow: "0 1px 6px rgba(42,122,79,0.35)" }}>
                     Done{scopeItems.length > 0 ? ` (${scopeItems.length})` : ""}
                   </button>
                 </div>

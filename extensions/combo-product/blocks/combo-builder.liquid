@@ -8,6 +8,9 @@
   data-currency-symbol="{{ cart.currency.symbol }}"
   data-api-base="https://combo-products.vercel.app"
   data-layout-mode="{{ block.settings.layout_mode | default: 'grid' }}"
+  {% if block.settings.box_filter == 'specific' and block.settings.box_names != blank %}
+  data-visible-boxes="{{ block.settings.box_names }}"
+  {% endif %}
   data-page-template="{{ template.name }}"
   {% case template.name %}
     {% when 'page' %}
@@ -42,7 +45,8 @@
     currencySymbol: '{{ cart.currency.symbol }}',
     apiBase:        'https://combo-products.vercel.app',
     productHandle:  '{{ product.handle }}',
-    layoutMode:     '{{ block.settings.layout_mode | default: "grid" }}'
+    layoutMode:     '{{ block.settings.layout_mode | default: "grid" }}'{% if block.settings.box_filter == 'specific' and block.settings.box_names != blank %},
+    visibleBoxes:   '{{ block.settings.box_names | escape }}'{% endif %}
   });
 </script>
 
@@ -61,6 +65,22 @@
         { "value": "steps", "label": "Steps (one at a time)" }
       ],
       "default": "grid"
+    },
+    {
+      "type": "select",
+      "id": "box_filter",
+      "label": "Show boxes",
+      "options": [
+        { "value": "all",      "label": "All boxes" },
+        { "value": "specific", "label": "Specific box(es)" }
+      ],
+      "default": "all"
+    },
+    {
+      "type": "text",
+      "id": "box_names",
+      "label": "Box(es) — name or ID",
+      "info": "Used when 'Specific box(es)' is selected above. Enter box names or numeric IDs, comma-separated. E.g: Snack Box, 42, Gift Box"
     }
   ]
 }

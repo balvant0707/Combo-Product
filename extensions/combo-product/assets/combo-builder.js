@@ -613,11 +613,27 @@
       boxIdsFilter = String(rawBoxIds).split(',').map(function (id) { return parseInt(id.trim(), 10); }).filter(Boolean);
     }
 
-    // Per-box visibility filter from theme editor (box names, one per line)
+    // Per-box visibility filter from theme editor (box names or IDs, comma/newline separated)
     var visibleBoxNames = null;
     var rawVisible = root.dataset.visibleBoxes || config.visibleBoxes || null;
     if (rawVisible && String(rawVisible).trim()) {
-      visibleBoxNames = String(rawVisible).split('\n').map(function (n) { return n.trim().toLowerCase(); }).filter(Boolean);
+      var visTokens = String(rawVisible).split(/[\n,]+/)
+        .map(function (t) { return t.trim(); }).filter(Boolean);
+      var visIdTokens = [], visNameTokens = [];
+      visTokens.forEach(function (t) {
+        var n = parseInt(t, 10);
+        if (!isNaN(n) && String(n) === t) {
+          visIdTokens.push(n);
+        } else {
+          visNameTokens.push(t.toLowerCase());
+        }
+      });
+      if (visIdTokens.length > 0) {
+        boxIdsFilter = (boxIdsFilter || []).concat(visIdTokens);
+      }
+      if (visNameTokens.length > 0) {
+        visibleBoxNames = visNameTokens;
+      }
     }
 
     // Current page handle passed from Liquid

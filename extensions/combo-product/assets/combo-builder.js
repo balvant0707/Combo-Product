@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  var DEFAULT_API_BASE = 'https://combo-products.vercel.app';
+  var DEFAULT_API_BASE = 'https://combo-product-ten.vercel.app';
 
   // ─── Utilities ───────────────────────────────────────────────────────────────
 

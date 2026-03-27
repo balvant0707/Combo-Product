@@ -1,10 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
-import { useActionData, useFetcher, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
+import { useFetcher, useLoaderData, useLocation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { Buffer } from "node:buffer";
 import { AdminIcon } from "../components/admin-icons";
-import { getBox, upsertComboConfig, addComboStepImagesToProduct, saveComboStepImages, getComboStepImages, deleteComboStepImage, syncShopifyBundleProduct } from "../models/boxes.server";
+import { getBox, upsertComboConfig, addComboStepImagesToProduct, saveComboStepImages, getComboStepImages, deleteComboStepImage, syncShopifyBundleProduct, updateBox, isBoxCodeValidationError } from "../models/boxes.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
 
@@ -203,6 +203,7 @@ export const action = async ({ request, params }) => {
 
   if (intent === "save_combo") {
     const comboStepsConfig = formData.get("comboStepsConfig");
+    const boxCode = formData.get("boxCode");
 
     // Parse step images (only validate image files, not step selections)
     const stepImages = await parseStepImages(formData);
@@ -216,8 +217,12 @@ export const action = async ({ request, params }) => {
     }
 
     try {
+      await updateBox(params.id, session.shop, { boxCode }, admin);
       await upsertComboConfig(params.id, comboStepsConfig, admin);
     } catch (e) {
+      if (isBoxCodeValidationError(e)) {
+        return { ok: false, errors: { boxCode: e.message } };
+      }
       console.error("[app.boxes.$id.combo] upsertComboConfig error:", e);
       return { ok: false, errors: { _global: "Failed to save combo configuration. Please try again." } };
     }
@@ -277,7 +282,6 @@ const errorStyle = { color: "#dc2626", fontSize: "11px", marginTop: "5px", displ
 /* ─────────────────────────── Component ─────────────────────────── */
 export default function SpecificComboBoxPage() {
   const { box, products, collections, stepImagesBase64 } = useLoaderData();
-  const actionData = useActionData();
   const comboFetcher = useFetcher();
   const removeImageFetcher = useFetcher();
   /* One fetcher per step for lazy-loading collection-scoped products */
@@ -536,6 +540,13 @@ export default function SpecificComboBoxPage() {
       <div style={{ display: "flex", gap: "10px", padding: "12px 14px", borderLeft: "3px solid #458fff", background: "#f4f6f8", fontSize: "13px", marginBottom: "20px", borderRadius: "0 5px 5px 0", alignItems: "flex-start" }}>
         <AdminIcon type="info" size="small" style={{ marginTop: "1px" }} />
         <span>Each step has its own <strong>Select Collection</strong> and <strong>Select Product</strong> picker. Collections and products are independent per step.</span>
+      </div>
+
+      <div style={{ marginBottom: "20px", maxWidth: "320px" }}>
+        <label style={labelStyle}>Box Code</label>
+        <input type="text" name="boxCode" form="combo-config-form" defaultValue={box.boxCode || ""} maxLength="10" style={{ ...fieldStyle, borderColor: comboErrors.boxCode ? "#e11d48" : "#d1d5db", textTransform: "uppercase" }} />
+        <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>Shown in the code column. Use 3-10 letters, numbers, or hyphens.</div>
+        {comboErrors.boxCode && <div style={errorStyle}>{comboErrors.boxCode}</div>}
       </div>
 
       {/* 2-column layout */}

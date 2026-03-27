@@ -3,7 +3,7 @@ import { Form, useActionData, useLoaderData, useLocation, useNavigation, useRout
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { AdminIcon } from "../components/admin-icons";
-import { getBox, updateBox, deleteBox, getBannerImageSrc } from "../models/boxes.server";
+import { getBox, updateBox, deleteBox, getBannerImageSrc, isBoxCodeValidationError } from "../models/boxes.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
 /* ─────────────────────────── GraphQL ─────────────────────────── */
@@ -181,6 +181,7 @@ export const action = async ({ request, params }) => {
   const data = {
     boxName: formData.get("boxName"),
     displayTitle: formData.get("displayTitle"),
+    boxCode: formData.get("boxCode"),
     itemCount: formData.get("itemCount"),
     bundlePrice: formData.get("bundlePrice"),
     bundlePriceType: formData.get("bundlePriceType"),
@@ -230,6 +231,9 @@ export const action = async ({ request, params }) => {
   try {
     await updateBox(params.id, shop, data, admin);
   } catch (e) {
+    if (isBoxCodeValidationError(e)) {
+      return { errors: { boxCode: e.message } };
+    }
     console.error("[app.boxes.$id._index] updateBox error:", e);
     return { errors: { _global: "Failed to save changes. Please try again." } };
   }
@@ -380,6 +384,12 @@ export default function BoxSettingsPage() {
               <label style={labelStyle}>Display Title (Storefront) *</label>
               <input type="text" name="displayTitle" defaultValue={box.displayTitle} style={{ ...fieldStyle, borderColor: errors.displayTitle ? "#e11d48" : "#d1d5db" }} />
               {errors.displayTitle && <div style={errorStyle}>{errors.displayTitle}</div>}
+            </div>
+            <div>
+              <label style={labelStyle}>Box Code</label>
+              <input type="text" name="boxCode" defaultValue={box.boxCode || ""} maxLength="10" style={{ ...fieldStyle, borderColor: errors.boxCode ? "#e11d48" : "#d1d5db", textTransform: "uppercase" }} />
+              <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>Shown in the code column. Use 3-10 letters, numbers, or hyphens.</div>
+              {errors.boxCode && <div style={errorStyle}>{errors.boxCode}</div>}
             </div>
             <div>
               <label style={labelStyle}>Number of Items *</label>

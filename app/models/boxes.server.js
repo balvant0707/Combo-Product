@@ -3,6 +3,21 @@ import { Buffer } from "node:buffer";
 
 // Generate a 5-character unique box code (uppercase alphanumeric, no I/O/1/0 ambiguity)
 const BOX_CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const BOX_CODE_MIN_LENGTH = 3;
+const BOX_CODE_MAX_LENGTH = 10;
+const BOX_CODE_PATTERN = /^[A-Z0-9-]+$/;
+
+export class BoxCodeValidationError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "BoxCodeValidationError";
+  }
+}
+
+export function isBoxCodeValidationError(error) {
+  return error instanceof BoxCodeValidationError || error?.name === "BoxCodeValidationError";
+}
+
 function generateBoxCode() {
   let code = "";
   for (let i = 0; i < 5; i++) {
@@ -18,6 +33,30 @@ async function getUniqueBoxCode() {
     exists = await db.comboBox.findFirst({ where: { boxCode: code } });
   } while (exists);
   return code;
+}
+
+async function getRequestedBoxCode(rawValue, excludeId = null) {
+  const normalized = rawValue == null ? "" : String(rawValue).trim().toUpperCase();
+  if (!normalized) return null;
+  if (normalized.length < BOX_CODE_MIN_LENGTH || normalized.length > BOX_CODE_MAX_LENGTH) {
+    throw new BoxCodeValidationError(`Box code must be ${BOX_CODE_MIN_LENGTH}-${BOX_CODE_MAX_LENGTH} characters long`);
+  }
+  if (!BOX_CODE_PATTERN.test(normalized)) {
+    throw new BoxCodeValidationError("Box code can only contain letters, numbers, and hyphens");
+  }
+
+  const where = excludeId
+    ? { boxCode: normalized, NOT: { id: parseInt(excludeId) } }
+    : { boxCode: normalized };
+  const existing = await db.comboBox.findFirst({
+    where,
+    select: { id: true },
+  });
+  if (existing) {
+    throw new BoxCodeValidationError("Box code is already in use");
+  }
+
+  return normalized;
 }
 
 const CREATE_BUNDLE_PRODUCT_MUTATION = `#graphql
@@ -742,7 +781,8 @@ export async function createBox(shop, data, admin) {
   }
 
   const nextSortOrder = await getNextSortOrder(shop);
-  const boxCode = await getUniqueBoxCode();
+  const requestedBoxCode = await getRequestedBoxCode(data.boxCode);
+  const boxCode = requestedBoxCode || await getUniqueBoxCode();
 
   const hasUploadedBanner = Boolean(data.bannerImage?.bytes);
 
@@ -975,6 +1015,13 @@ export async function updateBox(id, shop, data, admin) {
   });
   if (!existing) throw new Error("Box not found");
 
+  const requestedBoxCode = data.boxCode !== undefined
+    ? await getRequestedBoxCode(data.boxCode, id)
+    : undefined;
+  const nextBoxCode = data.boxCode !== undefined
+    ? (requestedBoxCode || existing.boxCode || await getUniqueBoxCode())
+    : (existing.boxCode || await getUniqueBoxCode());
+
   const bundlePrice = parseFloat(data.bundlePrice) || existing.bundlePrice;
   const priceChanged =
     parseFloat(bundlePrice) !== parseFloat(existing.bundlePrice);
@@ -1043,6 +1090,7 @@ export async function updateBox(id, shop, data, admin) {
   await db.comboBox.update({
     where: { id: parseInt(id) },
     data: {
+      boxCode: nextBoxCode,
       boxName: data.boxName ?? existing.boxName,
       displayTitle: data.displayTitle ?? existing.displayTitle,
       itemCount: data.itemCount ? parseInt(data.itemCount) : existing.itemCount,

@@ -89,6 +89,8 @@ const DEFAULT_COMBO = {
   subtitle: "Choose a product for each step",
   bundlePrice: 0,
   bundlePriceType: "dynamic",
+  discountType: "none",
+  discountValue: "0",
   isActive: true,
   showProductImages: true,
   showProgressBar: true,
@@ -293,12 +295,19 @@ export default function CreateSpecificComboBoxPage() {
     setShowStepProdModal(false);
   }
 
-  const comboDynamicPrice = useMemo(() => {
-    const cfg = comboConfig;
-    return cfg.steps.slice(0, cfg.type)
+  const comboDynamicMrp = useMemo(() => {
+    return comboConfig.steps.slice(0, comboConfig.type)
       .flatMap((s) => (s.selectedProducts || []).map((p) => parseFloat(p.price) || 0))
       .reduce((a, b) => a + b, 0);
   }, [comboConfig]);
+
+  const comboDynamicPrice = useMemo(() => {
+    const total = comboDynamicMrp;
+    const val = parseFloat(comboConfig.discountValue) || 0;
+    if (comboConfig.discountType === "percent") return Math.max(0, total * (1 - val / 100));
+    if (comboConfig.discountType === "fixed")   return Math.max(0, total - val);
+    return total;
+  }, [comboDynamicMrp, comboConfig.discountType, comboConfig.discountValue]);
 
   const comboConfigJson = JSON.stringify({
     ...comboConfig,
@@ -435,11 +444,35 @@ export default function CreateSpecificComboBoxPage() {
                       />
                     )}
                     {comboConfig.bundlePriceType === "dynamic" && (
-                      <div style={{ border: "1px solid #d1d5db", borderRadius: "5px", padding: "10px 12px", background: "#f9fafb", fontSize: "12px", color: "#6b7280" }}>
-                        {comboDynamicPrice > 0
-                          ? <>₹{comboDynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })} <span style={{ fontSize: "10px" }}>(sum of step products)</span></>
-                          : <span style={{ color: "#9ca3af" }}>Price calculated from selected step products</span>
-                        }
+                      <div style={{ border: "1px solid #e5e7eb", borderRadius: "5px", padding: "12px", background: "#f9fafb" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: comboConfig.discountType !== "none" ? "10px" : "0" }}>
+                          <div>
+                            <label style={labelStyle}>Discount Type</label>
+                            <select value={comboConfig.discountType} onChange={(e) => updateComboField("discountType", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }}>
+                              <option value="percent">% Off Total</option>
+                              <option value="fixed">₹ Fixed Discount</option>
+                              <option value="none">No Discount</option>
+                            </select>
+                          </div>
+                          {comboConfig.discountType !== "none" && (
+                            <div>
+                              <label style={labelStyle}>{comboConfig.discountType === "percent" ? "Discount %" : "Amount (₹)"}</label>
+                              <input type="number" min="0" step={comboConfig.discountType === "percent" ? "1" : "0.01"} max={comboConfig.discountType === "percent" ? "99" : undefined} value={comboConfig.discountValue} onChange={(e) => updateComboField("discountValue", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "8px", borderTop: "1px solid #e5e7eb" }}>
+                          <span style={{ fontSize: "11px", color: "#6b7280" }}>
+                            {comboDynamicMrp > 0
+                              ? (comboConfig.discountType !== "none" ? "After discount:" : "Sum of step products:")
+                              : "Price calculated from selected step products"}
+                          </span>
+                          {comboDynamicMrp > 0 && (
+                            <span style={{ fontSize: "13px", fontWeight: "700", color: "#166534" }}>
+                              ₹{comboDynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>

@@ -274,12 +274,23 @@ const GET_PRODUCT_MEDIA_QUERY = `#graphql
       media(first: 50) {
         edges {
           node {
+            id
             ... on MediaImage {
               image { url }
             }
           }
         }
       }
+    }
+  }
+`;
+
+const PRODUCT_DELETE_MEDIA_MUTATION = `#graphql
+  mutation productDeleteMedia($productId: ID!, $mediaIds: [ID!]!) {
+    productDeleteMedia(productId: $productId, mediaIds: $mediaIds) {
+      deletedMediaIds
+      product { id }
+      mediaUserErrors { field message }
     }
   }
 `;
@@ -391,16 +402,41 @@ function urlPath(raw) {
 }
 
 /** Fetch existing media URLs already attached to a Shopify product. */
-async function getExistingProductMediaUrls(admin, productId) {
+async function getExistingProductMedia(admin, productId) {
   try {
     const resp = await admin.graphql(GET_PRODUCT_MEDIA_QUERY, { variables: { id: productId } });
     const json = await resp.json();
     return (json?.data?.product?.media?.edges || [])
-      .map((e) => e?.node?.image?.url)
-      .filter(Boolean);
+      .map((e) => ({ id: e?.node?.id, url: e?.node?.image?.url }))
+      .filter((m) => m.id);
   } catch (e) {
-    console.warn("[getExistingProductMediaUrls] failed:", e.message);
+    console.warn("[getExistingProductMedia] failed:", e.message);
     return [];
+  }
+}
+
+/**
+ * Delete all existing media from a Shopify product, then optionally add a new image.
+ * Used when the banner image is changed or removed on an existing box.
+ */
+async function replaceProductImage(admin, productId, imageSource) {
+  try {
+    const existing = await getExistingProductMedia(admin, productId);
+    if (existing.length > 0) {
+      const mediaIds = existing.map((m) => m.id);
+      const delResp = await admin.graphql(PRODUCT_DELETE_MEDIA_MUTATION, {
+        variables: { productId, mediaIds },
+      });
+      const delJson = await delResp.json();
+      const delErrors = delJson?.data?.productDeleteMedia?.mediaUserErrors || [];
+      if (delErrors.length) console.warn("[replaceProductImage] deleteMedia errors:", delErrors);
+    }
+  } catch (e) {
+    console.warn("[replaceProductImage] delete existing media failed:", e.message);
+  }
+
+  if (imageSource) {
+    await addImageToProduct(admin, productId, imageSource);
   }
 }
 
@@ -419,8 +455,8 @@ export async function addComboStepImagesToProduct(admin, shopifyProductId, combo
     const imageUrls = extractStepImageUrls(parsedCombo);
     if (imageUrls.length === 0) return;
 
-    const existingUrls = await getExistingProductMediaUrls(admin, shopifyProductId);
-    const existingPaths = new Set(existingUrls.map(urlPath));
+    const existingMedia = await getExistingProductMedia(admin, shopifyProductId);
+    const existingPaths = new Set(existingMedia.map((m) => urlPath(m.url)).filter(Boolean));
 
     for (const imageUrl of imageUrls) {
       if (!existingPaths.has(urlPath(imageUrl))) {
@@ -999,13 +1035,17 @@ export async function updateBox(id, shop, data, admin) {
     },
   });
 
-  // Sync new banner image to Shopify product
-  if (hasUploadedBanner && existing.shopifyProductId && admin) {
-    await addImageToProduct(admin, existing.shopifyProductId, {
-      bytes: data.bannerImage.bytes,
-      mimeType: data.bannerImage.mimeType,
-      fileName: data.bannerImage.fileName,
-    });
+  // Sync banner image to Shopify product (replace on upload, delete on removal)
+  if (existing.shopifyProductId && admin) {
+    if (hasUploadedBanner) {
+      await replaceProductImage(admin, existing.shopifyProductId, {
+        bytes: data.bannerImage.bytes,
+        mimeType: data.bannerImage.mimeType,
+        fileName: data.bannerImage.fileName,
+      });
+    } else if (shouldRemoveBanner) {
+      await replaceProductImage(admin, existing.shopifyProductId, null);
+    }
   }
 
   // Replace eligible products only when a non-empty list is submitted (prevents accidental wipe)

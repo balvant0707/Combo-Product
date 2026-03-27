@@ -313,16 +313,28 @@ export default function SpecificComboBoxPage() {
 
   /* ── Combo Config state ── */
   const [comboConfig, setComboConfig] = useState(() => {
+    function mergeSteps(parsedSteps, type) {
+      const count = Math.max(type || DEFAULT_COMBO_CONFIG.type, DEFAULT_COMBO_CONFIG.steps.length);
+      return DEFAULT_COMBO_CONFIG.steps.slice(0, count).map((def, i) =>
+        (Array.isArray(parsedSteps) && parsedSteps[i]) ? { ...def, ...parsedSteps[i] } : def
+      );
+    }
     // Primary: raw JSON saved on ComboBox row
     if (box.comboStepsConfig) {
-      try { return { ...DEFAULT_COMBO_CONFIG, ...JSON.parse(box.comboStepsConfig) }; } catch {}
+      try {
+        const parsed = JSON.parse(box.comboStepsConfig);
+        const type = parseInt(parsed.type) || DEFAULT_COMBO_CONFIG.type;
+        return { ...DEFAULT_COMBO_CONFIG, ...parsed, type, steps: mergeSteps(parsed.steps, type) };
+      } catch {}
     }
     // Fallback: ComboBoxConfig relation (for records saved before the comboStepsConfig sync was added)
     if (box.config) {
       try {
+        const type = box.config.comboType ?? DEFAULT_COMBO_CONFIG.type;
+        const rawSteps = box.config.stepsJson ? JSON.parse(box.config.stepsJson) : null;
         return {
           ...DEFAULT_COMBO_CONFIG,
-          type:             box.config.comboType          ?? DEFAULT_COMBO_CONFIG.type,
+          type,
           title:            box.config.title              ?? DEFAULT_COMBO_CONFIG.title,
           subtitle:         box.config.subtitle           ?? DEFAULT_COMBO_CONFIG.subtitle,
           bundlePrice:      box.config.bundlePrice != null ? parseFloat(box.config.bundlePrice) : DEFAULT_COMBO_CONFIG.bundlePrice,
@@ -331,9 +343,7 @@ export default function SpecificComboBoxPage() {
           showProductImages:box.config.showProductImages,
           showProgressBar:  box.config.showProgressBar,
           allowReselection: box.config.allowReselection,
-          steps: box.config.stepsJson
-            ? JSON.parse(box.config.stepsJson)
-            : DEFAULT_COMBO_CONFIG.steps,
+          steps: mergeSteps(rawSteps, type),
         };
       } catch {}
     }
@@ -607,7 +617,7 @@ export default function SpecificComboBoxPage() {
           {/* Step content */}
           {(() => {
             const ai = comboActiveStep;
-            const step = comboConfig.steps[ai];
+            const step = comboConfig.steps[ai] || DEFAULT_COMBO_CONFIG.steps[ai] || DEFAULT_COMBO_CONFIG.steps[0];
             return (
               <div>
                 {/* ── Pickers card ── */}

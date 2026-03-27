@@ -18,7 +18,12 @@ function getComboConfigSummary(box) {
   if (box.config) {
     const comboType = box.config.comboType;
     if (!comboType || comboType <= 0) return null;
-    return { comboType, title: box.config.title, isActive: box.config.isActive, stepsJson: box.config.stepsJson };
+    // discountType/discountValue live only in comboStepsConfig JSON (not in ComboBoxConfig schema columns)
+    let discountType = null, discountValue = null;
+    if (box.comboStepsConfig) {
+      try { const p = JSON.parse(box.comboStepsConfig); discountType = p?.discountType || null; discountValue = p?.discountValue ?? null; } catch {}
+    }
+    return { comboType, title: box.config.title, isActive: box.config.isActive, stepsJson: box.config.stepsJson, discountType, discountValue };
   }
   if (!box.comboStepsConfig) return null;
   try {
@@ -26,7 +31,14 @@ function getComboConfigSummary(box) {
     const comboType = parseInt(parsed?.type) || 0;
     if (comboType <= 0) return null;
     const steps = Array.isArray(parsed?.steps) ? parsed.steps : [];
-    return { comboType, title: parsed?.title || null, isActive: parsed?.isActive !== false, stepsJson: JSON.stringify(steps) };
+    return {
+      comboType,
+      title: parsed?.title || null,
+      isActive: parsed?.isActive !== false,
+      stepsJson: JSON.stringify(steps),
+      discountType: parsed?.discountType || null,
+      discountValue: parsed?.discountValue ?? null,
+    };
   } catch { return null; }
 }
 
@@ -558,7 +570,16 @@ export default function ManageBoxesPage() {
                       {/* Price */}
                       <td>
                         {box.bundlePriceType === "dynamic" ? (
-                          <span className="cb-price-dynamic">Dynamic</span>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                            <span className="cb-price-dynamic">Dynamic</span>
+                            {box.comboConfig?.discountType && box.comboConfig.discountType !== "none" && box.comboConfig.discountValue != null && (
+                              <span style={{ fontSize: 11, color: "#2A7A4F", fontWeight: 600 }}>
+                                {box.comboConfig.discountType === "percent"
+                                  ? `${box.comboConfig.discountValue}% off`
+                                  : `₹${box.comboConfig.discountValue} off`}
+                              </span>
+                            )}
+                          </div>
                         ) : (
                           <span className="cb-price">
                             &#8377;{Number(box.bundlePrice).toLocaleString("en-IN")}

@@ -65,11 +65,6 @@ export const action = async ({ request }) => {
   const formData = await request.formData();
   const intent   = formData.get("intent");
 
-  // Preserve embedded app params for all server-side redirects
-  const reqUrl = new URL(request.url);
-  const host   = reqUrl.searchParams.get("host") || "";
-  const embeddedParams = `?shop=${encodeURIComponent(shop)}${host ? `&host=${encodeURIComponent(host)}` : ""}`;
-
   const { createSubscription, cancelSubscription } = await import("../models/billing.server.js");
   const { activateFreePlan, activatePaidPlan }      = await import("../models/subscription.server.js");
   const { setShopPlanStatus }                       = await import("../models/shop.server.js");
@@ -78,7 +73,7 @@ export const action = async ({ request }) => {
   if (intent === "free") {
     await activateFreePlan(shop);
     await setShopPlanStatus(shop, "free");
-    return rrRedirect(`/app/boxes${embeddedParams}`);
+    return rrRedirect("/app/boxes");
   }
 
   /* ── Pro plan — create Shopify subscription ── */
@@ -92,12 +87,12 @@ export const action = async ({ request }) => {
         subscriptionId: `gid://shopify/AppSubscription/dev-${Date.now()}`,
       });
       await setShopPlanStatus(shop, "active");
-      return rrRedirect(`/app/boxes${embeddedParams}`);
+      return rrRedirect("/app/boxes");
     }
 
     try {
       const appUrl    = (process.env.SHOPIFY_APP_URL || "").replace(/\/$/, "");
-      const returnUrl = `${appUrl}/app/pricing${embeddedParams}&subscribed=1`;
+      const returnUrl = `${appUrl}/app/pricing?subscribed=1`;
       const confirmationUrl = await createSubscription(admin, "PRO", returnUrl);
       // Return URL to client — component uses window.open(_top) to navigate parent frame
       return { confirmationUrl };
@@ -112,7 +107,7 @@ export const action = async ({ request }) => {
     try {
       await cancelSubscription(admin, shop, subscriptionId);
       await setShopPlanStatus(shop, "free");
-      return rrRedirect(`/app/pricing${embeddedParams}&cancelled=1`);
+      return rrRedirect("/app/pricing?cancelled=1");
     } catch (e) {
       return { error: e.message };
     }

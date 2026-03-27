@@ -653,7 +653,7 @@ export default function SpecificComboBoxPage() {
                               <svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5l3.5 3.5L11 1" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
                             </div>
                             <div>
-                              <div style={{ fontSize: "10px", fontWeight: "600", color: "#166534", textTransform: "uppercase", letterSpacing: "0.05em" }}>Est. after discount</div>
+                              {/* <div style={{ fontSize: "10px", fontWeight: "600", color: "#166534", textTransform: "uppercase", letterSpacing: "0.05em" }}>Est. after discount</div> */}
                               <div style={{ fontSize: "10px", color: "#4ade80", marginTop: "1px" }}>
                                 {comboConfig.discountType === "percent" ? `${comboConfig.discountValue || 0}% off applied` : `₹${comboConfig.discountValue || 0} deducted`}
                               </div>

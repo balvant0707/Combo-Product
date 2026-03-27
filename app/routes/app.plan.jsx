@@ -16,15 +16,21 @@ export const loader = async ({ request }) => {
     PLAN_CONFIG,
   } = await import("../models/billing.server.js");
 
-  const [subscription, boxCount] = await Promise.all([
-    getActiveSubscription(admin),
-    getBoxCount(shop),
-  ]);
+  let subscription = null;
+  let billingUnavailable = false;
 
+  try {
+    subscription = await getActiveSubscription(admin);
+  } catch (e) {
+    if (e.isBillingUnavailable) billingUnavailable = true;
+  }
+
+  const boxCount = await getBoxCount(shop);
   const isPro = !!subscription && subscription.status === "ACTIVE";
 
   return {
     isPro,
+    billingUnavailable,
     subscription: subscription
       ? {
           id:               subscription.id,
@@ -57,7 +63,7 @@ export const action = async ({ request }) => {
       const confirmationUrl = await createSubscription(admin, returnUrl);
       return redirect(confirmationUrl);
     } catch (e) {
-      return { error: e.message };
+      return { error: e.message, billingUnavailable: !!e.isBillingUnavailable };
     }
   }
 
@@ -121,11 +127,12 @@ function CrossRow({ children }) {
 /* ─── Component ──────────────────────────────────────────────────── */
 
 export default function PlanPage() {
-  const { isPro, subscription, boxCount, freeLimit, planConfig } = useLoaderData();
+  const { isPro, billingUnavailable, subscription, boxCount, freeLimit, planConfig } = useLoaderData();
   const actionData = useActionData();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
+  const isBillingUnavailable = billingUnavailable || actionData?.billingUnavailable;
   const url = new URL(typeof window !== "undefined" ? window.location.href : "http://localhost");
   const justSubscribed = url.searchParams.get("subscribed") === "1";
 
@@ -141,6 +148,33 @@ export default function PlanPage() {
           Choose the plan that fits your store
         </div>
       </div>
+
+      {/* ── Billing unavailable banner (dev / custom app) ── */}
+      {isBillingUnavailable && (
+        <div style={{ background: "#fffbeb", border: "1px solid #fcd34d", borderRadius: "8px", padding: "16px 18px", marginBottom: "20px" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+            <span style={{ fontSize: "20px", flexShrink: 0 }}>⚠️</span>
+            <div>
+              <div style={{ fontSize: "13px", fontWeight: "700", color: "#92400e", marginBottom: "6px" }}>
+                Billing API not available — Public Distribution required
+              </div>
+              <div style={{ fontSize: "12px", color: "#78350f", lineHeight: 1.7 }}>
+                Shopify's Billing API only works for apps with <strong>Public</strong> distribution.
+                Your app is currently set to <strong>Custom / Development</strong>. To fix this:
+              </div>
+              <ol style={{ fontSize: "12px", color: "#78350f", margin: "10px 0 0 0", paddingLeft: "18px", lineHeight: 2 }}>
+                <li>Open your <strong>Shopify Partner Dashboard</strong></li>
+                <li>Go to <strong>Apps → {`<your app>`} → Distribution</strong></li>
+                <li>Change distribution to <strong>Public</strong></li>
+                <li>Save and redeploy the app</li>
+              </ol>
+              <div style={{ marginTop: "10px", fontSize: "11px", color: "#92400e", background: "#fef3c7", borderRadius: "5px", padding: "6px 10px", display: "inline-block" }}>
+                In the meantime, all shops are treated as <strong>Free plan</strong>.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Success banners ── */}
       {justSubscribed && (
@@ -290,6 +324,11 @@ export default function PlanPage() {
               {isPro ? (
                 <div style={{ textAlign: "center", padding: "10px", borderRadius: "8px", background: "rgba(255,255,255,0.12)", fontSize: "13px", fontWeight: "600", color: "#fff" }}>
                   ✦ Active — Thank you!
+                </div>
+              ) : isBillingUnavailable ? (
+                <div style={{ textAlign: "center", padding: "11px", borderRadius: "8px", background: "#f3f4f6", fontSize: "13px", color: "#9ca3af", border: "1.5px solid #e5e7eb", lineHeight: 1.4 }}>
+                  Billing unavailable
+                  <div style={{ fontSize: "11px", marginTop: "3px", color: "#d1d5db" }}>See notice above to enable</div>
                 </div>
               ) : (
                 <form method="post">

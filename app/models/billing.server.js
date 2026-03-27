@@ -73,23 +73,55 @@ const CANCEL_SUBSCRIPTION_MUTATION = `#graphql
 
 /* ─── Helpers ─────────────────────────────────────────────────────── */
 
-/** Returns the first active subscription from Shopify, or null */
-export async function getActiveSubscription(admin) {
-  const resp = await admin.graphql(ACTIVE_SUBSCRIPTIONS_QUERY);
-  const json = await resp.json();
-  const subs = json?.data?.currentAppInstallation?.activeSubscriptions || [];
-  return subs[0] || null;
+/** Detects the Shopify "public distribution required" error message */
+function isDistributionError(message) {
+  return typeof message === "string" &&
+    (message.toLowerCase().includes("public distribution") ||
+     message.toLowerCase().includes("without a public distribution") ||
+     message.toLowerCase().includes("billing api"));
 }
 
-/** Returns true when the shop has an ACTIVE Pro subscription */
+/** Returns the first active subscription from Shopify, or null.
+ *  Returns null (= free plan) if the Billing API is unavailable (dev / custom app). */
+export async function getActiveSubscription(admin) {
+  try {
+    const resp = await admin.graphql(ACTIVE_SUBSCRIPTIONS_QUERY);
+    const json = await resp.json();
+    // Surface billing-unavailable errors so callers can detect them
+    const errors = json?.errors || [];
+    if (errors.length) {
+      const msg = errors[0]?.message || "";
+      if (isDistributionError(msg)) {
+        const err = new Error(msg);
+        err.isBillingUnavailable = true;
+        throw err;
+      }
+    }
+    const subs = json?.data?.currentAppInstallation?.activeSubscriptions || [];
+    return subs[0] || null;
+  } catch (e) {
+    if (e.isBillingUnavailable) throw e;
+    console.warn("[billing] getActiveSubscription failed:", e.message);
+    return null;
+  }
+}
+
+/** Returns true when the shop has an ACTIVE Pro subscription.
+ *  Returns false (= free plan assumed) if Billing API is unavailable. */
 export async function isProPlan(admin) {
-  const sub = await getActiveSubscription(admin);
-  return !!sub && sub.status === "ACTIVE";
+  try {
+    const sub = await getActiveSubscription(admin);
+    return !!sub && sub.status === "ACTIVE";
+  } catch (e) {
+    if (e.isBillingUnavailable) return false;
+    return false;
+  }
 }
 
 /**
  * Creates a recurring Pro subscription.
  * Returns the Shopify confirmation URL the merchant must visit to approve.
+ * Throws with { isBillingUnavailable: true } when app lacks public distribution.
  */
 export async function createSubscription(admin, returnUrl) {
   const isTest = process.env.NODE_ENV !== "production";
@@ -112,8 +144,23 @@ export async function createSubscription(admin, returnUrl) {
     },
   });
   const json = await resp.json();
+
+  // Check top-level GraphQL errors first (distribution error surfaces here)
+  const gqlErrors = json?.errors || [];
+  if (gqlErrors.length) {
+    const msg = gqlErrors[0]?.message || "Billing API error";
+    const err = new Error(msg);
+    if (isDistributionError(msg)) err.isBillingUnavailable = true;
+    throw err;
+  }
+
   const result = json?.data?.appSubscriptionCreate;
-  if (result?.userErrors?.length) throw new Error(result.userErrors[0].message);
+  if (result?.userErrors?.length) {
+    const msg = result.userErrors[0].message;
+    const err = new Error(msg);
+    if (isDistributionError(msg)) err.isBillingUnavailable = true;
+    throw err;
+  }
   return result?.confirmationUrl;
 }
 

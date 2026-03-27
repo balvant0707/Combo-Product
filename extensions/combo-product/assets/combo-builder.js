@@ -906,7 +906,16 @@
 
     root.appendChild(wrapper);
 
-    // Auto-select the first box in grid mode only; steps mode waits for user click
+    // Single box visible: skip Step 1 entirely — hide heading + grid and auto-select
+    if (ctx.boxes.length === 1) {
+      step1Head.style.display = 'none';
+      boxGrid.style.display = 'none';
+      var onlyCard = boxGrid.firstElementChild;
+      if (onlyCard) onlyCard.click();
+      return;
+    }
+
+    // Multiple boxes: auto-select first in grid mode; steps mode waits for user click
     if (ctx.layoutMode !== 'steps') {
       var firstCard = boxGrid.firstElementChild;
       if (firstCard) firstCard.click();

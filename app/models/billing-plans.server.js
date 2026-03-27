@@ -336,8 +336,8 @@ export async function createSubscription(admin, planKey, returnUrl, currentPlanK
   // In skip-billing mode, redirect directly to returnUrl — no Shopify billing page
   if (SKIP_BILLING) return returnUrl;
 
-  // Use test:true until BILLING_LIVE=true is explicitly set (independent of NODE_ENV)
-  const isTest    = process.env.BILLING_LIVE !== "true";
+  // test:true = no real charge; controlled by BILLING_TEST; defaults to true for safety
+  const isTest    = process.env.BILLING_TEST !== "false";
   const upgrading = isUpgrade(currentPlanKey, planKey);
 
   const resp = await admin.graphql(CREATE_SUBSCRIPTION_MUTATION, {

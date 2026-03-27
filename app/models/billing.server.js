@@ -160,9 +160,9 @@ export async function createSubscription(admin, returnUrl) {
     return returnUrl;
   }
 
-  // Always use test:true when the app is not yet in production distribution.
-  // Switch to test:false only after Public Distribution is approved.
-  const isTest = process.env.BILLING_LIVE !== "true";
+  // test:true = no real charge (Shopify test subscription)
+  // Controlled by BILLING_TEST env var; defaults to true for safety.
+  const isTest = process.env.BILLING_TEST !== "false";
 
   const resp = await admin.graphql(CREATE_SUBSCRIPTION_MUTATION, {
     variables: {

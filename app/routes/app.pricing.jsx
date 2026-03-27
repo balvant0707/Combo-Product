@@ -4,8 +4,7 @@
  * Handles: subscribe, upgrade, downgrade, cancel
  */
 
-import { redirect } from "react-router";
-import { useActionData, useLoaderData, useNavigation, useRouteError } from "react-router";
+import { redirect as rrRedirect, useActionData, useLoaderData, useNavigation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 
@@ -50,19 +49,26 @@ export const action = async ({ request }) => {
     PLANS,
   } = await import("../models/billing-plans.server.js");
 
-  /* shared return URL — Shopify will append charge_id automatically */
-  const appUrl    = process.env.SHOPIFY_APP_URL;
+  const isSkipBilling = process.env.SKIP_BILLING === "true";
+
+  // returnUrl is only used for real Shopify billing (skip-billing mode ignores it)
+  const appUrl    = process.env.SHOPIFY_APP_URL?.replace(/\/$/, "");
   const returnUrl = `${appUrl}/app/pricing?status=subscribed`;
 
   /* ── subscribe: free → paid ─────────────────────────────── */
   if (intent === "subscribe") {
+    // Skip-billing: no Shopify billing page — navigate internally via React Router
+    if (isSkipBilling) {
+      return rrRedirect("/app/pricing?status=subscribed");
+    }
     const targetKey = formData.get("planKey");
     try {
       const confirmationUrl = await createSubscription(admin, targetKey, returnUrl);
-      return redirect(confirmationUrl);
+      // shopifyRedirect uses App Bridge to load the external Shopify billing page in top frame
+      return shopifyRedirect(confirmationUrl);
     } catch (e) {
       return {
-        error:               e.message,
+        error:                e.message,
         isBillingUnavailable: !!e.isBillingUnavailable,
         intent,
       };
@@ -71,9 +77,12 @@ export const action = async ({ request }) => {
 
   /* ── switch: paid → different paid ─────────────────────── */
   if (intent === "switch") {
-    const targetKey           = formData.get("planKey");
+    if (isSkipBilling) {
+      return rrRedirect("/app/pricing?status=subscribed");
+    }
+    const targetKey             = formData.get("planKey");
     const currentSubscriptionId = formData.get("subscriptionId");
-    const currentPlanKey      = formData.get("currentPlanKey");
+    const currentPlanKey        = formData.get("currentPlanKey");
     try {
       const confirmationUrl = await switchPlan(
         admin,
@@ -83,13 +92,13 @@ export const action = async ({ request }) => {
         currentPlanKey,
       );
       if (!confirmationUrl) {
-        // switched to free (cancel only), no redirect needed
-        return redirect("/app/pricing?status=cancelled");
+        // switched to free (cancel only) — internal redirect
+        return rrRedirect("/app/pricing?status=cancelled");
       }
-      return redirect(confirmationUrl);
+      return shopifyRedirect(confirmationUrl);
     } catch (e) {
       return {
-        error:               e.message,
+        error:                e.message,
         isBillingUnavailable: !!e.isBillingUnavailable,
         intent,
       };
@@ -101,7 +110,7 @@ export const action = async ({ request }) => {
     const subscriptionId = formData.get("subscriptionId");
     try {
       await cancelSubscription(admin, subscriptionId);
-      return redirect("/app/pricing?status=cancelled");
+      return rrRedirect("/app/pricing?status=cancelled");
     } catch (e) {
       return { error: e.message, intent };
     }

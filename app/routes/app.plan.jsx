@@ -1,4 +1,4 @@
-import { useActionData, useLoaderData, useNavigation, useRouteError } from "react-router";
+import { redirect as rrRedirect, useActionData, useLoaderData, useNavigation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { AdminIcon } from "../components/admin-icons";
@@ -63,18 +63,29 @@ export const loader = async ({ request }) => {
 /* ─── Action ─────────────────────────────────────────────────────── */
 
 export const action = async ({ request }) => {
-  const { admin, redirect } = await authenticate.admin(request);
+  // shopifyRedirect navigates the Shopify App Bridge top-frame (for external billing URLs).
+  // rrRedirect is React Router's own redirect — use it for internal app navigations.
+  const { admin, redirect: shopifyRedirect } = await authenticate.admin(request);
   const formData = await request.formData();
-  const intent = formData.get("intent");
+  const intent   = formData.get("intent");
 
   const { createSubscription, cancelSubscription } =
     await import("../models/billing.server.js");
 
   if (intent === "subscribe") {
+    const isSkipBilling = process.env.SKIP_BILLING === "true";
+
+    // Skip-billing: no Shopify billing page, redirect internally via React Router
+    if (isSkipBilling) {
+      return rrRedirect("/app/plan?subscribed=1");
+    }
+
+    // Real billing: Shopify returns an external confirmation URL
     try {
-      const returnUrl = `${process.env.SHOPIFY_APP_URL}/app/plan?subscribed=1`;
+      const returnUrl = `${(process.env.SHOPIFY_APP_URL || "").replace(/\/$/, "")}/app/plan?subscribed=1`;
       const confirmationUrl = await createSubscription(admin, returnUrl);
-      return redirect(confirmationUrl);
+      // shopifyRedirect uses App Bridge to navigate the top frame to Shopify's billing page
+      return shopifyRedirect(confirmationUrl);
     } catch (e) {
       return { error: e.message, billingUnavailable: !!e.isBillingUnavailable };
     }
@@ -84,7 +95,7 @@ export const action = async ({ request }) => {
     const subscriptionId = formData.get("subscriptionId");
     try {
       await cancelSubscription(admin, subscriptionId);
-      return { cancelled: true };
+      return rrRedirect("/app/plan?cancelled=1");
     } catch (e) {
       return { error: e.message };
     }
@@ -146,8 +157,9 @@ export default function PlanPage() {
   const isSubmitting = navigation.state === "submitting";
 
   const isBillingUnavailable = !isDevMode && (billingUnavailable || actionData?.billingUnavailable);
-  const url = new URL(typeof window !== "undefined" ? window.location.href : "http://localhost");
+  const url            = new URL(typeof window !== "undefined" ? window.location.href : "http://localhost");
   const justSubscribed = url.searchParams.get("subscribed") === "1";
+  const justCancelled  = url.searchParams.get("cancelled")  === "1";
 
   return (
     <div style={{ maxWidth: "820px", margin: "0 auto", padding: "28px 20px" }}>
@@ -210,7 +222,7 @@ export default function PlanPage() {
           </div>
         </div>
       )}
-      {actionData?.cancelled && (
+      {justCancelled && (
         <div style={{ background: "#fefce8", border: "1px solid #fde047", borderRadius: "8px", padding: "14px 16px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
           <AdminIcon type="info" size="small" style={{ color: "#ca8a04" }} />
           <div style={{ fontSize: "13px", fontWeight: "600", color: "#854d0e" }}>

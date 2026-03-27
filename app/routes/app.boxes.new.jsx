@@ -115,8 +115,6 @@ export const action = async ({ request }) => {
   if (!data.displayTitle?.trim()) errors.displayTitle = "Display title is required";
   if (!data.itemCount || parseInt(data.itemCount) < 1 || parseInt(data.itemCount) > 20)
     errors.itemCount = "Item count must be between 1 and 20";
-  if (!data.bundlePrice || parseFloat(data.bundlePrice) <= 0)
-    errors.bundlePrice = "Bundle price must be greater than 0";
 
   if (Object.keys(errors).length > 0) return { errors };
 
@@ -272,7 +270,7 @@ export default function CreateBoxPage() {
                   ))}
                 </div>
                 {priceMode === "manual" && (
-                  <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} style={{ ...fieldStyle, borderColor: errors.bundlePrice ? "#e11d48" : "#d1d5db" }} />
+                  <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} style={{ ...fieldStyle }} />
                 )}
                 {priceMode === "dynamic" && (
                   <div style={{ border: "1px solid #d1d5db", borderRadius: "5px", padding: "10px", background: "#f9fafb" }}>
@@ -300,7 +298,7 @@ export default function CreateBoxPage() {
                     </div>
                   </div>
                 )}
-                {errors.bundlePrice && <div style={errorStyle}>{errors.bundlePrice}</div>}
+
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
                 <label style={labelStyle}>Banner Image (optional)</label>

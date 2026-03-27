@@ -323,7 +323,7 @@ export default function BoxSettingsPage() {
                 ))}
               </div>
               {priceMode === "manual" && (
-                <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} style={{ ...fieldStyle, borderColor: errors.bundlePrice ? "#e11d48" : "#d1d5db" }} />
+                <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} style={{ ...fieldStyle }} />
               )}
               {priceMode === "dynamic" && (
                 <div style={{ border: "1px solid #d1d5db", borderRadius: "5px", padding: "12px", background: "#ffffff" }}>
@@ -345,7 +345,6 @@ export default function BoxSettingsPage() {
                   </div>
                 </div>
               )}
-              {errors.bundlePrice && <div style={errorStyle}>{errors.bundlePrice}</div>}
             </div>
             <div style={{ gridColumn: "1 / -1" }}>
               <label style={labelStyle}>Banner Image (optional)</label>

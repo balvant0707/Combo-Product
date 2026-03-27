@@ -1992,6 +1992,13 @@
     var comboConfig = box.comboConfig;
     var numSteps = comboConfig.comboType || comboConfig.steps.length;
     var steps = comboConfig.steps.slice(0, numSteps);
+
+    // Pad steps array to numSteps with safe defaults if the stored config has fewer entries
+    // (can happen when a box was saved as 2-step and later changed to 3-step)
+    while (steps.length < numSteps) {
+      steps.push({ label: 'Item ' + (steps.length + 1), scope: 'collection', collections: [], selectedProducts: [] });
+    }
+
     var sessionId = generateSessionId();
 
     var slots = [];
@@ -2279,7 +2286,8 @@
     function getStepProducts(stepIdx, cb) {
       if (stepProductsCache[stepIdx]) { cb(null, stepProductsCache[stepIdx]); return; }
       var stepCfg = steps[stepIdx];
-      var scope = stepCfg.scope || 'product';
+      if (!stepCfg) { cb(null, []); return; }
+      var scope = stepCfg.scope || 'collection';
 
       if (scope === 'product') {
         var prods = (stepCfg.selectedProducts || []).map(function (p) {
@@ -2300,18 +2308,39 @@
         stepProductsCache[stepIdx] = prods;
         cb(null, prods);
       } else {
-        var colls = stepCfg.collections || [];
-        if (!colls.length || !colls[0].handle) { cb(null, []); return; }
-        fetchCollectionProducts(colls[0].handle, function (err, prods) {
-          if (!err && prods) stepProductsCache[stepIdx] = prods;
-          cb(err, prods || []);
+        // Collection scope — fetch ALL configured collections and merge results
+        var colls = (stepCfg.collections || []).filter(function (c) { return c && c.handle; });
+        if (!colls.length) { cb(null, []); return; }
+
+        var remaining = colls.length;
+        var allProds = [];
+        var seenIds = {};
+        var firstErr = null;
+
+        colls.forEach(function (coll) {
+          fetchCollectionProducts(coll.handle, function (err, prods) {
+            if (err) firstErr = err;
+            if (prods) {
+              prods.forEach(function (p) {
+                if (!seenIds[p.productId]) {
+                  seenIds[p.productId] = true;
+                  allProds.push(p);
+                }
+              });
+            }
+            remaining--;
+            if (remaining === 0) {
+              if (allProds.length > 0) stepProductsCache[stepIdx] = allProds;
+              cb(allProds.length === 0 ? firstErr : null, allProds);
+            }
+          });
         });
       }
     }
 
     // ── Product Grid rendering ──
     function renderProductGrid(products) {
-      var stepCfg = steps[activeSlotIndex];
+      var stepCfg = steps[activeSlotIndex] || {};
       var stepLabelText = stepCfg.label || ('Item ' + (activeSlotIndex + 1));
       productLabel.textContent = 'Choose your ' + stepLabelText;
       productGrid.innerHTML = '';

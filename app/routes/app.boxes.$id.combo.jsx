@@ -216,7 +216,7 @@ export const action = async ({ request, params }) => {
     }
 
     try {
-      await upsertComboConfig(params.id, comboStepsConfig);
+      await upsertComboConfig(params.id, comboStepsConfig, admin);
     } catch (e) {
       console.error("[app.boxes.$id.combo] upsertComboConfig error:", e);
       return { ok: false, errors: { _global: "Failed to save combo configuration. Please try again." } };

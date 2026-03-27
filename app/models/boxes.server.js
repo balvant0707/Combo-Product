@@ -117,6 +117,119 @@ const DELETE_BUNDLE_PRODUCT_MUTATION = `#graphql
   }
 `;
 
+const DISCOUNT_AUTOMATIC_BASIC_CREATE_MUTATION = `#graphql
+  mutation discountAutomaticBasicCreate($automaticBasicDiscount: DiscountAutomaticBasicInput!) {
+    discountAutomaticBasicCreate(automaticBasicDiscount: $automaticBasicDiscount) {
+      automaticDiscountNode {
+        id
+        automaticDiscount {
+          ... on DiscountAutomaticBasic {
+            title
+            status
+            customerGets {
+              value {
+                ... on DiscountPercentage { percentage }
+                ... on DiscountAmount { amount { amount currencyCode } }
+              }
+            }
+          }
+        }
+      }
+      userErrors { field message }
+    }
+  }
+`;
+
+const DISCOUNT_AUTOMATIC_BASIC_UPDATE_MUTATION = `#graphql
+  mutation discountAutomaticBasicUpdate($id: ID!, $automaticBasicDiscount: DiscountAutomaticBasicInput!) {
+    discountAutomaticBasicUpdate(id: $id, automaticBasicDiscount: $automaticBasicDiscount) {
+      automaticDiscountNode {
+        id
+        automaticDiscount {
+          ... on DiscountAutomaticBasic {
+            title
+            status
+          }
+        }
+      }
+      userErrors { field message }
+    }
+  }
+`;
+
+const DISCOUNT_AUTOMATIC_DELETE_MUTATION = `#graphql
+  mutation discountAutomaticDelete($id: ID!) {
+    discountAutomaticDelete(id: $id) {
+      deletedAutomaticDiscountId
+      userErrors { field message }
+    }
+  }
+`;
+
+/**
+ * Build the DiscountAutomaticBasicInput object for create/update mutations.
+ * Scoped to a specific product variant so only this bundle product gets the discount.
+ */
+function buildDiscountInput({ title, discountType, discountValue, shopifyProductId }) {
+  const pct = parseFloat(discountValue) || 0;
+  const customerGets = discountType === "fixed"
+    ? { value: { discountAmount: { amount: String(pct), appliesOnEachItem: false } }, items: { products: { productsToAdd: [shopifyProductId] } } }
+    : { value: { percentage: pct / 100 }, items: { products: { productsToAdd: [shopifyProductId] } } };
+
+  return {
+    title,
+    startsAt: new Date().toISOString(),
+    customerGets,
+  };
+}
+
+/**
+ * Create or update an automatic basic discount in Shopify for a dynamic-priced box.
+ * Returns the discount GID, or null on failure.
+ */
+export async function syncShopifyDiscount(admin, { boxId, existingDiscountId, title, discountType, discountValue, shopifyProductId }) {
+  if (!admin || !shopifyProductId) return null;
+  if (!discountType || discountType === "none" || !(parseFloat(discountValue) > 0)) {
+    // Remove existing discount if switching away from dynamic
+    if (existingDiscountId) {
+      try {
+        await admin.graphql(DISCOUNT_AUTOMATIC_DELETE_MUTATION, { variables: { id: existingDiscountId } });
+        await db.comboBox.update({ where: { id: boxId }, data: { shopifyDiscountId: null } });
+      } catch (e) { console.error("[syncShopifyDiscount] delete error:", e); }
+    }
+    return null;
+  }
+
+  const input = buildDiscountInput({ title, discountType, discountValue, shopifyProductId });
+
+  try {
+    if (existingDiscountId) {
+      const resp = await admin.graphql(DISCOUNT_AUTOMATIC_BASIC_UPDATE_MUTATION, {
+        variables: { id: existingDiscountId, automaticBasicDiscount: input },
+      });
+      const json = await resp.json();
+      const errors = json?.data?.discountAutomaticBasicUpdate?.userErrors || [];
+      if (errors.length) { console.error("[syncShopifyDiscount] update userErrors:", errors); return existingDiscountId; }
+      return existingDiscountId;
+    } else {
+      const resp = await admin.graphql(DISCOUNT_AUTOMATIC_BASIC_CREATE_MUTATION, {
+        variables: { automaticBasicDiscount: input },
+      });
+      const json = await resp.json();
+      const errors = json?.data?.discountAutomaticBasicCreate?.userErrors || [];
+      if (errors.length) { console.error("[syncShopifyDiscount] create userErrors:", errors); return null; }
+      const discountId = json?.data?.discountAutomaticBasicCreate?.automaticDiscountNode?.id || null;
+      if (discountId && boxId) {
+        await db.comboBox.update({ where: { id: boxId }, data: { shopifyDiscountId: discountId } });
+      }
+      return discountId;
+    }
+  } catch (e) {
+    console.error("[syncShopifyDiscount] error:", e);
+    return existingDiscountId || null;
+  }
+}
+
 const STAGED_UPLOADS_CREATE_MUTATION = `#graphql
   mutation stagedUploadsCreate($input: [StagedUploadInput!]!) {
     stagedUploadsCreate(input: $input) {
@@ -597,6 +710,18 @@ export async function createBox(shop, data, admin) {
     },
   });
 
+  // Create Shopify automatic discount for dynamic-priced boxes
+  if (admin && data.bundlePriceType === "dynamic" && shopifyProductId) {
+    await syncShopifyDiscount(admin, {
+      boxId: box.id,
+      existingDiscountId: null,
+      title: `${data.boxName || data.displayTitle} Bundle Discount`,
+      discountType: data.discountType || "none",
+      discountValue: data.discountValue || "0",
+      shopifyProductId,
+    });
+  }
+
   // Save eligible products
   if (data.eligibleProducts && Array.isArray(data.eligibleProducts)) {
     const productRows = data.eligibleProducts.map((p) => {
@@ -636,7 +761,7 @@ export async function updateComboStepsConfig(id, shop, comboStepsConfig) {
  * Handles both INSERT (first save) and UPDATE (subsequent saves).
  * `config` may be a JSON string or a plain object matching DEFAULT_COMBO_CONFIG shape.
  */
-export async function upsertComboConfig(boxId, config) {
+export async function upsertComboConfig(boxId, config, admin = null) {
   const parsed = typeof config === "string" ? JSON.parse(config) : config;
   const rawJson = typeof config === "string" ? config : JSON.stringify(config);
   const comboType = parseInt(parsed.type) || 2;
@@ -668,11 +793,28 @@ export async function upsertComboConfig(boxId, config) {
     data:  comboBoxUpdate,
   });
 
-  return db.comboBoxConfig.upsert({
+  const result = await db.comboBoxConfig.upsert({
     where:  { boxId: parseInt(boxId) },
     create: { boxId: parseInt(boxId), ...payload },
     update: payload,
   });
+
+  // Sync Shopify automatic discount for dynamic-priced specific combo boxes
+  if (admin && payload.bundlePriceType === "dynamic") {
+    const box = await db.comboBox.findUnique({ where: { id: parseInt(boxId) }, select: { shopifyProductId: true, shopifyDiscountId: true, boxName: true, displayTitle: true } });
+    if (box?.shopifyProductId) {
+      await syncShopifyDiscount(admin, {
+        boxId: parseInt(boxId),
+        existingDiscountId: box.shopifyDiscountId || null,
+        title: `${box.boxName || box.displayTitle} Bundle Discount`,
+        discountType: parsed.discountType || "none",
+        discountValue: parsed.discountValue || "0",
+        shopifyProductId: box.shopifyProductId,
+      });
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -887,6 +1029,21 @@ export async function updateBox(id, shop, data, admin) {
     });
   }
 
+  // Sync Shopify automatic discount for dynamic-priced boxes
+  if (admin && existing.shopifyProductId) {
+    const effectivePriceType = data.bundlePriceType !== undefined
+      ? (data.bundlePriceType === "dynamic" ? "dynamic" : "manual")
+      : existing.bundlePriceType;
+    await syncShopifyDiscount(admin, {
+      boxId: parseInt(id),
+      existingDiscountId: existing.shopifyDiscountId || null,
+      title: `${data.boxName ?? existing.boxName} Bundle Discount`,
+      discountType: effectivePriceType === "dynamic" ? (data.discountType || "none") : "none",
+      discountValue: data.discountValue || "0",
+      shopifyProductId: existing.shopifyProductId,
+    });
+  }
+
   return db.comboBox.findUnique({
     where: { id: parseInt(id) },
     include: { products: true },
@@ -907,6 +1064,15 @@ export async function deleteBox(id, shop, admin = null) {
       });
     } catch (e) {
       console.error("[deleteBox] Failed to delete Shopify product", e);
+    }
+  }
+
+  // Delete associated Shopify automatic discount
+  if (admin && existing.shopifyDiscountId) {
+    try {
+      await admin.graphql(DISCOUNT_AUTOMATIC_DELETE_MUTATION, { variables: { id: existing.shopifyDiscountId } });
+    } catch (e) {
+      console.error("[deleteBox] Failed to delete Shopify discount", e);
     }
   }
 

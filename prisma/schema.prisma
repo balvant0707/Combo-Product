@@ -69,6 +69,7 @@ model ComboBox {
   giftMessageEnabled  Boolean           @default(false)
   shopifyProductId    String?           @db.VarChar(255)
   shopifyVariantId    String?           @db.VarChar(255)
+  shopifyDiscountId   String?           @db.VarChar(255)
   deletedAt           DateTime?
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt

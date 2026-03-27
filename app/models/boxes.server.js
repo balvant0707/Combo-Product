@@ -118,9 +118,10 @@ const DELETE_BUNDLE_PRODUCT_MUTATION = `#graphql
 `;
 
 const COMBO_COLLECTION_PRODUCTS_QUERY = `#graphql
-  query GetComboCollectionProducts($id: ID!, $first: Int!) {
+  query GetComboCollectionProducts($id: ID!, $first: Int!, $after: String) {
     collection(id: $id) {
-      products(first: $first) {
+      products(first: $first, after: $after) {
+        pageInfo { hasNextPage endCursor }
         edges {
           node {
             id title handle
@@ -841,22 +842,33 @@ export async function upsertComboConfig(boxId, config, admin = null) {
       const step = allSteps[i];
       if (step.scope === "collection" && Array.isArray(step.collections) && step.collections.length > 0) {
         const resolvedProducts = [];
+        const seenIds = new Set();
         for (const coll of step.collections) {
           if (!coll.id) continue;
           try {
-            const resp = await admin.graphql(COMBO_COLLECTION_PRODUCTS_QUERY, {
-              variables: { id: coll.id, first: 100 },
-            });
-            const json = await resp.json();
-            for (const { node } of json?.data?.collection?.products?.edges || []) {
-              resolvedProducts.push({
-                id: node.id,
-                title: node.title,
-                handle: node.handle,
-                imageUrl: node.featuredImage?.url || null,
-                variantId: node.variants?.edges?.[0]?.node?.id || null,
-                price: node.variants?.edges?.[0]?.node?.price || "0",
+            let cursor = null;
+            let hasNextPage = true;
+            while (hasNextPage) {
+              const resp = await admin.graphql(COMBO_COLLECTION_PRODUCTS_QUERY, {
+                variables: { id: coll.id, first: 250, after: cursor },
               });
+              const json = await resp.json();
+              const productsConn = json?.data?.collection?.products;
+              for (const { node } of productsConn?.edges || []) {
+                if (!seenIds.has(node.id)) {
+                  seenIds.add(node.id);
+                  resolvedProducts.push({
+                    id: node.id,
+                    title: node.title,
+                    handle: node.handle,
+                    imageUrl: node.featuredImage?.url || null,
+                    variantId: node.variants?.edges?.[0]?.node?.id || null,
+                    price: node.variants?.edges?.[0]?.node?.price || "0",
+                  });
+                }
+              }
+              hasNextPage = productsConn?.pageInfo?.hasNextPage || false;
+              cursor = productsConn?.pageInfo?.endCursor || null;
             }
           } catch (e) {
             console.warn(`[upsertComboConfig] Failed to expand collection ${coll.id}:`, e.message);

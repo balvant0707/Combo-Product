@@ -585,24 +585,47 @@
   var _collectionProductsCache = {};
   function fetchCollectionProducts(handle, cb) {
     if (_collectionProductsCache[handle]) { cb(null, _collectionProductsCache[handle]); return; }
-    fetch('/collections/' + encodeURIComponent(handle) + '/products.json?limit=250')
-      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-      .then(function (data) {
-        var prods = (data.products || []).map(function (p) {
-          var v0 = p.variants && p.variants[0] ? p.variants[0] : null;
-          return {
-            productId: p.id ? ('gid://shopify/Product/' + p.id) : null,
-            productTitle: p.title,
-            productHandle: p.handle,
-            productImageUrl: p.images && p.images[0] ? p.images[0].src : null,
-            productPrice: v0 ? parseFloat(v0.price) : 0,
-            variantIds: (p.variants || []).map(function (v) { return String(v.id); }),
-          };
+
+    var allProds = [];
+    var seenIds = {};
+
+    function fetchPage(page) {
+      fetch('/collections/' + encodeURIComponent(handle) + '/products.json?limit=250&page=' + page)
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function (data) {
+          var batch = (data.products || []);
+          batch.forEach(function (p) {
+            if (seenIds[p.id]) return;
+            seenIds[p.id] = true;
+            var v0 = p.variants && p.variants[0] ? p.variants[0] : null;
+            allProds.push({
+              productId: p.id ? ('gid://shopify/Product/' + p.id) : null,
+              productTitle: p.title,
+              productHandle: p.handle,
+              productImageUrl: p.images && p.images[0] ? p.images[0].src : null,
+              productPrice: v0 ? parseFloat(v0.price) : 0,
+              variantIds: (p.variants || []).map(function (v) { return String(v.id); }),
+            });
+          });
+          // If we got a full page of 250, there may be more
+          if (batch.length === 250) {
+            fetchPage(page + 1);
+          } else {
+            _collectionProductsCache[handle] = allProds;
+            cb(null, allProds);
+          }
+        })
+        .catch(function (err) {
+          if (allProds.length > 0) {
+            _collectionProductsCache[handle] = allProds;
+            cb(null, allProds);
+          } else {
+            cb(err, null);
+          }
         });
-        _collectionProductsCache[handle] = prods;
-        cb(null, prods);
-      })
-      .catch(function (err) { cb(err, null); });
+    }
+
+    fetchPage(1);
   }
 
   // ─── Main Widget Init ─────────────────────────────────────────────────────────
@@ -1113,9 +1136,8 @@
     builderArea.innerHTML = '';
 
     if (box.comboConfig && Array.isArray(box.comboConfig.steps) && box.comboConfig.steps.length > 0) {
-      showPageLoader('Loading products…');
+      // Inline grid spinner shown by loadAndRenderGrid inside renderSpecificComboBuilder
       setTimeout(function () {
-        hidePageLoader(true);
         renderSpecificComboBuilder(builderArea, box, ctx);
         builderArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 0);
@@ -2679,9 +2701,16 @@
     // Load products for active slot then render grid
     function loadAndRenderGrid() {
       renderProductGrid(null);
-      showPageLoader('Loading products…');
+      // Show inline spinner overlay on the product section
+      var gridOverlay = document.createElement('div');
+      gridOverlay.className = 'cb-grid-overlay';
+      gridOverlay.innerHTML =
+        '<span class="combo-builder-spinner" aria-hidden="true"></span>' +
+        '<span class="cb-grid-overlay-text">Loading products\u2026</span>';
+      productSection.appendChild(gridOverlay);
+
       getStepProducts(activeSlotIndex, function (err, products) {
-        hidePageLoader(true);
+        if (gridOverlay.parentNode) gridOverlay.parentNode.removeChild(gridOverlay);
         renderProductGrid(err ? [] : products);
       });
     }
@@ -2709,6 +2738,16 @@
         });
         return;
       }
+      // Show spinner on cart buttons immediately
+      [inlineCartBtn, _stickyBtn].forEach(function (btn) {
+        if (!btn) return;
+        btn.disabled = true;
+        btn.className = btn === _stickyBtn
+          ? 'cb-sticky-btn cb-sticky-btn--loading'
+          : 'cb-inline-cart-btn cb-inline-cart-btn--loading';
+        btn.innerHTML = '<span class="cb-btn-spinner" aria-hidden="true"></span><span class="cb-btn-label">Adding\u2026</span>';
+      });
+      showPageLoader('Adding products to cart\u2026');
       addToCart(box, slots, sessionId, null, inlineCartBtn, _stickyBtn, resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel), ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo);
     }
 

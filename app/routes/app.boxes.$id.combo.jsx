@@ -563,29 +563,121 @@ export default function SpecificComboBoxPage() {
                   <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={comboConfig.bundlePrice || ""} onChange={(e) => updateComboField("bundlePrice", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
                 )}
                 {comboConfig.bundlePriceType === "dynamic" && (
-                  <div style={{ border: "1px solid #e5e7eb", borderRadius: "5px", padding: "12px", background: "#f9fafb" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: comboConfig.discountType !== "none" ? "10px" : "0" }}>
-                      <div>
-                        <label style={labelStyle}>Discount Type</label>
-                        <select value={comboConfig.discountType} onChange={(e) => updateComboField("discountType", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }}>
-                          <option value="percent">% Off Total</option>
-                          <option value="fixed">₹ Fixed Discount</option>
-                          <option value="none">No Discount</option>
-                        </select>
+                  <div style={{ border: "1px solid #e5e7eb", borderRadius: "8px", overflow: "hidden", background: "#fff" }}>
+                    {/* Discount header */}
+                    <div style={{ padding: "9px 14px", background: "#f9fafb", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M12.5 1.5l-11 11M4.5 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM11.5 10.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" stroke="#6b7280" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                      <span style={{ fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em" }}>Discount</span>
+                    </div>
+
+                    <div style={{ padding: "14px" }}>
+                      {/* Segmented discount type selector */}
+                      <div style={{ marginBottom: "12px" }}>
+                        <label style={labelStyle}>Discount type</label>
+                        <div style={{ display: "flex", border: "1.5px solid #e5e7eb", borderRadius: "7px", overflow: "hidden", background: "#f9fafb" }}>
+                          {[
+                            { value: "percent", label: "% Off",    icon: "%" },
+                            { value: "fixed",   label: "₹ Fixed",  icon: "₹" },
+                            { value: "none",    label: "None",     icon: "—" },
+                          ].map((opt) => {
+                            const active = comboConfig.discountType === opt.value;
+                            return (
+                              <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => updateComboField("discountType", opt.value)}
+                                style={{
+                                  flex: 1,
+                                  padding: "8px 6px",
+                                  border: "none",
+                                  borderRight: opt.value !== "none" ? "1px solid #e5e7eb" : "none",
+                                  background: active ? "#000" : "transparent",
+                                  color: active ? "#fff" : "#6b7280",
+                                  fontSize: "12px",
+                                  fontWeight: "600",
+                                  cursor: "pointer",
+                                  transition: "background 0.15s, color 0.15s",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: "5px",
+                                }}
+                              >
+                                <span style={{ fontSize: "11px", opacity: active ? 0.7 : 0.5 }}>{opt.icon}</span>
+                                {opt.label}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
+
+                      {/* Discount value input */}
                       {comboConfig.discountType !== "none" && (
-                        <div>
-                          <label style={labelStyle}>{comboConfig.discountType === "percent" ? "Discount %" : "Amount (₹)"}</label>
-                          <input type="number" min="0" step={comboConfig.discountType === "percent" ? "1" : "0.01"} max={comboConfig.discountType === "percent" ? "99" : undefined} value={comboConfig.discountValue} onChange={(e) => updateComboField("discountValue", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
+                        <div style={{ marginBottom: "12px" }}>
+                          <label style={labelStyle}>
+                            {comboConfig.discountType === "percent" ? "Discount %" : "Discount amount (₹)"}
+                          </label>
+                          <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                            <span style={{
+                              position: "absolute", left: "11px",
+                              fontSize: "13px", fontWeight: "700", color: "#374151",
+                              pointerEvents: "none", userSelect: "none",
+                            }}>
+                              {comboConfig.discountType === "percent" ? "%" : "₹"}
+                            </span>
+                            <input
+                              type="number"
+                              min="0"
+                              step={comboConfig.discountType === "percent" ? "1" : "0.01"}
+                              max={comboConfig.discountType === "percent" ? "99" : undefined}
+                              value={comboConfig.discountValue}
+                              onChange={(e) => updateComboField("discountValue", e.target.value)}
+                              style={{ ...fieldStyle, borderColor: "#d1d5db", paddingLeft: "28px", paddingRight: "60px" }}
+                            />
+                            <span style={{
+                              position: "absolute", right: "11px",
+                              fontSize: "11px", fontWeight: "600", color: "#9ca3af",
+                              pointerEvents: "none",
+                            }}>
+                              {comboConfig.discountType === "percent" ? "percent" : "rupees"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Price comparison row */}
+                      {comboConfig.discountType !== "none" && (
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderRadius: "6px", background: "#f0fdf4", border: "1px solid #bbf7d0" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                              <svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5l3.5 3.5L11 1" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: "10px", fontWeight: "600", color: "#166534", textTransform: "uppercase", letterSpacing: "0.05em" }}>Est. after discount</div>
+                              <div style={{ fontSize: "10px", color: "#4ade80", marginTop: "1px" }}>
+                                {comboConfig.discountType === "percent" ? `${comboConfig.discountValue || 0}% off applied` : `₹${comboConfig.discountValue || 0} deducted`}
+                              </div>
+                            </div>
+                          </div>
+                          <div style={{ textAlign: "right" }}>
+                            <div style={{ fontSize: "16px", fontWeight: "800", color: "#15803d", lineHeight: 1 }}>
+                              ₹{comboDynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                            </div>
+                            {comboDynamicPrice < (comboDynamicPrice / (1 - (parseFloat(comboConfig.discountValue) || 0) / 100)) && comboConfig.discountType === "percent" && (
+                              <div style={{ fontSize: "10px", color: "#86efac", textDecoration: "line-through", marginTop: "2px" }}>
+                                ₹{(comboDynamicPrice / (1 - (parseFloat(comboConfig.discountValue) || 0.001) / 100)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {comboConfig.discountType === "none" && (
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 12px", borderRadius: "6px", background: "#f9fafb", border: "1px solid #e5e7eb" }}>
+                          <span style={{ fontSize: "12px", color: "#9ca3af" }}>No discount applied — full product prices sum is charged</span>
                         </div>
                       )}
                     </div>
-                    {comboConfig.discountType !== "none" && (
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "8px", borderTop: "1px solid #e5e7eb" }}>
-                        <span style={{ fontSize: "11px", color: "#6b7280" }}>Est. bundle price after discount</span>
-                        <span style={{ fontSize: "13px", fontWeight: "700", color: "#166534" }}>₹{comboDynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
@@ -742,14 +834,27 @@ export default function SpecificComboBoxPage() {
                     {step.collections.length > 0 && (step.scope || "collection") === "collection" && (
                       <div style={{ border: "1px solid #e5e7eb", borderRadius: "6px", marginTop: "10px", overflow: "hidden" }}>
                         <div style={{ padding: "7px 12px", background: "#f9fafb", borderBottom: "1px solid #e5e7eb", fontSize: "10px", fontWeight: "700", color: "#6b7280", letterSpacing: "0.07em", textTransform: "uppercase" }}>
-                          Selected Collections
+                          Selected Collections ({step.collections.length})
                         </div>
-                        <div style={{ padding: "10px 12px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                        <div style={{ padding: "10px 12px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: "8px" }}>
                           {step.collections.map((c) => (
-                            <span key={c.id} style={{ display: "inline-flex", alignItems: "center", gap: "5px", background: "#f3f4f6", color: "#000000", padding: "5px 10px", borderRadius: "5px", fontSize: "12px", fontWeight: "600", border: "1px solid #d1d5db" }}>
-                              {c.title}
-                              <button type="button" aria-label={`Remove ${c.title}`} onClick={() => updateComboStep(ai, "collections", step.collections.filter((x) => x.id !== c.id))} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", fontSize: "14px", lineHeight: 1, padding: "0 0 0 2px", opacity: 0.65, display: "inline-flex", alignItems: "center" }}>×</button>
-                            </span>
+                            <div key={c.id} style={{ position: "relative", borderRadius: "6px", border: "1px solid #e5e7eb", overflow: "hidden", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                              <div style={{ width: "100%", aspectRatio: "1 / 1", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                                {c.imageUrl
+                                  ? <img src={c.imageUrl} alt={c.title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                                  : <span style={{ fontSize: "22px", fontWeight: "700", color: "#d1d5db" }}>{c.title.charAt(0).toUpperCase()}</span>
+                                }
+                              </div>
+                              <div style={{ padding: "5px 6px 6px", fontSize: "10px", fontWeight: "600", color: "#374151", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={c.title}>
+                                {c.title}
+                              </div>
+                              <button
+                                type="button"
+                                aria-label={`Remove ${c.title}`}
+                                onClick={() => updateComboStep(ai, "collections", step.collections.filter((x) => x.id !== c.id))}
+                                style={{ position: "absolute", top: "4px", right: "4px", width: "18px", height: "18px", borderRadius: "50%", background: "rgba(0,0,0,0.55)", border: "none", color: "#fff", fontSize: "11px", lineHeight: 1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
+                              >×</button>
+                            </div>
                           ))}
                         </div>
                       </div>
@@ -757,14 +862,32 @@ export default function SpecificComboBoxPage() {
                     {(step.selectedProducts || []).length > 0 && (step.scope || "collection") === "product" && (
                       <div style={{ border: "1px solid #e5e7eb", borderRadius: "6px", marginTop: "10px", overflow: "hidden" }}>
                         <div style={{ padding: "7px 12px", background: "#f9fafb", borderBottom: "1px solid #e5e7eb", fontSize: "10px", fontWeight: "700", color: "#6b7280", letterSpacing: "0.07em", textTransform: "uppercase" }}>
-                          Selected Products
+                          Selected Products ({step.selectedProducts.length})
                         </div>
-                        <div style={{ padding: "10px 12px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                        <div style={{ padding: "10px 12px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: "8px" }}>
                           {step.selectedProducts.map((p) => (
-                            <span key={p.id} style={{ display: "inline-flex", alignItems: "center", gap: "5px", background: "#f3f4f6", color: "#000000", padding: "5px 10px", borderRadius: "5px", fontSize: "12px", fontWeight: "600", border: "1px solid #d1d5db" }}>
-                              {p.title}
-                              <button type="button" aria-label={`Remove ${p.title}`} onClick={() => updateComboStep(ai, "selectedProducts", step.selectedProducts.filter((x) => x.id !== p.id))} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", fontSize: "14px", lineHeight: 1, padding: "0 0 0 2px", opacity: 0.65, display: "inline-flex", alignItems: "center" }}>×</button>
-                            </span>
+                            <div key={p.id} style={{ position: "relative", borderRadius: "6px", border: "1px solid #e5e7eb", overflow: "hidden", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                              <div style={{ width: "100%", aspectRatio: "1 / 1", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                                {p.imageUrl
+                                  ? <img src={p.imageUrl} alt={p.title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                                  : <span style={{ fontSize: "22px", fontWeight: "700", color: "#d1d5db" }}>{p.title.charAt(0).toUpperCase()}</span>
+                                }
+                              </div>
+                              <div style={{ padding: "5px 6px 6px", fontSize: "10px", fontWeight: "600", color: "#374151", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={p.title}>
+                                {p.title}
+                              </div>
+                              {p.price && (
+                                <div style={{ padding: "0 6px 5px", fontSize: "10px", color: "#6b7280" }}>
+                                  ₹{parseFloat(p.price).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                </div>
+                              )}
+                              <button
+                                type="button"
+                                aria-label={`Remove ${p.title}`}
+                                onClick={() => updateComboStep(ai, "selectedProducts", step.selectedProducts.filter((x) => x.id !== p.id))}
+                                style={{ position: "absolute", top: "4px", right: "4px", width: "18px", height: "18px", borderRadius: "50%", background: "rgba(0,0,0,0.55)", border: "none", color: "#fff", fontSize: "11px", lineHeight: 1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
+                              >×</button>
+                            </div>
                           ))}
                         </div>
                       </div>

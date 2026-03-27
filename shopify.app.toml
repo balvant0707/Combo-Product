@@ -2,7 +2,7 @@
 
 client_id = "335f2a536c3bcb46c4450e5ecaa080b1"
 name = "MixBox – Box & Bundle Builder"
-application_url = "https://combo-product-ten.vercel.app"
+application_url = "https://combo-product-ten.vercel.app/"
 embedded = true
 
 handle = "mixbox-box-bundle-builder"
@@ -11,7 +11,7 @@ handle = "mixbox-box-bundle-builder"
 automatically_update_urls_on_dev = true
 
 [app_proxy]
-url = "https://combo-product-ten.vercel.app"
+url = "https://combo-product-ten.vercel.app/"
 subpath = "combo-builder"
 prefix = "apps"
 

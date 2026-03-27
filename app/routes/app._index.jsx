@@ -15,6 +15,17 @@ import { withEmbeddedAppParams } from "../utils/embedded-app";
 export const loader = async ({ request }) => {
   const { session, admin } = await authenticate.admin(request);
   const shop = session.shop;
+  const url = new URL(request.url);
+
+  if (url.searchParams.get("subscribed") === "1") {
+    const { syncSubscription } = await import("../models/billing.server.js");
+    const { setShopPlanStatus } = await import("../models/shop.server.js");
+    const { subscription } = await syncSubscription(admin, shop);
+
+    if (subscription?.subscriptionId || process.env.SKIP_BILLING === "true") {
+      await setShopPlanStatus(shop, "active").catch(() => {});
+    }
+  }
 
   const [activeBoxCount, bundlesSold, bundleRevenue, recentOrders] =
     await Promise.all([

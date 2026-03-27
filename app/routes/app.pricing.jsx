@@ -94,7 +94,7 @@ export const action = async ({ request }) => {
     }
 
     try {
-      const returnPath = withEmbeddedAppParamsFromRequest("/app/pricing?subscribed=1", request);
+      const returnPath = withEmbeddedAppParamsFromRequest("/app?subscribed=1", request);
       const returnUrl = new URL(returnPath, requestUrl.origin).toString();
       const confirmationUrl = await createSubscription(admin, returnUrl);
       // Return URL to client — component uses window.open(_top) to navigate parent frame

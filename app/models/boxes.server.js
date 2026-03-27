@@ -851,8 +851,8 @@ export async function upsertComboConfig(boxId, config, admin = null) {
     update: payload,
   });
 
-  // Sync Shopify automatic discount for dynamic-priced specific combo boxes
-  if (admin && payload.bundlePriceType === "dynamic") {
+  // Sync Shopify automatic discount for specific combo boxes (both manual and dynamic pricing)
+  if (admin) {
     const box = await db.comboBox.findUnique({ where: { id: parseInt(boxId) }, select: { shopifyProductId: true, shopifyDiscountId: true, boxName: true, displayTitle: true } });
     if (box?.shopifyProductId) {
       await syncShopifyDiscount(admin, {

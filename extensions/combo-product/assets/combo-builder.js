@@ -36,13 +36,13 @@
     return total;
   }
 
-  function applyComboDiscount(totalMrp, comboConfig) {
-    if (!comboConfig || String(comboConfig.bundlePriceType) !== 'dynamic') return totalMrp;
+  function applyComboDiscount(price, comboConfig) {
+    if (!comboConfig) return price;
     var discountType = comboConfig.discountType || 'none';
     var discountValue = parseFloat(comboConfig.discountValue) || 0;
-    if (discountType === 'percent') return Math.max(0, totalMrp * (1 - discountValue / 100));
-    if (discountType === 'fixed') return Math.max(0, totalMrp - discountValue);
-    return totalMrp;
+    if (discountType === 'percent') return Math.max(0, price * (1 - discountValue / 100));
+    if (discountType === 'fixed') return Math.max(0, price - discountValue);
+    return price;
   }
 
   function renderStickyTotal(totalEl, amount, currencySymbol) {
@@ -552,7 +552,7 @@
     totalRow.className = 'cb-sticky-total';
     renderStickyTotal(
       totalRow,
-      isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0),
+      isDynamicBundlePrice(box) ? 0 : applyComboDiscount(parseFloat(box.bundlePrice) || 0, box.comboConfig),
       ctx.currencySymbol
     );
     center.appendChild(totalRow);
@@ -962,10 +962,8 @@
 
     var priceText = document.createElement('div');
     priceText.className = 'cb-box-price-text';
-    priceText.textContent = formatPrice(
-      isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0),
-      ctx.currencySymbol
-    );
+    var _initPrice = isDynamicBundlePrice(box) ? 0 : applyComboDiscount(parseFloat(box.bundlePrice) || 0, box.comboConfig);
+    priceText.textContent = formatPrice(_initPrice, ctx.currencySymbol);
     box._priceTextEl = priceText;
     body.appendChild(priceText);
 
@@ -1831,7 +1829,7 @@
 
         setBoxCardPrice(
           box,
-          isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0),
+          isDynamicBundlePrice(box) ? 0 : applyComboDiscount(parseFloat(box.bundlePrice) || 0, box.comboConfig),
           ctx.currencySymbol
         );
 
@@ -2180,11 +2178,32 @@
 
       var totalMrp = getSelectedProductsTotal(slots);
       var isDynamic = isDynamicBundlePrice(box);
-      var dynamicEffectivePrice = isDynamic ? applyComboDiscount(totalMrp, box.comboConfig) : 0;
+      var bundlePriceRaw = parseFloat(box.bundlePrice) || 0;
+      var effectivePrice = isDynamic
+        ? applyComboDiscount(totalMrp, box.comboConfig)
+        : applyComboDiscount(bundlePriceRaw, box.comboConfig);
       if (_stickyTotalEl) {
-        renderStickyTotal(_stickyTotalEl, isDynamic ? dynamicEffectivePrice : (parseFloat(box.bundlePrice) || 0), ctx.currencySymbol);
+        renderStickyTotal(_stickyTotalEl, effectivePrice, ctx.currencySymbol);
       }
-      if (isDynamic) setBoxCardPrice(box, dynamicEffectivePrice, ctx.currencySymbol);
+      setBoxCardPrice(box, effectivePrice, ctx.currencySymbol);
+
+      // Savings / MRP row for specific combo (both dynamic and manual with discount)
+      if (_stickySavingsEl) {
+        var hasAnyProduct = slots.some(Boolean);
+        var originalPrice = isDynamic ? totalMrp : bundlePriceRaw;
+        var savings = originalPrice - effectivePrice;
+        if (hasAnyProduct && savings > 0.005) {
+          var savingsBadge = (ctx.settings && ctx.settings.showSavingsBadge)
+            ? '<span class="cb-sticky-save">Save ' + formatPrice(savings, ctx.currencySymbol) + '</span>'
+            : '';
+          _stickySavingsEl.innerHTML =
+            '<span class="cb-sticky-mrp">MRP: ' + formatPrice(originalPrice, ctx.currencySymbol) + '</span>' +
+            savingsBadge;
+          _stickySavingsEl.style.display = 'flex';
+        } else {
+          _stickySavingsEl.style.display = 'none';
+        }
+      }
 
       // Steps mode: hide product grid when done; enable/disable cart buttons; update wizard
       if (ctx.layoutMode === 'steps') {
@@ -2605,7 +2624,7 @@
       setTimeout(function () {
         for (var i = 0; i < slots.length; i++) slots[i] = null;
         activeSlotIndex = 0;
-        setBoxCardPrice(box, isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0), ctx.currencySymbol);
+        setBoxCardPrice(box, isDynamicBundlePrice(box) ? 0 : applyComboDiscount(parseFloat(box.bundlePrice) || 0, box.comboConfig), ctx.currencySymbol);
         renderSlots();
         loadAndRenderGrid();
         updateCartButton();

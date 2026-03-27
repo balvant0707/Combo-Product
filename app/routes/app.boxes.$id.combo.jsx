@@ -392,9 +392,8 @@ export default function SpecificComboBoxPage() {
   /* ── Combo Config helpers ── */
   function updateComboField(field, value) { setComboConfig((prev) => ({ ...prev, [field]: value })); }
 
-  // comboDynamicPrice — uses products from stepProducts or all products for pricing reference
+  // comboDynamicPrice — estimated price for dynamic pricing mode (after discount)
   const comboDynamicPrice = useMemo(() => {
-    // Use average of all available products as a rough estimate
     const allProds = products || [];
     const avgPrice = allProds.length > 0 ? allProds.reduce((s, p) => s + (parseFloat(p.price) || 0), 0) / allProds.length : 0;
     const estimatedTotal = avgPrice * (comboConfig.type || 2);
@@ -404,6 +403,15 @@ export default function SpecificComboBoxPage() {
     if (comboConfig.discountType === "fixed") return Math.max(0, estimatedTotal - val);
     return estimatedTotal;
   }, [products, comboConfig.type, comboConfig.discountType, comboConfig.discountValue]);
+
+  // comboManualDiscountedPrice — manual bundle price after discount
+  const comboManualDiscountedPrice = useMemo(() => {
+    const price = parseFloat(comboConfig.bundlePrice) || 0;
+    const val = parseFloat(comboConfig.discountValue) || 0;
+    if (comboConfig.discountType === "percent") return Math.max(0, price * (1 - val / 100));
+    if (comboConfig.discountType === "fixed") return Math.max(0, price - val);
+    return price;
+  }, [comboConfig.bundlePrice, comboConfig.discountType, comboConfig.discountValue]);
 
   function updateComboStep(stepIdx, field, value) {
     setComboConfig((prev) => {
@@ -543,7 +551,7 @@ export default function SpecificComboBoxPage() {
               </div>
               {/* Bundle Price */}
               <div>
-                <label style={labelStyle}>Bundle Price (₹) *</label>
+                <label style={labelStyle}>Bundle Price (₹)</label>
                 <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "5px", overflow: "hidden", marginBottom: "8px" }}>
                   {["manual", "dynamic"].map((mode) => (
                     <button key={mode} type="button" onClick={() => updateComboField("bundlePriceType", mode)} style={{ flex: 1, padding: "6px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: comboConfig.bundlePriceType === mode ? "#000000" : "#f9fafb", color: comboConfig.bundlePriceType === mode ? "#ffffff" : "#374151", transition: "background 0.15s" }}>
@@ -552,29 +560,44 @@ export default function SpecificComboBoxPage() {
                   ))}
                 </div>
                 {comboConfig.bundlePriceType === "manual" && (
-                  <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={comboConfig.bundlePrice || ""} onChange={(e) => updateComboField("bundlePrice", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
+                  <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={comboConfig.bundlePrice || ""} onChange={(e) => updateComboField("bundlePrice", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db", marginBottom: "8px" }} />
                 )}
                 {comboConfig.bundlePriceType === "dynamic" && (
-                  <div style={{ border: "1px solid #d1d5db", borderRadius: "5px", padding: "10px", background: "#f9fafb" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "8px" }}>
-                      <div>
-                        <label style={{ ...labelStyle, fontSize: "10px" }}>Discount Type</label>
-                        <select value={comboConfig.discountType} onChange={(e) => updateComboField("discountType", e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }}>
-                          <option value="percent">% Off Total</option>
-                          <option value="fixed">₹ Fixed Discount</option>
-                          <option value="none">No Discount</option>
-                        </select>
-                      </div>
-                      {comboConfig.discountType !== "none" && (
-                        <div>
-                          <label style={{ ...labelStyle, fontSize: "10px" }}>{comboConfig.discountType === "percent" ? "Discount %" : "Amount (₹)"}</label>
-                          <input type="number" min="0" step={comboConfig.discountType === "percent" ? "1" : "0.01"} max={comboConfig.discountType === "percent" ? "99" : undefined} value={comboConfig.discountValue} onChange={(e) => updateComboField("discountValue", e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ fontSize: "11px", color: "#6b7280" }}>Price: ₹{comboDynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", padding: "6px 10px", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "5px" }}>
+                    Estimated: ₹{comboDynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                   </div>
                 )}
+
+                {/* Discount — shown for both Manual and Dynamic modes */}
+                <div style={{ border: "1px solid #e5e7eb", borderRadius: "5px", padding: "10px", background: "#fafafa" }}>
+                  <div style={{ fontSize: "10px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Discount</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                    <div>
+                      <label style={{ ...labelStyle, fontSize: "10px" }}>Type</label>
+                      <select value={comboConfig.discountType} onChange={(e) => updateComboField("discountType", e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }}>
+                        <option value="none">No Discount</option>
+                        <option value="percent">% Off</option>
+                        <option value="fixed">₹ Fixed Off</option>
+                      </select>
+                    </div>
+                    {comboConfig.discountType !== "none" && (
+                      <div>
+                        <label style={{ ...labelStyle, fontSize: "10px" }}>{comboConfig.discountType === "percent" ? "Discount %" : "Amount (₹)"}</label>
+                        <input type="number" min="0" step={comboConfig.discountType === "percent" ? "1" : "0.01"} max={comboConfig.discountType === "percent" ? "99" : undefined} value={comboConfig.discountValue} onChange={(e) => updateComboField("discountValue", e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
+                      </div>
+                    )}
+                  </div>
+                  {comboConfig.discountType !== "none" && comboConfig.bundlePriceType === "manual" && (
+                    <div style={{ fontSize: "11px", color: "#166534", fontWeight: "600", marginTop: "8px" }}>
+                      After discount: ₹{comboManualDiscountedPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    </div>
+                  )}
+                  {comboConfig.discountType !== "none" && comboConfig.bundlePriceType === "dynamic" && (
+                    <div style={{ fontSize: "11px", color: "#166534", fontWeight: "600", marginTop: "8px" }}>
+                      Est. after discount: ₹{comboDynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             </div>

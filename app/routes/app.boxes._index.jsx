@@ -30,15 +30,20 @@ function getDiscountSummary(box) {
 function getComboConfigSummary(box) {
   if (box.config) {
     const comboType = box.config.comboType;
-    if (!comboType || comboType <= 0) return null;
+    if (!comboType || comboType < 2) return null;
+    // Require at least one step to be saved — prevents misidentifying regular boxes
+    let hasSteps = false;
+    try { hasSteps = JSON.parse(box.config.stepsJson || "[]").length > 0; } catch {}
+    if (!hasSteps) return null;
     return { comboType, title: box.config.title, isActive: box.config.isActive, stepsJson: box.config.stepsJson };
   }
   if (!box.comboStepsConfig) return null;
   try {
     const parsed = JSON.parse(box.comboStepsConfig);
     const comboType = parseInt(parsed?.type) || 0;
-    if (comboType <= 0) return null;
+    if (comboType < 2) return null;
     const steps = Array.isArray(parsed?.steps) ? parsed.steps : [];
+    if (steps.length === 0) return null;
     return { comboType, title: parsed?.title || null, isActive: parsed?.isActive !== false, stepsJson: JSON.stringify(steps) };
   } catch { return null; }
 }
@@ -48,7 +53,10 @@ export const loader = async ({ request }) => {
   await repairMissingShopifyProducts(session.shop, admin);
   await repairMissingShopifyVariantIds(session.shop, admin);
   let boxes = await listBoxes(session.shop);
-  const boxesMissingTypedComboConfig = boxes.filter((box) => !box.config && box.comboStepsConfig);
+  const boxesMissingTypedComboConfig = boxes.filter((box) => {
+    if (box.config || !box.comboStepsConfig) return false;
+    try { const p = JSON.parse(box.comboStepsConfig); return parseInt(p?.type) >= 2; } catch { return false; }
+  });
   if (boxesMissingTypedComboConfig.length > 0) {
     await Promise.all(
       boxesMissingTypedComboConfig.map((box) =>

@@ -620,11 +620,62 @@ export default function SpecificComboBoxPage() {
         <div>
           {/* Step tabs */}
           <div style={{ display: "flex", borderBottom: "1px solid #e5e7eb", marginBottom: "16px" }}>
-            {Array.from({ length: comboConfig.type }, (_, i) => (
-              <button key={i} type="button" onClick={() => setComboActiveStep(i)} style={{ padding: "8px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none", borderRadius: "6px 6px 0 0", background: comboActiveStep === i ? "#000000" : "#f9fafb", borderBottom: comboActiveStep === i ? "2px solid #000000" : "2px solid transparent", marginBottom: "-1px", color: comboActiveStep === i ? "#ffffff" : "#6b7280", transition: "color 0.15s, border-color 0.15s, background 0.15s" }}>
-                {comboConfig.steps[i]?.label || "Untitled step"}
-              </button>
-            ))}
+            {Array.from({ length: comboConfig.type }, (_, i) => {
+              const stepTab = comboConfig.steps[i];
+              const isActive = comboActiveStep === i;
+              const scope = stepTab?.scope || "collection";
+              const collections = stepTab?.collections || [];
+              const selectedProducts = stepTab?.selectedProducts || [];
+
+              let subLabel = null;
+              if (scope === "collection") {
+                if (collections.length === 1) subLabel = collections[0].title;
+                else if (collections.length > 1) subLabel = `${collections.length} collections`;
+              } else if (scope === "product") {
+                if (selectedProducts.length === 1) subLabel = selectedProducts[0].title;
+                else if (selectedProducts.length > 1) subLabel = `${selectedProducts.length} products`;
+              }
+
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setComboActiveStep(i)}
+                  style={{
+                    padding: "8px 16px",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    border: "none",
+                    borderRadius: "6px 6px 0 0",
+                    background: isActive ? "#000000" : "#f9fafb",
+                    borderBottom: isActive ? "2px solid #000000" : "2px solid transparent",
+                    marginBottom: "-1px",
+                    color: isActive ? "#ffffff" : "#6b7280",
+                    transition: "color 0.15s, border-color 0.15s, background 0.15s",
+                    textAlign: "left",
+                    lineHeight: 1.3,
+                    minWidth: "100px",
+                  }}
+                >
+                  <div>{stepTab?.label || `Step ${i + 1}`}</div>
+                  {subLabel && (
+                    <div style={{
+                      fontSize: "10px",
+                      fontWeight: "400",
+                      marginTop: "2px",
+                      color: isActive ? "rgba(255,255,255,0.7)" : "#9ca3af",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      maxWidth: "160px",
+                    }}>
+                      {subLabel}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           {/* Step content */}

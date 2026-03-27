@@ -1,8 +1,8 @@
-import { redirect, Outlet, useLoaderData, useLocation, useRouteError } from "react-router";
+import { Outlet, useLoaderData, useLocation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
 import { authenticate } from "../shopify.server";
-import { upsertSessionFromAuth, upsertShopFromAdmin, getShopStatus } from "../models/shop.server";
+import { upsertSessionFromAuth, upsertShopFromAdmin } from "../models/shop.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 import { sendMail } from "../utils/mailer.server";
 import { installedEmailHtml } from "../emails/app-installed";
@@ -45,18 +45,6 @@ export const loader = async ({ request }) => {
 
     // Must await — Vercel kills background promises before they complete (fire-and-forget doesn't work)
     await Promise.all(mailJobs);
-  }
-
-  // ── Plan gate ────────────────────────────────────────────────────────────
-  // Allow through only if the merchant has explicitly selected Free or Pro.
-  // "installed" is the default status set on first install — redirect to pricing.
-  // Skip the gate when already on /app/pricing or /app/plan so they can choose without a loop.
-  const reqUrl = new URL(request.url);
-  if (!reqUrl.pathname.startsWith("/app/pricing") && !reqUrl.pathname.startsWith("/app/plan")) {
-    const shopStatus = await getShopStatus(session.shop);
-    if (!shopStatus || shopStatus === "installed") {
-      throw redirect("/app/pricing");
-    }
   }
 
   // eslint-disable-next-line no-undef

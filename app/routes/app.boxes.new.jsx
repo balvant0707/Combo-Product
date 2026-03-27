@@ -73,15 +73,12 @@ async function parseBannerImage(formData, errors) {
 }
 
 export const loader = async ({ request }) => {
-  const { admin, session } = await authenticate.admin(request);
-  const shop = session.shop;
+  const { admin } = await authenticate.admin(request);
   const url = new URL(request.url);
   const query = url.searchParams.get("q") || "";
   const searchQuery = query ? `${query} NOT vendor:ComboBuilder` : "NOT vendor:ComboBuilder";
 
-  const { canCreateBox, FREE_BOX_LIMIT } = await import("../models/billing.server.js");
-  const [planCheck, prodResp, collResp] = await Promise.all([
-    canCreateBox(admin, shop),
+  const [prodResp, collResp] = await Promise.all([
     admin.graphql(PRODUCTS_QUERY, { variables: { first: 50, query: searchQuery } }),
     admin.graphql(COLLECTIONS_QUERY, { variables: { first: 50 } }),
   ]);
@@ -104,7 +101,7 @@ export const loader = async ({ request }) => {
     imageUrl: node.image?.url || null,
   }));
 
-  return { products, collections, planCheck, freeLimit: FREE_BOX_LIMIT };
+  return { products, collections };
 };
 
 export const action = async ({ request }) => {
@@ -199,7 +196,7 @@ const sectionHeadingStyle = {
 };
 
 export default function CreateBoxPage() {
-  const { products, collections, planCheck, freeLimit } = useLoaderData();
+  const { products, collections } = useLoaderData();
   const actionData = useActionData();
   const location = useLocation();
   const navigation = useNavigation();
@@ -240,33 +237,6 @@ export default function CreateBoxPage() {
   const modalFooterStyle = { padding: "14px 16px", borderTop: "1px solid #f3f4f6", background: "#fafafa", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" };
   const searchInputStyle = { ...fieldStyle, borderColor: "#d1d5db", paddingLeft: "14px", fontSize: "13px" };
 
-  if (!planCheck.allowed) {
-    return (
-      <s-page heading="Create New Box" back-url={withEmbeddedAppParams("/app/boxes", location.search)}>
-        <div style={{ maxWidth: "520px", margin: "60px auto", textAlign: "center", padding: "40px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: "12px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-            <AdminIcon type="box" size="large" style={{ color: "#6b7280" }} />
-          </div>
-          <div style={{ fontSize: "18px", fontWeight: "800", color: "#111827", marginBottom: "8px" }}>Free plan limit reached</div>
-          <div style={{ fontSize: "13px", color: "#6b7280", lineHeight: 1.6, marginBottom: "24px" }}>
-            You're using {planCheck.currentCount} of {freeLimit} combo {freeLimit === 1 ? "box" : "boxes"} on the Free plan.<br />
-            Upgrade to Pro for unlimited combo boxes.
-          </div>
-          <a
-            href={withEmbeddedAppParams("/app/plan", location.search)}
-            style={{ display: "inline-block", padding: "12px 28px", background: "#000", color: "#fff", borderRadius: "8px", fontSize: "14px", fontWeight: "700", textDecoration: "none" }}
-          >
-            Upgrade to Pro →
-          </a>
-          <div style={{ marginTop: "12px" }}>
-            <a href={withEmbeddedAppParams("/app/boxes", location.search)} style={{ fontSize: "12px", color: "#9ca3af", textDecoration: "none" }}>
-              ← Back to boxes
-            </a>
-          </div>
-        </div>
-      </s-page>
-    );
-  }
 
   return (
     <s-page

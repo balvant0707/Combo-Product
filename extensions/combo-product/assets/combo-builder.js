@@ -931,12 +931,25 @@
 
     card.appendChild(banner);
 
-    // Gift badge — top-right corner of card
+    // Gift badge — top-left corner of card
     if (box.isGiftBox) {
       var giftTag = document.createElement('span');
       giftTag.className = 'cb-gift-tag';
       giftTag.textContent = 'Gift Box';
       card.appendChild(giftTag);
+    }
+
+    // Discount badge — top-right corner of card banner
+    var _discountCfg = box.comboConfig || {};
+    var _discountType = _discountCfg.discountType || 'none';
+    var _discountValue = parseFloat(_discountCfg.discountValue) || 0;
+    if (_discountType !== 'none' && _discountValue > 0) {
+      var discountBadge = document.createElement('span');
+      discountBadge.className = 'cb-discount-badge';
+      discountBadge.textContent = _discountType === 'percent'
+        ? _discountValue + '% OFF'
+        : ctx.currencySymbol + _discountValue + ' OFF';
+      card.appendChild(discountBadge);
     }
 
     // Checkmark badge (shown when selected)
@@ -966,6 +979,20 @@
     priceText.textContent = formatPrice(_initPrice, ctx.currencySymbol);
     box._priceTextEl = priceText;
     body.appendChild(priceText);
+
+    // MRP / savings row — only for manual pricing with a discount (we know original price)
+    if (!isDynamicBundlePrice(box) && _discountType !== 'none' && _discountValue > 0) {
+      var _origPrice = parseFloat(box.bundlePrice) || 0;
+      var _savings = _origPrice - _initPrice;
+      if (_savings > 0.005) {
+        var mrpRow = document.createElement('div');
+        mrpRow.className = 'cb-box-mrp-row';
+        mrpRow.innerHTML =
+          '<span class="cb-box-mrp-strike">MRP: ' + formatPrice(_origPrice, ctx.currencySymbol) + '</span>' +
+          '<span class="cb-box-save-badge">Save ' + formatPrice(_savings, ctx.currencySymbol) + '</span>';
+        body.appendChild(mrpRow);
+      }
+    }
 
     // CTA button
     var ctaBtn = document.createElement('button');

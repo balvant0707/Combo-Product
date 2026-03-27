@@ -293,6 +293,59 @@
   pointer-events: none;
 }
 
+/* Discount badge — top-right corner of box card banner */
+.cb-discount-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+  background: #e53e3e;
+  padding: 4px 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-radius: 3px;
+  box-shadow: 0 2px 6px rgba(229,62,62,0.40);
+  z-index: 2;
+  pointer-events: none;
+  line-height: 1.4;
+}
+
+/* Hide discount badge when card is active (check-mark takes top-right) */
+.cb-box-card--active .cb-discount-badge {
+  display: none;
+}
+
+/* MRP / savings row under the price on the box card */
+.cb-box-mrp-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: -2px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.cb-box-mrp-strike {
+  font-size: 12px;
+  color: var(--cb-text-muted);
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.cb-box-save-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #059669;
+  background: rgba(5,150,105,0.10);
+  border: 1px solid rgba(5,150,105,0.25);
+  padding: 1px 7px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
 /* CTA button inside each box card */
 .cb-box-cta-btn {
   display: block;

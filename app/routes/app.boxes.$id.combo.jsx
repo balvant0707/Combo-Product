@@ -560,44 +560,34 @@ export default function SpecificComboBoxPage() {
                   ))}
                 </div>
                 {comboConfig.bundlePriceType === "manual" && (
-                  <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={comboConfig.bundlePrice || ""} onChange={(e) => updateComboField("bundlePrice", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db", marginBottom: "8px" }} />
+                  <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={comboConfig.bundlePrice || ""} onChange={(e) => updateComboField("bundlePrice", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
                 )}
                 {comboConfig.bundlePriceType === "dynamic" && (
-                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", padding: "6px 10px", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "5px" }}>
-                    Estimated: ₹{comboDynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                  </div>
-                )}
-
-                {/* Discount — shown for both Manual and Dynamic modes */}
-                <div style={{ border: "1px solid #e5e7eb", borderRadius: "5px", padding: "10px", background: "#fafafa" }}>
-                  <div style={{ fontSize: "10px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Discount</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                    <div>
-                      <label style={{ ...labelStyle, fontSize: "10px" }}>Type</label>
-                      <select value={comboConfig.discountType} onChange={(e) => updateComboField("discountType", e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }}>
-                        <option value="none">No Discount</option>
-                        <option value="percent">% Off</option>
-                        <option value="fixed">₹ Fixed Off</option>
-                      </select>
+                  <div style={{ border: "1px solid #e5e7eb", borderRadius: "5px", padding: "12px", background: "#f9fafb" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: comboConfig.discountType !== "none" ? "10px" : "0" }}>
+                      <div>
+                        <label style={labelStyle}>Discount Type</label>
+                        <select value={comboConfig.discountType} onChange={(e) => updateComboField("discountType", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }}>
+                          <option value="percent">% Off Total</option>
+                          <option value="fixed">₹ Fixed Discount</option>
+                          <option value="none">No Discount</option>
+                        </select>
+                      </div>
+                      {comboConfig.discountType !== "none" && (
+                        <div>
+                          <label style={labelStyle}>{comboConfig.discountType === "percent" ? "Discount %" : "Amount (₹)"}</label>
+                          <input type="number" min="0" step={comboConfig.discountType === "percent" ? "1" : "0.01"} max={comboConfig.discountType === "percent" ? "99" : undefined} value={comboConfig.discountValue} onChange={(e) => updateComboField("discountValue", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
+                        </div>
+                      )}
                     </div>
                     {comboConfig.discountType !== "none" && (
-                      <div>
-                        <label style={{ ...labelStyle, fontSize: "10px" }}>{comboConfig.discountType === "percent" ? "Discount %" : "Amount (₹)"}</label>
-                        <input type="number" min="0" step={comboConfig.discountType === "percent" ? "1" : "0.01"} max={comboConfig.discountType === "percent" ? "99" : undefined} value={comboConfig.discountValue} onChange={(e) => updateComboField("discountValue", e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "8px", borderTop: "1px solid #e5e7eb" }}>
+                        <span style={{ fontSize: "11px", color: "#6b7280" }}>Est. bundle price after discount</span>
+                        <span style={{ fontSize: "13px", fontWeight: "700", color: "#166534" }}>₹{comboDynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
                       </div>
                     )}
                   </div>
-                  {comboConfig.discountType !== "none" && comboConfig.bundlePriceType === "manual" && (
-                    <div style={{ fontSize: "11px", color: "#166534", fontWeight: "600", marginTop: "8px" }}>
-                      After discount: ₹{comboManualDiscountedPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                    </div>
-                  )}
-                  {comboConfig.discountType !== "none" && comboConfig.bundlePriceType === "dynamic" && (
-                    <div style={{ fontSize: "11px", color: "#166534", fontWeight: "600", marginTop: "8px" }}>
-                      Est. after discount: ₹{comboDynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
             </div>
             </div>

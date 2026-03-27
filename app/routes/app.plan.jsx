@@ -11,7 +11,7 @@ export const loader = async ({ request }) => {
   const shop = session.shop;
 
   const {
-    getActiveSubscription,
+    getActiveShopifySubscription,
     getBoxCount,
     FREE_BOX_LIMIT,
     PLAN_CONFIG,
@@ -24,7 +24,7 @@ export const loader = async ({ request }) => {
 
   if (!isDevMode) {
     try {
-      subscription = await getActiveSubscription(admin);
+      subscription = await getActiveShopifySubscription(admin);
     } catch (e) {
       if (e.isBillingUnavailable) billingUnavailable = true;
     }
@@ -100,7 +100,7 @@ export const action = async ({ request }) => {
       const appUrl    = (process.env.SHOPIFY_APP_URL || "").replace(/\/$/, "");
       const returnUrl = `${appUrl}/app/plan?subscribed=1`;
 
-      const confirmationUrl = await createSubscription(admin, returnUrl);
+      const confirmationUrl = await createSubscription(admin, "PRO", returnUrl);
 
       if (!confirmationUrl) {
         return { error: "Shopify did not return a confirmation URL. Please try again." };
@@ -116,7 +116,7 @@ export const action = async ({ request }) => {
   if (intent === "cancel") {
     const subscriptionId = formData.get("subscriptionId");
     try {
-      await cancelSubscription(admin, subscriptionId);
+      await cancelSubscription(admin, shop, subscriptionId);
       await setShopPlanStatus(shop, "free").catch(() => {});
       return rrRedirect("/app/plan?cancelled=1");
     } catch (e) {

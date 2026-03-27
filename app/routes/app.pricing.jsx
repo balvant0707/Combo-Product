@@ -24,9 +24,8 @@ export const loader = async ({ request }) => {
   const { admin, session } = await authenticate.admin(request);
   const shop = session.shop;
 
-  const { syncSubscription }      = await import("../models/billing.server.js");
-  const { getBoxCount, PLANS }    = await import("../models/billing.server.js");
-  const { activatePaidPlan }      = await import("../models/subscription.server.js");
+  const { syncSubscription, getBoxCount } = await import("../models/billing.server.js");
+  const { activatePaidPlan, PLANS }       = await import("../models/subscription.server.js");
 
   // Sync Shopify subscription state with local DB
   const { subscription, billingUnavailable } = await syncSubscription(admin, shop);

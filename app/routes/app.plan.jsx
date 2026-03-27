@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { AdminIcon } from "../components/admin-icons";
+import { withEmbeddedAppParamsFromRequest } from "../utils/embedded-app";
 
 /* ─── Loader ─────────────────────────────────────────────────────── */
 
@@ -75,6 +76,7 @@ export const action = async ({ request }) => {
   const shop     = session.shop;
   const formData = await request.formData();
   const intent   = formData.get("intent");
+  const requestUrl = new URL(request.url);
 
   const { createSubscription, cancelSubscription } =
     await import("../models/billing.server.js");
@@ -83,7 +85,7 @@ export const action = async ({ request }) => {
   /* ── Select Free plan ── */
   if (intent === "free") {
     await setShopPlanStatus(shop, "free").catch(() => {});
-    return rrRedirect("/app/boxes");
+    return rrRedirect(withEmbeddedAppParamsFromRequest("/app/boxes", request));
   }
 
   /* ── Subscribe to Pro (monthly) ── */
@@ -93,12 +95,12 @@ export const action = async ({ request }) => {
     if (isSkipBilling) {
       // Dev mode: mark active and go straight to app
       await setShopPlanStatus(shop, "active").catch(() => {});
-      return rrRedirect("/app/boxes");
+      return rrRedirect(withEmbeddedAppParamsFromRequest("/app/boxes", request));
     }
 
     try {
-      const appUrl    = (process.env.SHOPIFY_APP_URL || "").replace(/\/$/, "");
-      const returnUrl = `${appUrl}/app/plan?subscribed=1`;
+      const returnPath = withEmbeddedAppParamsFromRequest("/app/plan?subscribed=1", request);
+      const returnUrl = new URL(returnPath, requestUrl.origin).toString();
 
       const confirmationUrl = await createSubscription(admin, returnUrl);
 
@@ -118,7 +120,7 @@ export const action = async ({ request }) => {
     try {
       await cancelSubscription(admin, shop, subscriptionId);
       await setShopPlanStatus(shop, "free").catch(() => {});
-      return rrRedirect("/app/plan?cancelled=1");
+      return rrRedirect(withEmbeddedAppParamsFromRequest("/app/plan?cancelled=1", request));
     } catch (e) {
       return { error: e.message };
     }

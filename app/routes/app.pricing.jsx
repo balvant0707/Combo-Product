@@ -110,44 +110,6 @@ const PRICING_UI_CSS = `
     gap: 20px;
   }
 
-  .pricing-hero {
-    background: linear-gradient(180deg, #ffffff 0%, #f6f6f7 100%);
-    border: 1px solid #e3e3e3;
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  }
-
-  .pricing-kicker {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 10px;
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: #f1f2f4;
-    color: #303030;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  .pricing-title {
-    margin: 0;
-    color: #202223;
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 1.15;
-  }
-
-  .pricing-subtitle {
-    margin: 8px 0 0;
-    color: #616161;
-    font-size: 14px;
-    line-height: 1.5;
-  }
-
   .pricing-banner {
     border: 1px solid #e3e3e3;
     border-radius: 10px;
@@ -393,8 +355,33 @@ const PRICING_UI_CSS = `
     gap: 8px;
   }
 
-  .pricing-card-action s-button {
+  .pricing-action-btn {
     width: 100%;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid #d0d0d0;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+  }
+
+  .pricing-action-btn.is-secondary {
+    background: #ffffff;
+    border-color: #d0d0d0;
+    color: #202223;
+  }
+
+  .pricing-action-btn.is-primary {
+    background: #111827;
+    border-color: #111827;
+    color: #ffffff;
+  }
+
+  .pricing-action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   .pricing-cancel-form {
@@ -447,8 +434,7 @@ const PRICING_UI_CSS = `
       grid-template-columns: 1fr;
     }
 
-    .pricing-card,
-    .pricing-hero {
+    .pricing-card {
       padding: 20px;
     }
   }
@@ -505,6 +491,10 @@ export default function PricingPage() {
   const actionData = useActionData();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
+  const submittingIntent = navigation.formData?.get("intent");
+  const isSubmittingFree = isSubmitting && submittingIntent === "free";
+  const isSubmittingSubscribe = isSubmitting && submittingIntent === "subscribe";
+  const isSubmittingCancel = isSubmitting && submittingIntent === "cancel";
 
   const isPro = hasPaidAccess(subscription);
   const isFree = subscription?.plan === "FREE" && subscription?.status === "ACTIVE";
@@ -536,14 +526,6 @@ export default function PricingPage() {
       <style>{PRICING_UI_CSS}</style>
 
       <div className="pricing-shell">
-        <div className="pricing-hero">
-          <div className="pricing-kicker">MixBox billing</div>
-          <h1 className="pricing-title">Choose a plan that fits your store</h1>
-          <p className="pricing-subtitle">
-            Start free for setup and testing. Upgrade to Pro when you need unlimited combo boxes and premium features.
-          </p>
-        </div>
-
         {isDevMode && (
           <StatusBanner tone="info" title="Billing bypass active">
             <code>SKIP_BILLING=true</code> is enabled, so Pro activates instantly without opening Shopify billing.
@@ -618,9 +600,9 @@ export default function PricingPage() {
                   ) : (
                     <form method="post">
                       <input type="hidden" name="intent" value="free" />
-                      <s-button type="submit" disabled={isSubmitting || undefined}>
-                        {isSubmitting ? "Starting..." : "Continue with Free"}
-                      </s-button>
+                      <button type="submit" className="pricing-action-btn is-secondary" disabled={isSubmittingFree}>
+                        {isSubmittingFree ? "Starting..." : "Continue with Free"}
+                      </button>
                     </form>
                   )}
                 </div>
@@ -659,8 +641,8 @@ export default function PricingPage() {
                       <form method="post" className="pricing-cancel-form">
                         <input type="hidden" name="intent" value="cancel" />
                         <input type="hidden" name="subscriptionId" value={subscription?.subscriptionId || ""} />
-                        <button type="submit" className="pricing-danger-btn" disabled={isSubmitting}>
-                          {isSubmitting ? "Cancelling..." : "Cancel Pro plan"}
+                        <button type="submit" className="pricing-danger-btn" disabled={isSubmittingCancel}>
+                          {isSubmittingCancel ? "Cancelling..." : "Cancel Pro plan"}
                         </button>
                         <div className="pricing-inline-note">
                           Access continues until the end of the current billing period.
@@ -674,9 +656,9 @@ export default function PricingPage() {
                   ) : (
                     <form method="post">
                       <input type="hidden" name="intent" value="subscribe" />
-                      <s-button type="submit" disabled={isSubmitting || undefined}>
-                        {isSubmitting ? "Preparing billing..." : `Start ${proPlan?.trialDays}-day free trial`}
-                      </s-button>
+                      <button type="submit" className="pricing-action-btn is-primary" disabled={isSubmittingSubscribe}>
+                        {isSubmittingSubscribe ? "Preparing billing..." : `Start ${proPlan?.trialDays}-day free trial`}
+                      </button>
                     </form>
                   )}
                 </div>

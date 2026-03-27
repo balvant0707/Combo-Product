@@ -5,14 +5,44 @@ import db from "../db.server";
 export const PRO_PLAN_NAME = "Combo Builder Pro";
 
 export const PLAN_CONFIG = {
-  price:       9.99,
+  price:        9.99,
   currencyCode: "USD",
-  interval:    "EVERY_30_DAYS",
-  trialDays:   7,
+  interval:     "EVERY_30_DAYS",
+  trialDays:    7,
 };
 
 /** Max active boxes allowed on the free tier */
 export const FREE_BOX_LIMIT = 1;
+
+/* ─── Dev / skip-billing mode ─────────────────────────────────────── */
+//
+// Set SKIP_BILLING=true in .env to bypass Shopify's Billing API entirely.
+// Required when the app does not yet have Public Distribution approved.
+// All shops are granted the plan named in DEV_PLAN (default: "PRO").
+//
+const SKIP_BILLING = process.env.SKIP_BILLING === "true";
+
+/** Mock subscription returned when SKIP_BILLING=true */
+function mockSubscription() {
+  return {
+    id:               "gid://shopify/AppSubscription/dev",
+    name:             PRO_PLAN_NAME,
+    status:           "ACTIVE",
+    currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt:        new Date().toISOString(),
+    lineItems: [
+      {
+        plan: {
+          pricingDetails: {
+            price:    { amount: String(PLAN_CONFIG.price), currencyCode: PLAN_CONFIG.currencyCode },
+            interval: PLAN_CONFIG.interval,
+          },
+        },
+      },
+    ],
+    _isMock: true,
+  };
+}
 
 /* ─── GraphQL ─────────────────────────────────────────────────────── */
 
@@ -81,13 +111,16 @@ function isDistributionError(message) {
      message.toLowerCase().includes("billing api"));
 }
 
+/* ─── Core API ────────────────────────────────────────────────────── */
+
 /** Returns the first active subscription from Shopify, or null.
- *  Returns null (= free plan) if the Billing API is unavailable (dev / custom app). */
+ *  When SKIP_BILLING=true, returns a mock subscription without hitting Shopify. */
 export async function getActiveSubscription(admin) {
+  if (SKIP_BILLING) return mockSubscription();
+
   try {
     const resp = await admin.graphql(ACTIVE_SUBSCRIPTIONS_QUERY);
     const json = await resp.json();
-    // Surface billing-unavailable errors so callers can detect them
     const errors = json?.errors || [];
     if (errors.length) {
       const msg = errors[0]?.message || "";
@@ -106,25 +139,31 @@ export async function getActiveSubscription(admin) {
   }
 }
 
-/** Returns true when the shop has an ACTIVE Pro subscription.
- *  Returns false (= free plan assumed) if Billing API is unavailable. */
+/** Returns true when the shop has an ACTIVE Pro subscription. */
 export async function isProPlan(admin) {
   try {
     const sub = await getActiveSubscription(admin);
     return !!sub && sub.status === "ACTIVE";
-  } catch (e) {
-    if (e.isBillingUnavailable) return false;
+  } catch {
     return false;
   }
 }
 
 /**
  * Creates a recurring Pro subscription.
- * Returns the Shopify confirmation URL the merchant must visit to approve.
- * Throws with { isBillingUnavailable: true } when app lacks public distribution.
+ * When SKIP_BILLING=true, redirects directly to returnUrl (no Shopify billing page).
+ * Returns the confirmation URL the merchant must visit to approve.
  */
 export async function createSubscription(admin, returnUrl) {
-  const isTest = process.env.NODE_ENV !== "production";
+  if (SKIP_BILLING) {
+    // In dev/skip-billing mode, skip the Shopify approval step entirely
+    return returnUrl;
+  }
+
+  // Always use test:true when the app is not yet in production distribution.
+  // Switch to test:false only after Public Distribution is approved.
+  const isTest = process.env.BILLING_LIVE !== "true";
+
   const resp = await admin.graphql(CREATE_SUBSCRIPTION_MUTATION, {
     variables: {
       name: PRO_PLAN_NAME,
@@ -132,7 +171,7 @@ export async function createSubscription(admin, returnUrl) {
         {
           plan: {
             appRecurringPricingDetails: {
-              price: { amount: PLAN_CONFIG.price, currencyCode: PLAN_CONFIG.currencyCode },
+              price:    { amount: PLAN_CONFIG.price, currencyCode: PLAN_CONFIG.currencyCode },
               interval: PLAN_CONFIG.interval,
             },
           },
@@ -145,7 +184,6 @@ export async function createSubscription(admin, returnUrl) {
   });
   const json = await resp.json();
 
-  // Check top-level GraphQL errors first (distribution error surfaces here)
   const gqlErrors = json?.errors || [];
   if (gqlErrors.length) {
     const msg = gqlErrors[0]?.message || "Billing API error";
@@ -164,8 +202,11 @@ export async function createSubscription(admin, returnUrl) {
   return result?.confirmationUrl;
 }
 
-/** Cancels an active subscription by GID */
+/** Cancels an active subscription by GID.
+ *  No-op when SKIP_BILLING=true (nothing real to cancel). */
 export async function cancelSubscription(admin, subscriptionId) {
+  if (SKIP_BILLING || subscriptionId === "gid://shopify/AppSubscription/dev") return null;
+
   const resp = await admin.graphql(CANCEL_SUBSCRIPTION_MUTATION, {
     variables: { id: subscriptionId },
   });

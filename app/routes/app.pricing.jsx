@@ -18,7 +18,7 @@ export const loader = async ({ request }) => {
     await import("../models/billing-plans.server.js");
 
   const [currentPlanInfo, boxCount] = await Promise.all([
-    getCurrentPlan(admin),
+    getCurrentPlan(admin),       // handles SKIP_BILLING internally
     getBoxCount(session.shop).catch(() => 0),
   ]);
 
@@ -414,6 +414,7 @@ export default function PricingPage() {
     planKey,
     subscription,
     isBillingUnavailable,
+    isDevMode,
     boxCount,
     plans,
     planHierarchy,
@@ -424,7 +425,8 @@ export default function PricingPage() {
   const navigation   = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
-  const billingDown = isBillingUnavailable || actionData?.isBillingUnavailable;
+  // When SKIP_BILLING=true, isDevMode is true — suppress the error banner entirely
+  const billingDown = !isDevMode && (isBillingUnavailable || actionData?.isBillingUnavailable);
 
   return (
     <div style={{ maxWidth: "900px", margin: "0 auto", padding: "32px 20px", fontFamily: "inherit" }}>
@@ -443,6 +445,18 @@ export default function PricingPage() {
           Start free. Upgrade as your store grows. Cancel anytime.
         </div>
       </div>
+
+      {/* ── Dev mode notice ── */}
+      {isDevMode && (
+        <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "10px", padding: "12px 16px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ fontSize: "16px", flexShrink: 0 }}>🛠️</span>
+          <div style={{ fontSize: "12px", color: "#1e40af", lineHeight: 1.6 }}>
+            <strong>Billing bypass active</strong> — <code style={{ background: "#dbeafe", borderRadius: "3px", padding: "1px 5px", fontSize: "11px" }}>SKIP_BILLING=true</code> is set.
+            All shops are granted the <strong>{plans.find(p => p.key === planKey)?.name || planKey} plan</strong> without charge.
+            Remove it once your app has <strong>Public Distribution</strong> approved in the Partner Dashboard.
+          </div>
+        </div>
+      )}
 
       {/* ── Billing unavailable banner ── */}
       {billingDown && (

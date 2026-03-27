@@ -6,6 +6,14 @@
 
 import db from "../db.server";
 
+/* ─── Dev / skip-billing mode ─────────────────────────────────────── */
+//
+// Set SKIP_BILLING=true in .env to bypass Shopify Billing API entirely.
+// DEV_PLAN sets which plan all shops receive while skipping (default: "PRO").
+//
+const SKIP_BILLING = process.env.SKIP_BILLING === "true";
+const DEV_PLAN_KEY = (process.env.DEV_PLAN || "PRO").toUpperCase();
+
 /* ─── Plan Definitions ─────────────────────────────────────────────── */
 
 export const PLANS = {
@@ -175,6 +183,34 @@ const CANCEL_SUBSCRIPTION_MUTATION = `#graphql
   }
 `;
 
+/* ─── Mock subscription (SKIP_BILLING mode) ───────────────────────── */
+
+function mockSubscription(planKey) {
+  const key  = SKIP_BILLING ? DEV_PLAN_KEY : (planKey || DEV_PLAN_KEY);
+  const plan = PLANS[key] || PLANS.PRO;
+  return {
+    id:               `gid://shopify/AppSubscription/dev-${key.toLowerCase()}`,
+    name:             plan.name,
+    status:           "ACTIVE",
+    currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt:        new Date().toISOString(),
+    trialDays:        0,
+    test:             true,
+    lineItems: [
+      {
+        id: "gid://shopify/AppSubscriptionLineItem/dev",
+        plan: {
+          pricingDetails: {
+            price:    { amount: String(plan.price), currencyCode: plan.currencyCode },
+            interval: plan.interval,
+          },
+        },
+      },
+    ],
+    _isMock: true,
+  };
+}
+
 /* ─── Error helpers ────────────────────────────────────────────────── */
 
 function isDistributionError(message) {
@@ -197,9 +233,12 @@ function tagError(message) {
 
 /**
  * Returns the first active Shopify subscription or null.
+ * When SKIP_BILLING=true, returns a mock subscription without hitting Shopify.
  * Throws with err.isBillingUnavailable = true when billing is unavailable.
  */
 export async function getActiveSubscription(admin) {
+  if (SKIP_BILLING) return mockSubscription();
+
   try {
     const resp = await admin.graphql(ACTIVE_SUBSCRIPTIONS_QUERY);
     const json = await resp.json();
@@ -221,9 +260,34 @@ export async function getActiveSubscription(admin) {
 
 /**
  * Returns a normalised plan info object:
- * { planKey, plan, subscription, isFree, isBillingUnavailable }
+ * { planKey, plan, subscription, isFree, isBillingUnavailable, isDevMode }
  */
 export async function getCurrentPlan(admin) {
+  // Dev bypass — return mock plan without touching Shopify
+  if (SKIP_BILLING) {
+    const planKey = DEV_PLAN_KEY in PLANS ? DEV_PLAN_KEY : "PRO";
+    const plan    = PLANS[planKey];
+    const sub     = mockSubscription(planKey);
+    return {
+      planKey,
+      plan,
+      subscription: {
+        id:               sub.id,
+        name:             sub.name,
+        status:           sub.status,
+        currentPeriodEnd: sub.currentPeriodEnd,
+        createdAt:        sub.createdAt,
+        trialDays:        sub.trialDays,
+        test:             sub.test,
+        price:            String(plan.price),
+        currencyCode:     plan.currencyCode,
+      },
+      isFree:              planKey === "FREE",
+      isBillingUnavailable: false,
+      isDevMode:           true,
+    };
+  }
+
   let subscription = null;
   let isBillingUnavailable = false;
 
@@ -252,8 +316,9 @@ export async function getCurrentPlan(admin) {
           currencyCode:     subscription.lineItems?.[0]?.plan?.pricingDetails?.price?.currencyCode,
         }
       : null,
-    isFree: planKey === "FREE",
+    isFree:              planKey === "FREE",
     isBillingUnavailable,
+    isDevMode:           false,
   };
 }
 
@@ -264,11 +329,15 @@ export async function getCurrentPlan(admin) {
  * Returns the Shopify confirmation URL.
  */
 export async function createSubscription(admin, planKey, returnUrl, currentPlanKey = "FREE") {
-  const plan   = PLANS[planKey];
+  const plan = PLANS[planKey];
   if (!plan) throw new Error(`Unknown plan key: ${planKey}`);
   if (plan.price === 0) throw new Error("Cannot create a Shopify subscription for the free plan");
 
-  const isTest = process.env.NODE_ENV !== "production";
+  // In skip-billing mode, redirect directly to returnUrl — no Shopify billing page
+  if (SKIP_BILLING) return returnUrl;
+
+  // Use test:true until BILLING_LIVE=true is explicitly set (independent of NODE_ENV)
+  const isTest    = process.env.BILLING_LIVE !== "true";
   const upgrading = isUpgrade(currentPlanKey, planKey);
 
   const resp = await admin.graphql(CREATE_SUBSCRIPTION_MUTATION, {
@@ -308,9 +377,12 @@ export async function createSubscription(admin, planKey, returnUrl, currentPlanK
 
 /**
  * Cancels an active subscription by GID.
+ * No-op when SKIP_BILLING=true.
  * Returns the cancelled subscription object.
  */
 export async function cancelSubscription(admin, subscriptionId) {
+  if (SKIP_BILLING || subscriptionId?.includes("/dev")) return null;
+
   const resp = await admin.graphql(CANCEL_SUBSCRIPTION_MUTATION, {
     variables: { id: subscriptionId },
   });

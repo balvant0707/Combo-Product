@@ -18,11 +18,23 @@ export const loader = async ({ request }) => {
 
   let subscription = null;
   let billingUnavailable = false;
+  const isDevMode = process.env.SKIP_BILLING === "true";
 
-  try {
-    subscription = await getActiveSubscription(admin);
-  } catch (e) {
-    if (e.isBillingUnavailable) billingUnavailable = true;
+  if (!isDevMode) {
+    try {
+      subscription = await getActiveSubscription(admin);
+    } catch (e) {
+      if (e.isBillingUnavailable) billingUnavailable = true;
+    }
+  } else {
+    // Dev bypass — treat shop as Pro without calling Shopify
+    subscription = {
+      id:               "gid://shopify/AppSubscription/dev",
+      status:           "ACTIVE",
+      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      createdAt:        new Date().toISOString(),
+      lineItems:        [{ plan: { pricingDetails: { price: { amount: String(PLAN_CONFIG.price), currencyCode: PLAN_CONFIG.currencyCode } } } }],
+    };
   }
 
   const boxCount = await getBoxCount(shop);
@@ -30,6 +42,7 @@ export const loader = async ({ request }) => {
 
   return {
     isPro,
+    isDevMode,
     billingUnavailable,
     subscription: subscription
       ? {
@@ -127,12 +140,12 @@ function CrossRow({ children }) {
 /* ─── Component ──────────────────────────────────────────────────── */
 
 export default function PlanPage() {
-  const { isPro, billingUnavailable, subscription, boxCount, freeLimit, planConfig } = useLoaderData();
+  const { isPro, isDevMode, billingUnavailable, subscription, boxCount, freeLimit, planConfig } = useLoaderData();
   const actionData = useActionData();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
-  const isBillingUnavailable = billingUnavailable || actionData?.billingUnavailable;
+  const isBillingUnavailable = !isDevMode && (billingUnavailable || actionData?.billingUnavailable);
   const url = new URL(typeof window !== "undefined" ? window.location.href : "http://localhost");
   const justSubscribed = url.searchParams.get("subscribed") === "1";
 
@@ -149,7 +162,19 @@ export default function PlanPage() {
         </div>
       </div>
 
-      {/* ── Billing unavailable banner (dev / custom app) ── */}
+      {/* ── Dev mode notice (SKIP_BILLING=true) ── */}
+      {isDevMode && (
+        <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "8px", padding: "12px 16px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ fontSize: "16px", flexShrink: 0 }}>🛠️</span>
+          <div style={{ fontSize: "12px", color: "#1e40af", lineHeight: 1.6 }}>
+            <strong>Billing bypass active</strong> — <code style={{ background: "#dbeafe", borderRadius: "3px", padding: "1px 5px", fontSize: "11px" }}>SKIP_BILLING=true</code> is set in <code style={{ background: "#dbeafe", borderRadius: "3px", padding: "1px 5px", fontSize: "11px" }}>.env</code>.
+            All shops are granted the <strong>{planConfig ? "Pro" : "configured"} plan</strong> without charge.
+            Remove <code style={{ background: "#dbeafe", borderRadius: "3px", padding: "1px 5px", fontSize: "11px" }}>SKIP_BILLING</code> once your app has Public Distribution approved.
+          </div>
+        </div>
+      )}
+
+      {/* ── Billing unavailable banner (public distribution not yet approved) ── */}
       {isBillingUnavailable && (
         <div style={{ background: "#fffbeb", border: "1px solid #fcd34d", borderRadius: "8px", padding: "16px 18px", marginBottom: "20px" }}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
@@ -169,7 +194,7 @@ export default function PlanPage() {
                 <li>Save and redeploy the app</li>
               </ol>
               <div style={{ marginTop: "10px", fontSize: "11px", color: "#92400e", background: "#fef3c7", borderRadius: "5px", padding: "6px 10px", display: "inline-block" }}>
-                In the meantime, all shops are treated as <strong>Free plan</strong>.
+                Quick fix: add <code style={{ background: "#fef3c7" }}>SKIP_BILLING=true</code> to your <code style={{ background: "#fef3c7" }}>.env</code> to bypass billing during development.
               </div>
             </div>
           </div>

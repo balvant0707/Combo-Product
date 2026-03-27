@@ -1,11 +1,11 @@
 import db, { ensureAppTables } from "../db.server";
 import { Buffer } from "node:buffer";
 
-// Generate a 5-character unique box code (uppercase alphanumeric, no I/O/1/0 ambiguity)
-const BOX_CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+// Generate a 5-digit unique box code
+const BOX_CODE_CHARS = "0123456789";
 const BOX_CODE_MIN_LENGTH = 3;
 const BOX_CODE_MAX_LENGTH = 10;
-const BOX_CODE_PATTERN = /^[A-Z0-9-]+$/;
+const BOX_CODE_PATTERN = /^\d+$/;
 
 export class BoxCodeValidationError extends Error {
   constructor(message) {
@@ -38,11 +38,20 @@ async function getUniqueBoxCode() {
 async function getRequestedBoxCode(rawValue, excludeId = null) {
   const normalized = rawValue == null ? "" : String(rawValue).trim().toUpperCase();
   if (!normalized) return null;
+  if (excludeId) {
+    const existingRecord = await db.comboBox.findUnique({
+      where: { id: parseInt(excludeId) },
+      select: { boxCode: true },
+    });
+    if (existingRecord?.boxCode === normalized) {
+      return normalized;
+    }
+  }
   if (normalized.length < BOX_CODE_MIN_LENGTH || normalized.length > BOX_CODE_MAX_LENGTH) {
     throw new BoxCodeValidationError(`Box code must be ${BOX_CODE_MIN_LENGTH}-${BOX_CODE_MAX_LENGTH} characters long`);
   }
   if (!BOX_CODE_PATTERN.test(normalized)) {
-    throw new BoxCodeValidationError("Box code can only contain letters, numbers, and hyphens");
+    throw new BoxCodeValidationError("Box code can only contain numbers");
   }
 
   const where = excludeId

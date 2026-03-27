@@ -324,7 +324,7 @@ export default function CreateBoxPage() {
               <div>
                 <label style={labelStyle}>Box Code</label>
                 <input type="text" name="boxCode" placeholder="Leave blank to auto-generate" maxLength="10" style={{ ...fieldStyle, borderColor: errors.boxCode ? "#e11d48" : "#d1d5db", textTransform: "uppercase" }} />
-                <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>Shown in the code column. Use 3-10 letters, numbers, or hyphens.</div>
+                <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>Shown in the code column. Leave blank to auto-generate a numeric code, or enter 3-10 digits.</div>
                 {errors.boxCode && <div style={errorStyle}>{errors.boxCode}</div>}
               </div>
               <div>

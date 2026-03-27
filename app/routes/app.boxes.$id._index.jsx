@@ -388,7 +388,7 @@ export default function BoxSettingsPage() {
             <div>
               <label style={labelStyle}>Box Code</label>
               <input type="text" name="boxCode" defaultValue={box.boxCode || ""} maxLength="10" style={{ ...fieldStyle, borderColor: errors.boxCode ? "#e11d48" : "#d1d5db", textTransform: "uppercase" }} />
-              <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>Shown in the code column. Use 3-10 letters, numbers, or hyphens.</div>
+              <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>Shown in the code column. Use 3-10 digits. Legacy codes stay valid until changed.</div>
               {errors.boxCode && <div style={errorStyle}>{errors.boxCode}</div>}
             </div>
             <div>

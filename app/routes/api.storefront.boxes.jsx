@@ -102,12 +102,11 @@ export const loader = async ({ request }) => {
           try {
             const parsed = JSON.parse(box.comboStepsConfig);
             const steps = attachStepImages(Array.isArray(parsed.steps) ? parsed.steps : []);
-            if (steps.length === 0) return null;
             return {
-              comboType: parseInt(parsed.type) || steps.length,
+              comboType: parseInt(parsed.type) || 0,
               title: parsed.title || null,
               subtitle: parsed.subtitle || null,
-              bundlePriceType: parsed.bundlePriceType || 'manual',
+              bundlePriceType: parsed.bundlePriceType || box.bundlePriceType || 'manual',
               bundlePrice: parsed.bundlePrice != null ? parseFloat(parsed.bundlePrice) : 0,
               discountType: parsed.discountType || 'none',
               discountValue: String(parsed.discountValue || '0'),

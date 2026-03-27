@@ -305,11 +305,6 @@ export default function SpecificComboBoxPage() {
     }
   }, [comboFetcher.data]);
 
-  // Sync removed image back into preview state
-  const removedStepIndex = removeImageFetcher.data?.stepImageRemoved;
-  if (removedStepIndex !== undefined && stepImagePreviews[removedStepIndex] !== null) {
-    setStepImagePreviews((p) => { const n = [...p]; n[removedStepIndex] = null; return n; });
-  }
 
   /* ── Combo Config state ── */
   const [comboConfig, setComboConfig] = useState(() => {
@@ -359,6 +354,14 @@ export default function SpecificComboBoxPage() {
     }
     return arr;
   });
+
+  // Sync removed image back into preview state — must be in useEffect, NOT during render
+  useEffect(() => {
+    const removedStepIndex = removeImageFetcher.data?.stepImageRemoved;
+    if (removedStepIndex !== undefined) {
+      setStepImagePreviews((p) => { const n = [...p]; n[removedStepIndex] = null; return n; });
+    }
+  }, [removeImageFetcher.data]);
 
   /* Per-step scoped product lists: null = use all products (no collection selected) */
   const [stepProducts, setStepProducts] = useState([null, null, null]);
@@ -426,10 +429,28 @@ export default function SpecificComboBoxPage() {
     });
   }
 
+  /* ── Pending collection load — deferred so it runs after React finishes
+        batching the state updates in confirmColl(), avoiding the
+        "Transition was aborted because of invalid state" error.        ── */
+  const [pendingCollLoad, setPendingCollLoad] = useState(null); // { stepIdx, collId }
+
+  useEffect(() => {
+    if (!pendingCollLoad) return;
+    const { stepIdx, collId } = pendingCollLoad;
+    setPendingCollLoad(null);
+    // Plain path — fetcher.load() is not a page navigation so embedded
+    // app params are not needed and can confuse Shopify App Bridge.
+    collProdsFetchers[stepIdx].load(
+      `/app/boxes/${box.id}/combo?collectionId=${encodeURIComponent(collId)}`
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingCollLoad]);
+
   /* collection modal helpers */
   function confirmColl() {
     if (tempColls.length === 0) return;
     const stepIdx = collModalStepIdx;
+    const firstCollId = tempColls[0].id;
     setComboConfig((prev) => {
       const steps = prev.steps.map((s, i) => {
         if (i !== stepIdx) return s;
@@ -438,10 +459,9 @@ export default function SpecificComboBoxPage() {
       return { ...prev, steps };
     });
     setStepProducts((p) => { const n = [...p]; n[stepIdx] = null; return n; });
-    collProdsFetchers[stepIdx].load(
-      withEmbeddedAppParams(`/app/boxes/${box.id}/combo?collectionId=${encodeURIComponent(tempColls[0].id)}`, location.search)
-    );
     setShowCollModal(false);
+    // Trigger the fetcher load AFTER state updates settle (via useEffect above)
+    setPendingCollLoad({ stepIdx, collId: firstCollId });
   }
   function confirmStepProd() {
     updateComboStep(stepProdModalIdx, "selectedProducts", tempStepProds);

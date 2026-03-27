@@ -445,7 +445,7 @@ export default function CreateSpecificComboBoxPage() {
                     )}
                     {comboConfig.bundlePriceType === "dynamic" && (
                       <div style={{ border: "1px solid #e5e7eb", borderRadius: "5px", padding: "12px", background: "#f9fafb" }}>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: comboConfig.discountType !== "none" ? "10px" : "0" }}>
+                        <div style={{ display: "block", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: comboConfig.discountType !== "none" ? "10px" : "0" }}>
                           <div>
                             <label style={labelStyle}>Discount Type</label>
                             <select value={comboConfig.discountType} onChange={(e) => updateComboField("discountType", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }}>

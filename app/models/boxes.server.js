@@ -117,6 +117,22 @@ const DELETE_BUNDLE_PRODUCT_MUTATION = `#graphql
   }
 `;
 
+const COMBO_COLLECTION_PRODUCTS_QUERY = `#graphql
+  query GetComboCollectionProducts($id: ID!, $first: Int!) {
+    collection(id: $id) {
+      products(first: $first) {
+        edges {
+          node {
+            id title handle
+            featuredImage { url }
+            variants(first: 1) { edges { node { id price } } }
+          }
+        }
+      }
+    }
+  }
+`;
+
 const DISCOUNT_AUTOMATIC_BASIC_CREATE_MUTATION = `#graphql
   mutation discountAutomaticBasicCreate($automaticBasicDiscount: DiscountAutomaticBasicInput!) {
     discountAutomaticBasicCreate(automaticBasicDiscount: $automaticBasicDiscount) {
@@ -815,10 +831,44 @@ export async function updateComboStepsConfig(id, shop, comboStepsConfig) {
  */
 export async function upsertComboConfig(boxId, config, admin = null) {
   const parsed = typeof config === "string" ? JSON.parse(config) : config;
-  const rawJson = typeof config === "string" ? config : JSON.stringify(config);
   const comboType = parseInt(parsed.type) || 2;
   const allSteps = Array.isArray(parsed.steps) ? parsed.steps : [];
+
+  // Pre-expand collection-scoped steps via Admin API so the storefront widget
+  // can read products directly without relying on /collections/{handle}/products.json
+  if (admin) {
+    for (let i = 0; i < Math.min(allSteps.length, comboType); i++) {
+      const step = allSteps[i];
+      if (step.scope === "collection" && Array.isArray(step.collections) && step.collections.length > 0) {
+        const resolvedProducts = [];
+        for (const coll of step.collections) {
+          if (!coll.id) continue;
+          try {
+            const resp = await admin.graphql(COMBO_COLLECTION_PRODUCTS_QUERY, {
+              variables: { id: coll.id, first: 100 },
+            });
+            const json = await resp.json();
+            for (const { node } of json?.data?.collection?.products?.edges || []) {
+              resolvedProducts.push({
+                id: node.id,
+                title: node.title,
+                handle: node.handle,
+                imageUrl: node.featuredImage?.url || null,
+                variantId: node.variants?.edges?.[0]?.node?.id || null,
+                price: node.variants?.edges?.[0]?.node?.price || "0",
+              });
+            }
+          } catch (e) {
+            console.warn(`[upsertComboConfig] Failed to expand collection ${coll.id}:`, e.message);
+          }
+        }
+        allSteps[i] = { ...step, resolvedProducts };
+      }
+    }
+  }
+
   const stepsJson = JSON.stringify(allSteps.slice(0, comboType));
+  const rawJson = JSON.stringify({ ...parsed, steps: allSteps });
 
   const payload = {
     comboType,

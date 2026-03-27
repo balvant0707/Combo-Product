@@ -191,7 +191,7 @@ export const action = async ({ request }) => {
   try {
     const box = await createBox(session.shop, data, admin);
     if (comboStepsConfig) {
-      try { await upsertComboConfig(box.id, comboStepsConfig); } catch (e) {
+      try { await upsertComboConfig(box.id, comboStepsConfig, admin); } catch (e) {
         console.error("[app.boxes.specific-combo] upsertComboConfig error:", e);
       }
       // Add step product/collection images to the Shopify bundle product

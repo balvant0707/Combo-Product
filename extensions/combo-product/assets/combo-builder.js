@@ -2283,28 +2283,39 @@
     }
 
     // ── Resolve products for a step ──
+    function normalizeProduct(p) {
+      var rawVarId = p.variantId || null;
+      var numericVarId = rawVarId && String(rawVarId).indexOf('/') !== -1
+        ? String(rawVarId).split('/').pop()
+        : (rawVarId ? String(rawVarId) : null);
+      return {
+        productId: p.id || p.productId,
+        productTitle: p.title || p.productTitle || '',
+        productHandle: p.handle || p.productHandle || '',
+        productImageUrl: p.imageUrl || p.productImageUrl || null,
+        productPrice: parseFloat(p.price || p.productPrice) || 0,
+        variantIds: numericVarId ? [numericVarId] : (Array.isArray(p.variantIds) ? p.variantIds : []),
+        isCollection: false,
+      };
+    }
+
     function getStepProducts(stepIdx, cb) {
       if (stepProductsCache[stepIdx]) { cb(null, stepProductsCache[stepIdx]); return; }
       var stepCfg = steps[stepIdx];
       if (!stepCfg) { cb(null, []); return; }
+
+      // Primary source: admin-expanded resolvedProducts (Admin API → no storefront dependency)
+      if (Array.isArray(stepCfg.resolvedProducts) && stepCfg.resolvedProducts.length > 0) {
+        var resolved = stepCfg.resolvedProducts.map(normalizeProduct);
+        stepProductsCache[stepIdx] = resolved;
+        cb(null, resolved);
+        return;
+      }
+
       var scope = stepCfg.scope || 'collection';
 
       if (scope === 'product') {
-        var prods = (stepCfg.selectedProducts || []).map(function (p) {
-          var rawVarId = p.variantId || null;
-          var numericVarId = rawVarId && String(rawVarId).indexOf('/') !== -1
-            ? String(rawVarId).split('/').pop()
-            : (rawVarId ? String(rawVarId) : null);
-          return {
-            productId: p.id || p.productId,
-            productTitle: p.title || p.productTitle || '',
-            productHandle: p.handle || p.productHandle || '',
-            productImageUrl: p.imageUrl || p.productImageUrl || null,
-            productPrice: parseFloat(p.price || p.productPrice) || 0,
-            variantIds: numericVarId ? [numericVarId] : [],
-            isCollection: false,
-          };
-        });
+        var prods = (stepCfg.selectedProducts || []).map(normalizeProduct);
         stepProductsCache[stepIdx] = prods;
         cb(null, prods);
       } else {

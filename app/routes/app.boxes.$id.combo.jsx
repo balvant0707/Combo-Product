@@ -6,7 +6,7 @@ import { Buffer } from "node:buffer";
 import { AdminIcon } from "../components/admin-icons";
 import { getBox, upsertComboConfig, addComboStepImagesToProduct, saveComboStepImages, getComboStepImages, deleteComboStepImage, syncShopifyBundleProduct } from "../models/boxes.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
-import { validateComboConfig } from "../utils/combo-config";
+
 
 /* ─────────────────────────── GraphQL ─────────────────────────── */
 const PRODUCTS_QUERY = `#graphql
@@ -203,25 +203,24 @@ export const action = async ({ request, params }) => {
 
   if (intent === "save_combo") {
     const comboStepsConfig = formData.get("comboStepsConfig");
-    const comboValidation = validateComboConfig(comboStepsConfig);
 
-    // Parse step images
+    // Parse step images (only validate image files, not step selections)
     const stepImages = await parseStepImages(formData);
     const stepImgErrors = {};
     for (const img of stepImages) {
       if (img?.error) stepImgErrors[`stepImage_${img.stepIndex}`] = img.error;
     }
 
-    if (comboValidation || Object.keys(stepImgErrors).length > 0) {
-      return {
-        ok: false,
-        errors: {
-          ...(comboValidation ? { comboConfig: comboValidation.form, comboStepSelections: comboValidation.stepSelections } : {}),
-          ...stepImgErrors,
-        },
-      };
+    if (Object.keys(stepImgErrors).length > 0) {
+      return { ok: false, errors: { ...stepImgErrors } };
     }
-    await upsertComboConfig(params.id, comboStepsConfig);
+
+    try {
+      await upsertComboConfig(params.id, comboStepsConfig);
+    } catch (e) {
+      console.error("[app.boxes.$id.combo] upsertComboConfig error:", e);
+      return { ok: false, errors: { _global: "Failed to save combo configuration. Please try again." } };
+    }
 
     // Save uploaded step images
     const validStepImages = stepImages.filter((img) => img && !img.error);
@@ -289,8 +288,6 @@ export default function SpecificComboBoxPage() {
   const location = useLocation();
 
   const comboErrors = comboFetcher.data?.errors || {};
-  const comboFormError = comboErrors.comboConfig;
-  const comboStepErrors = comboErrors.comboStepSelections || {};
   const comboStepImgErrors = Object.fromEntries(Object.entries(comboErrors).filter(([k]) => k.startsWith("stepImage_")));
 
   // Toast state
@@ -301,8 +298,8 @@ export default function SpecificComboBoxPage() {
       const t = setTimeout(() => setToast(null), 3500);
       return () => clearTimeout(t);
     }
-    if (comboFetcher.data?.errors?.comboConfig) {
-      setToast({ type: "error", message: comboFetcher.data.errors.comboConfig });
+    if (comboFetcher.data?.errors?._global) {
+      setToast({ type: "error", message: comboFetcher.data.errors._global });
       const t = setTimeout(() => setToast(null), 4500);
       return () => clearTimeout(t);
     }
@@ -472,12 +469,6 @@ export default function SpecificComboBoxPage() {
       )}
       <style>{`@keyframes cb-toast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
 
-      {comboFormError && (
-        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "5px", padding: "10px 16px", marginBottom: "16px", color: "#991b1b", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
-          <span style={{ fontSize: "15px" }}>!</span> {comboFormError}
-        </div>
-      )}
-
       {/* Hidden form for saving (encType for file uploads) */}
       <comboFetcher.Form id="combo-config-form" method="POST" encType="multipart/form-data" action={`/app/boxes/${box.id}/combo${location.search}`}>
         <input type="hidden" name="_action" value="save_combo" />
@@ -523,7 +514,7 @@ export default function SpecificComboBoxPage() {
                 <label style={labelStyle}>Combo type</label>
                 <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
                   {[2, 3].map((n) => (
-                    <button key={n} type="button" onClick={() => { updateComboField("type", n); if (comboActiveStep >= n) setComboActiveStep(0); }} style={{ flex: 1, padding: "7px 0", fontSize: "12px", fontWeight: "600", border: "none", borderRadius: "5px", cursor: "pointer", background: comboConfig.type === n ? "#000000" : "#f3f4f6", color: comboConfig.type === n ? "#ffffff" : "#374151", transition: "background 0.15s" }}>
+                    <button key={n} type="button" onClick={() => { setComboConfig((prev) => { const steps = DEFAULT_COMBO_CONFIG.steps.slice(0, n).map((def, i) => prev.steps[i] || def); return { ...prev, type: n, steps }; }); if (comboActiveStep >= n) setComboActiveStep(0); }} style={{ flex: 1, padding: "7px 0", fontSize: "12px", fontWeight: "600", border: "none", borderRadius: "5px", cursor: "pointer", background: comboConfig.type === n ? "#000000" : "#f3f4f6", color: comboConfig.type === n ? "#ffffff" : "#374151", transition: "background 0.15s" }}>
                       {n}-step
                     </button>
                   ))}
@@ -607,8 +598,8 @@ export default function SpecificComboBoxPage() {
           {/* Step tabs */}
           <div style={{ display: "flex", borderBottom: "1px solid #e5e7eb", marginBottom: "16px" }}>
             {Array.from({ length: comboConfig.type }, (_, i) => (
-              <button key={i} type="button" onClick={() => setComboActiveStep(i)} style={{ padding: "8px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none", borderRadius: "6px 6px 0 0", background: comboActiveStep === i ? "#000000" : comboStepErrors[i] ? "#fff5f5" : "#f9fafb", borderBottom: comboActiveStep === i ? "2px solid #000000" : comboStepErrors[i] ? "2px solid #dc2626" : "2px solid transparent", marginBottom: "-1px", color: comboStepErrors[i] ? "#dc2626" : comboActiveStep === i ? "#ffffff" : "#6b7280", transition: "color 0.15s, border-color 0.15s, background 0.15s" }}>
-                {comboConfig.steps[i].label || "Untitled step"}
+              <button key={i} type="button" onClick={() => setComboActiveStep(i)} style={{ padding: "8px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none", borderRadius: "6px 6px 0 0", background: comboActiveStep === i ? "#000000" : "#f9fafb", borderBottom: comboActiveStep === i ? "2px solid #000000" : "2px solid transparent", marginBottom: "-1px", color: comboActiveStep === i ? "#ffffff" : "#6b7280", transition: "color 0.15s, border-color 0.15s, background 0.15s" }}>
+                {comboConfig.steps[i]?.label || "Untitled step"}
               </button>
             ))}
           </div>
@@ -674,11 +665,6 @@ export default function SpecificComboBoxPage() {
                           : `${(step.selectedProducts || []).length} selected`}
                       </span>
                     </div>
-                    {comboStepErrors[ai] && (
-                      <div style={{ color: "#e11d48", fontSize: "12px", marginTop: "10px", padding: "8px 12px", background: "#fff5f5", borderRadius: "5px", border: "1px solid #fecaca" }}>
-                        {comboStepErrors[ai]}
-                      </div>
-                    )}
                     {step.collections.length > 0 && (step.scope || "collection") === "collection" && (
                       <div style={{ border: "1px solid #e5e7eb", borderRadius: "6px", marginTop: "10px", overflow: "hidden" }}>
                         <div style={{ padding: "7px 12px", background: "#f9fafb", borderBottom: "1px solid #e5e7eb", fontSize: "10px", fontWeight: "700", color: "#6b7280", letterSpacing: "0.07em", textTransform: "uppercase" }}>

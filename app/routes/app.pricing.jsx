@@ -65,13 +65,20 @@ export const action = async ({ request }) => {
   const formData = await request.formData();
   const intent   = formData.get("intent");
 
+  // Preserve embedded app params for all server-side redirects
+  const reqUrl = new URL(request.url);
+  const host   = reqUrl.searchParams.get("host") || "";
+  const embeddedParams = `?shop=${encodeURIComponent(shop)}${host ? `&host=${encodeURIComponent(host)}` : ""}`;
+
   const { createSubscription, cancelSubscription } = await import("../models/billing.server.js");
   const { activateFreePlan, activatePaidPlan }      = await import("../models/subscription.server.js");
+  const { setShopPlanStatus }                       = await import("../models/shop.server.js");
 
   /* ── Free plan — no Shopify billing needed ── */
   if (intent === "free") {
     await activateFreePlan(shop);
-    return rrRedirect("/app/boxes");
+    await setShopPlanStatus(shop, "free");
+    return rrRedirect(`/app/boxes${embeddedParams}`);
   }
 
   /* ── Pro plan — create Shopify subscription ── */
@@ -84,12 +91,13 @@ export const action = async ({ request }) => {
         plan:           "PRO",
         subscriptionId: `gid://shopify/AppSubscription/dev-${Date.now()}`,
       });
-      return rrRedirect("/app/boxes");
+      await setShopPlanStatus(shop, "active");
+      return rrRedirect(`/app/boxes${embeddedParams}`);
     }
 
     try {
       const appUrl    = (process.env.SHOPIFY_APP_URL || "").replace(/\/$/, "");
-      const returnUrl = `${appUrl}/app/pricing?subscribed=1`;
+      const returnUrl = `${appUrl}/app/pricing${embeddedParams}&subscribed=1`;
       const confirmationUrl = await createSubscription(admin, "PRO", returnUrl);
       // Return URL to client — component uses window.open(_top) to navigate parent frame
       return { confirmationUrl };
@@ -103,7 +111,8 @@ export const action = async ({ request }) => {
     const subscriptionId = formData.get("subscriptionId");
     try {
       await cancelSubscription(admin, shop, subscriptionId);
-      return rrRedirect("/app/pricing?cancelled=1");
+      await setShopPlanStatus(shop, "free");
+      return rrRedirect(`/app/pricing${embeddedParams}&cancelled=1`);
     } catch (e) {
       return { error: e.message };
     }

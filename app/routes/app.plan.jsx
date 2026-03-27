@@ -80,10 +80,15 @@ export const action = async ({ request }) => {
     await import("../models/billing.server.js");
   const { setShopPlanStatus } = await import("../models/shop.server.js");
 
+  // Preserve embedded app params for all server-side redirects
+  const reqUrl = new URL(request.url);
+  const host   = reqUrl.searchParams.get("host") || "";
+  const embeddedParams = `?shop=${encodeURIComponent(shop)}${host ? `&host=${encodeURIComponent(host)}` : ""}`;
+
   /* ── Select Free plan ── */
   if (intent === "free") {
     await setShopPlanStatus(shop, "free").catch(() => {});
-    return rrRedirect("/app/boxes");
+    return rrRedirect(`/app/boxes${embeddedParams}`);
   }
 
   /* ── Subscribe to Pro (monthly) ── */
@@ -93,12 +98,12 @@ export const action = async ({ request }) => {
     if (isSkipBilling) {
       // Dev mode: mark active and go straight to app
       await setShopPlanStatus(shop, "active").catch(() => {});
-      return rrRedirect("/app/boxes");
+      return rrRedirect(`/app/boxes${embeddedParams}`);
     }
 
     try {
       const appUrl    = (process.env.SHOPIFY_APP_URL || "").replace(/\/$/, "");
-      const returnUrl = `${appUrl}/app/plan?subscribed=1`;
+      const returnUrl = `${appUrl}/app/plan${embeddedParams}&subscribed=1`;
 
       const confirmationUrl = await createSubscription(admin, returnUrl);
 
@@ -106,9 +111,6 @@ export const action = async ({ request }) => {
         return { error: "Shopify did not return a confirmation URL. Please try again." };
       }
 
-      // Return URL to client — component navigates window.top to it.
-      // Do NOT use shopifyRedirect() here; it races with React Router's
-      // form-submission handling and causes the InvalidStateError.
       return { confirmationUrl };
     } catch (e) {
       return { error: e.message, billingUnavailable: !!e.isBillingUnavailable };
@@ -121,7 +123,7 @@ export const action = async ({ request }) => {
     try {
       await cancelSubscription(admin, subscriptionId);
       await setShopPlanStatus(shop, "free").catch(() => {});
-      return rrRedirect("/app/plan?cancelled=1");
+      return rrRedirect(`/app/plan${embeddedParams}&cancelled=1`);
     } catch (e) {
       return { error: e.message };
     }

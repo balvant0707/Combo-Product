@@ -168,13 +168,13 @@ const DISCOUNT_AUTOMATIC_DELETE_MUTATION = `#graphql
 
 /**
  * Build the DiscountAutomaticBasicInput object for create/update mutations.
- * Scoped to a specific product variant so only this bundle product gets the discount.
+ * Uses ORDER-level discount (items.all = true) so it applies at the cart/order level.
  */
-function buildDiscountInput({ title, discountType, discountValue, shopifyProductId }) {
+function buildDiscountInput({ title, discountType, discountValue }) {
   const pct = parseFloat(discountValue) || 0;
   const customerGets = discountType === "fixed"
-    ? { value: { discountAmount: { amount: String(pct), appliesOnEachItem: false } }, items: { products: { productsToAdd: [shopifyProductId] } } }
-    : { value: { percentage: pct / 100 }, items: { products: { productsToAdd: [shopifyProductId] } } };
+    ? { value: { discountAmount: { amount: String(pct), appliesOnEachItem: false } }, items: { all: true } }
+    : { value: { percentage: pct / 100 }, items: { all: true } };
 
   return {
     title,

@@ -38,6 +38,26 @@ const PRODUCTS_QUERY = `#graphql
   }
 `;
 
+const COLLECTION_PRODUCTS_QUERY = `#graphql
+  query CollectionProducts($id: ID!, $first: Int!) {
+    collection(id: $id) {
+      products(first: $first) {
+        edges {
+          node {
+            id
+            title
+            handle
+            featuredImage { url }
+            variants(first: 100) {
+              edges { node { id price } }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
 const MAX_BANNER_IMAGE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_BANNER_MIME_TYPES = new Set([
   "image/jpeg", "image/jpg", "image/png",
@@ -90,9 +110,12 @@ export const action = async ({ request }) => {
 
   let scopeItems = [];
   try { scopeItems = JSON.parse(formData.get("scopeItems") || "[]"); } catch {}
+  let eligibleProducts = [];
+  try { eligibleProducts = JSON.parse(formData.get("eligibleProducts") || "[]"); } catch {}
 
   const errors = {};
   const bannerImage = await parseBannerImage(formData, errors);
+  const scopeType = formData.get("scope") || "specific_collections";
 
   const data = {
     boxName: formData.get("boxName"),
@@ -107,7 +130,7 @@ export const action = async ({ request }) => {
     bannerImage,
     isActive: formData.get("isActive") !== "false",
     giftMessageEnabled: formData.get("giftMessageEnabled") === "true",
-    scopeType: formData.get("scope") || "specific_collections",
+    scopeType,
     scopeItems,
   };
 
@@ -117,6 +140,32 @@ export const action = async ({ request }) => {
     errors.itemCount = "Item count must be between 1 and 20";
 
   if (Object.keys(errors).length > 0) return { errors };
+
+  // Build eligible products list for ComboBoxProduct table
+  if (scopeType === "specific_collections" && scopeItems.length > 0) {
+    const allProds = [];
+    for (const col of scopeItems) {
+      try {
+        const resp = await admin.graphql(COLLECTION_PRODUCTS_QUERY, { variables: { id: col.id, first: 100 } });
+        const json = await resp.json();
+        (json?.data?.collection?.products?.edges || []).forEach(({ node }) => {
+          allProds.push({
+            productId: node.id,
+            productTitle: node.title,
+            productHandle: node.handle || null,
+            productImageUrl: node.featuredImage?.url || null,
+            variantIds: (node.variants?.edges || []).map(({ node: v }) => v.id),
+            price: node.variants?.edges?.[0]?.node?.price || "0",
+          });
+        });
+      } catch (e) {
+        console.error("[new box] Failed to expand collection:", col.id, e);
+      }
+    }
+    data.eligibleProducts = allProds;
+  } else if (scopeType === "specific_products" && eligibleProducts.length > 0) {
+    data.eligibleProducts = eligibleProducts;
+  }
 
   try {
     await createBox(session.shop, data, admin);
@@ -232,7 +281,19 @@ export default function CreateBoxPage() {
         <input type="hidden" name="discountValue" value={discountValue} />
         <input type="hidden" name="itemCount" value={itemCount} />
         <input type="hidden" name="scope" value={scope} />
-        <input type="hidden" name="scopeItems" value={JSON.stringify(scopeItems)} />
+        <input type="hidden" name="scopeItems" value={JSON.stringify(scopeItems.map(i => ({ id: i.id, title: i.title })))} />
+        {scope === "specific_products" && (
+          <input type="hidden" name="eligibleProducts" value={JSON.stringify(
+            scopeItems.map(item => ({
+              productId: item.id,
+              productTitle: item.title,
+              productHandle: item.handle || null,
+              productImageUrl: item.imageUrl || null,
+              variantIds: item.variantIds || [],
+              price: item.price || "0",
+            }))
+          )} />
+        )}
         <input type="hidden" name="isGiftBox" value={String(options.isGiftBox)} />
         <input type="hidden" name="allowDuplicates" value={String(options.allowDuplicates)} />
         <input type="hidden" name="giftMessageEnabled" value={String(options.giftMessageEnabled)} />
@@ -385,7 +446,7 @@ export default function CreateBoxPage() {
         function toggleScopeItem(item) {
           setScopeItems((prev) => prev.some((i) => i.id === item.id)
             ? prev.filter((i) => i.id !== item.id)
-            : [...prev, { id: item.id, title: item.title }]
+            : [...prev, item]
           );
         }
         return (

@@ -39,6 +39,26 @@ const PRODUCTS_QUERY = `#graphql
   }
 `;
 
+const COLLECTION_PRODUCTS_QUERY = `#graphql
+  query CollectionProducts($id: ID!, $first: Int!) {
+    collection(id: $id) {
+      products(first: $first) {
+        edges {
+          node {
+            id
+            title
+            handle
+            featuredImage { url }
+            variants(first: 100) {
+              edges { node { id price } }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
 /* ─────────────────────────── Constants ─────────────────────────── */
 const MAX_BANNER_IMAGE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_BANNER_MIME_TYPES = new Set([
@@ -151,9 +171,12 @@ export const action = async ({ request, params }) => {
   // Default: save box settings only (ComboBox table)
   let scopeItems = [];
   try { scopeItems = JSON.parse(formData.get("scopeItems") || "[]"); } catch {}
+  let eligibleProducts = [];
+  try { eligibleProducts = JSON.parse(formData.get("eligibleProducts") || "[]"); } catch {}
   const errors = {};
   const bannerImage = await parseBannerImage(formData, errors);
   const removeBannerImage = formData.get("removeBannerImage") === "true" && !bannerImage;
+  const scopeType = formData.get("scope") || "specific_collections";
 
   const data = {
     boxName: formData.get("boxName"),
@@ -169,7 +192,7 @@ export const action = async ({ request, params }) => {
     removeBannerImage,
     isActive: formData.get("isActive") === "true",
     giftMessageEnabled: formData.get("giftMessageEnabled") === "true",
-    scopeType: formData.get("scope") || "specific_collections",
+    scopeType,
     scopeItems,
   };
   if (!data.boxName?.trim()) errors.boxName = "Box name is required";
@@ -177,6 +200,32 @@ export const action = async ({ request, params }) => {
   if (!data.itemCount || parseInt(data.itemCount) < 1) errors.itemCount = "Invalid item count";
 
   if (Object.keys(errors).length > 0) return { errors };
+
+  // Build eligible products list for ComboBoxProduct table
+  if (scopeType === "specific_collections" && scopeItems.length > 0) {
+    const allProds = [];
+    for (const col of scopeItems) {
+      try {
+        const resp = await admin.graphql(COLLECTION_PRODUCTS_QUERY, { variables: { id: col.id, first: 100 } });
+        const json = await resp.json();
+        (json?.data?.collection?.products?.edges || []).forEach(({ node }) => {
+          allProds.push({
+            productId: node.id,
+            productTitle: node.title,
+            productHandle: node.handle || null,
+            productImageUrl: node.featuredImage?.url || null,
+            variantIds: (node.variants?.edges || []).map(({ node: v }) => v.id),
+            price: node.variants?.edges?.[0]?.node?.price || "0",
+          });
+        });
+      } catch (e) {
+        console.error("[edit box] Failed to expand collection:", col.id, e);
+      }
+    }
+    data.eligibleProducts = allProds;
+  } else if (scopeType === "specific_products" && eligibleProducts.length > 0) {
+    data.eligibleProducts = eligibleProducts;
+  }
 
   try {
     await updateBox(params.id, shop, data, admin);
@@ -227,6 +276,18 @@ export default function BoxSettingsPage() {
   const [discountValue, setDiscountValue] = useState(box.discountValue || "10");
   const [scope, setScope] = useState(box.scopeType || "specific_collections");
   const [scopeItems, setScopeItems] = useState(() => {
+    // For specific_products: initialize from ComboBoxProduct records (full data) if available
+    if ((box.scopeType || "specific_collections") === "specific_products" && Array.isArray(box.products) && box.products.length > 0) {
+      return box.products.map(p => ({
+        id: p.productId,
+        title: p.productTitle || p.productId,
+        handle: p.productHandle || null,
+        imageUrl: p.productImageUrl || null,
+        variantIds: (() => { try { return JSON.parse(p.variantIds || "[]"); } catch { return []; } })(),
+        price: p.productPrice != null ? String(p.productPrice) : "0",
+      }));
+    }
+    // For collections (or fallback): use scopeItemsJson
     try { return JSON.parse(box.scopeItemsJson || "[]"); } catch { return []; }
   });
   const [showScopePicker, setShowScopePicker] = useState(false);
@@ -292,7 +353,19 @@ export default function BoxSettingsPage() {
         <input type="hidden" name="giftMessageEnabled" value={String(options.giftMessageEnabled)} />
         <input type="hidden" name="isActive" value={String(options.isActive)} />
         <input type="hidden" name="scope" value={scope} />
-        <input type="hidden" name="scopeItems" value={JSON.stringify(scopeItems)} />
+        <input type="hidden" name="scopeItems" value={JSON.stringify(scopeItems.map(i => ({ id: i.id, title: i.title })))} />
+        {scope === "specific_products" && (
+          <input type="hidden" name="eligibleProducts" value={JSON.stringify(
+            scopeItems.map(item => ({
+              productId: item.id,
+              productTitle: item.title,
+              productHandle: item.handle || null,
+              productImageUrl: item.imageUrl || null,
+              variantIds: item.variantIds || [],
+              price: item.price || "0",
+            }))
+          )} />
+        )}
 
         {/* Basic Information */}
         <div style={{ marginBottom: "28px" }}>
@@ -447,7 +520,7 @@ export default function BoxSettingsPage() {
         function toggleScopeItem(item) {
           setScopeItems((prev) => prev.some((i) => i.id === item.id)
             ? prev.filter((i) => i.id !== item.id)
-            : [...prev, { id: item.id, title: item.title }]
+            : [...prev, item]
           );
         }
         return (

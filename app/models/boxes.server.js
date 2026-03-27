@@ -183,9 +183,17 @@ function buildDiscountInput({ title, discountType, discountValue, shopifyProduct
   };
 }
 
+/** True when a caught error is a Shopify "missing write_discounts scope" error. */
+function isScopeError(e) {
+  const msg = e?.message || "";
+  return msg.includes("write_discounts") || msg.includes("Access denied") || msg.includes("access scope");
+}
+
 /**
  * Create or update an automatic basic discount in Shopify for a dynamic-priced box.
  * Returns the discount GID, or null on failure.
+ * Silently skips (returns null) when the app token lacks write_discounts scope —
+ * the scope is declared in shopify.app.toml and will be granted on next merchant re-auth.
  */
 export async function syncShopifyDiscount(admin, { boxId, existingDiscountId, title, discountType, discountValue, shopifyProductId }) {
   if (!admin || !shopifyProductId) return null;
@@ -195,7 +203,9 @@ export async function syncShopifyDiscount(admin, { boxId, existingDiscountId, ti
       try {
         await admin.graphql(DISCOUNT_AUTOMATIC_DELETE_MUTATION, { variables: { id: existingDiscountId } });
         await db.comboBox.update({ where: { id: boxId }, data: { shopifyDiscountId: null } });
-      } catch (e) { console.error("[syncShopifyDiscount] delete error:", e); }
+      } catch (e) {
+        if (!isScopeError(e)) console.error("[syncShopifyDiscount] delete error:", e);
+      }
     }
     return null;
   }
@@ -209,7 +219,7 @@ export async function syncShopifyDiscount(admin, { boxId, existingDiscountId, ti
       });
       const json = await resp.json();
       const errors = json?.data?.discountAutomaticBasicUpdate?.userErrors || [];
-      if (errors.length) { console.error("[syncShopifyDiscount] update userErrors:", errors); return existingDiscountId; }
+      if (errors.length) { console.error("[syncShopifyDiscount] update userErrors:", errors); }
       return existingDiscountId;
     } else {
       const resp = await admin.graphql(DISCOUNT_AUTOMATIC_BASIC_CREATE_MUTATION, {
@@ -225,7 +235,13 @@ export async function syncShopifyDiscount(admin, { boxId, existingDiscountId, ti
       return discountId;
     }
   } catch (e) {
-    console.error("[syncShopifyDiscount] error:", e);
+    if (isScopeError(e)) {
+      // write_discounts not yet granted — merchant must re-authorize the app.
+      // Scope is declared in shopify.app.toml; re-auth happens automatically on next app open.
+      console.warn("[syncShopifyDiscount] write_discounts scope not yet granted — discount skipped until merchant re-authorizes.");
+    } else {
+      console.error("[syncShopifyDiscount] error:", e);
+    }
     return existingDiscountId || null;
   }
 }

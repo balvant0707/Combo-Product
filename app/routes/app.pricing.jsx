@@ -1,10 +1,7 @@
+/* eslint-disable react/prop-types */
 /**
  * app.pricing.jsx
- * Shopify Billing — Free & Pro plan selection.
- * • Free plan  → save to DB, redirect to /app/boxes
- * • Pro plan   → Shopify appSubscriptionCreate → window.open(_top) → billing page
- * • After approval Shopify redirects back → sync DB → show success
- * • Cancel     → cancel Shopify subscription, revert to Free in DB
+ * Shopify Billing - Free & Pro plan selection.
  */
 
 import { useEffect } from "react";
@@ -19,25 +16,20 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { withEmbeddedAppParamsFromRequest } from "../utils/embedded-app";
 
-/* ─── Loader ─────────────────────────────────────────────────────── */
-
 export const loader = async ({ request }) => {
   const { admin, session } = await authenticate.admin(request);
   const shop = session.shop;
   const url = new URL(request.url);
 
   const { syncSubscription, getBoxCount } = await import("../models/billing.server.js");
-  const { activatePaidPlan, PLANS }       = await import("../models/subscription.server.js");
+  const { activatePaidPlan, PLANS } = await import("../models/subscription.server.js");
 
-  // Sync Shopify subscription state with local DB
   const { subscription, billingUnavailable } = await syncSubscription(admin, shop);
 
-  // After Shopify billing approval, the return URL contains ?subscribed=1
   if (url.searchParams.get("subscribed") === "1" && subscription?.subscriptionId) {
-    // Ensure DB is up to date
     await activatePaidPlan(shop, {
-      plan:            subscription.plan || "PRO",
-      subscriptionId:  subscription.subscriptionId,
+      plan: subscription.plan || "PRO",
+      subscriptionId: subscription.subscriptionId,
       currentPeriodEnd: subscription.currentPeriodEnd,
     }).catch(() => {});
 
@@ -53,40 +45,34 @@ export const loader = async ({ request }) => {
     isDevMode,
     boxCount,
     plans: Object.values(PLANS),
-    status: url.searchParams.get("status"),   // "subscribed" | "cancelled"
     subscribed: url.searchParams.get("subscribed") === "1",
-    cancelled:  url.searchParams.get("cancelled")  === "1",
+    cancelled: url.searchParams.get("cancelled") === "1",
   };
 };
 
-/* ─── Action ─────────────────────────────────────────────────────── */
-
 export const action = async ({ request }) => {
   const { admin, session } = await authenticate.admin(request);
-  const shop     = session.shop;
+  const shop = session.shop;
   const formData = await request.formData();
-  const intent   = formData.get("intent");
+  const intent = formData.get("intent");
   const requestUrl = new URL(request.url);
 
   const { createSubscription, cancelSubscription } = await import("../models/billing.server.js");
-  const { activateFreePlan, activatePaidPlan }      = await import("../models/subscription.server.js");
-  const { setShopPlanStatus }                       = await import("../models/shop.server.js");
+  const { activateFreePlan, activatePaidPlan } = await import("../models/subscription.server.js");
+  const { setShopPlanStatus } = await import("../models/shop.server.js");
 
-  /* ── Free plan — no Shopify billing needed ── */
   if (intent === "free") {
     await activateFreePlan(shop);
     await setShopPlanStatus(shop, "free");
     return rrRedirect(withEmbeddedAppParamsFromRequest("/app/boxes", request));
   }
 
-  /* ── Pro plan — create Shopify subscription ── */
   if (intent === "subscribe") {
     const isSkipBilling = process.env.SKIP_BILLING === "true";
 
     if (isSkipBilling) {
-      // Dev bypass: activate pro immediately, no Shopify billing page
       await activatePaidPlan(shop, {
-        plan:           "PRO",
+        plan: "PRO",
         subscriptionId: `gid://shopify/AppSubscription/dev-${Date.now()}`,
       });
       await setShopPlanStatus(shop, "active");
@@ -94,17 +80,15 @@ export const action = async ({ request }) => {
     }
 
     try {
-      const returnPath = withEmbeddedAppParamsFromRequest("/app?subscribed=1", request);
+      const returnPath = withEmbeddedAppParamsFromRequest("/app/billing-success?subscribed=1", request);
       const returnUrl = new URL(returnPath, requestUrl.origin).toString();
       const confirmationUrl = await createSubscription(admin, returnUrl);
-      // Return URL to client — component uses window.open(_top) to navigate parent frame
       return { confirmationUrl };
     } catch (e) {
       return { error: e.message, billingUnavailable: !!e.isBillingUnavailable };
     }
   }
 
-  /* ── Cancel subscription ── */
   if (intent === "cancel") {
     const subscriptionId = formData.get("subscriptionId");
     try {
@@ -119,318 +103,569 @@ export const action = async ({ request }) => {
   return { error: "Unknown intent" };
 };
 
-/* ─── Styles / tokens ────────────────────────────────────────────── */
+const PRICING_UI_CSS = `
+  .pricing-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
 
-const C = {
-  black:  "#111827",
-  white:  "#ffffff",
-  green:  "#2A7A4F",
-  muted:  "#6b7280",
-  border: "#e5e7eb",
-  surface:"#f9fafb",
-  red:    "#ef4444",
-  amber:  "#92400e",
-  blue:   "#1d4ed8",
-};
+  .pricing-hero {
+    background: linear-gradient(180deg, #ffffff 0%, #f6f6f7 100%);
+    border: 1px solid #e3e3e3;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  }
 
-function Spinner({ color = "#fff", size = 14 }) {
+  .pricing-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #f1f2f4;
+    color: #303030;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .pricing-title {
+    margin: 0;
+    color: #202223;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  .pricing-subtitle {
+    margin: 8px 0 0;
+    color: #616161;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .pricing-banner {
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .pricing-banner strong {
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .pricing-banner.info {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+  }
+
+  .pricing-banner.warning {
+    background: #fff8e7;
+    border-color: #f4c97a;
+    color: #8a4b08;
+  }
+
+  .pricing-banner.error {
+    background: #fef1f1;
+    border-color: #f1b4b4;
+    color: #b42318;
+  }
+
+  .pricing-banner.success {
+    background: #edfdf3;
+    border-color: #8cd9a0;
+    color: #146c2e;
+  }
+
+  .pricing-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 16px 18px;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    background: #ffffff;
+  }
+
+  .pricing-summary.is-pro {
+    background: #111827;
+    border-color: #111827;
+  }
+
+  .pricing-summary-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .pricing-summary-label {
+    color: #202223;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .pricing-summary.is-pro .pricing-summary-label {
+    color: #ffffff;
+  }
+
+  .pricing-summary-meta {
+    color: #616161;
+    font-size: 13px;
+  }
+
+  .pricing-summary.is-pro .pricing-summary-meta {
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .pricing-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 0 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: #f1f2f4;
+    color: #303030;
+  }
+
+  .pricing-summary.is-pro .pricing-pill {
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+  }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .pricing-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 24px;
+    border: 1px solid #e3e3e3;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+
+  .pricing-card.is-current {
+    border-color: #111827;
+    box-shadow: 0 0 0 1px #111827 inset;
+  }
+
+  .pricing-card.is-highlighted {
+    border-color: #2a7a4f;
+    box-shadow: 0 0 0 1px #2a7a4f inset;
+  }
+
+  .pricing-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .pricing-card-name {
+    margin: 0 0 4px;
+    color: #202223;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .pricing-card-price {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    margin: 0 0 6px;
+  }
+
+  .pricing-card-price strong {
+    color: #202223;
+    font-size: 34px;
+    line-height: 1;
+    font-weight: 700;
+  }
+
+  .pricing-card-price span {
+    color: #616161;
+    font-size: 13px;
+    padding-bottom: 4px;
+  }
+
+  .pricing-card-copy {
+    margin: 0;
+    color: #616161;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .pricing-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #f1f2f4;
+    color: #303030;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .pricing-badge.success {
+    background: #edfdf3;
+    color: #146c2e;
+  }
+
+  .pricing-feature-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pricing-feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: #303030;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .pricing-feature.muted {
+    color: #8a8a8a;
+  }
+
+  .pricing-feature-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    background: #111827;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .pricing-feature.muted .pricing-feature-icon {
+    background: #f1f2f4;
+    color: #8a8a8a;
+  }
+
+  .pricing-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    flex: 1;
+  }
+
+  .pricing-card-action {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .pricing-card-action s-button {
+    width: 100%;
+  }
+
+  .pricing-static-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 10px;
+    background: #f6f6f7;
+    border: 1px solid #e3e3e3;
+    color: #616161;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .pricing-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .pricing-fact {
+    padding: 14px 16px;
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    background: #ffffff;
+  }
+
+  .pricing-fact-label {
+    margin: 0 0 4px;
+    color: #616161;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .pricing-fact-value {
+    margin: 0;
+    color: #202223;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 768px) {
+    .pricing-grid,
+    .pricing-facts {
+      grid-template-columns: 1fr;
+    }
+
+    .pricing-card,
+    .pricing-hero {
+      padding: 20px;
+    }
+  }
+`;
+
+function StatusBanner({ tone, title, children }) {
   return (
-    <span style={{
-      width: size, height: size,
-      border: `2px solid ${color}33`,
-      borderTopColor: color,
-      borderRadius: "50%",
-      display: "inline-block",
-      animation: "pricing-spin 0.7s linear infinite",
-    }} />
-  );
-}
-
-function FeatureRow({ text }) {
-  return (
-    <div style={{ display:"flex", alignItems:"flex-start", gap:"9px", marginBottom:"9px" }}>
-      <span style={{ width:"17px", height:"17px", borderRadius:"50%", flexShrink:0, marginTop:"1px", background: C.black, display:"flex", alignItems:"center", justifyContent:"center" }}>
-        <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-          <path d="M1 3.5l2 2L8 1" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </span>
-      <span style={{ fontSize:"12.5px", color:"#374151", lineHeight:1.5 }}>{text}</span>
+    <div className={`pricing-banner ${tone}`}>
+      <strong>{title}</strong>
+      <div>{children}</div>
     </div>
   );
 }
 
-function CrossRow({ text }) {
+function PlanFeature({ text, muted = false }) {
   return (
-    <div style={{ display:"flex", alignItems:"flex-start", gap:"9px", marginBottom:"9px" }}>
-      <span style={{ width:"17px", height:"17px", borderRadius:"50%", flexShrink:0, marginTop:"1px", background:"#f3f4f6", display:"flex", alignItems:"center", justifyContent:"center" }}>
-        <svg width="7" height="7" viewBox="0 0 7 7" fill="none">
-          <path d="M1 1l5 5M6 1L1 6" stroke="#9ca3af" strokeWidth="1.7" strokeLinecap="round"/>
-        </svg>
-      </span>
-      <span style={{ fontSize:"12.5px", color:"#9ca3af", lineHeight:1.5 }}>{text}</span>
-    </div>
+    <li className={`pricing-feature${muted ? " muted" : ""}`}>
+      <span className="pricing-feature-icon">{muted ? "-" : "✓"}</span>
+      <span>{text}</span>
+    </li>
   );
 }
-
-/* ─── Component ──────────────────────────────────────────────────── */
 
 export default function PricingPage() {
   const { subscription, billingUnavailable, isDevMode, boxCount, plans, subscribed, cancelled } = useLoaderData();
-  const actionData   = useActionData();
-  const navigation   = useNavigation();
+  const actionData = useActionData();
+  const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
-  const isPro  = subscription?.plan === "PRO"  && subscription?.status === "ACTIVE";
+  const isPro = subscription?.plan === "PRO" && subscription?.status === "ACTIVE";
   const isFree = subscription?.plan === "FREE" && subscription?.status === "ACTIVE";
   const hasNoPlan = !subscription || subscription.status === "NONE" || subscription.status === "CANCELLED";
-
   const billingDown = billingUnavailable || actionData?.billingUnavailable;
 
-  // Navigate the parent Shopify admin frame to the billing confirmation page
   useEffect(() => {
     if (actionData?.confirmationUrl) {
       window.open(actionData.confirmationUrl, "_top");
     }
   }, [actionData?.confirmationUrl]);
 
-  const proPlan  = plans.find((p) => p.key === "PRO");
+  const proPlan = plans.find((p) => p.key === "PRO");
   const freePlan = plans.find((p) => p.key === "FREE");
+  const currentPlanLabel = isPro ? "Pro plan active" : isFree ? "Free plan active" : "No plan selected";
+  const currentPlanMeta = isPro
+    ? `Renews ${subscription?.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "-"}`
+    : `${boxCount} box${boxCount !== 1 ? "es" : ""} created · ${hasNoPlan ? "Select a plan below" : "1 box allowed on Free"}`;
 
   return (
-    <div style={{ maxWidth:"860px", margin:"0 auto", padding:"32px 20px", fontFamily:"inherit" }}>
-      <style>{`@keyframes pricing-spin { to { transform:rotate(360deg); } }`}</style>
+    <s-page heading="Pricing plans">
+      <style>{PRICING_UI_CSS}</style>
 
-      {/* Header */}
-      <div style={{ textAlign:"center", marginBottom:"36px" }}>
-        <div style={{ fontSize:"26px", fontWeight:"800", color: C.black, letterSpacing:"-0.5px", marginBottom:"8px" }}>
-          Choose Your Plan
+      <div className="pricing-shell">
+        <div className="pricing-hero">
+          <div className="pricing-kicker">MixBox billing</div>
+          <h1 className="pricing-title">Choose a plan that fits your store</h1>
+          <p className="pricing-subtitle">
+            Start free for setup and testing. Upgrade to Pro when you need unlimited combo boxes and premium features.
+          </p>
         </div>
-        <div style={{ fontSize:"14px", color: C.muted }}>
-          Start free. Upgrade when your store needs more.
-        </div>
-      </div>
 
-      {/* Dev mode notice */}
-      {isDevMode && (
-        <div style={{ background:"#eff6ff", border:"1px solid #bfdbfe", borderRadius:"10px", padding:"12px 16px", marginBottom:"20px", display:"flex", alignItems:"center", gap:"10px" }}>
-          <span style={{ fontSize:"16px" }}>🛠️</span>
-          <div style={{ fontSize:"12px", color: C.blue, lineHeight:1.6 }}>
-            <strong>Billing bypass active</strong> — <code style={{ background:"#dbeafe", borderRadius:"3px", padding:"1px 5px", fontSize:"11px" }}>SKIP_BILLING=true</code>.
-            Plans activate instantly without Shopify billing.
+        {isDevMode && (
+          <StatusBanner tone="info" title="Billing bypass active">
+            <code>SKIP_BILLING=true</code> is enabled, so Pro activates instantly without opening Shopify billing.
+          </StatusBanner>
+        )}
+
+        {billingDown && (
+          <StatusBanner tone="warning" title="Billing API unavailable">
+            Set the app to <strong>Public Distribution</strong> in the Shopify Partner Dashboard to enable paid plans.
+          </StatusBanner>
+        )}
+
+        {actionData?.error && !actionData?.billingUnavailable && (
+          <StatusBanner tone="error" title="Billing request failed">
+            {actionData.error}
+          </StatusBanner>
+        )}
+
+        {subscribed && (
+          <StatusBanner tone="success" title="Pro plan activated">
+            All premium features are now unlocked for this store.
+          </StatusBanner>
+        )}
+
+        {cancelled && (
+          <StatusBanner tone="warning" title="Subscription cancelled">
+            You&apos;ll keep Pro access until the end of the current billing period.
+          </StatusBanner>
+        )}
+
+        <s-section heading="Current plan">
+          <div className={`pricing-summary${isPro ? " is-pro" : ""}`}>
+            <div className="pricing-summary-copy">
+              <div className="pricing-summary-label">{currentPlanLabel}</div>
+              <div className="pricing-summary-meta">{currentPlanMeta}</div>
+            </div>
+            <div className="pricing-pill">{isPro ? "Pro" : isFree ? "Free" : "No plan"}</div>
           </div>
-        </div>
-      )}
+        </s-section>
 
-      {/* Billing unavailable */}
-      {billingDown && (
-        <div style={{ background:"#fffbeb", border:"1px solid #fcd34d", borderRadius:"10px", padding:"16px 18px", marginBottom:"20px" }}>
-          <div style={{ display:"flex", alignItems:"flex-start", gap:"12px" }}>
-            <span style={{ fontSize:"20px" }}>⚠️</span>
-            <div>
-              <div style={{ fontSize:"13px", fontWeight:"700", color: C.amber, marginBottom:"6px" }}>Billing API unavailable</div>
-              <div style={{ fontSize:"12px", color:"#78350f", lineHeight:1.7 }}>
-                Set your app to <strong>Public Distribution</strong> in the Shopify Partner Dashboard to enable paid plans.
-                Until then, use <code>SKIP_BILLING=true</code> in <code>.env</code> for development.
+        <s-section heading="Plan options">
+          <div className="pricing-grid">
+            <div className={`pricing-card${isFree ? " is-current" : ""}`}>
+              <div className="pricing-card-head">
+                <div>
+                  <h2 className="pricing-card-name">Free</h2>
+                  <div className="pricing-card-price">
+                    <strong>$0</strong>
+                    <span>/month</span>
+                  </div>
+                  <p className="pricing-card-copy">Good for setup, testing, and a single live combo box.</p>
+                </div>
+                {isFree && <div className="pricing-badge">Current</div>}
+              </div>
+
+              <div className="pricing-card-body">
+                <ul className="pricing-feature-list">
+                  {freePlan?.features?.map((feature) => (
+                    <PlanFeature key={feature} text={feature} />
+                  ))}
+                  <PlanFeature text="Unlimited combo boxes" muted />
+                  <PlanFeature text="Priority support" muted />
+                </ul>
+
+                <div className="pricing-card-action">
+                  {isFree ? (
+                    <div className="pricing-static-note">Current plan</div>
+                  ) : isPro ? (
+                    <form method="post">
+                      <input type="hidden" name="intent" value="cancel" />
+                      <input type="hidden" name="subscriptionId" value={subscription?.subscriptionId || ""} />
+                      <s-button type="submit" disabled={isSubmitting || undefined}>
+                        {isSubmitting ? "Processing..." : "Downgrade to Free"}
+                      </s-button>
+                    </form>
+                  ) : (
+                    <form method="post">
+                      <input type="hidden" name="intent" value="free" />
+                      <s-button type="submit" disabled={isSubmitting || undefined}>
+                        {isSubmitting ? "Starting..." : "Continue with Free"}
+                      </s-button>
+                    </form>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className={`pricing-card${isPro ? " is-current" : " is-highlighted"}`}>
+              <div className="pricing-card-head">
+                <div>
+                  <h2 className="pricing-card-name">Pro</h2>
+                  <div className="pricing-card-price">
+                    <strong>${proPlan?.price}</strong>
+                    <span>/month</span>
+                  </div>
+                  <p className="pricing-card-copy">
+                    {proPlan?.trialDays}-day free trial, then billed monthly through Shopify.
+                  </p>
+                </div>
+                <div className={`pricing-badge${isPro ? "" : " success"}`}>{isPro ? "Current" : "Recommended"}</div>
+              </div>
+
+              <div className="pricing-card-body">
+                <ul className="pricing-feature-list">
+                  {proPlan?.features?.map((feature) => (
+                    <PlanFeature key={feature} text={feature} />
+                  ))}
+                </ul>
+
+                <div className="pricing-card-action">
+                  {isPro ? (
+                    <div className="pricing-static-note">Pro is active on this store</div>
+                  ) : billingDown ? (
+                    <div className="pricing-static-note">Billing unavailable right now</div>
+                  ) : actionData?.confirmationUrl ? (
+                    <div className="pricing-static-note">Opening Shopify billing...</div>
+                  ) : (
+                    <form method="post">
+                      <input type="hidden" name="intent" value="subscribe" />
+                      <s-button type="submit" disabled={isSubmitting || undefined}>
+                        {isSubmitting ? "Preparing billing..." : `Start ${proPlan?.trialDays}-day free trial`}
+                      </s-button>
+                    </form>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </s-section>
 
-      {/* Error */}
-      {actionData?.error && !actionData?.billingUnavailable && (
-        <div style={{ background:"#fef2f2", border:"1px solid #fecaca", borderRadius:"10px", padding:"14px 16px", marginBottom:"20px" }}>
-          <strong style={{ fontSize:"13px", color:"#b91c1c" }}>Error: </strong>
-          <span style={{ fontSize:"13px", color:"#b91c1c" }}>{actionData.error}</span>
-        </div>
-      )}
-
-      {/* Success banners */}
-      {subscribed && (
-        <div style={{ background:"#f0fdf4", border:"1px solid #bbf7d0", borderRadius:"10px", padding:"14px 16px", marginBottom:"20px", display:"flex", alignItems:"center", gap:"10px" }}>
-          <span style={{ fontSize:"18px" }}>🎉</span>
-          <span style={{ fontSize:"13px", fontWeight:"600", color:"#15803d" }}>
-            Pro plan activated! All features are now unlocked.
-          </span>
-        </div>
-      )}
-      {cancelled && (
-        <div style={{ background:"#fefce8", border:"1px solid #fde047", borderRadius:"10px", padding:"14px 16px", marginBottom:"20px", display:"flex", alignItems:"center", gap:"10px" }}>
-          <span style={{ fontSize:"18px" }}>ℹ️</span>
-          <span style={{ fontSize:"13px", fontWeight:"600", color:"#854d0e" }}>
-            Subscription cancelled. You&apos;ll keep Pro access until the billing period ends.
-          </span>
-        </div>
-      )}
-
-      {/* Current plan bar */}
-      <div style={{
-        background:    isPro ? C.black : C.surface,
-        border:        `1px solid ${isPro ? C.black : C.border}`,
-        borderRadius:  "10px", padding:"14px 20px", marginBottom:"28px",
-        display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"12px",
-      }}>
-        <div style={{ display:"flex", alignItems:"center", gap:"12px" }}>
-          <span style={{ fontSize:"22px" }}>{isPro ? "⚡" : "📦"}</span>
-          <div>
-            <div style={{ fontSize:"14px", fontWeight:"700", color: isPro ? C.white : C.black }}>
-              {isPro ? "Pro Plan — Active" : hasNoPlan ? "No plan selected" : "Free Plan"}
+        <s-section heading="Billing details">
+          <div className="pricing-facts">
+            <div className="pricing-fact">
+              <div className="pricing-fact-label">Free trial</div>
+              <p className="pricing-fact-value">{proPlan?.trialDays} days free on Pro before the first charge.</p>
             </div>
-            <div style={{ fontSize:"12px", color: isPro ? "rgba(255,255,255,0.55)" : C.muted, marginTop:"2px" }}>
-              {isPro
-                ? `Renews ${subscription?.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" }) : "—"}`
-                : `${boxCount} box${boxCount !== 1 ? "es" : ""} created · ${hasNoPlan ? "Select a plan below" : "1 box allowed on Free"}`}
+            <div className="pricing-fact">
+              <div className="pricing-fact-label">Billing</div>
+              <p className="pricing-fact-value">Monthly, charged to the merchant&apos;s Shopify invoice in USD.</p>
+            </div>
+            <div className="pricing-fact">
+              <div className="pricing-fact-label">Upgrade</div>
+              <p className="pricing-fact-value">Pro activates after billing approval and unlocks unlimited combo boxes.</p>
+            </div>
+            <div className="pricing-fact">
+              <div className="pricing-fact-label">Cancellation</div>
+              <p className="pricing-fact-value">Cancel anytime. Access continues until the end of the current billing period.</p>
             </div>
           </div>
-        </div>
-        <span style={{
-          fontSize:"10px", fontWeight:"700", textTransform:"uppercase", letterSpacing:"0.08em",
-          padding:"3px 12px", borderRadius:"20px",
-          color:       isPro ? C.white : C.muted,
-          background:  isPro ? "rgba(255,255,255,0.15)" : "#e5e7eb",
-          border:      isPro ? "1px solid rgba(255,255,255,0.25)" : "1px solid #d1d5db",
-        }}>
-          {isPro ? "PRO" : isFree ? "FREE" : "NONE"}
-        </span>
+        </s-section>
       </div>
-
-      {/* Plan cards */}
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px" }}>
-
-        {/* ── FREE CARD ── */}
-        <div style={{
-          background: C.white,
-          border: `2px solid ${isFree || hasNoPlan ? C.black : C.border}`,
-          borderRadius:"14px", overflow:"hidden", position:"relative", display:"flex", flexDirection:"column",
-        }}>
-          {isFree && (
-            <div style={{ position:"absolute", top:"12px", right:"12px", fontSize:"10px", fontWeight:"700", background: C.black, color: C.white, borderRadius:"20px", padding:"3px 10px" }}>
-              CURRENT
-            </div>
-          )}
-          <div style={{ padding:"26px 22px", flex:1, display:"flex", flexDirection:"column" }}>
-            <div style={{ fontSize:"11px", fontWeight:"700", textTransform:"uppercase", letterSpacing:"0.1em", color: C.muted, marginBottom:"6px" }}>Free</div>
-            <div style={{ display:"flex", alignItems:"flex-end", gap:"4px", marginBottom:"3px" }}>
-              <span style={{ fontSize:"36px", fontWeight:"800", color: C.black, lineHeight:1 }}>$0</span>
-              <span style={{ fontSize:"13px", color: C.muted, marginBottom:"5px" }}>/month</span>
-            </div>
-            <div style={{ fontSize:"12px", color: C.muted, marginBottom:"22px" }}>Forever free · no credit card</div>
-
-            <div style={{ borderTop:`1px solid ${C.border}`, paddingTop:"18px", flex:1 }}>
-              {freePlan?.features?.map((f) => <FeatureRow key={f} text={f} />)}
-              <CrossRow text="Unlimited combo boxes" />
-              <CrossRow text="Priority support" />
-            </div>
-
-            <div style={{ marginTop:"22px" }}>
-              {isFree ? (
-                <div style={{ textAlign:"center", padding:"11px", borderRadius:"8px", background: C.surface, fontSize:"13px", fontWeight:"600", color: C.muted, border:`1.5px solid ${C.border}` }}>
-                  Current plan
-                </div>
-              ) : isPro ? (
-                /* Downgrade: cancel subscription → free */
-                <form method="post">
-                  <input type="hidden" name="intent" value="cancel" />
-                  <input type="hidden" name="subscriptionId" value={subscription?.subscriptionId || ""} />
-                  <button type="submit" disabled={isSubmitting} style={{ width:"100%", padding:"11px", borderRadius:"8px", border:`1.5px solid #fecaca`, background: C.white, fontSize:"12px", fontWeight:"600", color: C.red, cursor:"pointer", opacity: isSubmitting ? 0.7 : 1 }}>
-                    {isSubmitting ? "Processing…" : "Downgrade to Free"}
-                  </button>
-                </form>
-              ) : (
-                /* No plan → select free */
-                <form method="post">
-                  <input type="hidden" name="intent" value="free" />
-                  <button type="submit" disabled={isSubmitting} style={{ width:"100%", padding:"11px", borderRadius:"8px", border:`1.5px solid ${C.black}`, background: C.white, fontSize:"13px", fontWeight:"700", color: C.black, cursor: isSubmitting ? "not-allowed" : "pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:"8px", opacity: isSubmitting ? 0.7 : 1 }}>
-                    {isSubmitting ? <><Spinner color={C.black} size={13} />Starting…</> : "Continue with Free →"}
-                  </button>
-                </form>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* ── PRO CARD ── */}
-        <div style={{
-          background:   isPro ? C.black : C.white,
-          border:       `2px solid ${isPro ? C.black : C.green}`,
-          borderRadius: "14px", overflow:"hidden", position:"relative", display:"flex", flexDirection:"column",
-        }}>
-          <div style={{ position:"absolute", top:"12px", right:"12px", fontSize:"10px", fontWeight:"700", background: isPro ? "rgba(255,255,255,0.2)" : C.green, color: C.white, borderRadius:"20px", padding:"3px 10px" }}>
-            {isPro ? "CURRENT" : "RECOMMENDED"}
-          </div>
-          <div style={{ padding:"26px 22px", flex:1, display:"flex", flexDirection:"column" }}>
-            <div style={{ fontSize:"11px", fontWeight:"700", textTransform:"uppercase", letterSpacing:"0.1em", color: isPro ? "rgba(255,255,255,0.5)" : C.muted, marginBottom:"6px" }}>Pro</div>
-            <div style={{ display:"flex", alignItems:"flex-end", gap:"4px", marginBottom:"3px" }}>
-              <span style={{ fontSize:"36px", fontWeight:"800", color: isPro ? C.white : C.black, lineHeight:1 }}>${proPlan?.price}</span>
-              <span style={{ fontSize:"13px", color: isPro ? "rgba(255,255,255,0.5)" : C.muted, marginBottom:"5px" }}>/month</span>
-            </div>
-            <div style={{ fontSize:"12px", color: isPro ? "rgba(255,255,255,0.5)" : C.muted, marginBottom:"22px" }}>
-              {proPlan?.trialDays}-day free trial · billed monthly
-            </div>
-
-            <div style={{ borderTop:`1px solid ${isPro ? "rgba(255,255,255,0.12)" : C.border}`, paddingTop:"18px", flex:1 }}>
-              {proPlan?.features?.map((f) => (
-                <div key={f} style={{ display:"flex", alignItems:"flex-start", gap:"9px", marginBottom:"9px" }}>
-                  <span style={{ width:"17px", height:"17px", borderRadius:"50%", flexShrink:0, marginTop:"1px", background: isPro ? "rgba(255,255,255,0.2)" : C.black, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                    <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-                      <path d="M1 3.5l2 2L8 1" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </span>
-                  <span style={{ fontSize:"12.5px", color: isPro ? "rgba(255,255,255,0.85)" : "#374151", lineHeight:1.5 }}>{f}</span>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ marginTop:"22px" }}>
-              {isPro ? (
-                <div style={{ textAlign:"center", padding:"11px", borderRadius:"8px", background:"rgba(255,255,255,0.12)", fontSize:"13px", fontWeight:"600", color: C.white }}>
-                  ✦ Active — Thank you!
-                </div>
-              ) : billingDown ? (
-                <div style={{ textAlign:"center", padding:"11px", borderRadius:"8px", background: C.surface, fontSize:"12px", color: C.muted, border:`1.5px solid ${C.border}`, lineHeight:1.4 }}>
-                  Billing unavailable
-                </div>
-              ) : actionData?.confirmationUrl ? (
-                <div style={{ textAlign:"center", padding:"12px", borderRadius:"8px", background: C.black, fontSize:"13px", fontWeight:"600", color: C.white, display:"flex", alignItems:"center", justifyContent:"center", gap:"8px" }}>
-                  <Spinner />Opening Shopify billing…
-                </div>
-              ) : (
-                <form method="post">
-                  <input type="hidden" name="intent" value="subscribe" />
-                  <button type="submit" disabled={isSubmitting} style={{ width:"100%", padding:"12px", borderRadius:"8px", border:"none", background: C.green, fontSize:"14px", fontWeight:"700", color: C.white, cursor: isSubmitting ? "not-allowed" : "pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:"8px", opacity: isSubmitting ? 0.7 : 1 }}>
-                    {isSubmitting ? <><Spinner />Preparing billing…</> : `Start ${proPlan?.trialDays}-Day Free Trial →`}
-                  </button>
-                </form>
-              )}
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Billing FAQ */}
-      <div style={{ marginTop:"36px", padding:"20px 22px", background: C.surface, border:`1px solid ${C.border}`, borderRadius:"10px" }}>
-        <div style={{ fontSize:"11px", fontWeight:"700", color: C.muted, textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:"14px" }}>Billing FAQ</div>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"12px 28px" }}>
-          {[
-            ["Free trial",    `${proPlan?.trialDays} days free on Pro — no charge until trial ends`],
-            ["Billing",       "Monthly, charged through your Shopify account in USD"],
-            ["Upgrade",       "Applies immediately, prorated for the current period"],
-            ["Cancel",        "Access continues until the end of the billing period"],
-          ].map(([k, v]) => (
-            <div key={k}>
-              <div style={{ fontSize:"10px", fontWeight:"700", color: C.muted, textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:"3px" }}>{k}</div>
-              <div style={{ fontSize:"12px", color:"#374151", lineHeight:1.6 }}>{v}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-    </div>
+    </s-page>
   );
 }
 
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
+
 export const headers = (h) => boundary.headers(h);

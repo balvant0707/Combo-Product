@@ -100,7 +100,7 @@ export const action = async ({ request }) => {
     }
 
     try {
-      const returnPath = withEmbeddedAppParamsFromRequest("/app?subscribed=1", request);
+      const returnPath = withEmbeddedAppParamsFromRequest("/app/billing-success?subscribed=1", request);
       const returnUrl = new URL(returnPath, requestUrl.origin).toString();
 
       const confirmationUrl = await createSubscription(admin, returnUrl);

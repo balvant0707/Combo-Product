@@ -24,6 +24,7 @@ import { withEmbeddedAppParamsFromRequest } from "../utils/embedded-app";
 export const loader = async ({ request }) => {
   const { admin, session } = await authenticate.admin(request);
   const shop = session.shop;
+  const url = new URL(request.url);
 
   const { syncSubscription, getBoxCount } = await import("../models/billing.server.js");
   const { activatePaidPlan, PLANS }       = await import("../models/subscription.server.js");
@@ -32,7 +33,6 @@ export const loader = async ({ request }) => {
   const { subscription, billingUnavailable } = await syncSubscription(admin, shop);
 
   // After Shopify billing approval, the return URL contains ?subscribed=1
-  const url = new URL(request.url);
   if (url.searchParams.get("subscribed") === "1" && subscription?.subscriptionId) {
     // Ensure DB is up to date
     await activatePaidPlan(shop, {
@@ -40,6 +40,8 @@ export const loader = async ({ request }) => {
       subscriptionId:  subscription.subscriptionId,
       currentPeriodEnd: subscription.currentPeriodEnd,
     }).catch(() => {});
+
+    return rrRedirect(withEmbeddedAppParamsFromRequest("/app?subscribed=1", request));
   }
 
   const boxCount = await getBoxCount(shop);
@@ -88,7 +90,7 @@ export const action = async ({ request }) => {
         subscriptionId: `gid://shopify/AppSubscription/dev-${Date.now()}`,
       });
       await setShopPlanStatus(shop, "active");
-      return rrRedirect(withEmbeddedAppParamsFromRequest("/app/boxes", request));
+      return rrRedirect(withEmbeddedAppParamsFromRequest("/app?subscribed=1", request));
     }
 
     try {

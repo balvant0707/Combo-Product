@@ -10,6 +10,7 @@ import { withEmbeddedAppParamsFromRequest } from "../utils/embedded-app";
 export const loader = async ({ request }) => {
   const { admin, session } = await authenticate.admin(request);
   const shop = session.shop;
+  const url = new URL(request.url);
 
   const {
     getActiveShopifySubscription,
@@ -42,9 +43,9 @@ export const loader = async ({ request }) => {
   const isPro = !!subscription && subscription.status === "ACTIVE";
 
   // When Shopify redirects back after billing approval, mark the shop as active
-  const url = new URL(request.url);
   if (url.searchParams.get("subscribed") === "1" && isPro) {
     await setShopPlanStatus(shop, "active").catch(() => {});
+    return rrRedirect(withEmbeddedAppParamsFromRequest("/app?subscribed=1", request));
   }
 
   const boxCount = await getBoxCount(shop);
@@ -95,7 +96,7 @@ export const action = async ({ request }) => {
     if (isSkipBilling) {
       // Dev mode: mark active and go straight to app
       await setShopPlanStatus(shop, "active").catch(() => {});
-      return rrRedirect(withEmbeddedAppParamsFromRequest("/app/boxes", request));
+      return rrRedirect(withEmbeddedAppParamsFromRequest("/app?subscribed=1", request));
     }
 
     try {

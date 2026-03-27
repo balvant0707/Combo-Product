@@ -404,6 +404,7 @@ export default function DashboardPage() {
   } = useLoaderData();
   const location = useLocation();
   const navigate = useNavigate();
+  const justSubscribed = new URLSearchParams(location.search).get("subscribed") === "1";
 
   const stats = STAT_CARDS(activeBoxCount, bundlesSold, bundleRevenue);
   function navigateTo(path) {
@@ -474,7 +475,11 @@ export default function DashboardPage() {
         </button>
       </ui-title-bar>
 
-     
+      {justSubscribed && (
+        <div style={{ marginBottom: "20px", padding: "14px 16px", borderRadius: "5px", border: "1px solid #bbf7d0", background: "#f0fdf4", color: "#15803d", fontSize: "13px", fontWeight: "700" }}>
+          Pro plan activated. All premium features are now unlocked.
+        </div>
+      )}
 
       <EmbedBlockCard embedBlockUrl={embedBlockUrl} enabled={embedBlockEnabled} />
       <ThemeCustomizationCard themeEditorUrl={themeEditorUrl} />

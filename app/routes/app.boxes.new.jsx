@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Form, useActionData, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
-import { createBox, isBoxCodeValidationError } from "../models/boxes.server";
+import { createBox } from "../models/boxes.server";
 import { AdminIcon } from "../components/admin-icons";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
@@ -120,7 +120,6 @@ export const action = async ({ request }) => {
   const data = {
     boxName: formData.get("boxName"),
     displayTitle: formData.get("displayTitle"),
-    boxCode: formData.get("boxCode"),
     itemCount: formData.get("itemCount"),
     bundlePrice: formData.get("bundlePrice"),
     bundlePriceType: formData.get("bundlePriceType"),
@@ -171,9 +170,6 @@ export const action = async ({ request }) => {
   try {
     await createBox(session.shop, data, admin);
   } catch (e) {
-    if (isBoxCodeValidationError(e)) {
-      return { errors: { boxCode: e.message } };
-    }
     console.error("[app.boxes.new] createBox error:", e);
     const message = e instanceof Error && e.message ? e.message : "Failed to create box. Please try again.";
     return { errors: { _global: message } };
@@ -320,12 +316,6 @@ export default function CreateBoxPage() {
                 <label style={labelStyle}>Display Title (Storefront) *</label>
                 <input type="text" name="displayTitle" placeholder="Shown to customers" style={{ ...fieldStyle, borderColor: errors.displayTitle ? "#e11d48" : "#d1d5db" }} />
                 {errors.displayTitle && <div style={errorStyle}>{errors.displayTitle}</div>}
-              </div>
-              <div>
-                <label style={labelStyle}>Box Code</label>
-                <input type="text" name="boxCode" placeholder="Leave blank to auto-generate" maxLength="10" style={{ ...fieldStyle, borderColor: errors.boxCode ? "#e11d48" : "#d1d5db", textTransform: "uppercase" }} />
-                <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>Shown in the code column. Leave blank to auto-generate a numeric code, or enter 3-10 digits.</div>
-                {errors.boxCode && <div style={errorStyle}>{errors.boxCode}</div>}
               </div>
               <div>
                 <label style={labelStyle}>Number of Items *</label>

@@ -92,8 +92,8 @@ export const action = async ({ request }) => {
   if (intent === "cancel") {
     const subscriptionId = formData.get("subscriptionId");
     try {
-      await cancelSubscription(admin, shop, subscriptionId);
-      await setShopPlanStatus(shop, "free");
+      const nextSubscription = await cancelSubscription(admin, shop, subscriptionId);
+      await setShopPlanStatus(shop, nextSubscription?.plan === "PRO" ? "active" : "free");
       return rrRedirect(withEmbeddedAppParamsFromRequest("/app/pricing?cancelled=1", request));
     } catch (e) {
       return { error: e.message };
@@ -397,6 +397,36 @@ const PRICING_UI_CSS = `
     width: 100%;
   }
 
+  .pricing-cancel-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .pricing-danger-btn {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid #e35d6a;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #b42318;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .pricing-danger-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .pricing-inline-note {
+    color: #616161;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
   .pricing-static-note {
     display: flex;
     align-items: center;
@@ -412,38 +442,8 @@ const PRICING_UI_CSS = `
     text-align: center;
   }
 
-  .pricing-facts {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
-
-  .pricing-fact {
-    padding: 14px 16px;
-    border: 1px solid #e3e3e3;
-    border-radius: 10px;
-    background: #ffffff;
-  }
-
-  .pricing-fact-label {
-    margin: 0 0 4px;
-    color: #616161;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  .pricing-fact-value {
-    margin: 0;
-    color: #202223;
-    font-size: 13px;
-    line-height: 1.5;
-  }
-
   @media (max-width: 768px) {
-    .pricing-grid,
-    .pricing-facts {
+    .pricing-grid {
       grid-template-columns: 1fr;
     }
 
@@ -472,15 +472,44 @@ function PlanFeature({ text, muted = false }) {
   );
 }
 
+function toDateOrNull(value) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function hasRemainingBillingPeriod(subscription) {
+  const currentPeriodEnd = toDateOrNull(subscription?.currentPeriodEnd);
+  return !!currentPeriodEnd && currentPeriodEnd.getTime() > Date.now();
+}
+
+function hasPaidAccess(subscription) {
+  if (!subscription || subscription.plan !== "PRO") return false;
+  if (subscription.status === "ACTIVE") return true;
+  return subscription.status === "CANCELLED" && hasRemainingBillingPeriod(subscription);
+}
+
+function hasScheduledCancellation(subscription) {
+  return !!subscription && subscription.plan === "PRO" && subscription.status === "CANCELLED" && hasRemainingBillingPeriod(subscription);
+}
+
+function formatSubscriptionDate(value) {
+  const parsed = toDateOrNull(value);
+  return parsed
+    ? parsed.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+    : "-";
+}
+
 export default function PricingPage() {
   const { subscription, billingUnavailable, isDevMode, boxCount, plans, subscribed, cancelled } = useLoaderData();
   const actionData = useActionData();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
-  const isPro = subscription?.plan === "PRO" && subscription?.status === "ACTIVE";
+  const isPro = hasPaidAccess(subscription);
   const isFree = subscription?.plan === "FREE" && subscription?.status === "ACTIVE";
-  const hasNoPlan = !subscription || subscription.status === "NONE" || subscription.status === "CANCELLED";
+  const cancellationScheduled = hasScheduledCancellation(subscription);
+  const hasNoPlan = !isPro && !isFree;
   const billingDown = billingUnavailable || actionData?.billingUnavailable;
 
   useEffect(() => {
@@ -491,9 +520,15 @@ export default function PricingPage() {
 
   const proPlan = plans.find((p) => p.key === "PRO");
   const freePlan = plans.find((p) => p.key === "FREE");
-  const currentPlanLabel = isPro ? "Pro plan active" : isFree ? "Free plan active" : "No plan selected";
+  const currentPlanLabel = cancellationScheduled
+    ? "Pro cancellation scheduled"
+    : isPro
+      ? "Pro plan active"
+      : isFree
+        ? "Free plan active"
+        : "No plan selected";
   const currentPlanMeta = isPro
-    ? `Renews ${subscription?.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "-"}`
+    ? `${cancellationScheduled ? "Access until" : "Renews"} ${formatSubscriptionDate(subscription?.currentPeriodEnd)}`
     : `${boxCount} box${boxCount !== 1 ? "es" : ""} created · ${hasNoPlan ? "Select a plan below" : "1 box allowed on Free"}`;
 
   return (
@@ -577,13 +612,9 @@ export default function PricingPage() {
                   {isFree ? (
                     <div className="pricing-static-note">Current plan</div>
                   ) : isPro ? (
-                    <form method="post">
-                      <input type="hidden" name="intent" value="cancel" />
-                      <input type="hidden" name="subscriptionId" value={subscription?.subscriptionId || ""} />
-                      <s-button type="submit" disabled={isSubmitting || undefined}>
-                        {isSubmitting ? "Processing..." : "Downgrade to Free"}
-                      </s-button>
-                    </form>
+                    <div className="pricing-static-note">
+                      {cancellationScheduled ? `Free starts after ${formatSubscriptionDate(subscription?.currentPeriodEnd)}` : "Cancel Pro below to switch later"}
+                    </div>
                   ) : (
                     <form method="post">
                       <input type="hidden" name="intent" value="free" />
@@ -620,7 +651,22 @@ export default function PricingPage() {
 
                 <div className="pricing-card-action">
                   {isPro ? (
-                    <div className="pricing-static-note">Pro is active on this store</div>
+                    cancellationScheduled ? (
+                      <div className="pricing-static-note">
+                        Pro remains active until {formatSubscriptionDate(subscription?.currentPeriodEnd)}
+                      </div>
+                    ) : (
+                      <form method="post" className="pricing-cancel-form">
+                        <input type="hidden" name="intent" value="cancel" />
+                        <input type="hidden" name="subscriptionId" value={subscription?.subscriptionId || ""} />
+                        <button type="submit" className="pricing-danger-btn" disabled={isSubmitting}>
+                          {isSubmitting ? "Cancelling..." : "Cancel Pro plan"}
+                        </button>
+                        <div className="pricing-inline-note">
+                          Access continues until the end of the current billing period.
+                        </div>
+                      </form>
+                    )
                   ) : billingDown ? (
                     <div className="pricing-static-note">Billing unavailable right now</div>
                   ) : actionData?.confirmationUrl ? (
@@ -639,26 +685,6 @@ export default function PricingPage() {
           </div>
         </s-section>
 
-        <s-section heading="Billing details">
-          <div className="pricing-facts">
-            <div className="pricing-fact">
-              <div className="pricing-fact-label">Free trial</div>
-              <p className="pricing-fact-value">{proPlan?.trialDays} days free on Pro before the first charge.</p>
-            </div>
-            <div className="pricing-fact">
-              <div className="pricing-fact-label">Billing</div>
-              <p className="pricing-fact-value">Monthly, charged to the merchant&apos;s Shopify invoice in USD.</p>
-            </div>
-            <div className="pricing-fact">
-              <div className="pricing-fact-label">Upgrade</div>
-              <p className="pricing-fact-value">Pro activates after billing approval and unlocks unlimited combo boxes.</p>
-            </div>
-            <div className="pricing-fact">
-              <div className="pricing-fact-label">Cancellation</div>
-              <p className="pricing-fact-value">Cancel anytime. Access continues until the end of the current billing period.</p>
-            </div>
-          </div>
-        </s-section>
       </div>
     </s-page>
   );

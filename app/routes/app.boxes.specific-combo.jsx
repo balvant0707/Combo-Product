@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
-import { createBox, upsertComboConfig, addComboStepImagesToProduct, saveComboStepImages, isBoxCodeValidationError } from "../models/boxes.server";
+import { createBox, upsertComboConfig, addComboStepImagesToProduct, saveComboStepImages } from "../models/boxes.server";
 import { AdminIcon } from "../components/admin-icons";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 import { validateComboConfig } from "../utils/combo-config";
@@ -177,7 +177,6 @@ export const action = async ({ request }) => {
   const data = {
     boxName:            comboName,
     displayTitle:       comboName,
-    boxCode:            formData.get("boxCode"),
     itemCount,
     bundlePrice,
     bundlePriceType,
@@ -211,9 +210,6 @@ export const action = async ({ request }) => {
     }
   } catch (e) {
     if (e instanceof Response) throw e;
-    if (isBoxCodeValidationError(e)) {
-      return { errors: { boxCode: e.message } };
-    }
     const message = e instanceof Error && e.message ? e.message : "Failed to create combo box. Please try again.";
     return { errors: { _global: message } };
   }
@@ -367,13 +363,6 @@ export default function CreateSpecificComboBoxPage() {
             <label style={labelStyle}>Combo Name *</label>
             <input type="text" name="comboName" placeholder="e.g. Premium Bundle" style={{ ...fieldStyle, borderColor: errors.comboName ? "#e11d48" : "#d1d5db" }} />
             {errors.comboName && <div style={errorStyle}>{errors.comboName}</div>}
-          </div>
-
-          <div style={{ marginBottom: "20px" }}>
-            <label style={labelStyle}>Box Code</label>
-            <input type="text" name="boxCode" placeholder="Leave blank to auto-generate" maxLength="10" style={{ ...fieldStyle, borderColor: errors.boxCode ? "#e11d48" : "#d1d5db", textTransform: "uppercase" }} />
-            <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>Shown in the code column. Leave blank to auto-generate a numeric code, or enter 3-10 digits.</div>
-            {errors.boxCode && <div style={errorStyle}>{errors.boxCode}</div>}
           </div>
 
           {/* Banner Image */}

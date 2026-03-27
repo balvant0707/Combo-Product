@@ -45,6 +45,12 @@ export const PLANS = {
 
 export const PLAN_KEYS = ["FREE", "PRO"];
 
+function toDateOrNull(value) {
+  if (!value) return null;
+  const parsed = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 /* ─── Status values ─────────────────────────────────────────────────── */
 // NONE    — not yet selected any plan (redirect to pricing)
 // ACTIVE  — paid plan active (or free plan chosen)
@@ -92,26 +98,55 @@ export async function activatePaidPlan(shop, { plan, subscriptionId, trialEndsAt
   });
 }
 
-/** Mark subscription as CANCELLED */
-export async function cancelPlan(shop) {
+export function hasRemainingBillingPeriod(subscription, now = new Date()) {
+  const currentPeriodEnd = toDateOrNull(subscription?.currentPeriodEnd);
+  return !!currentPeriodEnd && currentPeriodEnd.getTime() > now.getTime();
+}
+
+export function isPaidPlanActive(subscription, now = new Date()) {
+  if (!subscription || subscription.plan !== "PRO") return false;
+  if (subscription.status === "ACTIVE") return true;
+  return subscription.status === "CANCELLED" && hasRemainingBillingPeriod(subscription, now);
+}
+
+export function isFreePlanActive(subscription) {
+  return !!subscription && subscription.plan === "FREE" && subscription.status === "ACTIVE";
+}
+
+export function hasPlanAccess(subscription, now = new Date()) {
+  return isFreePlanActive(subscription) || isPaidPlanActive(subscription, now);
+}
+
+export function isCancellationScheduled(subscription, now = new Date()) {
+  return !!subscription && subscription.plan === "PRO" && subscription.status === "CANCELLED" && hasRemainingBillingPeriod(subscription, now);
+}
+
+/** Mark subscription as CANCELLED, preserving paid access until currentPeriodEnd when available */
+export async function cancelPlan(shop, { subscriptionId = null, currentPeriodEnd = null } = {}) {
+  const endsAt = toDateOrNull(currentPeriodEnd);
+  if (!endsAt || endsAt.getTime() <= Date.now()) {
+    return activateFreePlan(shop);
+  }
+
   return saveSubscription(shop, {
-    plan:           "FREE",
-    status:         "CANCELLED",
-    subscriptionId: null,
-    trialEndsAt:    null,
-    currentPeriodEnd: null,
+    plan: "PRO",
+    status: "CANCELLED",
+    subscriptionId,
+    trialEndsAt: null,
+    currentPeriodEnd: endsAt,
   });
 }
 
 /** Check if the shop has an active plan (FREE or PRO) */
 export async function hasActivePlan(shop) {
   const sub = await getSubscription(shop);
-  return !!sub && sub.status === "ACTIVE";
+  return hasPlanAccess(sub);
 }
 
 /** Get the box limit for the shop's current plan */
 export async function getBoxLimit(shop) {
   const sub = await getSubscription(shop);
-  if (!sub || sub.status !== "ACTIVE") return PLANS.FREE.boxLimit;
-  return PLANS[sub.plan]?.boxLimit ?? PLANS.FREE.boxLimit;
+  if (isPaidPlanActive(sub)) return PLANS.PRO.boxLimit;
+  if (isFreePlanActive(sub)) return PLANS.FREE.boxLimit;
+  return PLANS.FREE.boxLimit;
 }

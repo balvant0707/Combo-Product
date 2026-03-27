@@ -119,8 +119,8 @@ export const action = async ({ request }) => {
   if (intent === "cancel") {
     const subscriptionId = formData.get("subscriptionId");
     try {
-      await cancelSubscription(admin, shop, subscriptionId);
-      await setShopPlanStatus(shop, "free").catch(() => {});
+      const nextSubscription = await cancelSubscription(admin, shop, subscriptionId);
+      await setShopPlanStatus(shop, nextSubscription?.plan === "PRO" ? "active" : "free").catch(() => {});
       return rrRedirect(withEmbeddedAppParamsFromRequest("/app/plan?cancelled=1", request));
     } catch (e) {
       return { error: e.message };

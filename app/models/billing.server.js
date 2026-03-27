@@ -71,7 +71,7 @@ const CREATE_SUBSCRIPTION_MUTATION = `#graphql
 const CANCEL_SUBSCRIPTION_MUTATION = `#graphql
   mutation CancelSubscription($id: ID!) {
     appSubscriptionCancel(id: $id) {
-      appSubscription { id status }
+      appSubscription { id status currentPeriodEnd }
       userErrors { field message }
     }
   }
@@ -125,7 +125,12 @@ export async function getActiveShopifySubscription(admin) {
  * Returns the local DB subscription record.
  */
 export async function syncSubscription(admin, shop) {
-  const { saveSubscription, getSubscription } = await import("./subscription.server.js");
+  const {
+    activateFreePlan,
+    getSubscription,
+    hasRemainingBillingPeriod,
+    saveSubscription,
+  } = await import("./subscription.server.js");
 
   let shopifySub = null;
   let billingUnavailable = false;
@@ -135,8 +140,20 @@ export async function syncSubscription(admin, shop) {
     if (e.isBillingUnavailable) billingUnavailable = true;
   }
 
+  const existingLocal = await getSubscription(shop);
+
   if (shopifySub) {
     // Shopify reports an active subscription — save it
+    const preserveScheduledCancellation =
+      existingLocal?.plan === "PRO" &&
+      existingLocal?.status === "CANCELLED" &&
+      existingLocal?.subscriptionId === shopifySub.id &&
+      hasRemainingBillingPeriod(existingLocal);
+
+    if (preserveScheduledCancellation) {
+      return { subscription: existingLocal, billingUnavailable };
+    }
+
     const planName = shopifySub.name || "";
     const planKey  = planName.toUpperCase().includes("PRO") ? "PRO" : "FREE";
     await saveSubscription(shop, {
@@ -148,7 +165,10 @@ export async function syncSubscription(admin, shop) {
     });
   }
 
-  const local = await getSubscription(shop);
+  let local = await getSubscription(shop);
+  if (!billingUnavailable && !shopifySub && local?.plan === "PRO" && !hasRemainingBillingPeriod(local)) {
+    local = await activateFreePlan(shop);
+  }
   return { subscription: local, billingUnavailable };
 }
 
@@ -194,7 +214,10 @@ export async function createSubscription(admin, planOrReturnUrl, maybeReturnUrl)
  * Also updates the local DB record to CANCELLED.
  */
 export async function cancelSubscription(admin, shop, subscriptionId) {
-  const { cancelPlan } = await import("./subscription.server.js");
+  const { cancelPlan, getSubscription } = await import("./subscription.server.js");
+  const existing = await getSubscription(shop);
+  let currentPeriodEnd = existing?.currentPeriodEnd ?? null;
+  let effectiveSubscriptionId = subscriptionId || existing?.subscriptionId || null;
 
   if (!SKIP_BILLING && subscriptionId && !subscriptionId.includes("/dev")) {
     const resp = await admin.graphql(CANCEL_SUBSCRIPTION_MUTATION, {
@@ -203,9 +226,14 @@ export async function cancelSubscription(admin, shop, subscriptionId) {
     const json   = await resp.json();
     const result = json?.data?.appSubscriptionCancel;
     if (result?.userErrors?.length) throw new Error(result.userErrors[0].message);
+    currentPeriodEnd = result?.appSubscription?.currentPeriodEnd || currentPeriodEnd;
+    effectiveSubscriptionId = result?.appSubscription?.id || effectiveSubscriptionId;
   }
 
-  await cancelPlan(shop);
+  return cancelPlan(shop, {
+    subscriptionId: effectiveSubscriptionId,
+    currentPeriodEnd,
+  });
 }
 
 /* ─── Box count helpers ─────────────────────────────────────────────── */
@@ -237,7 +265,7 @@ export const PLAN_CONFIG   = { price: 10, currencyCode: "USD", interval: "EVERY_
 export const FREE_BOX_LIMIT = 1;
 
 export async function isProPlan(admin, shop) {
-  const { getSubscription } = await import("./subscription.server.js");
+  const { getSubscription, isPaidPlanActive } = await import("./subscription.server.js");
   const sub = await getSubscription(shop);
-  return sub?.plan === "PRO" && sub?.status === "ACTIVE";
+  return isPaidPlanActive(sub);
 }

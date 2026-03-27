@@ -92,7 +92,7 @@ export const action = async ({ request }) => {
     try {
       const appUrl    = (process.env.SHOPIFY_APP_URL || "").replace(/\/$/, "");
       const returnUrl = `${appUrl}/app/pricing?subscribed=1`;
-      const confirmationUrl = await createSubscription(admin, "PRO", returnUrl);
+      const confirmationUrl = await createSubscription(admin, returnUrl);
       // Return URL to client — component uses window.open(_top) to navigate parent frame
       return { confirmationUrl };
     } catch (e) {

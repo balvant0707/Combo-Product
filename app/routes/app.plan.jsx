@@ -100,7 +100,7 @@ export const action = async ({ request }) => {
       const appUrl    = (process.env.SHOPIFY_APP_URL || "").replace(/\/$/, "");
       const returnUrl = `${appUrl}/app/plan?subscribed=1`;
 
-      const confirmationUrl = await createSubscription(admin, "PRO", returnUrl);
+      const confirmationUrl = await createSubscription(admin, returnUrl);
 
       if (!confirmationUrl) {
         return { error: "Shopify did not return a confirmation URL. Please try again." };

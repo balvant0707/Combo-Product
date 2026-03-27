@@ -4,7 +4,6 @@
  * Plans: FREE ($0) and PRO ($10/month with 7-day trial).
  */
 
-import { PLANS } from "./subscription.server.js";
 import db from "../db.server";
 
 /* ─── GraphQL ──────────────────────────────────────────────────────── */
@@ -37,23 +36,34 @@ const ACTIVE_SUBSCRIPTIONS_QUERY = `#graphql
 `;
 
 const CREATE_SUBSCRIPTION_MUTATION = `#graphql
-  mutation CreateSubscription(
-    $name:        String!
-    $lineItems:   [AppSubscriptionLineItemInput!]!
-    $returnUrl:   URL!
-    $trialDays:   Int
-    $test:        Boolean
-  ) {
+  mutation AppSubscriptionCreate($returnUrl: URL!) {
     appSubscriptionCreate(
-      name:      $name
-      lineItems: $lineItems
+      name: "Pro Plan"
       returnUrl: $returnUrl
-      trialDays: $trialDays
-      test:      $test
+      test: true
+      trialDays: 7
+      lineItems: [
+        {
+          plan: {
+            appRecurringPricingDetails: {
+              price: {
+                amount: 10
+                currencyCode: USD
+              }
+            }
+          }
+        }
+      ]
     ) {
       confirmationUrl
-      appSubscription { id status name }
-      userErrors { field message }
+      appSubscription {
+        id
+        status
+      }
+      userErrors {
+        field
+        message
+      }
     }
   }
 `;
@@ -82,7 +92,6 @@ function tagError(msg) {
 }
 
 const SKIP_BILLING = process.env.SKIP_BILLING === "true";
-const IS_TEST      = process.env.BILLING_TEST  !== "false";   // true by default
 
 /* ─── Read current Shopify subscription ────────────────────────────── */
 
@@ -116,8 +125,7 @@ export async function getActiveShopifySubscription(admin) {
  * Returns the local DB subscription record.
  */
 export async function syncSubscription(admin, shop) {
-  const { saveSubscription, activateFreePlan, getSubscription, PLANS: PLAN_MAP } =
-    await import("./subscription.server.js");
+  const { saveSubscription, getSubscription } = await import("./subscription.server.js");
 
   let shopifySub = null;
   let billingUnavailable = false;
@@ -148,31 +156,21 @@ export async function syncSubscription(admin, shop) {
 
 /**
  * Calls appSubscriptionCreate and returns the Shopify confirmation URL.
+ * Supports both createSubscription(admin, returnUrl) and the older
+ * createSubscription(admin, "PRO", returnUrl) call shape.
  * The merchant must visit this URL to approve the charge.
  * Returns null in SKIP_BILLING mode (dev bypass).
  */
-export async function createSubscription(admin, planKey, returnUrl) {
-  const plan = PLANS[planKey];
-  if (!plan) throw new Error(`Unknown plan: ${planKey}`);
-  if (plan.price === 0) throw new Error("Use activateFreePlan() for the Free plan — no Shopify billing needed.");
-
+export async function createSubscription(admin, planOrReturnUrl, maybeReturnUrl) {
   if (SKIP_BILLING) return null; // dev mode — caller handles this
 
+  const returnUrl = maybeReturnUrl ?? planOrReturnUrl;
+  if (typeof returnUrl !== "string" || !/^https?:\/\//i.test(returnUrl)) {
+    throw new Error("Invalid billing return URL.");
+  }
+
   const resp = await admin.graphql(CREATE_SUBSCRIPTION_MUTATION, {
-    variables: {
-      name:      plan.name,
-      lineItems: [{
-        plan: {
-          appRecurringPricingDetails: {
-            price:    { amount: String(plan.price), currencyCode: plan.currencyCode },
-            interval: plan.interval,
-          },
-        },
-      }],
-      returnUrl,
-      trialDays: plan.trialDays,
-      test:      IS_TEST,
-    },
+    variables: { returnUrl },
   });
 
   const json = await resp.json();
@@ -239,7 +237,7 @@ export const PLAN_CONFIG   = { price: 10, currencyCode: "USD", interval: "EVERY_
 export const FREE_BOX_LIMIT = 1;
 
 export async function isProPlan(admin, shop) {
-  const { hasActivePlan, getSubscription } = await import("./subscription.server.js");
+  const { getSubscription } = await import("./subscription.server.js");
   const sub = await getSubscription(shop);
   return sub?.plan === "PRO" && sub?.status === "ACTIVE";
 }

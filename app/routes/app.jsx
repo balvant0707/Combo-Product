@@ -1,8 +1,8 @@
-import { Outlet, useLoaderData, useLocation, useRouteError } from "react-router";
+import { redirect, Outlet, useLoaderData, useLocation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
 import { authenticate } from "../shopify.server";
-import { upsertSessionFromAuth, upsertShopFromAdmin } from "../models/shop.server";
+import { upsertSessionFromAuth, upsertShopFromAdmin, getShopStatus } from "../models/shop.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 import { sendMail } from "../utils/mailer.server";
 import { installedEmailHtml } from "../emails/app-installed";
@@ -47,6 +47,18 @@ export const loader = async ({ request }) => {
     await Promise.all(mailJobs);
   }
 
+  // ── Plan gate ────────────────────────────────────────────────────────────
+  // Allow through only if the merchant has explicitly selected Free or Pro.
+  // "installed" is the default status set on first install — redirect to pricing.
+  // Skip the gate when already on /app/pricing or /app/plan so they can choose without a loop.
+  const reqUrl = new URL(request.url);
+  if (!reqUrl.pathname.startsWith("/app/pricing") && !reqUrl.pathname.startsWith("/app/plan")) {
+    const shopStatus = await getShopStatus(session.shop);
+    if (!shopStatus || shopStatus === "installed") {
+      throw redirect("/app/pricing");
+    }
+  }
+
   // eslint-disable-next-line no-undef
   return { apiKey: process.env.SHOPIFY_API_KEY || "" };
 };
@@ -80,7 +92,7 @@ export default function App() {
         <s-link href={withEmbeddedAppParams("/app/boxes", location.search)}>Box Settings</s-link>
         <s-link href={withEmbeddedAppParams("/app/analytics", location.search)}>Analytics</s-link>
         <s-link href={withEmbeddedAppParams("/app/settings", location.search)}>Settings</s-link>
-        <s-link href={withEmbeddedAppParams("/app/plan", location.search)}>Plan</s-link>
+        <s-link href={withEmbeddedAppParams("/app/pricing", location.search)}>Plan</s-link>
       </s-app-nav>
       <Outlet />
     </AppProvider>

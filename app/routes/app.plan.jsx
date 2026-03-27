@@ -1,4 +1,5 @@
 import { redirect as rrRedirect, useActionData, useLoaderData, useNavigation, useRouteError } from "react-router";
+import { useEffect } from "react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { AdminIcon } from "../components/admin-icons";
@@ -15,6 +16,7 @@ export const loader = async ({ request }) => {
     FREE_BOX_LIMIT,
     PLAN_CONFIG,
   } = await import("../models/billing.server.js");
+  const { setShopPlanStatus } = await import("../models/shop.server.js");
 
   let subscription = null;
   let billingUnavailable = false;
@@ -27,7 +29,6 @@ export const loader = async ({ request }) => {
       if (e.isBillingUnavailable) billingUnavailable = true;
     }
   } else {
-    // Dev bypass — treat shop as Pro without calling Shopify
     subscription = {
       id:               "gid://shopify/AppSubscription/dev",
       status:           "ACTIVE",
@@ -37,8 +38,15 @@ export const loader = async ({ request }) => {
     };
   }
 
-  const boxCount = await getBoxCount(shop);
   const isPro = !!subscription && subscription.status === "ACTIVE";
+
+  // When Shopify redirects back after billing approval, mark the shop as active
+  const url = new URL(request.url);
+  if (url.searchParams.get("subscribed") === "1" && isPro) {
+    await setShopPlanStatus(shop, "active").catch(() => {});
+  }
+
+  const boxCount = await getBoxCount(shop);
 
   return {
     isPro,
@@ -63,38 +71,56 @@ export const loader = async ({ request }) => {
 /* ─── Action ─────────────────────────────────────────────────────── */
 
 export const action = async ({ request }) => {
-  // shopifyRedirect navigates the Shopify App Bridge top-frame (for external billing URLs).
-  // rrRedirect is React Router's own redirect — use it for internal app navigations.
-  const { admin, redirect: shopifyRedirect } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
+  const shop     = session.shop;
   const formData = await request.formData();
   const intent   = formData.get("intent");
 
   const { createSubscription, cancelSubscription } =
     await import("../models/billing.server.js");
+  const { setShopPlanStatus } = await import("../models/shop.server.js");
 
+  /* ── Select Free plan ── */
+  if (intent === "free") {
+    await setShopPlanStatus(shop, "free").catch(() => {});
+    return rrRedirect("/app/boxes");
+  }
+
+  /* ── Subscribe to Pro (monthly) ── */
   if (intent === "subscribe") {
     const isSkipBilling = process.env.SKIP_BILLING === "true";
 
-    // Skip-billing: no Shopify billing page, redirect internally via React Router
     if (isSkipBilling) {
-      return rrRedirect("/app/plan?subscribed=1");
+      // Dev mode: mark active and go straight to app
+      await setShopPlanStatus(shop, "active").catch(() => {});
+      return rrRedirect("/app/boxes");
     }
 
-    // Real billing: Shopify returns an external confirmation URL
     try {
-      const returnUrl = `${(process.env.SHOPIFY_APP_URL || "").replace(/\/$/, "")}/app/plan?subscribed=1`;
+      const appUrl    = (process.env.SHOPIFY_APP_URL || "").replace(/\/$/, "");
+      const returnUrl = `${appUrl}/app/plan?subscribed=1`;
+
       const confirmationUrl = await createSubscription(admin, returnUrl);
-      // shopifyRedirect uses App Bridge to navigate the top frame to Shopify's billing page
-      return shopifyRedirect(confirmationUrl);
+
+      if (!confirmationUrl) {
+        return { error: "Shopify did not return a confirmation URL. Please try again." };
+      }
+
+      // Return URL to client — component navigates window.top to it.
+      // Do NOT use shopifyRedirect() here; it races with React Router's
+      // form-submission handling and causes the InvalidStateError.
+      return { confirmationUrl };
     } catch (e) {
       return { error: e.message, billingUnavailable: !!e.isBillingUnavailable };
     }
   }
 
+  /* ── Cancel Pro → back to Free ── */
   if (intent === "cancel") {
     const subscriptionId = formData.get("subscriptionId");
     try {
       await cancelSubscription(admin, subscriptionId);
+      await setShopPlanStatus(shop, "free").catch(() => {});
       return rrRedirect("/app/plan?cancelled=1");
     } catch (e) {
       return { error: e.message };
@@ -160,6 +186,15 @@ export default function PlanPage() {
   const url            = new URL(typeof window !== "undefined" ? window.location.href : "http://localhost");
   const justSubscribed = url.searchParams.get("subscribed") === "1";
   const justCancelled  = url.searchParams.get("cancelled")  === "1";
+
+  // When the action returns a Shopify billing confirmation URL, navigate the
+  // TOP frame to it. Using window.open(_top) is the only reliable way to
+  // escape the embedded iframe and reach Shopify's billing page.
+  useEffect(() => {
+    if (actionData?.confirmationUrl) {
+      window.open(actionData.confirmationUrl, "_top");
+    }
+  }, [actionData?.confirmationUrl]);
 
   return (
     <div style={{ maxWidth: "820px", margin: "0 auto", padding: "28px 20px" }}>
@@ -294,21 +329,35 @@ export default function PlanPage() {
             </div>
 
             <div style={{ marginTop: "20px" }}>
-              <div style={{ textAlign: "center", padding: "10px", borderRadius: "8px", border: "1.5px solid #e5e7eb", fontSize: "13px", fontWeight: "600", color: "#9ca3af", cursor: "default" }}>
-                {isPro ? "Downgrade" : "Current plan"}
-              </div>
-              {isPro && (
-                <form method="post" style={{ marginTop: "8px" }}>
-                  <input type="hidden" name="intent" value="cancel" />
-                  <input type="hidden" name="subscriptionId" value={subscription?.id || ""} />
+              {!isPro ? (
+                /* Free plan CTA — no Shopify billing, just mark status and go */
+                <form method="post">
+                  <input type="hidden" name="intent" value="free" />
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1.5px solid #fecaca", background: "#fff", fontSize: "12px", fontWeight: "600", color: "#ef4444", cursor: "pointer" }}
+                    style={{ width: "100%", padding: "11px", borderRadius: "8px", border: "1.5px solid #000", background: "#fff", fontSize: "13px", fontWeight: "700", color: "#000", cursor: isSubmitting ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", opacity: isSubmitting ? 0.7 : 1 }}
                   >
-                    {isSubmitting ? "Cancelling…" : "Cancel subscription"}
+                    {isSubmitting ? "Starting…" : "Continue with Free Plan →"}
                   </button>
                 </form>
+              ) : (
+                <>
+                  <div style={{ textAlign: "center", padding: "10px", borderRadius: "8px", border: "1.5px solid #e5e7eb", fontSize: "13px", fontWeight: "600", color: "#9ca3af", cursor: "default", marginBottom: "8px" }}>
+                    Current plan
+                  </div>
+                  <form method="post">
+                    <input type="hidden" name="intent" value="cancel" />
+                    <input type="hidden" name="subscriptionId" value={subscription?.id || ""} />
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1.5px solid #fecaca", background: "#fff", fontSize: "12px", fontWeight: "600", color: "#ef4444", cursor: "pointer" }}
+                    >
+                      {isSubmitting ? "Cancelling…" : "Cancel subscription"}
+                    </button>
+                  </form>
+                </>
               )}
             </div>
           </div>
@@ -367,6 +416,12 @@ export default function PlanPage() {
                   Billing unavailable
                   <div style={{ fontSize: "11px", marginTop: "3px", color: "#d1d5db" }}>See notice above to enable</div>
                 </div>
+              ) : actionData?.confirmationUrl ? (
+                /* URL returned — useEffect is opening it; show holding state */
+                <div style={{ textAlign: "center", padding: "12px", borderRadius: "8px", background: "#000", fontSize: "13px", fontWeight: "600", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                  <span style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "plan-spin 0.7s linear infinite" }} />
+                  Opening Shopify billing…
+                </div>
               ) : (
                 <form method="post">
                   <input type="hidden" name="intent" value="subscribe" />
@@ -378,7 +433,7 @@ export default function PlanPage() {
                     {isSubmitting ? (
                       <>
                         <span style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "plan-spin 0.7s linear infinite" }} />
-                        Redirecting to Shopify…
+                        Preparing billing…
                       </>
                     ) : (
                       `Start ${planConfig.trialDays}-Day Free Trial →`

@@ -190,6 +190,26 @@ export async function upsertShopFromAdmin(session, admin) {
   };
 }
 
+/**
+ * Records which app plan the merchant has chosen.
+ * status: "free" | "active" (pro subscription confirmed)
+ * Called from the plan selection page action / billing return URL.
+ */
+export async function setShopPlanStatus(shop, status) {
+  await db.shop.update({
+    where: { shop },
+    data:  { status },
+  });
+}
+
+/**
+ * Returns the shop's current plan-selection status, or null if not found.
+ */
+export async function getShopStatus(shop) {
+  const row = await db.shop.findUnique({ where: { shop }, select: { status: true } });
+  return row?.status ?? null;
+}
+
 export async function markShopUninstalled(shop) {
   console.info("[DB Sync] markShopUninstalled", { shop });
 

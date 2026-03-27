@@ -14,16 +14,24 @@ import {
 import { AdminIcon } from "../components/admin-icons";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
+function getDiscountSummary(box) {
+  // Always read from comboStepsConfig JSON — works for both regular and specific combo boxes
+  const src = box.comboStepsConfig;
+  if (!src) return null;
+  try {
+    const p = JSON.parse(src);
+    const type = p?.discountType;
+    const value = p?.discountValue;
+    if (!type || type === "none" || value == null) return null;
+    return { discountType: type, discountValue: value };
+  } catch { return null; }
+}
+
 function getComboConfigSummary(box) {
   if (box.config) {
     const comboType = box.config.comboType;
     if (!comboType || comboType <= 0) return null;
-    // discountType/discountValue live only in comboStepsConfig JSON (not in ComboBoxConfig schema columns)
-    let discountType = null, discountValue = null;
-    if (box.comboStepsConfig) {
-      try { const p = JSON.parse(box.comboStepsConfig); discountType = p?.discountType || null; discountValue = p?.discountValue ?? null; } catch {}
-    }
-    return { comboType, title: box.config.title, isActive: box.config.isActive, stepsJson: box.config.stepsJson, discountType, discountValue };
+    return { comboType, title: box.config.title, isActive: box.config.isActive, stepsJson: box.config.stepsJson };
   }
   if (!box.comboStepsConfig) return null;
   try {
@@ -31,14 +39,7 @@ function getComboConfigSummary(box) {
     const comboType = parseInt(parsed?.type) || 0;
     if (comboType <= 0) return null;
     const steps = Array.isArray(parsed?.steps) ? parsed.steps : [];
-    return {
-      comboType,
-      title: parsed?.title || null,
-      isActive: parsed?.isActive !== false,
-      stepsJson: JSON.stringify(steps),
-      discountType: parsed?.discountType || null,
-      discountValue: parsed?.discountValue ?? null,
-    };
+    return { comboType, title: parsed?.title || null, isActive: parsed?.isActive !== false, stepsJson: JSON.stringify(steps) };
   } catch { return null; }
 }
 
@@ -73,6 +74,7 @@ export const loader = async ({ request }) => {
       sortOrder: b.sortOrder,
       orderCount: b._count?.orders ?? 0,
       comboConfig: getComboConfigSummary(b),
+      discount: getDiscountSummary(b),
     })),
   };
 };
@@ -572,11 +574,11 @@ export default function ManageBoxesPage() {
                         {box.bundlePriceType === "dynamic" ? (
                           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                             <span className="cb-price-dynamic">Dynamic</span>
-                            {box.comboConfig?.discountType && box.comboConfig.discountType !== "none" && box.comboConfig.discountValue != null && (
+                            {box.discount && (
                               <span style={{ fontSize: 11, color: "#2A7A4F", fontWeight: 600 }}>
-                                {box.comboConfig.discountType === "percent"
-                                  ? `${box.comboConfig.discountValue}% off`
-                                  : `₹${box.comboConfig.discountValue} off`}
+                                {box.discount.discountType === "percent"
+                                  ? `${box.discount.discountValue}% off`
+                                  : `₹${box.discount.discountValue} off`}
                               </span>
                             )}
                           </div>

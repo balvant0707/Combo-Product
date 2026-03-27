@@ -588,14 +588,12 @@ export async function createBox(shop, data, admin) {
       shopifyVariantId,
       scopeType: data.scopeType || "specific_collections",
       scopeItemsJson: Array.isArray(data.scopeItems) && data.scopeItems.length > 0 ? JSON.stringify(data.scopeItems) : null,
-      comboStepsConfig: data.bundlePriceType === "dynamic"
-        ? JSON.stringify({
-            bundlePriceType: "dynamic",
-            discountType: data.discountType || "none",
-            discountValue: data.discountValue || "0",
-            bundlePrice: bundlePrice,
-          })
-        : null,
+      comboStepsConfig: JSON.stringify({
+        bundlePriceType: data.bundlePriceType === "dynamic" ? "dynamic" : "manual",
+        discountType: data.discountType || "none",
+        discountValue: data.discountValue || "0",
+        bundlePrice: bundlePrice,
+      }),
     },
   });
 
@@ -658,10 +656,16 @@ export async function upsertComboConfig(boxId, config) {
     stepsJson,
   };
 
-  // Persist raw JSON to ComboBox.comboStepsConfig and sync itemCount to match comboType
+  // Persist raw JSON to ComboBox and sync bundlePrice/bundlePriceType so both tables stay in sync
+  const comboBoxUpdate = {
+    comboStepsConfig: rawJson,
+    itemCount: payload.comboType,
+    bundlePriceType: payload.bundlePriceType,
+  };
+  if (payload.bundlePrice != null) comboBoxUpdate.bundlePrice = payload.bundlePrice;
   await db.comboBox.update({
     where: { id: parseInt(boxId) },
-    data:  { comboStepsConfig: rawJson, itemCount: payload.comboType },
+    data:  comboBoxUpdate,
   });
 
   return db.comboBoxConfig.upsert({

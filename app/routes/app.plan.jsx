@@ -142,31 +142,31 @@ const labelStyle = {
   marginBottom: "4px",
 };
 
-function CheckRow({ children, muted = false }) {
+function CheckRow({ children }) {
   return (
     <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "10px" }}>
       <span style={{
-        width: "18px", height: "18px", borderRadius: "50%", flexShrink: 0, marginTop: "1px",
-        background: muted ? "#f3f4f6" : "#000", display: "flex", alignItems: "center", justifyContent: "center",
+        width: "20px", height: "20px", borderRadius: "50%", flexShrink: 0, marginTop: "1px",
+        background: "#111827", display: "flex", alignItems: "center", justifyContent: "center",
       }}>
         <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-          <path d="M1 4l2.5 2.5L9 1" stroke={muted ? "#9ca3af" : "#fff"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M1 4l2.5 2.5L9 1" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </span>
-      <span style={{ fontSize: "13px", color: muted ? "#9ca3af" : "#374151", lineHeight: 1.5 }}>{children}</span>
+      <span style={{ fontSize: "13px", color: "#374151", lineHeight: 1.5 }}>{children}</span>
     </div>
   );
 }
 
-function CrossRow({ children }) {
+function MutedRow({ children }) {
   return (
     <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "10px" }}>
       <span style={{
-        width: "18px", height: "18px", borderRadius: "50%", flexShrink: 0, marginTop: "1px",
-        background: "#fee2e2", display: "flex", alignItems: "center", justifyContent: "center",
+        width: "20px", height: "20px", borderRadius: "50%", flexShrink: 0, marginTop: "1px",
+        background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center",
       }}>
-        <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-          <path d="M1 1l6 6M7 1L1 7" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" />
+        <svg width="8" height="2" viewBox="0 0 8 2" fill="none">
+          <path d="M1 1h6" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" />
         </svg>
       </span>
       <span style={{ fontSize: "13px", color: "#9ca3af", lineHeight: 1.5 }}>{children}</span>
@@ -202,10 +202,7 @@ export default function PlanPage() {
       {/* ── Title ── */}
       <div style={{ marginBottom: "24px" }}>
         <div style={{ fontSize: "22px", fontWeight: "800", color: "#111827", letterSpacing: "-0.5px" }}>
-          Pricing Plans
-        </div>
-        <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "4px" }}>
-          Choose the plan that fits your store
+          Plan options
         </div>
       </div>
 
@@ -271,177 +268,129 @@ export default function PlanPage() {
         </div>
       )}
 
-      {/* ── Current status bar ── */}
-      <div style={{ background: isPro ? "#000" : "#f9fafb", border: `1px solid ${isPro ? "#000" : "#e5e7eb"}`, borderRadius: "10px", padding: "16px 20px", marginBottom: "28px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ width: "38px", height: "38px", borderRadius: "50%", background: isPro ? "rgba(255,255,255,0.15)" : "#e5e7eb", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <AdminIcon type={isPro ? "star" : "box"} size="small" style={{ color: isPro ? "#fff" : "#6b7280" }} />
-          </div>
-          <div>
-            <div style={{ fontSize: "14px", fontWeight: "700", color: isPro ? "#fff" : "#111827" }}>
-              {isPro ? "Pro Plan — Active" : "Free Plan"}
-            </div>
-            <div style={{ fontSize: "12px", color: isPro ? "rgba(255,255,255,0.65)" : "#6b7280", marginTop: "2px" }}>
-              {isPro
-                ? `Renews on ${subscription?.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}`
-                : `${boxCount} / ${freeLimit} combo box used`}
-            </div>
-          </div>
-        </div>
-        {isPro && (
-          <div style={{ fontSize: "12px", fontWeight: "700", color: "#fff", background: "rgba(255,255,255,0.15)", borderRadius: "20px", padding: "4px 14px", border: "1px solid rgba(255,255,255,0.25)" }}>
-            ✦ PRO
-          </div>
-        )}
-        {!isPro && (
-          <div style={{ fontSize: "12px", color: "#6b7280", background: "#e5e7eb", borderRadius: "20px", padding: "4px 14px" }}>
-            FREE
-          </div>
-        )}
-      </div>
-
       {/* ── Plan cards ── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
 
         {/* Free card */}
-        <div style={{ background: "#fff", border: `2px solid ${!isPro ? "#000" : "#e5e7eb"}`, borderRadius: "12px", overflow: "hidden", position: "relative" }}>
-          {!isPro && (
-            <div style={{ position: "absolute", top: "12px", right: "12px", fontSize: "10px", fontWeight: "700", background: "#000", color: "#fff", borderRadius: "20px", padding: "3px 10px", letterSpacing: "0.05em" }}>
-              CURRENT
+        <div style={{ background: "#fff", border: `2px solid ${!isPro ? "#111827" : "#e5e7eb"}`, borderRadius: "12px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <div style={{ padding: "24px", flex: 1, position: "relative" }}>
+            {!isPro && (
+              <div style={{ position: "absolute", top: "16px", right: "16px", fontSize: "10px", fontWeight: "700", background: "#f3f4f6", color: "#374151", borderRadius: "6px", padding: "3px 10px", letterSpacing: "0.05em", border: "1px solid #e5e7eb" }}>
+                CURRENT
+              </div>
+            )}
+            <div style={{ fontSize: "18px", fontWeight: "700", color: "#111827", marginBottom: "4px" }}>Free</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "4px", marginBottom: "4px" }}>
+              <span style={{ fontSize: "36px", fontWeight: "800", color: "#111827", lineHeight: 1 }}>$0</span>
+              <span style={{ fontSize: "13px", color: "#6b7280" }}>/month</span>
             </div>
-          )}
-          <div style={{ padding: "24px" }}>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "6px" }}>Free</div>
-            <div style={{ display: "flex", alignItems: "flex-end", gap: "4px", marginBottom: "4px" }}>
-              <span style={{ fontSize: "32px", fontWeight: "800", color: "#111827", lineHeight: 1 }}>$0</span>
-              <span style={{ fontSize: "13px", color: "#6b7280", marginBottom: "4px" }}>/month</span>
-            </div>
-            <div style={{ fontSize: "12px", color: "#9ca3af", marginBottom: "20px" }}>Forever free, no credit card needed</div>
+            <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "20px" }}>Good for setup, testing, and a single live combo box.</div>
 
-            <div style={{ borderTop: "1px solid #f3f4f6", paddingTop: "20px" }}>
+            <div>
               <CheckRow>1 combo box</CheckRow>
               <CheckRow>2-step &amp; 3-step bundles</CheckRow>
-              <CheckRow>Smart &amp; manual collections</CheckRow>
-              <CheckRow>Dynamic pricing &amp; discounts</CheckRow>
               <CheckRow>Storefront widget</CheckRow>
-              <CrossRow>Unlimited combo boxes</CrossRow>
-              <CrossRow>Priority support</CrossRow>
+              <CheckRow>Basic analytics</CheckRow>
+              <MutedRow>Unlimited combo boxes</MutedRow>
+              <MutedRow>Priority support</MutedRow>
             </div>
+          </div>
 
-            <div style={{ marginTop: "20px" }}>
-              {!isPro ? (
-                /* Free plan CTA — no Shopify billing, just mark status and go */
-                <form method="post">
-                  <input type="hidden" name="intent" value="free" />
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    style={{ width: "100%", padding: "11px", borderRadius: "8px", border: "1.5px solid #000", background: "#fff", fontSize: "13px", fontWeight: "700", color: "#000", cursor: isSubmitting ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", opacity: isSubmitting ? 0.7 : 1 }}
-                  >
-                    {isSubmitting ? "Starting…" : "Continue with Free Plan →"}
-                  </button>
-                </form>
-              ) : (
-                <>
-                  <div style={{ textAlign: "center", padding: "10px", borderRadius: "8px", border: "1.5px solid #e5e7eb", fontSize: "13px", fontWeight: "600", color: "#9ca3af", cursor: "default", marginBottom: "8px" }}>
-                    Current plan
-                  </div>
-                  <form method="post">
-                    <input type="hidden" name="intent" value="cancel" />
-                    <input type="hidden" name="subscriptionId" value={subscription?.id || ""} />
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1.5px solid #fecaca", background: "#fff", fontSize: "12px", fontWeight: "600", color: "#ef4444", cursor: "pointer" }}
-                    >
-                      {isSubmitting ? "Cancelling…" : "Cancel subscription"}
-                    </button>
-                  </form>
-                </>
-              )}
-            </div>
+          {/* Card footer */}
+          <div style={{ borderTop: "1px solid #f3f4f6", background: "#f9fafb", padding: "14px 24px" }}>
+            {!isPro ? (
+              <form method="post">
+                <input type="hidden" name="intent" value="free" />
+                <button
+                  type="submit"
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1.5px solid #d1d5db", background: "#f9fafb", fontSize: "13px", fontWeight: "600", color: "#374151", cursor: "pointer", textAlign: "center" }}
+                >
+                  {isSubmitting ? "Starting…" : "Continue with Free Plan"}
+                </button>
+              </form>
+            ) : (
+              <form method="post">
+                <input type="hidden" name="intent" value="cancel" />
+                <input type="hidden" name="subscriptionId" value={subscription?.id || ""} />
+                <button
+                  type="submit"
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1.5px solid #fecaca", background: "#fff5f5", fontSize: "13px", fontWeight: "600", color: "#ef4444", cursor: "pointer", textAlign: "center" }}
+                >
+                  {isSubmitting ? "Cancelling…" : "Cancel subscription"}
+                </button>
+              </form>
+            )}
           </div>
         </div>
 
         {/* Pro card */}
-        <div style={{ background: isPro ? "#000" : "#fff", border: `2px solid ${isPro ? "#000" : "#e5e7eb"}`, borderRadius: "12px", overflow: "hidden", position: "relative" }}>
-          {!isPro && (
-            <div style={{ position: "absolute", top: "12px", right: "12px", fontSize: "10px", fontWeight: "700", background: "#2A7A4F", color: "#fff", borderRadius: "20px", padding: "3px 10px", letterSpacing: "0.05em" }}>
-              RECOMMENDED
+        <div style={{ background: "#fff", border: `2px solid ${isPro ? "#111827" : "#e5e7eb"}`, borderRadius: "12px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <div style={{ padding: "24px", flex: 1, position: "relative" }}>
+            {isPro && (
+              <div style={{ position: "absolute", top: "16px", right: "16px", fontSize: "10px", fontWeight: "700", background: "#f3f4f6", color: "#374151", borderRadius: "6px", padding: "3px 10px", letterSpacing: "0.05em", border: "1px solid #e5e7eb" }}>
+                CURRENT
+              </div>
+            )}
+            <div style={{ fontSize: "18px", fontWeight: "700", color: "#111827", marginBottom: "4px" }}>Pro</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "4px", marginBottom: "4px" }}>
+              <span style={{ fontSize: "36px", fontWeight: "800", color: "#111827", lineHeight: 1 }}>${planConfig.price}</span>
+              <span style={{ fontSize: "13px", color: "#6b7280" }}>/month</span>
             </div>
-          )}
-          {isPro && (
-            <div style={{ position: "absolute", top: "12px", right: "12px", fontSize: "10px", fontWeight: "700", background: "rgba(255,255,255,0.2)", color: "#fff", borderRadius: "20px", padding: "3px 10px", letterSpacing: "0.05em" }}>
-              CURRENT
-            </div>
-          )}
-          <div style={{ padding: "24px" }}>
-            <div style={{ fontSize: "11px", fontWeight: "700", color: isPro ? "rgba(255,255,255,0.5)" : "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "6px" }}>Pro</div>
-            <div style={{ display: "flex", alignItems: "flex-end", gap: "4px", marginBottom: "4px" }}>
-              <span style={{ fontSize: "32px", fontWeight: "800", color: isPro ? "#fff" : "#111827", lineHeight: 1 }}>${planConfig.price}</span>
-              <span style={{ fontSize: "13px", color: isPro ? "rgba(255,255,255,0.5)" : "#6b7280", marginBottom: "4px" }}>/month</span>
-            </div>
-            <div style={{ fontSize: "12px", color: isPro ? "rgba(255,255,255,0.5)" : "#9ca3af", marginBottom: "20px" }}>
-              {planConfig.trialDays}-day free trial · billed monthly
+            <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "20px" }}>
+              {planConfig.trialDays}-day free trial, then billed monthly through Shopify.
             </div>
 
-            <div style={{ borderTop: `1px solid ${isPro ? "rgba(255,255,255,0.12)" : "#f3f4f6"}`, paddingTop: "20px" }}>
+            <div>
               {[
                 "Unlimited combo boxes",
                 "2-step & 3-step bundles",
                 "Smart & manual collections",
                 "Dynamic pricing & discounts",
                 "Storefront widget",
-                "Priority email support",
+                "Advanced analytics",
+                "Priority support",
                 "Early access to new features",
               ].map((f) => (
-                <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "10px" }}>
-                  <span style={{ width: "18px", height: "18px", borderRadius: "50%", flexShrink: 0, marginTop: "1px", background: isPro ? "rgba(255,255,255,0.2)" : "#000", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                      <path d="M1 4l2.5 2.5L9 1" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
-                  <span style={{ fontSize: "13px", color: isPro ? "rgba(255,255,255,0.85)" : "#374151", lineHeight: 1.5 }}>{f}</span>
-                </div>
+                <CheckRow key={f}>{f}</CheckRow>
               ))}
             </div>
+          </div>
 
-            <div style={{ marginTop: "20px" }}>
-              {isPro ? (
-                <div style={{ textAlign: "center", padding: "10px", borderRadius: "8px", background: "rgba(255,255,255,0.12)", fontSize: "13px", fontWeight: "600", color: "#fff" }}>
-                  ✦ Active — Thank you!
-                </div>
-              ) : isBillingUnavailable ? (
-                <div style={{ textAlign: "center", padding: "11px", borderRadius: "8px", background: "#f3f4f6", fontSize: "13px", color: "#9ca3af", border: "1.5px solid #e5e7eb", lineHeight: 1.4 }}>
-                  Billing unavailable
-                  <div style={{ fontSize: "11px", marginTop: "3px", color: "#d1d5db" }}>See notice above to enable</div>
-                </div>
-              ) : actionData?.confirmationUrl ? (
-                /* URL returned — useEffect is opening it; show holding state */
-                <div style={{ textAlign: "center", padding: "12px", borderRadius: "8px", background: "#000", fontSize: "13px", fontWeight: "600", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-                  <span style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "plan-spin 0.7s linear infinite" }} />
-                  Opening Shopify billing…
-                </div>
-              ) : (
-                <form method="post">
-                  <input type="hidden" name="intent" value="subscribe" />
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "none", background: "#000", fontSize: "14px", fontWeight: "700", color: "#fff", cursor: isSubmitting ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", opacity: isSubmitting ? 0.7 : 1 }}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <span style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "plan-spin 0.7s linear infinite" }} />
-                        Preparing billing…
-                      </>
-                    ) : (
-                      `Start ${planConfig.trialDays}-Day Free Trial →`
-                    )}
-                  </button>
-                </form>
-              )}
-            </div>
+          {/* Card footer */}
+          <div style={{ borderTop: "1px solid #f3f4f6", background: "#f9fafb", padding: "14px 24px" }}>
+            {isPro ? (
+              <div style={{ fontSize: "13px", fontWeight: "600", color: "#374151", textAlign: "center", padding: "10px" }}>
+                {subscription?.currentPeriodEnd
+                  ? `Pro remains active until ${new Date(subscription.currentPeriodEnd).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
+                  : "Pro plan active"}
+              </div>
+            ) : isBillingUnavailable ? (
+              <div style={{ textAlign: "center", padding: "10px", fontSize: "13px", color: "#9ca3af" }}>
+                Billing unavailable — see notice above
+              </div>
+            ) : actionData?.confirmationUrl ? (
+              <div style={{ textAlign: "center", padding: "10px", fontSize: "13px", fontWeight: "600", color: "#374151", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                <span style={{ width: "14px", height: "14px", border: "2px solid #d1d5db", borderTopColor: "#374151", borderRadius: "50%", display: "inline-block", animation: "plan-spin 0.7s linear infinite" }} />
+                Opening Shopify billing…
+              </div>
+            ) : (
+              <form method="post">
+                <input type="hidden" name="intent" value="subscribe" />
+                <button
+                  type="submit"
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "none", background: "#111827", fontSize: "13px", fontWeight: "700", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "plan-spin 0.7s linear infinite" }} />
+                      Preparing billing…
+                    </>
+                  ) : (
+                    `Start ${planConfig.trialDays}-Day Free Trial →`
+                  )}
+                </button>
+              </form>
+            )}
           </div>
         </div>
 

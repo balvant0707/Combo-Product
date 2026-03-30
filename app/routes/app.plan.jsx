@@ -11,9 +11,12 @@ import {
 /* ─── Loader ─────────────────────────────────────────────────────── */
 
 export const loader = async ({ request }) => {
+  const url = new URL(request.url);
+  const redirectPath = `/app/pricing${url.search || ""}`;
+  return rrRedirect(withEmbeddedAppParamsFromRequest(redirectPath, request));
+
   const { billing, session } = await authenticate.admin(request);
   const shop = session.shop;
-  const url = new URL(request.url);
 
   const {
     getActiveShopifySubscription,
@@ -76,6 +79,10 @@ export const loader = async ({ request }) => {
 /* ─── Action ─────────────────────────────────────────────────────── */
 
 export const action = async ({ request }) => {
+  const url = new URL(request.url);
+  const redirectPath = `/app/pricing${url.search || ""}`;
+  return rrRedirect(withEmbeddedAppParamsFromRequest(redirectPath, request));
+
   const { billing, session } = await authenticate.admin(request);
   const shop     = session.shop;
   const formData = await request.formData();

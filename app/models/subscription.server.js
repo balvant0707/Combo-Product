@@ -4,6 +4,11 @@
  */
 
 import db from "../db.server";
+import {
+  BILLING_CURRENCY_CODE,
+  MONTHLY_PRICE,
+  TRIAL_DAYS,
+} from "../config/billing";
 
 /* ─── Constants ────────────────────────────────────────────────────── */
 
@@ -25,10 +30,10 @@ export const PLANS = {
   PRO: {
     key:      "PRO",
     name:     "Pro",
-    price:    10,
-    currencyCode: "USD",
+    price:    MONTHLY_PRICE,
+    currencyCode: BILLING_CURRENCY_CODE,
     interval: "EVERY_30_DAYS",
-    trialDays: 7,
+    trialDays: TRIAL_DAYS,
     boxLimit: Infinity,
     features: [
       "Unlimited combo boxes",

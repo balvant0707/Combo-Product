@@ -35,6 +35,10 @@ const ACTIVE_SUBSCRIPTIONS_QUERY = `#graphql
   }
 `;
 
+export const MONTHLY_PRICE = 5;
+export const YEARLY_PRICE  = 49;
+export const TRIAL_DAYS    = 7;
+
 const CREATE_SUBSCRIPTION_MUTATION = `#graphql
   mutation AppSubscriptionCreate($returnUrl: URL!) {
     appSubscriptionCreate(
@@ -46,24 +50,41 @@ const CREATE_SUBSCRIPTION_MUTATION = `#graphql
         {
           plan: {
             appRecurringPricingDetails: {
-              price: {
-                amount: 10
-                currencyCode: USD
-              }
+              price: { amount: 5, currencyCode: USD }
+              interval: EVERY_30_DAYS
             }
           }
         }
       ]
     ) {
       confirmationUrl
-      appSubscription {
-        id
-        status
-      }
-      userErrors {
-        field
-        message
-      }
+      appSubscription { id status }
+      userErrors { field message }
+    }
+  }
+`;
+
+const CREATE_YEARLY_MUTATION = `#graphql
+  mutation AppSubscriptionCreateYearly($returnUrl: URL!) {
+    appSubscriptionCreate(
+      name: "Pro Plan Yearly"
+      returnUrl: $returnUrl
+      test: true
+      trialDays: 7
+      lineItems: [
+        {
+          plan: {
+            appRecurringPricingDetails: {
+              price: { amount: 49, currencyCode: USD }
+              interval: ANNUAL
+            }
+          }
+        }
+      ]
+    ) {
+      confirmationUrl
+      appSubscription { id status }
+      userErrors { field message }
     }
   }
 `;
@@ -181,15 +202,15 @@ export async function syncSubscription(admin, shop) {
  * The merchant must visit this URL to approve the charge.
  * Returns null in SKIP_BILLING mode (dev bypass).
  */
-export async function createSubscription(admin, planOrReturnUrl, maybeReturnUrl) {
+export async function createSubscription(admin, returnUrl, billingCycle = "monthly") {
   if (SKIP_BILLING) return null; // dev mode — caller handles this
 
-  const returnUrl = maybeReturnUrl ?? planOrReturnUrl;
   if (typeof returnUrl !== "string" || !/^https?:\/\//i.test(returnUrl)) {
     throw new Error("Invalid billing return URL.");
   }
 
-  const resp = await admin.graphql(CREATE_SUBSCRIPTION_MUTATION, {
+  const mutation = billingCycle === "yearly" ? CREATE_YEARLY_MUTATION : CREATE_SUBSCRIPTION_MUTATION;
+  const resp = await admin.graphql(mutation, {
     variables: { returnUrl },
   });
 
@@ -261,7 +282,7 @@ export async function canCreateBox(admin, shop) {
 
 /* Legacy exports kept for backward compat with existing routes */
 export const PRO_PLAN_NAME = "Pro";
-export const PLAN_CONFIG   = { price: 10, currencyCode: "USD", interval: "EVERY_30_DAYS", trialDays: 7 };
+export const PLAN_CONFIG   = { price: MONTHLY_PRICE, currencyCode: "USD", interval: "EVERY_30_DAYS", trialDays: TRIAL_DAYS };
 export const FREE_BOX_LIMIT = 1;
 
 export async function isProPlan(admin, shop) {

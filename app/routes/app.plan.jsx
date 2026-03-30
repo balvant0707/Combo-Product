@@ -3,7 +3,10 @@ import { useEffect } from "react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { AdminIcon } from "../components/admin-icons";
-import { withEmbeddedAppParamsFromRequest } from "../utils/embedded-app";
+import {
+  buildShopifyAdminAppUrl,
+  withEmbeddedAppParamsFromRequest,
+} from "../utils/embedded-app";
 
 /* ─── Loader ─────────────────────────────────────────────────────── */
 
@@ -77,7 +80,6 @@ export const action = async ({ request }) => {
   const shop     = session.shop;
   const formData = await request.formData();
   const intent   = formData.get("intent");
-  const requestUrl = new URL(request.url);
 
   const { createSubscription, cancelSubscription } =
     await import("../models/billing.server.js");
@@ -100,8 +102,11 @@ export const action = async ({ request }) => {
     }
 
     try {
-      const returnPath = withEmbeddedAppParamsFromRequest("/app?subscribed=1", request);
-      const returnUrl = new URL(returnPath, requestUrl.origin).toString();
+      const returnUrl = buildShopifyAdminAppUrl({
+        shop,
+        path: "/app?subscribed=1",
+        request,
+      });
 
       await createSubscription(billing, returnUrl);
       return null;

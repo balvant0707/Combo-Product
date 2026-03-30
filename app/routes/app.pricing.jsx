@@ -355,7 +355,7 @@ export default function PricingPage() {
       )}
       {cancelled && (
         <Banner tone="warning">
-          Subscription cancelled. Pro access continues until the end of the billing period.
+          Subscription cancelled. Any remaining Shopify billing period will still be honored automatically.
         </Banner>
       )}
       {billingUnavailable && (

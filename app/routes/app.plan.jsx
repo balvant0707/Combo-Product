@@ -258,7 +258,7 @@ export default function PlanPage() {
         <div style={{ background: "#fefce8", border: "1px solid #fde047", borderRadius: "8px", padding: "14px 16px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
           <AdminIcon type="info" size="small" style={{ color: "#ca8a04" }} />
           <div style={{ fontSize: "13px", fontWeight: "600", color: "#854d0e" }}>
-            Subscription cancelled. Your Pro access continues until the end of the billing period.
+            Subscription cancelled. Any remaining Shopify billing period will still be honored automatically.
           </div>
         </div>
       )}

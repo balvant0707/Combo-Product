@@ -1,7 +1,7 @@
 import { authenticate } from "../shopify.server";
 import {
-  activateFreePlan,
   cancelPlan,
+  deleteSubscription,
   getSubscription,
   saveSubscription,
 } from "../models/subscription.server";
@@ -61,7 +61,7 @@ export const action = async ({ request }) => {
     case "EXPIRED":
     case "DECLINED":
     case "FROZEN":
-      await activateFreePlan(shop);
+      await deleteSubscription(shop);
       await setShopPlanStatus(shop, "free").catch(() => {});
       break;
 

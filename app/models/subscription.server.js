@@ -67,6 +67,11 @@ export async function getSubscription(shop) {
   return db.subscription.findUnique({ where: { shop } });
 }
 
+/** Delete the current subscription record for a shop */
+export async function deleteSubscription(shop) {
+  return db.subscription.deleteMany({ where: { shop } });
+}
+
 /** Upsert a subscription record */
 export async function saveSubscription(shop, data) {
   return db.subscription.upsert({
@@ -125,7 +130,8 @@ export function isCancellationScheduled(subscription, now = new Date()) {
 export async function cancelPlan(shop, { subscriptionId = null, currentPeriodEnd = null } = {}) {
   const endsAt = toDateOrNull(currentPeriodEnd);
   if (!endsAt || endsAt.getTime() <= Date.now()) {
-    return activateFreePlan(shop);
+    await deleteSubscription(shop);
+    return null;
   }
 
   return saveSubscription(shop, {

@@ -147,7 +147,7 @@ export async function getActiveShopifySubscription(admin) {
  */
 export async function syncSubscription(admin, shop) {
   const {
-    activateFreePlan,
+    deleteSubscription,
     getSubscription,
     hasRemainingBillingPeriod,
     saveSubscription,
@@ -188,7 +188,8 @@ export async function syncSubscription(admin, shop) {
 
   let local = await getSubscription(shop);
   if (!billingUnavailable && !shopifySub && local?.plan === "PRO" && !hasRemainingBillingPeriod(local)) {
-    local = await activateFreePlan(shop);
+    await deleteSubscription(shop);
+    local = await getSubscription(shop);
   }
   return { subscription: local, billingUnavailable };
 }

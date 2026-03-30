@@ -20,7 +20,7 @@ import { withEmbeddedAppParamsFromRequest } from "../utils/embedded-app";
 /* ── Loader ─────────────────────────────────────────────────────── */
 
 export const loader = async ({ request }) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { billing, session } = await authenticate.admin(request);
   const shop = session.shop;
   const url = new URL(request.url);
 
@@ -28,7 +28,7 @@ export const loader = async ({ request }) => {
     await import("../models/billing.server.js");
   const { activatePaidPlan, PLANS } = await import("../models/subscription.server.js");
 
-  const { subscription, billingUnavailable } = await syncSubscription(admin, shop);
+  const { subscription, billingUnavailable } = await syncSubscription(billing, shop);
   const isDevMode = process.env.SKIP_BILLING === "true";
 
   if (url.searchParams.get("subscribed") === "1" && subscription?.subscriptionId) {
@@ -59,7 +59,7 @@ export const loader = async ({ request }) => {
 /* ── Action ─────────────────────────────────────────────────────── */
 
 export const action = async ({ request }) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { billing, session } = await authenticate.admin(request);
   const shop = session.shop;
   const formData = await request.formData();
   const intent = formData.get("intent");
@@ -89,11 +89,12 @@ export const action = async ({ request }) => {
     }
 
     try {
-      const returnPath = withEmbeddedAppParamsFromRequest("/app/billing-success?subscribed=1", request);
+      const returnPath = withEmbeddedAppParamsFromRequest("/app?subscribed=1", request);
       const returnUrl = new URL(returnPath, requestUrl.origin).toString();
-      const confirmationUrl = await createSubscription(admin, returnUrl, billingCycle);
-      return { confirmationUrl };
+      await createSubscription(billing, returnUrl, billingCycle);
+      return null;
     } catch (e) {
+      if (e instanceof Response) throw e;
       return { error: e.message, billingUnavailable: !!e.isBillingUnavailable };
     }
   }
@@ -101,7 +102,7 @@ export const action = async ({ request }) => {
   if (intent === "cancel") {
     const subscriptionId = formData.get("subscriptionId");
     try {
-      const nextSubscription = await cancelSubscription(admin, shop, subscriptionId);
+      const nextSubscription = await cancelSubscription(billing, shop, subscriptionId);
       await setShopPlanStatus(shop, nextSubscription?.plan === "PRO" ? "active" : "free");
       return rrRedirect(withEmbeddedAppParamsFromRequest("/app/pricing?cancelled=1", request));
     } catch (e) {
@@ -281,10 +282,23 @@ export default function PricingPage() {
   const planTitle = isYearly ? "Yearly Plan" : "Monthly Plan";
 
   useEffect(() => {
-    if (actionData?.confirmationUrl) {
-      window.open(actionData.confirmationUrl, "_top");
+    if (typeof window === "undefined") return;
+
+    const url = new URL(window.location.href);
+    let changed = false;
+
+    for (const key of ["subscribed", "cancelled"]) {
+      if (url.searchParams.has(key)) {
+        url.searchParams.delete(key);
+        changed = true;
+      }
     }
-  }, [actionData?.confirmationUrl]);
+
+    if (changed) {
+      window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+    }
+  }, [subscribed, cancelled]);
+
 
   /* ── Button for Free card ── */
   let freeBtn;

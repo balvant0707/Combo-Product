@@ -10,6 +10,7 @@ import { upsertSessionFromAuth, upsertShopFromAdmin } from "./models/shop.server
 import { sendMail } from "./utils/mailer.server";
 import { installedEmailHtml } from "./emails/app-installed";
 import { ownerInstallNotifyHtml } from "./emails/owner-notify";
+import { BILLING_PLANS } from "./config/billing";
 
 const shouldEnsureAppTables =
   process.env.ENSURE_APP_TABLES === "true" ||
@@ -36,6 +37,7 @@ const shopify = shopifyApp({
   authPathPrefix: "/auth",
   sessionStorage: prismaSessionStorage,
   distribution: AppDistribution.AppStore,
+  billing: BILLING_PLANS,
   future: {
     expiringOfflineAccessTokens: true,
   },
@@ -108,3 +110,4 @@ export const unauthenticated = shopify.unauthenticated;
 export const login = shopify.login;
 export const registerWebhooks = shopify.registerWebhooks;
 export const sessionStorage = shopify.sessionStorage;
+export { BILLING_IS_TEST, MONTHLY_PLAN, YEARLY_PLAN } from "./config/billing";

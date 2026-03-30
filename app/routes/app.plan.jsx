@@ -8,7 +8,7 @@ import { withEmbeddedAppParamsFromRequest } from "../utils/embedded-app";
 /* ─── Loader ─────────────────────────────────────────────────────── */
 
 export const loader = async ({ request }) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { billing, session } = await authenticate.admin(request);
   const shop = session.shop;
   const url = new URL(request.url);
 
@@ -26,7 +26,7 @@ export const loader = async ({ request }) => {
 
   if (!isDevMode) {
     try {
-      subscription = await getActiveShopifySubscription(admin);
+      subscription = await getActiveShopifySubscription(billing);
     } catch (e) {
       if (e.isBillingUnavailable) billingUnavailable = true;
     }
@@ -73,7 +73,7 @@ export const loader = async ({ request }) => {
 /* ─── Action ─────────────────────────────────────────────────────── */
 
 export const action = async ({ request }) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { billing, session } = await authenticate.admin(request);
   const shop     = session.shop;
   const formData = await request.formData();
   const intent   = formData.get("intent");
@@ -100,17 +100,13 @@ export const action = async ({ request }) => {
     }
 
     try {
-      const returnPath = withEmbeddedAppParamsFromRequest("/app/billing-success?subscribed=1", request);
+      const returnPath = withEmbeddedAppParamsFromRequest("/app?subscribed=1", request);
       const returnUrl = new URL(returnPath, requestUrl.origin).toString();
 
-      const confirmationUrl = await createSubscription(admin, returnUrl);
-
-      if (!confirmationUrl) {
-        return { error: "Shopify did not return a confirmation URL. Please try again." };
-      }
-
-      return { confirmationUrl };
+      await createSubscription(billing, returnUrl);
+      return null;
     } catch (e) {
+      if (e instanceof Response) throw e;
       return { error: e.message, billingUnavailable: !!e.isBillingUnavailable };
     }
   }
@@ -119,7 +115,7 @@ export const action = async ({ request }) => {
   if (intent === "cancel") {
     const subscriptionId = formData.get("subscriptionId");
     try {
-      const nextSubscription = await cancelSubscription(admin, shop, subscriptionId);
+      const nextSubscription = await cancelSubscription(billing, shop, subscriptionId);
       await setShopPlanStatus(shop, nextSubscription?.plan === "PRO" ? "active" : "free").catch(() => {});
       return rrRedirect(withEmbeddedAppParamsFromRequest("/app/plan?cancelled=1", request));
     } catch (e) {
@@ -186,6 +182,24 @@ export default function PlanPage() {
   const url            = new URL(typeof window !== "undefined" ? window.location.href : "http://localhost");
   const justSubscribed = url.searchParams.get("subscribed") === "1";
   const justCancelled  = url.searchParams.get("cancelled")  === "1";
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const nextUrl = new URL(window.location.href);
+    let changed = false;
+
+    for (const key of ["subscribed", "cancelled"]) {
+      if (nextUrl.searchParams.has(key)) {
+        nextUrl.searchParams.delete(key);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      window.history.replaceState(window.history.state, "", `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+    }
+  }, [justSubscribed, justCancelled]);
 
   // When the action returns a Shopify billing confirmation URL, navigate the
   // TOP frame to it. Using window.open(_top) is the only reliable way to

@@ -4,13 +4,13 @@ import { authenticate } from "../shopify.server";
 import { withEmbeddedAppParamsFromRequest } from "../utils/embedded-app";
 
 export const loader = async ({ request }) => {
-  const { admin, session, redirect } = await authenticate.admin(request);
+  const { billing, session, redirect } = await authenticate.admin(request);
   const shop = session.shop;
 
   const { syncSubscription } = await import("../models/billing.server.js");
   const { setShopPlanStatus } = await import("../models/shop.server.js");
 
-  const { subscription } = await syncSubscription(admin, shop).catch(() => ({ subscription: null }));
+  const { subscription } = await syncSubscription(billing, shop).catch(() => ({ subscription: null }));
 
   if (subscription?.subscriptionId || process.env.SKIP_BILLING === "true") {
     await setShopPlanStatus(shop, "active").catch(() => {});

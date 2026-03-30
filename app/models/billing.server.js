@@ -1,151 +1,86 @@
 /**
  * billing.server.js
- * Shopify Billing API — GraphQL mutations + subscription lifecycle.
- * Plans: FREE ($0) and PRO ($10/month with 7-day trial).
+ * Shopify Billing API helpers backed by the official billing utilities from
+ * `authenticate.admin(request)`.
  */
 
 import db from "../db.server";
-
-/* ─── GraphQL ──────────────────────────────────────────────────────── */
-
-const ACTIVE_SUBSCRIPTIONS_QUERY = `#graphql
-  query ActiveSubscriptions {
-    currentAppInstallation {
-      activeSubscriptions {
-        id
-        name
-        status
-        currentPeriodEnd
-        createdAt
-        trialDays
-        test
-        lineItems {
-          id
-          plan {
-            pricingDetails {
-              ... on AppRecurringPricing {
-                price { amount currencyCode }
-                interval
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-`;
-
-export const MONTHLY_PRICE = 5;
-export const YEARLY_PRICE  = 49;
-export const TRIAL_DAYS    = 7;
-
-const CREATE_SUBSCRIPTION_MUTATION = `#graphql
-  mutation AppSubscriptionCreate($returnUrl: URL!) {
-    appSubscriptionCreate(
-      name: "Pro Plan"
-      returnUrl: $returnUrl
-      test: true
-      trialDays: 7
-      lineItems: [
-        {
-          plan: {
-            appRecurringPricingDetails: {
-              price: { amount: 5, currencyCode: USD }
-              interval: EVERY_30_DAYS
-            }
-          }
-        }
-      ]
-    ) {
-      confirmationUrl
-      appSubscription { id status }
-      userErrors { field message }
-    }
-  }
-`;
-
-const CREATE_YEARLY_MUTATION = `#graphql
-  mutation AppSubscriptionCreateYearly($returnUrl: URL!) {
-    appSubscriptionCreate(
-      name: "Pro Plan Yearly"
-      returnUrl: $returnUrl
-      test: true
-      trialDays: 7
-      lineItems: [
-        {
-          plan: {
-            appRecurringPricingDetails: {
-              price: { amount: 49, currencyCode: USD }
-              interval: ANNUAL
-            }
-          }
-        }
-      ]
-    ) {
-      confirmationUrl
-      appSubscription { id status }
-      userErrors { field message }
-    }
-  }
-`;
-
-const CANCEL_SUBSCRIPTION_MUTATION = `#graphql
-  mutation CancelSubscription($id: ID!) {
-    appSubscriptionCancel(id: $id) {
-      appSubscription { id status currentPeriodEnd }
-      userErrors { field message }
-    }
-  }
-`;
-
-/* ─── Helpers ──────────────────────────────────────────────────────── */
-
-function isDistributionError(msg) {
-  if (typeof msg !== "string") return false;
-  const m = msg.toLowerCase();
-  return m.includes("public distribution") || m.includes("billing api") || m.includes("without a public distribution");
-}
-
-function tagError(msg) {
-  const err = new Error(msg);
-  if (isDistributionError(msg)) err.isBillingUnavailable = true;
-  return err;
-}
+import {
+  BILLING_CURRENCY_CODE,
+  BILLING_IS_TEST,
+  BILLING_PLAN_KEYS,
+  MONTHLY_PRICE,
+  TRIAL_DAYS,
+  YEARLY_PLAN,
+  YEARLY_PRICE,
+  getBillingReplacementBehavior,
+  getPlanNameForBillingCycle,
+} from "../config/billing";
 
 const SKIP_BILLING = process.env.SKIP_BILLING === "true";
 
-/* ─── Read current Shopify subscription ────────────────────────────── */
+function isDistributionError(message) {
+  if (typeof message !== "string") return false;
+  const lower = message.toLowerCase();
+  return (
+    lower.includes("public distribution") ||
+    lower.includes("without a public distribution") ||
+    lower.includes("billing api")
+  );
+}
+
+function tagError(message) {
+  const error = new Error(message);
+  if (isDistributionError(message)) error.isBillingUnavailable = true;
+  return error;
+}
+
+function getErrorMessage(error) {
+  if (error instanceof Error) return error.message;
+  return String(error ?? "Unknown billing error");
+}
+
+function getSubscriptionPrice(subscription) {
+  const amount = subscription?.lineItems?.[0]?.plan?.pricingDetails?.price?.amount;
+  return typeof amount === "number" ? amount : Number(amount || 0);
+}
+
+export const PRO_PLAN_NAME = "Pro";
+export const FREE_BOX_LIMIT = 1;
+export { BILLING_CURRENCY_CODE, MONTHLY_PRICE, TRIAL_DAYS, YEARLY_PRICE };
+
+export const PLAN_CONFIG = {
+  price: MONTHLY_PRICE,
+  currencyCode: BILLING_CURRENCY_CODE,
+  interval: "EVERY_30_DAYS",
+  trialDays: TRIAL_DAYS,
+};
 
 /**
- * Fetches the active Shopify subscription for this installation.
- * Returns the first ACTIVE subscription, or null.
- * Throws with err.isBillingUnavailable = true when billing API is blocked.
+ * Fetches the active Shopify subscription for this installation using the
+ * official billing helper. Returns the first active subscription, or null.
  */
-export async function getActiveShopifySubscription(admin) {
-  if (SKIP_BILLING) return null; // dev mode — no real billing
+export async function getActiveShopifySubscription(billing) {
+  if (SKIP_BILLING) return null;
 
   try {
-    const resp = await admin.graphql(ACTIVE_SUBSCRIPTIONS_QUERY);
-    const json = await resp.json();
+    const { appSubscriptions } = await billing.check({
+      plans: BILLING_PLAN_KEYS,
+    });
 
-    const gqlErrors = json?.errors || [];
-    if (gqlErrors.length) throw tagError(gqlErrors[0]?.message || "GraphQL error");
-
-    const subs = json?.data?.currentAppInstallation?.activeSubscriptions || [];
-    return subs.find((s) => s.status === "ACTIVE") || null;
-  } catch (e) {
-    if (e.isBillingUnavailable) throw e;
-    console.warn("[billing] getActiveShopifySubscription:", e.message);
+    return appSubscriptions.find((subscription) => subscription.status === "ACTIVE") || null;
+  } catch (error) {
+    const message = getErrorMessage(error);
+    if (isDistributionError(message)) throw tagError(message);
+    console.warn("[billing] getActiveShopifySubscription:", message);
     return null;
   }
 }
 
 /**
- * Syncs the Shopify subscription state with the local DB.
- * Call this on the plan page loader and after billing returns.
- * Returns the local DB subscription record.
+ * Syncs the active Shopify subscription to the local DB record.
  */
-export async function syncSubscription(admin, shop) {
+export async function syncSubscription(billing, shop) {
   const {
     deleteSubscription,
     getSubscription,
@@ -155,16 +90,17 @@ export async function syncSubscription(admin, shop) {
 
   let shopifySub = null;
   let billingUnavailable = false;
+
   try {
-    shopifySub = await getActiveShopifySubscription(admin);
-  } catch (e) {
-    if (e.isBillingUnavailable) billingUnavailable = true;
+    shopifySub = await getActiveShopifySubscription(billing);
+  } catch (error) {
+    if (error.isBillingUnavailable) billingUnavailable = true;
+    else throw error;
   }
 
   const existingLocal = await getSubscription(shop);
 
   if (shopifySub) {
-    // Shopify reports an active subscription — save it
     const preserveScheduledCancellation =
       existingLocal?.plan === "PRO" &&
       existingLocal?.status === "CANCELLED" &&
@@ -175,14 +111,14 @@ export async function syncSubscription(admin, shop) {
       return { subscription: existingLocal, billingUnavailable };
     }
 
-    const planName = shopifySub.name || "";
-    const planKey  = planName.toUpperCase().includes("PRO") ? "PRO" : "FREE";
     await saveSubscription(shop, {
-      plan:            planKey,
-      status:          shopifySub.status,   // "ACTIVE"
-      subscriptionId:  shopifySub.id,
-      trialEndsAt:     null,
-      currentPeriodEnd: shopifySub.currentPeriodEnd ? new Date(shopifySub.currentPeriodEnd) : null,
+      plan: "PRO",
+      status: shopifySub.status,
+      subscriptionId: shopifySub.id,
+      trialEndsAt: null,
+      currentPeriodEnd: shopifySub.currentPeriodEnd
+        ? new Date(shopifySub.currentPeriodEnd)
+        : null,
     });
   }
 
@@ -191,65 +127,63 @@ export async function syncSubscription(admin, shop) {
     await deleteSubscription(shop);
     local = await getSubscription(shop);
   }
+
   return { subscription: local, billingUnavailable };
 }
 
-/* ─── Create subscription ──────────────────────────────────────────── */
-
 /**
- * Calls appSubscriptionCreate and returns the Shopify confirmation URL.
- * Supports both createSubscription(admin, returnUrl) and the older
- * createSubscription(admin, "PRO", returnUrl) call shape.
- * The merchant must visit this URL to approve the charge.
- * Returns null in SKIP_BILLING mode (dev bypass).
+ * Requests billing for the selected paid plan. Shopify handles the redirect.
  */
-export async function createSubscription(admin, returnUrl, billingCycle = "monthly") {
-  if (SKIP_BILLING) return null; // dev mode — caller handles this
+export async function createSubscription(billing, returnUrl, billingCycle = "monthly") {
+  if (SKIP_BILLING) return null;
 
   if (typeof returnUrl !== "string" || !/^https?:\/\//i.test(returnUrl)) {
     throw new Error("Invalid billing return URL.");
   }
 
-  const mutation = billingCycle === "yearly" ? CREATE_YEARLY_MUTATION : CREATE_SUBSCRIPTION_MUTATION;
-  const resp = await admin.graphql(mutation, {
-    variables: { returnUrl },
-  });
+  const plan = getPlanNameForBillingCycle(billingCycle);
+  const currentSubscription = await getActiveShopifySubscription(billing);
 
-  const json = await resp.json();
+  try {
+    await billing.request({
+      plan,
+      isTest: BILLING_IS_TEST,
+      returnUrl,
+      replacementBehavior: getBillingReplacementBehavior(currentSubscription?.name, plan),
+    });
+  } catch (error) {
+    if (error instanceof Response) throw error;
 
-  const gqlErrors = json?.errors || [];
-  if (gqlErrors.length) throw tagError(gqlErrors[0]?.message || "Billing API error");
-
-  const result = json?.data?.appSubscriptionCreate;
-  if (result?.userErrors?.length) throw tagError(result.userErrors[0].message);
-
-  const confirmationUrl = result?.confirmationUrl;
-  if (!confirmationUrl) throw new Error("Shopify did not return a billing confirmation URL.");
-
-  return confirmationUrl;
+    const message = getErrorMessage(error);
+    if (isDistributionError(message)) throw tagError(message);
+    throw error;
+  }
 }
 
-/* ─── Cancel subscription ──────────────────────────────────────────── */
-
 /**
- * Cancels the active Shopify subscription.
- * Also updates the local DB record to CANCELLED.
+ * Cancels the active Shopify subscription and updates the local DB.
  */
-export async function cancelSubscription(admin, shop, subscriptionId) {
+export async function cancelSubscription(billing, shop, subscriptionId) {
   const { cancelPlan, getSubscription } = await import("./subscription.server.js");
   const existing = await getSubscription(shop);
   let currentPeriodEnd = existing?.currentPeriodEnd ?? null;
   let effectiveSubscriptionId = subscriptionId || existing?.subscriptionId || null;
 
   if (!SKIP_BILLING && subscriptionId && !subscriptionId.includes("/dev")) {
-    const resp = await admin.graphql(CANCEL_SUBSCRIPTION_MUTATION, {
-      variables: { id: subscriptionId },
-    });
-    const json   = await resp.json();
-    const result = json?.data?.appSubscriptionCancel;
-    if (result?.userErrors?.length) throw new Error(result.userErrors[0].message);
-    currentPeriodEnd = result?.appSubscription?.currentPeriodEnd || currentPeriodEnd;
-    effectiveSubscriptionId = result?.appSubscription?.id || effectiveSubscriptionId;
+    try {
+      const cancelledSubscription = await billing.cancel({
+        subscriptionId,
+        isTest: BILLING_IS_TEST,
+        prorate: false,
+      });
+
+      currentPeriodEnd = cancelledSubscription?.currentPeriodEnd || currentPeriodEnd;
+      effectiveSubscriptionId = cancelledSubscription?.id || effectiveSubscriptionId;
+    } catch (error) {
+      const message = getErrorMessage(error);
+      if (isDistributionError(message)) throw tagError(message);
+      throw error;
+    }
   }
 
   return cancelPlan(shop, {
@@ -258,8 +192,6 @@ export async function cancelSubscription(admin, shop, subscriptionId) {
   });
 }
 
-/* ─── Box count helpers ─────────────────────────────────────────────── */
-
 export async function getBoxCount(shop) {
   return db.comboBox.count({ where: { shop, deletedAt: null } });
 }
@@ -267,27 +199,40 @@ export async function getBoxCount(shop) {
 /**
  * Returns { allowed, plan, currentCount, limit }
  */
-export async function canCreateBox(admin, shop) {
+export async function canCreateBox(_billing, shop) {
   const { getSubscription, PLANS: PM } = await import("./subscription.server.js");
-  const sub   = await getSubscription(shop);
-  const plan  = PM[sub?.plan] ?? PM.FREE;
+  const subscription = await getSubscription(shop);
+  const plan = PM[subscription?.plan] ?? PM.FREE;
   const limit = plan.boxLimit;
   const count = await getBoxCount(shop);
+
   return {
-    allowed:      count < limit,
+    allowed: count < limit,
     plan,
     currentCount: count,
     limit,
   };
 }
 
-/* Legacy exports kept for backward compat with existing routes */
-export const PRO_PLAN_NAME = "Pro";
-export const PLAN_CONFIG   = { price: MONTHLY_PRICE, currencyCode: "USD", interval: "EVERY_30_DAYS", trialDays: TRIAL_DAYS };
-export const FREE_BOX_LIMIT = 1;
-
-export async function isProPlan(admin, shop) {
+export async function isProPlan(_billing, shop) {
   const { getSubscription, isPaidPlanActive } = await import("./subscription.server.js");
-  const sub = await getSubscription(shop);
-  return isPaidPlanActive(sub);
+  const subscription = await getSubscription(shop);
+  return isPaidPlanActive(subscription);
+}
+
+export function toPlanPageSubscription(subscription) {
+  if (!subscription) return null;
+
+  return {
+    id: subscription.id,
+    name: subscription.name,
+    status: subscription.status,
+    currentPeriodEnd: subscription.currentPeriodEnd,
+    createdAt: subscription.createdAt,
+    price: getSubscriptionPrice(subscription),
+    currencyCode:
+      subscription?.lineItems?.[0]?.plan?.pricingDetails?.price?.currencyCode ||
+      BILLING_CURRENCY_CODE,
+    billingCycle: subscription.name === YEARLY_PLAN ? "yearly" : "monthly",
+  };
 }

@@ -138,14 +138,8 @@ const YEARLY_SAVING_PCT = 18;
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
 
-function hasPaidAccess(sub) {
-  if (!sub || sub.plan !== "PRO") return false;
-  if (sub.status === "ACTIVE") return true;
-  if (sub.status === "CANCELLED") {
-    const end = sub.currentPeriodEnd ? new Date(sub.currentPeriodEnd) : null;
-    return !!end && end.getTime() > Date.now();
-  }
-  return false;
+function isCurrentPaidPlan(sub) {
+  return !!sub && sub.plan === "PRO" && sub.status === "ACTIVE";
 }
 
 /* ── Sub-components ─────────────────────────────────────────────── */
@@ -272,7 +266,7 @@ export default function PricingPage() {
 
   const [billingCycle, setBillingCycle] = useState("monthly");
 
-  const isPro = hasPaidAccess(subscription);
+  const isPro = isCurrentPaidPlan(subscription);
   const isFree = subscription?.plan === "FREE" && subscription?.status === "ACTIVE";
   const hasNoPlan = !isPro && !isFree;
 

@@ -4,7 +4,7 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { Buffer } from "node:buffer";
 import { AdminIcon } from "../components/admin-icons";
-import { getBox, upsertComboConfig, addComboStepImagesToProduct, saveComboStepImages, getComboStepImages, deleteComboStepImage, syncShopifyBundleProduct } from "../models/boxes.server";
+import { getBox, upsertComboConfig, saveComboStepImages, getComboStepImages, deleteComboStepImage, syncShopifyBundleProduct, syncSpecificComboProductMedia } from "../models/boxes.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
 
@@ -242,13 +242,13 @@ export const action = async ({ request, params }) => {
         console.error("[app.boxes.$id.combo] syncShopifyBundleProduct error:", e);
       }
       try {
-        await addComboStepImagesToProduct(
+        await syncSpecificComboProductMedia(
           admin,
-          box.shopifyProductId,
+          box,
           box.comboStepsConfig || comboStepsConfig,
         );
       } catch (e) {
-        console.error("[app.boxes.$id.combo] addComboStepImagesToProduct error:", e);
+        console.error("[app.boxes.$id.combo] syncSpecificComboProductMedia error:", e);
       }
     }
 
@@ -259,6 +259,14 @@ export const action = async ({ request, params }) => {
     const stepIndex = parseInt(formData.get("stepIndex"));
     if (!isNaN(stepIndex)) {
       await deleteComboStepImage(params.id, stepIndex);
+      const box = await getBox(params.id, session.shop);
+      if (box?.shopifyProductId) {
+        try {
+          await syncSpecificComboProductMedia(admin, box, box.comboStepsConfig);
+        } catch (e) {
+          console.error("[app.boxes.$id.combo] sync after remove_step_image error:", e);
+        }
+      }
     }
     return { ok: true, stepImageRemoved: stepIndex };
   }

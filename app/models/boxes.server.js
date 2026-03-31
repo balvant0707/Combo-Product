@@ -530,6 +530,27 @@ async function replaceProductImage(admin, productId, imageSource) {
   }
 }
 
+async function deleteAllProductMedia(admin, productId) {
+  try {
+    const existing = await getExistingProductMedia(admin, productId);
+    if (existing.length === 0) return;
+
+    const mediaIds = existing.map((media) => media.id).filter(Boolean);
+    if (mediaIds.length === 0) return;
+
+    const delResp = await admin.graphql(PRODUCT_DELETE_MEDIA_MUTATION, {
+      variables: { productId, mediaIds },
+    });
+    const delJson = await delResp.json();
+    const delErrors = delJson?.data?.productDeleteMedia?.mediaUserErrors || [];
+    if (delErrors.length > 0) {
+      console.warn("[deleteAllProductMedia] deleteMedia errors:", delErrors);
+    }
+  } catch (e) {
+    console.warn("[deleteAllProductMedia] failed:", e.message);
+  }
+}
+
 /**
  * Add images from each combo step's selected products / collections to the
  * Shopify bundle product. Already-present images are skipped to avoid duplicates.
@@ -555,6 +576,55 @@ export async function addComboStepImagesToProduct(admin, shopifyProductId, combo
     }
   } catch (e) {
     console.error("[addComboStepImagesToProduct] error:", e);
+  }
+}
+
+export async function syncSpecificComboProductMedia(
+  admin,
+  box,
+  comboStepsConfigJson = null,
+  stepImages = null,
+) {
+  if (!admin || !box?.shopifyProductId) return;
+
+  const rawConfig = comboStepsConfigJson || box.comboStepsConfig;
+  let parsedCombo = null;
+  if (rawConfig) {
+    try {
+      parsedCombo = typeof rawConfig === "string" ? JSON.parse(rawConfig) : rawConfig;
+    } catch (e) {
+      console.warn("[syncSpecificComboProductMedia] Invalid combo config:", e.message);
+    }
+  }
+
+  const requestedType = parseInt(parsedCombo?.type, 10);
+  const activeStepCount =
+    Number.isInteger(requestedType) && requestedType >= 2 ? requestedType : 0;
+
+  const persistedStepImages = Array.isArray(stepImages)
+    ? stepImages
+    : await getComboStepImages(box.id);
+  const activeStepImages = persistedStepImages
+    .filter((image) => image && (image.bytes || image.imageData))
+    .filter((image) => activeStepCount === 0 || image.stepIndex < activeStepCount)
+    .sort((a, b) => a.stepIndex - b.stepIndex)
+    .map((image) => ({
+      bytes: image.bytes || image.imageData,
+      mimeType: image.mimeType || "image/jpeg",
+      fileName: image.fileName || `combo-step-${image.stepIndex + 1}.jpg`,
+    }));
+
+  if (activeStepImages.length > 0) {
+    await deleteAllProductMedia(admin, box.shopifyProductId);
+    for (const imageSource of activeStepImages) {
+      await addImageToProduct(admin, box.shopifyProductId, imageSource);
+    }
+    return;
+  }
+
+  await deleteAllProductMedia(admin, box.shopifyProductId);
+  if (rawConfig) {
+    await addComboStepImagesToProduct(admin, box.shopifyProductId, rawConfig);
   }
 }
 

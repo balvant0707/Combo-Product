@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
-import { createBox, getBox, upsertComboConfig, addComboStepImagesToProduct, saveComboStepImages } from "../models/boxes.server";
+import { createBox, getBox, upsertComboConfig, saveComboStepImages, syncSpecificComboProductMedia } from "../models/boxes.server";
 import { AdminIcon } from "../components/admin-icons";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 import { validateComboConfig } from "../utils/combo-config";
@@ -192,27 +192,27 @@ export const action = async ({ request }) => {
     const box = await createBox(session.shop, data, admin);
     if (comboStepsConfig) {
       let savedComboStepsConfig = comboStepsConfig;
+      const validStepImages = stepImages.filter(Boolean);
       try { await upsertComboConfig(box.id, comboStepsConfig, admin); } catch (e) {
         console.error("[app.boxes.specific-combo] upsertComboConfig error:", e);
       }
-      try {
-        const savedBox = await getBox(box.id, session.shop);
-        savedComboStepsConfig = savedBox?.comboStepsConfig || comboStepsConfig;
-      } catch (e) {
-        console.error("[app.boxes.specific-combo] getBox after save error:", e);
-      }
-      // Add step product/collection images to the Shopify bundle product
-      if (box.shopifyProductId) {
-        try { await addComboStepImagesToProduct(admin, box.shopifyProductId, savedComboStepsConfig); } catch (e) {
-          console.error("[app.boxes.specific-combo] addComboStepImagesToProduct error:", e);
-        }
-      }
-      // Save per-step uploaded images
-      const validStepImages = stepImages.filter(Boolean);
       if (validStepImages.length > 0) {
         try { await saveComboStepImages(box.id, validStepImages); } catch (e) {
           console.error("[app.boxes.specific-combo] saveComboStepImages error:", e);
         }
+      }
+      try {
+        const savedBox = await getBox(box.id, session.shop);
+        savedComboStepsConfig = savedBox?.comboStepsConfig || comboStepsConfig;
+        if (savedBox?.shopifyProductId) {
+          await syncSpecificComboProductMedia(
+            admin,
+            savedBox,
+            savedComboStepsConfig,
+          );
+        }
+      } catch (e) {
+        console.error("[app.boxes.specific-combo] getBox after save error:", e);
       }
     }
   } catch (e) {

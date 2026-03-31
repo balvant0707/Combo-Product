@@ -322,16 +322,16 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
         <div
           ref={popoverRef}
           style={{
-            position: "fixed",
+            position: "absolute",
             top: `${popoverPos.top}px`,
             right: `${popoverPos.right}px`,
             background: "#ffffff",
             border: "1px solid #e5e7eb",
             borderRadius: "5px",
             boxShadow: "0 8px 32px rgba(0,0,0,0.13)",
-            zIndex: 9999,
+            zIndex: 100,
             padding: "16px",
-            minWidth: "520px",
+            minWidth: "580px",
           }}
         >
           {/* Preset select */}

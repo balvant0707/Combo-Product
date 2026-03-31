@@ -63,8 +63,25 @@ const COLLECTION_PRODUCTS_QUERY = `#graphql
 `;
 
 /* ─────────────────────────── Constants ─────────────────────────── */
+const MIN_COMBO_STEPS = 2;
+const MAX_COMBO_STEPS = 8;
+
+function buildDefaultStep(index) {
+  return {
+    label: `Step ${index + 1}`,
+    scope: "collection",
+    collections: [],
+    selectedProducts: [],
+    popup: {
+      title: `Choose product for Step ${index + 1}`,
+      desc: "Select a product for this step.",
+      btn: "Confirm selection",
+    },
+  };
+}
+
 const DEFAULT_COMBO_CONFIG = {
-  type: 2,
+  type: MIN_COMBO_STEPS,
   title: "Build Your Perfect Bundle",
   subtitle: "Choose a product for each step",
   bundlePrice: 0,
@@ -75,11 +92,7 @@ const DEFAULT_COMBO_CONFIG = {
   showProductImages: true,
   showProgressBar: true,
   allowReselection: true,
-  steps: [
-    { label: "Main Product",      scope: "collection", collections: [], selectedProducts: [], popup: { title: "Choose your main product",  desc: "Select the primary product.",     btn: "Confirm selection" } },
-    { label: "Add-on Accessory",  scope: "collection", collections: [], selectedProducts: [], popup: { title: "Choose an accessory",       desc: "Pick an add-on.",                 btn: "Confirm selection" } },
-    { label: "Extra Item",        scope: "collection", collections: [], selectedProducts: [], popup: { title: "Choose an extra item",      desc: "Complete your bundle.",           btn: "Complete bundle"   } },
-  ],
+  steps: Array.from({ length: MIN_COMBO_STEPS }, (_, index) => buildDefaultStep(index)),
 };
 
 /* ─────────────────────────── Loader ─────────────────────────── */
@@ -185,7 +198,8 @@ const ALLOWED_STEP_IMAGE_TYPES = new Set(["image/jpeg", "image/jpg", "image/png"
 
 async function parseStepImages(formData) {
   const images = [];
-  for (let i = 0; i < 3; i++) {
+  const stepCount = parseInt(formData.get("stepCount") || String(MAX_COMBO_STEPS), 10) || MAX_COMBO_STEPS;
+  for (let i = 0; i < stepCount; i++) {
     const file = formData.get(`stepImage_${i}`);
     if (!file || typeof file !== "object" || typeof file.arrayBuffer !== "function" || !file.size) { images.push(null); continue; }
     if (!ALLOWED_STEP_IMAGE_TYPES.has(file.type)) { images.push({ stepIndex: i, error: "Only JPG, PNG, WEBP, GIF, or AVIF files are allowed" }); continue; }
@@ -295,7 +309,12 @@ export default function SpecificComboBoxPage() {
   const collProdsFetcher0 = useFetcher();
   const collProdsFetcher1 = useFetcher();
   const collProdsFetcher2 = useFetcher();
-  const collProdsFetchers = [collProdsFetcher0, collProdsFetcher1, collProdsFetcher2];
+  const collProdsFetcher3 = useFetcher();
+  const collProdsFetcher4 = useFetcher();
+  const collProdsFetcher5 = useFetcher();
+  const collProdsFetcher6 = useFetcher();
+  const collProdsFetcher7 = useFetcher();
+  const collProdsFetchers = [collProdsFetcher0, collProdsFetcher1, collProdsFetcher2, collProdsFetcher3, collProdsFetcher4, collProdsFetcher5, collProdsFetcher6, collProdsFetcher7];
   const location = useLocation();
 
   const comboErrors = comboFetcher.data?.errors || {};
@@ -320,10 +339,18 @@ export default function SpecificComboBoxPage() {
   /* ── Combo Config state ── */
   const [comboConfig, setComboConfig] = useState(() => {
     function mergeSteps(parsedSteps, type) {
-      const count = Math.max(type || DEFAULT_COMBO_CONFIG.type, DEFAULT_COMBO_CONFIG.steps.length);
-      return DEFAULT_COMBO_CONFIG.steps.slice(0, count).map((def, i) =>
-        (Array.isArray(parsedSteps) && parsedSteps[i]) ? { ...def, ...parsedSteps[i] } : def
-      );
+      const rawCount = parseInt(type, 10) || DEFAULT_COMBO_CONFIG.type;
+      const count = Math.max(MIN_COMBO_STEPS, Math.min(MAX_COMBO_STEPS, rawCount));
+      return Array.from({ length: count }, (_, index) => {
+        const base = buildDefaultStep(index);
+        const parsed = Array.isArray(parsedSteps) ? parsedSteps[index] : null;
+        if (!parsed) return base;
+        return {
+          ...base,
+          ...parsed,
+          popup: { ...base.popup, ...(parsed.popup || {}) },
+        };
+      });
     }
     // Primary: raw JSON saved on ComboBox row
     if (box.comboStepsConfig) {
@@ -355,13 +382,13 @@ export default function SpecificComboBoxPage() {
     }
     return DEFAULT_COMBO_CONFIG;
   });
-  const [comboActiveStep, setComboActiveStep] = useState(0);
+  const [comboActiveStep, setComboActiveStep] = useState("all");
 
   /* Per-step uploaded image previews (data URLs) */
   const [stepImagePreviews, setStepImagePreviews] = useState(() => {
-    const arr = [null, null, null];
+    const arr = Array(MAX_COMBO_STEPS).fill(null);
     for (const img of stepImagesBase64 || []) {
-      if (img.stepIndex >= 0 && img.stepIndex < 3 && img.src) arr[img.stepIndex] = img.src;
+      if (img.stepIndex >= 0 && img.stepIndex < MAX_COMBO_STEPS && img.src) arr[img.stepIndex] = img.src;
     }
     return arr;
   });
@@ -375,7 +402,7 @@ export default function SpecificComboBoxPage() {
   }, [removeImageFetcher.data]);
 
   /* Per-step scoped product lists: null = use all products (no collection selected) */
-  const [stepProducts, setStepProducts] = useState([null, null, null]);
+  const [stepProducts, setStepProducts] = useState(Array(MAX_COMBO_STEPS).fill(null));
 
   /* Sync each step fetcher result into stepProducts */
   useEffect(() => {
@@ -390,6 +417,26 @@ export default function SpecificComboBoxPage() {
     if (collProdsFetcher2.data?.collectionProducts)
       setStepProducts((p) => { const n = [...p]; n[2] = collProdsFetcher2.data.collectionProducts; return n; });
   }, [collProdsFetcher2.data]);
+  useEffect(() => {
+    if (collProdsFetcher3.data?.collectionProducts)
+      setStepProducts((p) => { const n = [...p]; n[3] = collProdsFetcher3.data.collectionProducts; return n; });
+  }, [collProdsFetcher3.data]);
+  useEffect(() => {
+    if (collProdsFetcher4.data?.collectionProducts)
+      setStepProducts((p) => { const n = [...p]; n[4] = collProdsFetcher4.data.collectionProducts; return n; });
+  }, [collProdsFetcher4.data]);
+  useEffect(() => {
+    if (collProdsFetcher5.data?.collectionProducts)
+      setStepProducts((p) => { const n = [...p]; n[5] = collProdsFetcher5.data.collectionProducts; return n; });
+  }, [collProdsFetcher5.data]);
+  useEffect(() => {
+    if (collProdsFetcher6.data?.collectionProducts)
+      setStepProducts((p) => { const n = [...p]; n[6] = collProdsFetcher6.data.collectionProducts; return n; });
+  }, [collProdsFetcher6.data]);
+  useEffect(() => {
+    if (collProdsFetcher7.data?.collectionProducts)
+      setStepProducts((p) => { const n = [...p]; n[7] = collProdsFetcher7.data.collectionProducts; return n; });
+  }, [collProdsFetcher7.data]);
 
   /* collection modal */
   const [showCollModal, setShowCollModal] = useState(false);
@@ -405,6 +452,20 @@ export default function SpecificComboBoxPage() {
 
   /* ── Combo Config helpers ── */
   function updateComboField(field, value) { setComboConfig((prev) => ({ ...prev, [field]: value })); }
+  function setStepCount(nextCount) {
+    const clamped = Math.max(MIN_COMBO_STEPS, Math.min(MAX_COMBO_STEPS, nextCount));
+    setComboConfig((prev) => {
+      const steps = [...(Array.isArray(prev.steps) ? prev.steps : [])];
+      while (steps.length < clamped) {
+        steps.push(buildDefaultStep(steps.length));
+      }
+      return { ...prev, type: clamped, steps: steps.slice(0, clamped) };
+    });
+    setComboActiveStep((prev) => {
+      if (prev === "all") return "all";
+      return Math.min(prev, clamped - 1);
+    });
+  }
 
   // comboDynamicPrice — estimated price for dynamic pricing mode (after discount)
   const comboDynamicPrice = useMemo(() => {
@@ -522,6 +583,7 @@ export default function SpecificComboBoxPage() {
       <comboFetcher.Form id="combo-config-form" method="POST" encType="multipart/form-data" action={`/app/boxes/${box.id}/combo${location.search}`}>
         <input type="hidden" name="_action" value="save_combo" />
         <input type="hidden" name="comboStepsConfig" value={JSON.stringify({ ...comboConfig, bundlePrice: comboConfig.bundlePriceType === "dynamic" ? comboDynamicPrice : parseFloat(comboConfig.bundlePrice) || 0 })} />
+        <input type="hidden" name="stepCount" value={comboConfig.type} />
       </comboFetcher.Form>
 
       {/* Remove-image fetcher form (hidden) */}
@@ -560,15 +622,15 @@ export default function SpecificComboBoxPage() {
             <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "14px" }}>
               {/* Combo type */}
               <div>
-                <label style={labelStyle}>Combo type</label>
-                <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
-                  {[2, 3].map((n) => (
-                    <button key={n} type="button" onClick={() => { setComboConfig((prev) => { const steps = DEFAULT_COMBO_CONFIG.steps.slice(0, n).map((def, i) => prev.steps[i] || def); return { ...prev, type: n, steps }; }); if (comboActiveStep >= n) setComboActiveStep(0); }} style={{ flex: 1, padding: "7px 0", fontSize: "12px", fontWeight: "600", border: "none", borderRadius: "5px", cursor: "pointer", background: comboConfig.type === n ? "#000000" : "#f3f4f6", color: comboConfig.type === n ? "#ffffff" : "#374151", transition: "background 0.15s" }}>
-                      {n}-step
-                    </button>
-                  ))}
+                <label style={labelStyle}>Number of steps</label>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px" }}>
+                  <button type="button" onClick={() => setStepCount(comboConfig.type - 1)} disabled={comboConfig.type <= MIN_COMBO_STEPS}
+                    style={{ width: "32px", height: "32px", fontSize: "18px", fontWeight: "700", border: "1.5px solid #d1d5db", borderRadius: "5px", cursor: comboConfig.type <= MIN_COMBO_STEPS ? "not-allowed" : "pointer", background: comboConfig.type <= MIN_COMBO_STEPS ? "#f3f4f6" : "#fff", color: comboConfig.type <= MIN_COMBO_STEPS ? "#d1d5db" : "#111827", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, flexShrink: 0 }}>-</button>
+                  <div style={{ flex: 1, textAlign: "center", fontSize: "20px", fontWeight: "800", color: "#111827" }}>{comboConfig.type}</div>
+                  <button type="button" onClick={() => setStepCount(comboConfig.type + 1)} disabled={comboConfig.type >= MAX_COMBO_STEPS}
+                    style={{ width: "32px", height: "32px", fontSize: "18px", fontWeight: "700", border: "1.5px solid #d1d5db", borderRadius: "5px", cursor: comboConfig.type >= MAX_COMBO_STEPS ? "not-allowed" : "pointer", background: comboConfig.type >= MAX_COMBO_STEPS ? "#f3f4f6" : "#fff", color: comboConfig.type >= MAX_COMBO_STEPS ? "#d1d5db" : "#111827", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, flexShrink: 0 }}>+</button>
                 </div>
-                <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "5px" }}>{comboConfig.type} product selections required</div>
+                <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "5px" }}>{comboConfig.type} product selections required (2-8)</div>
               </div>
               {/* Combo title */}
               <div>
@@ -742,69 +804,52 @@ export default function SpecificComboBoxPage() {
         {/* ── MAIN ── */}
         <div>
           {/* Step tabs */}
-          <div style={{ display: "flex", borderBottom: "1px solid #e5e7eb", marginBottom: "16px" }}>
-            {Array.from({ length: comboConfig.type }, (_, i) => {
-              const stepTab = comboConfig.steps[i];
-              const isActive = comboActiveStep === i;
-              const scope = stepTab?.scope || "collection";
-              const collections = stepTab?.collections || [];
-              const selectedProducts = stepTab?.selectedProducts || [];
-
-              let subLabel = null;
-              if (scope === "collection") {
-                if (collections.length === 1) subLabel = collections[0].title;
-                else if (collections.length > 1) subLabel = `${collections.length} collections`;
-              } else if (scope === "product") {
-                if (selectedProducts.length === 1) subLabel = selectedProducts[0].title;
-                else if (selectedProducts.length > 1) subLabel = `${selectedProducts.length} products`;
-              }
-
-              return (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setComboActiveStep(i)}
-                  style={{
-                    padding: "8px 16px",
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    border: "none",
-                    borderRadius: "6px 6px 0 0",
-                    background: isActive ? "#000000" : "#f9fafb",
-                    borderBottom: isActive ? "2px solid #000000" : "2px solid transparent",
-                    marginBottom: "-1px",
-                    color: isActive ? "#ffffff" : "#6b7280",
-                    transition: "color 0.15s, border-color 0.15s, background 0.15s",
-                    textAlign: "left",
-                    lineHeight: 1.3,
-                    minWidth: "100px",
-                  }}
-                >
-                  <div>{stepTab?.label || `Step ${i + 1}`}</div>
-                  {subLabel && (
-                    <div style={{
-                      fontSize: "10px",
-                      fontWeight: "400",
-                      marginTop: "2px",
-                      color: isActive ? "rgba(255,255,255,0.7)" : "#9ca3af",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      maxWidth: "160px",
-                    }}>
-                      {subLabel}
-                    </div>
-                  )}
-                </button>
-              );
-            })}
+          <div style={{ display: "flex", borderBottom: "1px solid #e5e7eb", marginBottom: "16px", flexWrap: "wrap", gap: "2px" }}>
+            <button
+              type="button"
+              onClick={() => setComboActiveStep("all")}
+              style={{ padding: "8px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none", borderRadius: "6px 6px 0 0", background: comboActiveStep === "all" ? "#000000" : "#f9fafb", borderBottom: comboActiveStep === "all" ? "2px solid #000000" : "2px solid transparent", marginBottom: "-1px", color: comboActiveStep === "all" ? "#ffffff" : "#6b7280", transition: "color 0.15s, border-color 0.15s, background 0.15s" }}
+            >
+              All Steps
+            </button>
+            {Array.from({ length: comboConfig.type }, (_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setComboActiveStep(i)}
+                style={{ padding: "8px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none", borderRadius: "6px 6px 0 0", background: comboActiveStep === i ? "#000000" : "#f9fafb", borderBottom: comboActiveStep === i ? "2px solid #000000" : "2px solid transparent", marginBottom: "-1px", color: comboActiveStep === i ? "#ffffff" : "#6b7280", transition: "color 0.15s, border-color 0.15s, background 0.15s" }}
+              >
+                Step {i + 1}
+              </button>
+            ))}
           </div>
 
+          {comboActiveStep === "all" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {Array.from({ length: comboConfig.type }, (_, idx) => {
+                const step = comboConfig.steps[idx] || buildDefaultStep(idx);
+                const scopeLabel = step.scope === "collection" ? "Collections" : "Products";
+                const selectionCount = step.scope === "collection" ? (step.collections?.length || 0) : ((step.selectedProducts || []).length);
+                return (
+                  <div key={idx} style={{ background: "#fff", border: "1.5px solid #e5e7eb", borderRadius: "8px", padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1, minWidth: 0 }}>
+                      <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#000000", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: "800", flexShrink: 0 }}>{idx + 1}</div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: "13px", fontWeight: "700", color: "#111827" }}>{`Step ${idx + 1}`} - {step.label || `Step ${idx + 1}`}</div>
+                        <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>{scopeLabel} - {selectionCount > 0 ? `${selectionCount} selected` : "None selected"}</div>
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => setComboActiveStep(idx)} style={{ padding: "6px 14px", fontSize: "12px", fontWeight: "600", border: "1.5px solid #000000", borderRadius: "5px", background: "#000000", color: "#fff", cursor: "pointer", flexShrink: 0 }}>Configure</button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           {/* Step content */}
-          {(() => {
+          {comboActiveStep !== "all" && (() => {
             const ai = comboActiveStep;
-            const step = comboConfig.steps[ai] || DEFAULT_COMBO_CONFIG.steps[ai] || DEFAULT_COMBO_CONFIG.steps[0];
+            const step = comboConfig.steps[ai] || buildDefaultStep(ai);
             return (
               <div>
                 {/* ── Pickers card ── */}
@@ -986,8 +1031,8 @@ export default function SpecificComboBoxPage() {
                       </div>
                     )}
                     <label style={labelStyle}>Upload step image (optional)</label>
-                    {/* All 3 inputs — active step shown, others hidden but included via form= */}
-                    {[0, 1, 2].map((si) => (
+                    {/* All step inputs — active step shown, others hidden but included via form= */}
+                    {Array.from({ length: comboConfig.type }, (_, si) => (
                       <input
                         key={si}
                         type="file"

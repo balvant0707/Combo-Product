@@ -600,7 +600,11 @@ export default function ManageBoxesPage() {
                               <span style={{ fontSize: 11, color: "#2A7A4F", fontWeight: 600 }}>
                                 {box.discount.discountType === "percent"
                                   ? `${box.discount.discountValue}% off`
-                                  : `₹${box.discount.discountValue} off`}
+                                  : box.discount.discountType === "fixed"
+                                    ? `₹${box.discount.discountValue} off`
+                                    : box.discount.discountType === "buy_x_get_y"
+                                      ? `Buy X Get Y (${box.discount.discountValue}% off)`
+                                      : `${box.discount.discountValue} off`}
                               </span>
                             )}
                           </div>

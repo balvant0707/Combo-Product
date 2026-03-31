@@ -978,9 +978,13 @@
     if (_discountType !== 'none' && _discountValue > 0) {
       var discountBadge = document.createElement('span');
       discountBadge.className = 'cb-discount-badge';
-      discountBadge.textContent = _discountType === 'percent'
-        ? _discountValue + '% OFF'
-        : ctx.currencySymbol + _discountValue + ' OFF';
+      if (_discountType === 'buy_x_get_y') {
+        discountBadge.textContent = 'BUY X GET Y';
+      } else {
+        discountBadge.textContent = _discountType === 'percent'
+          ? _discountValue + '% OFF'
+          : ctx.currencySymbol + _discountValue + ' OFF';
+      }
       card.appendChild(discountBadge);
     }
 
@@ -2058,6 +2062,16 @@
       return true;
     }
 
+    function findNextEmptySlot(currentIdx) {
+      for (var i = currentIdx + 1; i < slots.length; i++) {
+        if (!slots[i]) return i;
+      }
+      for (var j = 0; j < currentIdx; j++) {
+        if (!slots[j]) return j;
+      }
+      return -1;
+    }
+
     // Per-step product cache (keyed by step index)
     var stepProductsCache = {};
 
@@ -2236,6 +2250,26 @@
 
     var productLabel = document.createElement('div');
     productLabel.className = 'cb-product-label';
+    var productLabelText = document.createElement('span');
+    productLabelText.className = 'cb-product-label-text';
+    productLabel.appendChild(productLabelText);
+
+    var skipStepBtn = document.createElement('button');
+    skipStepBtn.type = 'button';
+    skipStepBtn.className = 'cb-step-skip-btn';
+    skipStepBtn.textContent = 'Skip';
+    skipStepBtn.style.display = 'none';
+    skipStepBtn.addEventListener('click', function () {
+      var stepCfg = steps[activeSlotIndex] || {};
+      if (!isOptionalStep(stepCfg)) return;
+      slots[activeSlotIndex] = null;
+      var next = findNextEmptySlot(activeSlotIndex);
+      if (next !== -1) activeSlotIndex = next;
+      renderSlots();
+      loadAndRenderGrid();
+      updateCartButton();
+    });
+    productLabel.appendChild(skipStepBtn);
     productSection.appendChild(productLabel);
 
     var productGrid = document.createElement('div');
@@ -2409,7 +2443,8 @@
       var stepCfg = steps[activeSlotIndex] || {};
       var stepLabelText = stepCfg.label || ('Item ' + (activeSlotIndex + 1));
       if (isOptionalStep(stepCfg)) stepLabelText += ' (Optional)';
-      productLabel.textContent = 'Choose your ' + stepLabelText;
+      productLabelText.textContent = 'Choose your ' + stepLabelText;
+      skipStepBtn.style.display = isOptionalStep(stepCfg) && !slots[activeSlotIndex] ? 'inline-flex' : 'none';
       productGrid.innerHTML = '';
 
       if (!products) {
@@ -2659,15 +2694,7 @@
               };
 
               // Advance to next empty slot
-              var next = -1;
-              for (var i = activeSlotIndex + 1; i < slots.length; i++) {
-                if (!slots[i]) { next = i; break; }
-              }
-              if (next === -1) {
-                for (var j = 0; j < activeSlotIndex; j++) {
-                  if (!slots[j]) { next = j; break; }
-                }
-              }
+              var next = findNextEmptySlot(activeSlotIndex);
               if (next !== -1) activeSlotIndex = next;
 
               renderSlots();

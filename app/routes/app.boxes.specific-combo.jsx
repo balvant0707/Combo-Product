@@ -515,20 +515,40 @@ export default function CreateSpecificComboBoxPage() {
                             <select value={comboConfig.discountType} onChange={(e) => updateComboField("discountType", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }}>
                               <option value="percent">% Off Total</option>
                               <option value="fixed">₹ Fixed Discount</option>
+                              <option value="buy_x_get_y">Buy X Get Y</option>
                               <option value="none">No Discount</option>
                             </select>
                           </div>
                           {comboConfig.discountType !== "none" && (
                             <div>
-                              <label style={labelStyle}>{comboConfig.discountType === "percent" ? "Discount %" : "Amount (₹)"}</label>
-                              <input type="number" min="0" step={comboConfig.discountType === "percent" ? "1" : "0.01"} max={comboConfig.discountType === "percent" ? "99" : undefined} value={comboConfig.discountValue} onChange={(e) => updateComboField("discountValue", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
+                              <label style={labelStyle}>
+                                {comboConfig.discountType === "buy_x_get_y"
+                                  ? "Get Y discount (%)"
+                                  : comboConfig.discountType === "percent"
+                                    ? "Discount %"
+                                    : "Amount (₹)"}
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                step={comboConfig.discountType === "fixed" ? "0.01" : "1"}
+                                max={comboConfig.discountType === "fixed" ? undefined : "100"}
+                                value={comboConfig.discountValue}
+                                onChange={(e) => updateComboField("discountValue", e.target.value)}
+                                style={{ ...fieldStyle, borderColor: "#d1d5db" }}
+                              />
+                              {comboConfig.discountType === "buy_x_get_y" && (
+                                <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "6px" }}>
+                                  Applied as Shopify automatic Buy X Get Y discount in checkout.
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "8px", borderTop: "1px solid #e5e7eb" }}>
                           <span style={{ fontSize: "11px", color: "#6b7280" }}>
                             {comboDynamicMrp > 0
-                              ? (comboConfig.discountType !== "none" ? "After discount:" : "Sum of step products:")
+                              ? (comboConfig.discountType === "percent" || comboConfig.discountType === "fixed" ? "After discount:" : "Sum of step products:")
                               : "Price calculated from selected step products"}
                           </span>
                           {comboDynamicMrp > 0 && (

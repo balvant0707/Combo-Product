@@ -36,12 +36,62 @@
     return total;
   }
 
-  function applyComboDiscount(price, comboConfig) {
+  function getBuyXGetYFreeUnits(totalQty, buyQty, getQty) {
+    var safeQty = Math.max(0, parseInt(String(totalQty || 0), 10) || 0);
+    var safeBuyQty = Math.max(1, parseInt(String(buyQty || 1), 10) || 1);
+    var safeGetQty = Math.max(1, parseInt(String(getQty || 1), 10) || 1);
+    var groupSize = safeBuyQty + safeGetQty;
+    if (safeQty <= 0 || groupSize <= 0) return 0;
+    var fullGroups = Math.floor(safeQty / groupSize);
+    var remainder = safeQty % groupSize;
+    var partialFree = Math.max(0, Math.min(safeGetQty, remainder - safeBuyQty));
+    return (fullGroups * safeGetQty) + partialFree;
+  }
+
+  function getBuyXGetYDiscountAmount(totalPrice, comboConfig, selectedItems) {
+    if (!(totalPrice > 0) || !comboConfig) return 0;
+
+    var unitPrices = [];
+    if (Array.isArray(selectedItems)) {
+      selectedItems.forEach(function (item) {
+        if (!item) return;
+        var raw = item;
+        if (typeof item === 'object') raw = item.productPrice != null ? item.productPrice : item.price;
+        var parsed = parseFloat(raw);
+        if (parsed > 0) unitPrices.push(parsed);
+      });
+    }
+
+    var quantity = unitPrices.length;
+    if (quantity <= 0) {
+      quantity = Math.max(0, parseInt(String(comboConfig.type || 0), 10) || 0);
+    }
+    if (quantity <= 0) return 0;
+
+    var freeUnits = getBuyXGetYFreeUnits(quantity, comboConfig.buyQuantity, comboConfig.getQuantity);
+    if (freeUnits <= 0) return 0;
+
+    var freeAmount = 0;
+    if (unitPrices.length >= freeUnits) {
+      unitPrices.sort(function (a, b) { return a - b; });
+      for (var i = 0; i < freeUnits; i++) freeAmount += unitPrices[i] || 0;
+    } else {
+      freeAmount = (totalPrice / quantity) * freeUnits;
+    }
+
+    return Math.min(totalPrice, freeAmount);
+  }
+
+  function applyComboDiscount(price, comboConfig, selectedItems) {
     if (!comboConfig) return price;
     var discountType = comboConfig.discountType || 'none';
     var discountValue = parseFloat(comboConfig.discountValue) || 0;
     if (discountType === 'percent') return Math.max(0, price * (1 - discountValue / 100));
     if (discountType === 'fixed') return Math.max(0, price - discountValue);
+    if (discountType === 'buy_x_get_y') {
+      var bxgyDiscountAmount = getBuyXGetYDiscountAmount(price, comboConfig, selectedItems);
+      return Math.max(0, price - bxgyDiscountAmount);
+    }
     return price;
   }
 
@@ -975,7 +1025,8 @@
     var _discountCfg = box.comboConfig || {};
     var _discountType = _discountCfg.discountType || 'none';
     var _discountValue = parseFloat(_discountCfg.discountValue) || 0;
-    if (_discountType !== 'none' && _discountValue > 0) {
+    var _hasDiscount = _discountType === 'buy_x_get_y' || (_discountType !== 'none' && _discountValue > 0);
+    if (_hasDiscount) {
       var discountBadge = document.createElement('span');
       discountBadge.className = 'cb-discount-badge';
       if (_discountType === 'buy_x_get_y') {
@@ -1435,7 +1486,7 @@
       });
       var totalMrp = getSelectedProductsTotal(slots);
       var isDynamic = isDynamicBundlePrice(box);
-      var dynamicEffectivePrice = isDynamic ? applyComboDiscount(totalMrp, box.comboConfig) : 0;
+      var dynamicEffectivePrice = isDynamic ? applyComboDiscount(totalMrp, box.comboConfig, slots) : 0;
 
       if (_stickyTotalEl) {
         renderStickyTotal(
@@ -2305,7 +2356,7 @@
       var isDynamic = isDynamicBundlePrice(box);
       var bundlePriceRaw = parseFloat(box.bundlePrice) || 0;
       var effectivePrice = isDynamic
-        ? applyComboDiscount(totalMrp, box.comboConfig)
+        ? applyComboDiscount(totalMrp, box.comboConfig, slots)
         : applyComboDiscount(bundlePriceRaw, box.comboConfig);
       if (_stickyTotalEl) {
         renderStickyTotal(_stickyTotalEl, effectivePrice, ctx.currencySymbol);
@@ -3269,7 +3320,7 @@
 
       // For dynamic mode, effective cart price = sum of selected products minus any discount.
       // For manual mode, it is the fixed bundlePrice set by the merchant.
-      var effectivePrice = isDynamic ? applyComboDiscount(totalMrp, box.comboConfig) : (parseFloat(box.bundlePrice) || 0);
+      var effectivePrice = isDynamic ? applyComboDiscount(totalMrp, box.comboConfig, slots) : (parseFloat(box.bundlePrice) || 0);
 
       var bundleProps = {
         '_bundle_price_item': 'true',
@@ -3327,7 +3378,7 @@
       if (dynamicTotal <= 0) {
         return Promise.reject(new Error('No product prices available for dynamic pricing'));
       }
-      var discountedTotal = applyComboDiscount(dynamicTotal, box.comboConfig);
+      var discountedTotal = applyComboDiscount(dynamicTotal, box.comboConfig, slots);
       if (discountedTotal <= 0) discountedTotal = dynamicTotal;
 
       var updateUrl = resolvedApiBase +

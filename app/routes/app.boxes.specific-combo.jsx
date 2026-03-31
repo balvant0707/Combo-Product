@@ -97,8 +97,8 @@ const DEFAULT_COMBO = {
   subtitle: "Choose a product for each step",
   bundlePrice: 0,
   bundlePriceType: "dynamic",
-  discountType: "none",
-  discountValue: "0",
+  discountType: "buy_x_get_y",
+  discountValue: "100",
   buyQuantity: 1,
   getQuantity: 1,
   isActive: true,
@@ -107,6 +107,53 @@ const DEFAULT_COMBO = {
   allowReselection: true,
   steps: Array.from({ length: MIN_COMBO_STEPS }, (_, index) => buildDefaultStep(index)),
 };
+
+function getBuyXGetYFreeUnits(totalQty, buyQty, getQty) {
+  const safeQty = Math.max(0, parseInt(String(totalQty || 0), 10) || 0);
+  const safeBuyQty = Math.max(1, parseInt(String(buyQty || 1), 10) || 1);
+  const safeGetQty = Math.max(1, parseInt(String(getQty || 1), 10) || 1);
+  const groupSize = safeBuyQty + safeGetQty;
+  if (safeQty <= 0 || groupSize <= 0) return 0;
+  const fullGroups = Math.floor(safeQty / groupSize);
+  const remainder = safeQty % groupSize;
+  const partialFree = Math.max(0, Math.min(safeGetQty, remainder - safeBuyQty));
+  return fullGroups * safeGetQty + partialFree;
+}
+
+function applyAdminComboDiscount(total, config, quantity = 0, unitPrices = []) {
+  const safeTotal = parseFloat(total) || 0;
+  if (safeTotal <= 0) return 0;
+  const discountType = config?.discountType || "none";
+  const discountValue = parseFloat(config?.discountValue) || 0;
+
+  if (discountType === "percent") return Math.max(0, safeTotal * (1 - discountValue / 100));
+  if (discountType === "fixed") return Math.max(0, safeTotal - discountValue);
+  if (discountType === "buy_x_get_y") {
+    const parsedUnitPrices = Array.isArray(unitPrices)
+      ? unitPrices
+        .map((price) => parseFloat(price) || 0)
+        .filter((price) => price > 0)
+      : [];
+    const safeQty = Math.max(
+      0,
+      parseInt(String(quantity || parsedUnitPrices.length || 0), 10) || parsedUnitPrices.length || 0,
+    );
+    if (safeQty <= 0) return safeTotal;
+    const freeUnits = getBuyXGetYFreeUnits(safeQty, config?.buyQuantity, config?.getQuantity);
+    if (freeUnits <= 0) return safeTotal;
+
+    let freeAmount = 0;
+    if (parsedUnitPrices.length >= freeUnits) {
+      const sorted = [...parsedUnitPrices].sort((a, b) => a - b);
+      freeAmount = sorted.slice(0, freeUnits).reduce((sum, price) => sum + price, 0);
+    } else {
+      freeAmount = (safeTotal / safeQty) * freeUnits;
+    }
+    return Math.max(0, safeTotal - Math.min(safeTotal, freeAmount));
+  }
+
+  return safeTotal;
+}
 
 /* ─────────────────────────── Loader ─────────────────────────── */
 export const loader = async ({ request }) => {
@@ -259,7 +306,7 @@ export default function CreateSpecificComboBoxPage() {
 
   /* ── Combo Config state ── */
   const [comboConfig, setComboConfig] = useState(DEFAULT_COMBO);
-  const [comboActiveStep, setComboActiveStep] = useState("all");
+  const [comboActiveStep, setComboActiveStep] = useState(0);
   const [stepProducts, setStepProducts] = useState(Array(MAX_COMBO_STEPS).fill(null));
 
   useEffect(() => { if (collProdsFetcher0.data?.collectionProducts) setStepProducts((p) => { const n = [...p]; n[0] = collProdsFetcher0.data.collectionProducts; return n; }); }, [collProdsFetcher0.data]);
@@ -326,19 +373,32 @@ export default function CreateSpecificComboBoxPage() {
     setShowStepProdModal(false);
   }
 
+  const comboDynamicSelectedPrices = useMemo(() => {
+    return comboConfig.steps
+      .slice(0, comboConfig.type)
+      .flatMap((step) => (step.selectedProducts || []).map((product) => parseFloat(product.price) || 0))
+      .filter((price) => price > 0);
+  }, [comboConfig.steps, comboConfig.type]);
+
   const comboDynamicMrp = useMemo(() => {
-    return comboConfig.steps.slice(0, comboConfig.type)
-      .flatMap((s) => (s.selectedProducts || []).map((p) => parseFloat(p.price) || 0))
-      .reduce((a, b) => a + b, 0);
-  }, [comboConfig]);
+    return comboDynamicSelectedPrices.reduce((sum, price) => sum + price, 0);
+  }, [comboDynamicSelectedPrices]);
 
   const comboDynamicPrice = useMemo(() => {
-    const total = comboDynamicMrp;
-    const val = parseFloat(comboConfig.discountValue) || 0;
-    if (comboConfig.discountType === "percent") return Math.max(0, total * (1 - val / 100));
-    if (comboConfig.discountType === "fixed")   return Math.max(0, total - val);
-    return total;
-  }, [comboDynamicMrp, comboConfig.discountType, comboConfig.discountValue]);
+    return applyAdminComboDiscount(
+      comboDynamicMrp,
+      comboConfig,
+      comboDynamicSelectedPrices.length,
+      comboDynamicSelectedPrices,
+    );
+  }, [
+    comboDynamicMrp,
+    comboConfig.discountType,
+    comboConfig.discountValue,
+    comboConfig.buyQuantity,
+    comboConfig.getQuantity,
+    comboDynamicSelectedPrices,
+  ]);
 
   const comboConfigJson = JSON.stringify({
     ...comboConfig,
@@ -525,11 +585,11 @@ export default function CreateSpecificComboBoxPage() {
                                   if (!(parseInt(String(comboConfig.getQuantity), 10) > 0)) updateComboField("getQuantity", 1);
                                 }
                               }}
-                              style={{ ...fieldStyle, borderColor: "#d1d5db" }}
+                              style={{ ...fieldStyle, borderColor: "#d1d5db", color: "#000000", fontWeight: "600" }}
                             >
                               <option value="percent">% Off Total</option>
                               <option value="fixed">₹ Fixed Discount</option>
-                              <option value="buy_x_get_y">Buy X Get Y</option>
+                              <option value="buy_x_get_y">Buy X Get Discount</option>
                               <option value="none">No Discount</option>
                             </select>
                           </div>
@@ -538,7 +598,7 @@ export default function CreateSpecificComboBoxPage() {
                               {comboConfig.discountType === "buy_x_get_y" ? (
                                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                                   <div>
-                                    <label style={labelStyle}>Buy X quantity</label>
+                                    <label style={{ ...labelStyle, color: "#000000" }}>Buy X quantity</label>
                                     <input
                                       type="number"
                                       min="1"
@@ -549,7 +609,7 @@ export default function CreateSpecificComboBoxPage() {
                                     />
                                   </div>
                                   <div>
-                                    <label style={labelStyle}>Get Y free quantity</label>
+                                    <label style={{ ...labelStyle, color: "#000000" }}>Get Y free quantity</label>
                                     <input
                                       type="number"
                                       min="1"
@@ -583,11 +643,11 @@ export default function CreateSpecificComboBoxPage() {
                           )}
                         </div>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "8px", borderTop: "1px solid #e5e7eb" }}>
-                          <span style={{ fontSize: "11px", color: "#6b7280" }}>
-                            {comboDynamicMrp > 0
-                              ? (comboConfig.discountType === "percent" || comboConfig.discountType === "fixed" ? "After discount:" : "Sum of step products:")
+                            <span style={{ fontSize: "11px", color: "#6b7280" }}>
+                              {comboDynamicMrp > 0
+                              ? (comboConfig.discountType === "none" ? "Sum of step products:" : "After discount:")
                               : "Price calculated from selected step products"}
-                          </span>
+                            </span>
                           {comboDynamicMrp > 0 && (
                             <span style={{ fontSize: "13px", fontWeight: "700", color: "#166534" }}>
                               ₹{comboDynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
@@ -632,7 +692,11 @@ export default function CreateSpecificComboBoxPage() {
             </div>
 
             {/* ── MAIN: Step Editor ── */}
-            <div>
+            <div style={{ minHeight: "calc(100vh - 260px)", height: "auto" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+                <div style={{ fontSize: "12px", fontWeight: "700", color: "#111827", letterSpacing: "0.04em", textTransform: "uppercase" }}>Steps</div>
+                <div style={{ fontSize: "11px", fontWeight: "700", color: "#6b7280" }}>{comboConfig.type} total</div>
+              </div>
               <div style={{ display: "flex", borderBottom: "1px solid #e5e7eb", marginBottom: "16px", flexWrap: "wrap", gap: "2px" }}>
                 <button type="button" onClick={() => setComboActiveStep("all")}
                   style={{ padding: "8px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none", borderRadius: "6px 6px 0 0", background: comboActiveStep === "all" ? "#000000" : "#f9fafb", borderBottom: comboActiveStep === "all" ? "2px solid #000000" : "2px solid transparent", marginBottom: "-1px", color: comboActiveStep === "all" ? "#ffffff" : "#6b7280", transition: "color 0.15s, border-color 0.15s, background 0.15s" }}>

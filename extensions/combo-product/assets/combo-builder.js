@@ -2027,7 +2027,7 @@
     // Pad steps array to numSteps with safe defaults if the stored config has fewer entries
     // (can happen when a box was saved as 2-step and later changed to 3-step)
     while (steps.length < numSteps) {
-      steps.push({ label: 'Item ' + (steps.length + 1), scope: 'collection', collections: [], selectedProducts: [] });
+      steps.push({ label: 'Item ' + (steps.length + 1), optional: false, scope: 'collection', collections: [], selectedProducts: [] });
     }
 
     var sessionId = generateSessionId();
@@ -2035,6 +2035,28 @@
     var slots = [];
     for (var si = 0; si < numSteps; si++) slots.push(null);
     var activeSlotIndex = 0;
+
+    function isOptionalStep(stepCfg) {
+      if (!stepCfg) return false;
+      return stepCfg.optional === true || String(stepCfg.optional).toLowerCase() === 'true';
+    }
+
+    function getRequiredStepIndexes() {
+      var required = [];
+      for (var i = 0; i < numSteps; i++) {
+        if (!isOptionalStep(steps[i])) required.push(i);
+      }
+      return required;
+    }
+
+    function areRequiredStepsFilled() {
+      var required = getRequiredStepIndexes();
+      if (required.length === 0) return slots.some(Boolean);
+      for (var i = 0; i < required.length; i++) {
+        if (!slots[required[i]]) return false;
+      }
+      return true;
+    }
 
     // Per-step product cache (keyed by step index)
     var stepProductsCache = {};
@@ -2103,7 +2125,7 @@
         labelEl.className = 'cb-slot-step-label';
         var smallText = document.createElement('span');
         smallText.className = 'cb-slot-step-small';
-        smallText.textContent = slotProduct ? 'Selected' : 'Select your';
+        smallText.textContent = slotProduct ? 'Selected' : (isOptionalStep(steps[idx]) ? 'Optional' : 'Select your');
         labelEl.appendChild(smallText);
 
         var itemLink = document.createElement('div');
@@ -2141,6 +2163,7 @@
         } else {
           // Use step label if set
           var stepLabel = (steps[idx] && steps[idx].label) ? steps[idx].label : ('Item ' + (idx + 1));
+          if (isOptionalStep(steps[idx])) stepLabel += ' (Optional)';
           itemLink.textContent = stepLabel;
           ;(function (i) {
             step.style.cursor = 'pointer';
@@ -2227,16 +2250,17 @@
     function updateCartButton() {
       var filled = slots.filter(Boolean).length;
       var allFilled = filled === numSteps;
+      var cartReady = areRequiredStepsFilled();
       var addLabel = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
 
-      inlineCartBtn.disabled = !allFilled;
-      if (allFilled) inlineCartBtn.classList.add('cb-inline-cart-btn--ready');
+      inlineCartBtn.disabled = !cartReady;
+      if (cartReady) inlineCartBtn.classList.add('cb-inline-cart-btn--ready');
       else inlineCartBtn.classList.remove('cb-inline-cart-btn--ready');
       inlineCartBtn.textContent = addLabel;
 
       if (_stickyBtn) {
-        _stickyBtn.disabled = !allFilled;
-        if (allFilled) _stickyBtn.classList.add('cb-sticky-btn--ready');
+        _stickyBtn.disabled = !cartReady;
+        if (cartReady) _stickyBtn.classList.add('cb-sticky-btn--ready');
         else _stickyBtn.classList.remove('cb-sticky-btn--ready');
         _stickyBtn.textContent = addLabel;
       }
@@ -2280,20 +2304,20 @@
           });
         }
         if (step3CartBtn) {
-          step3CartBtn.disabled = !allFilled;
-          if (!allFilled) {
+          step3CartBtn.disabled = !cartReady;
+          if (!cartReady) {
             step3CartBtn.classList.remove('cb-step3-cart-btn--loading');
             step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
           }
         }
         if (step3CheckoutBtn) {
-          step3CheckoutBtn.disabled = !allFilled;
-          if (!allFilled) {
+          step3CheckoutBtn.disabled = !cartReady;
+          if (!cartReady) {
             step3CheckoutBtn.classList.remove('cb-step3-checkout-btn--loading');
             step3CheckoutBtn.textContent = ctx.checkoutBtnLabel || 'Checkout';
           }
         }
-        if (allFilled && ctx._wizardDots && ctx._wizardDots[2]) {
+        if (cartReady && ctx._wizardDots && ctx._wizardDots[2]) {
           ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--done';
           setWizardStep2Preview(ctx, slots);
           ctx._wizardDots[2].className = 'cb-wizard-step cb-wizard-step--active';
@@ -2302,7 +2326,7 @@
             ctx._wizardLabelEls[1].textContent = ctx._wizardStepDefs[1].doneLabel;
             ctx._wizardLabelEls[2].textContent = ctx._wizardStepDefs[2].label;
           }
-        } else if (!allFilled && ctx._wizardDots && ctx._wizardDots[2]) {
+        } else if (!cartReady && ctx._wizardDots && ctx._wizardDots[2]) {
           ctx._wizardDots[1].className = 'cb-wizard-step cb-wizard-step--active';
                     ctx._wizardDots[2].className = 'cb-wizard-step';
           if (ctx._wizardLines && ctx._wizardLines[1]) ctx._wizardLines[1].className = 'cb-wizard-line';
@@ -2384,6 +2408,7 @@
     function renderProductGrid(products) {
       var stepCfg = steps[activeSlotIndex] || {};
       var stepLabelText = stepCfg.label || ('Item ' + (activeSlotIndex + 1));
+      if (isOptionalStep(stepCfg)) stepLabelText += ' (Optional)';
       productLabel.textContent = 'Choose your ' + stepLabelText;
       productGrid.innerHTML = '';
 
@@ -2737,10 +2762,14 @@
     }
 
     function doCart() {
-      if (slots.filter(Boolean).length < numSteps) {
+      if (!areRequiredStepsFilled()) {
         var stepEls = slotSteps.querySelectorAll('.cb-slot-step');
-        slots.forEach(function (p, idx) {
-          if (!p && stepEls[idx * 2]) {
+        var missingRequired = getRequiredStepIndexes().filter(function (idx) { return !slots[idx]; });
+        if (missingRequired.length === 0 && !slots.some(Boolean)) {
+          missingRequired = [activeSlotIndex];
+        }
+        missingRequired.forEach(function (idx) {
+          if (stepEls[idx * 2]) {
             stepEls[idx * 2].classList.add('cb-slot-step--error');
             setTimeout(function () { stepEls[idx * 2].classList.remove('cb-slot-step--error'); }, 700);
           }
@@ -2764,7 +2793,7 @@
     if (ctx.layoutMode === 'steps') {
       if (step3CartBtn) {
         step3CartBtn.addEventListener('click', function () {
-          if (slots.filter(Boolean).length < numSteps) return;
+          if (!areRequiredStepsFilled()) return;
           step3CartBtn.disabled = true;
           step3CartBtn.classList.add('cb-step3-cart-btn--loading');
           step3CartBtn.innerHTML = '<span class="cb-btn-spinner" aria-hidden="true"></span><span>Adding\u2026</span>';
@@ -2775,7 +2804,7 @@
       }
       if (step3CheckoutBtn) {
         step3CheckoutBtn.addEventListener('click', function () {
-          if (slots.filter(Boolean).length < numSteps) return;
+          if (!areRequiredStepsFilled()) return;
           step3CheckoutBtn.disabled = true;
           step3CheckoutBtn.classList.add('cb-step3-checkout-btn--loading');
           step3CheckoutBtn.innerHTML = '<span class="cb-btn-spinner" aria-hidden="true"></span><span>Checkout\u2026</span>';

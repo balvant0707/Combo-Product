@@ -6,6 +6,12 @@ const BOX_CODE_CHARS = "0123456789";
 const BOX_CODE_MIN_LENGTH = 3;
 const BOX_CODE_MAX_LENGTH = 10;
 const BOX_CODE_PATTERN = /^\d+$/;
+const MIN_COMBO_STEPS = 2;
+const MAX_COMBO_STEPS = 8;
+
+function clampComboStepCount(value) {
+  return Math.max(MIN_COMBO_STEPS, Math.min(MAX_COMBO_STEPS, value));
+}
 
 export class BoxCodeValidationError extends Error {
   constructor(message) {
@@ -449,8 +455,8 @@ function extractStepImageUrls(parsedCombo) {
   const allSteps = Array.isArray(parsedCombo?.steps) ? parsedCombo.steps : [];
   const requestedType = parseInt(parsedCombo?.type, 10);
   const comboType =
-    Number.isInteger(requestedType) && requestedType >= 2
-      ? requestedType
+    Number.isInteger(requestedType)
+      ? clampComboStepCount(requestedType)
       : allSteps.length;
 
   for (const step of allSteps.slice(0, comboType)) {
@@ -599,7 +605,7 @@ export async function syncSpecificComboProductMedia(
 
   const requestedType = parseInt(parsedCombo?.type, 10);
   const activeStepCount =
-    Number.isInteger(requestedType) && requestedType >= 2 ? requestedType : 0;
+    Number.isInteger(requestedType) ? clampComboStepCount(requestedType) : 0;
 
   const persistedStepImages = Array.isArray(stepImages)
     ? stepImages
@@ -976,7 +982,10 @@ export async function updateComboStepsConfig(id, shop, comboStepsConfig) {
  */
 export async function upsertComboConfig(boxId, config, admin = null) {
   const parsed = typeof config === "string" ? JSON.parse(config) : config;
-  const comboType = parseInt(parsed.type) || 2;
+  const requestedType = parseInt(parsed?.type, 10);
+  const comboType = Number.isInteger(requestedType)
+    ? clampComboStepCount(requestedType)
+    : MIN_COMBO_STEPS;
   const allSteps = Array.isArray(parsed.steps) ? parsed.steps : [];
 
   // Pre-expand collection-scoped steps via Admin API so the storefront widget
@@ -1023,8 +1032,12 @@ export async function upsertComboConfig(boxId, config, admin = null) {
     }
   }
 
-  const stepsJson = JSON.stringify(allSteps.slice(0, comboType));
-  const rawJson = JSON.stringify({ ...parsed, steps: allSteps });
+  const activeSteps = allSteps.slice(0, comboType).map((step) => ({
+    ...(step || {}),
+    optional: step?.optional === true || String(step?.optional).toLowerCase() === "true",
+  }));
+  const stepsJson = JSON.stringify(activeSteps);
+  const rawJson = JSON.stringify({ ...parsed, type: comboType, steps: activeSteps });
 
   const payload = {
     comboType,

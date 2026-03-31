@@ -1,3 +1,6 @@
+const MIN_COMBO_STEPS = 2;
+const MAX_COMBO_STEPS = 8;
+
 export function validateComboConfig(configInput) {
   if (!configInput) {
     return {
@@ -17,12 +20,16 @@ export function validateComboConfig(configInput) {
   }
 
   const requestedType = parseInt(parsed?.type, 10);
-  const comboType = (Number.isInteger(requestedType) && requestedType >= 2) ? requestedType : 2;
+  const comboType = Number.isInteger(requestedType)
+    ? Math.max(MIN_COMBO_STEPS, Math.min(MAX_COMBO_STEPS, requestedType))
+    : MIN_COMBO_STEPS;
   const steps = Array.isArray(parsed?.steps) ? parsed.steps : [];
   const stepSelections = {};
 
   for (let index = 0; index < comboType; index += 1) {
     const step = steps[index] || {};
+    const isOptionalStep = step?.optional === true || String(step?.optional).toLowerCase() === "true";
+    if (isOptionalStep) continue;
     const scope = step?.scope === "product" ? "product" : "collection";
     const hasCollections =
       Array.isArray(step?.collections) && step.collections.length > 0;

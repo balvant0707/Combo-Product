@@ -47,6 +47,8 @@ const PRODUCTS_QUERY = `#graphql
 /* ─────────────────────────── Constants ─────────────────────────── */
 const MAX_BANNER_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_STEP_IMAGE_SIZE = 2 * 1024 * 1024;
+const MIN_COMBO_STEPS = 2;
+const MAX_COMBO_STEPS = 8;
 const ALLOWED_IMAGE_MIME_TYPES = new Set([
   "image/jpeg", "image/jpg", "image/png",
   "image/webp", "image/gif", "image/avif",
@@ -62,7 +64,10 @@ async function parseBannerImage(formData, errors) {
 
 async function parseStepImages(formData, errors) {
   const images = [];
-  const stepCount = parseInt(formData.get("stepCount") || "8", 10) || 8;
+  const rawStepCount = parseInt(formData.get("stepCount") || String(MIN_COMBO_STEPS), 10);
+  const stepCount = Number.isInteger(rawStepCount)
+    ? Math.max(MIN_COMBO_STEPS, Math.min(MAX_COMBO_STEPS, rawStepCount))
+    : MIN_COMBO_STEPS;
   for (let i = 0; i < stepCount; i++) {
     const file = formData.get(`stepImage_${i}`);
     if (!file || typeof file !== "object" || typeof file.arrayBuffer !== "function" || !file.size) {
@@ -87,6 +92,7 @@ async function parseStepImages(formData, errors) {
 function buildDefaultStep(index) {
   return {
     label: `Step ${index + 1}`,
+    optional: false,
     scope: "collection",
     collections: [],
     selectedProducts: [],
@@ -99,7 +105,7 @@ function buildDefaultStep(index) {
 }
 
 const DEFAULT_COMBO = {
-  type: 2,
+  type: MIN_COMBO_STEPS,
   title: "Build Your Perfect Bundle",
   subtitle: "Choose a product for each step",
   bundlePrice: 0,
@@ -110,7 +116,7 @@ const DEFAULT_COMBO = {
   showProductImages: true,
   showProgressBar: true,
   allowReselection: true,
-  steps: Array.from({ length: 3 }, (_, index) => buildDefaultStep(index)),
+  steps: Array.from({ length: MIN_COMBO_STEPS }, (_, index) => buildDefaultStep(index)),
 };
 
 /* ─────────────────────────── Loader ─────────────────────────── */
@@ -266,7 +272,7 @@ export default function CreateSpecificComboBoxPage() {
   /* ── Combo Config state ── */
   const [comboConfig, setComboConfig] = useState(DEFAULT_COMBO);
   const [comboActiveStep, setComboActiveStep] = useState("all");
-  const [stepProducts, setStepProducts] = useState(Array(8).fill(null));
+  const [stepProducts, setStepProducts] = useState(Array(MAX_COMBO_STEPS).fill(null));
 
   useEffect(() => { if (collProdsFetcher0.data?.collectionProducts) setStepProducts((p) => { const n = [...p]; n[0] = collProdsFetcher0.data.collectionProducts; return n; }); }, [collProdsFetcher0.data]);
   useEffect(() => { if (collProdsFetcher1.data?.collectionProducts) setStepProducts((p) => { const n = [...p]; n[1] = collProdsFetcher1.data.collectionProducts; return n; }); }, [collProdsFetcher1.data]);
@@ -294,7 +300,7 @@ export default function CreateSpecificComboBoxPage() {
 
   /* ── Step count stepper ── */
   function setStepCount(n) {
-    const clampedN = Math.max(2, Math.min(8, n));
+    const clampedN = Math.max(MIN_COMBO_STEPS, Math.min(MAX_COMBO_STEPS, n));
     setComboConfig((prev) => {
       const newSteps = [...prev.steps];
       while (newSteps.length < clampedN) {
@@ -433,11 +439,22 @@ export default function CreateSpecificComboBoxPage() {
                   <div>
                     <label style={labelStyle}>Number of steps</label>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px" }}>
-                      <button type="button" onClick={() => setStepCount(comboConfig.type - 1)} disabled={comboConfig.type <= 2}
-                        style={{ width: "32px", height: "32px", fontSize: "18px", fontWeight: "700", border: "1.5px solid #d1d5db", borderRadius: "5px", cursor: comboConfig.type <= 2 ? "not-allowed" : "pointer", background: comboConfig.type <= 2 ? "#f3f4f6" : "#fff", color: comboConfig.type <= 2 ? "#d1d5db" : "#111827", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, flexShrink: 0 }}>−</button>
-                      <div style={{ flex: 1, textAlign: "center", fontSize: "20px", fontWeight: "800", color: "#111827" }}>{comboConfig.type}</div>
-                      <button type="button" onClick={() => setStepCount(comboConfig.type + 1)} disabled={comboConfig.type >= 8}
-                        style={{ width: "32px", height: "32px", fontSize: "18px", fontWeight: "700", border: "1.5px solid #d1d5db", borderRadius: "5px", cursor: comboConfig.type >= 8 ? "not-allowed" : "pointer", background: comboConfig.type >= 8 ? "#f3f4f6" : "#fff", color: comboConfig.type >= 8 ? "#d1d5db" : "#111827", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, flexShrink: 0 }}>+</button>
+                      <button type="button" onClick={() => setStepCount(comboConfig.type - 1)} disabled={comboConfig.type <= MIN_COMBO_STEPS}
+                        style={{ width: "32px", height: "32px", fontSize: "18px", fontWeight: "700", border: "1.5px solid #d1d5db", borderRadius: "5px", cursor: comboConfig.type <= MIN_COMBO_STEPS ? "not-allowed" : "pointer", background: comboConfig.type <= MIN_COMBO_STEPS ? "#f3f4f6" : "#fff", color: comboConfig.type <= MIN_COMBO_STEPS ? "#d1d5db" : "#111827", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, flexShrink: 0 }}>-</button>
+                      <input
+                        type="number"
+                        min={MIN_COMBO_STEPS}
+                        max={MAX_COMBO_STEPS}
+                        value={comboConfig.type}
+                        onChange={(e) => {
+                          const parsed = parseInt(e.target.value, 10);
+                          if (Number.isNaN(parsed)) return;
+                          setStepCount(parsed);
+                        }}
+                        style={{ flex: 1, textAlign: "center", fontSize: "18px", fontWeight: "800", color: "#111827", border: "1.5px solid #d1d5db", borderRadius: "5px", height: "32px", padding: "0 8px", boxSizing: "border-box" }}
+                      />
+                      <button type="button" onClick={() => setStepCount(comboConfig.type + 1)} disabled={comboConfig.type >= MAX_COMBO_STEPS}
+                        style={{ width: "32px", height: "32px", fontSize: "18px", fontWeight: "700", border: "1.5px solid #d1d5db", borderRadius: "5px", cursor: comboConfig.type >= MAX_COMBO_STEPS ? "not-allowed" : "pointer", background: comboConfig.type >= MAX_COMBO_STEPS ? "#f3f4f6" : "#fff", color: comboConfig.type >= MAX_COMBO_STEPS ? "#d1d5db" : "#111827", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, flexShrink: 0 }}>+</button>
                     </div>
                     <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "5px" }}>{comboConfig.type} product selections required (2–8)</div>
                   </div>
@@ -572,7 +589,12 @@ export default function CreateSpecificComboBoxPage() {
                         <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1, minWidth: 0 }}>
                           <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#000000", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: "800", flexShrink: 0 }}>{idx + 1}</div>
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: "13px", fontWeight: "700", color: "#111827" }}>Step {idx + 1} — {step.label}</div>
+                            <div style={{ fontSize: "13px", fontWeight: "700", color: "#111827", display: "flex", alignItems: "center", gap: "8px" }}>
+                              <span>Step {idx + 1} — {step.label}</span>
+                              <span style={{ fontSize: "10px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: step.optional ? "#0f766e" : "#6b7280", background: step.optional ? "#ccfbf1" : "#f3f4f6", border: `1px solid ${step.optional ? "#99f6e4" : "#e5e7eb"}`, borderRadius: "999px", padding: "2px 8px" }}>
+                                {step.optional ? "Optional" : "Required"}
+                              </span>
+                            </div>
                             <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>
                               {scopeLabel} · {selectionCount > 0 ? `${selectionCount} selected` : <span style={{ color: hasError ? "#dc2626" : "#9ca3af" }}>{hasError ? "⚠ No selection" : "None selected"}</span>}
                             </div>
@@ -610,6 +632,18 @@ export default function CreateSpecificComboBoxPage() {
                             <option value="product">Specific products</option>
                           </select>
                           <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "13px", color: "#6b7280", pointerEvents: "none" }}>⌃⌄</span>
+                        </div>
+                        <div style={{ marginBottom: "12px" }}>
+                          <label style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: "600", color: "#374151", cursor: "pointer" }}>
+                            <input
+                              type="checkbox"
+                              checked={step.optional === true}
+                              onChange={(e) => updateComboStep(ai, "optional", e.target.checked)}
+                              style={{ width: "14px", height: "14px", accentColor: "#000000", cursor: "pointer" }}
+                            />
+                            Optional
+                            <span style={{ fontSize: "11px", fontWeight: "700", color: "#6b7280" }}>{step.optional === true ? "true" : "false"}</span>
+                          </label>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                           {(step.scope || "collection") === "collection" ? (

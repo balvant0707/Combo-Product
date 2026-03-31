@@ -120,14 +120,20 @@ function getBuyXGetYFreeUnits(totalQty, buyQty, getQty) {
   return fullGroups * safeGetQty + partialFree;
 }
 
-function applyAdminComboDiscount(total, config, quantity = 0, unitPrices = []) {
+function getAdminComboDiscountBreakdown(total, config, quantity = 0, unitPrices = []) {
   const safeTotal = parseFloat(total) || 0;
-  if (safeTotal <= 0) return 0;
+  if (safeTotal <= 0) return { discountedTotal: 0, discountAmount: 0, freeUnits: 0 };
   const discountType = config?.discountType || "none";
   const discountValue = parseFloat(config?.discountValue) || 0;
 
-  if (discountType === "percent") return Math.max(0, safeTotal * (1 - discountValue / 100));
-  if (discountType === "fixed") return Math.max(0, safeTotal - discountValue);
+  if (discountType === "percent") {
+    const discountAmount = Math.min(safeTotal, Math.max(0, safeTotal * (discountValue / 100)));
+    return { discountedTotal: Math.max(0, safeTotal - discountAmount), discountAmount, freeUnits: 0 };
+  }
+  if (discountType === "fixed") {
+    const discountAmount = Math.min(safeTotal, Math.max(0, discountValue));
+    return { discountedTotal: Math.max(0, safeTotal - discountAmount), discountAmount, freeUnits: 0 };
+  }
   if (discountType === "buy_x_get_y") {
     const parsedUnitPrices = Array.isArray(unitPrices)
       ? unitPrices
@@ -138,9 +144,9 @@ function applyAdminComboDiscount(total, config, quantity = 0, unitPrices = []) {
       0,
       parseInt(String(quantity || parsedUnitPrices.length || 0), 10) || parsedUnitPrices.length || 0,
     );
-    if (safeQty <= 0) return safeTotal;
+    if (safeQty <= 0) return { discountedTotal: safeTotal, discountAmount: 0, freeUnits: 0 };
     const freeUnits = getBuyXGetYFreeUnits(safeQty, config?.buyQuantity, config?.getQuantity);
-    if (freeUnits <= 0) return safeTotal;
+    if (freeUnits <= 0) return { discountedTotal: safeTotal, discountAmount: 0, freeUnits: 0 };
 
     let freeAmount = 0;
     if (parsedUnitPrices.length >= freeUnits) {
@@ -149,10 +155,19 @@ function applyAdminComboDiscount(total, config, quantity = 0, unitPrices = []) {
     } else {
       freeAmount = (safeTotal / safeQty) * freeUnits;
     }
-    return Math.max(0, safeTotal - Math.min(safeTotal, freeAmount));
+    const discountAmount = Math.min(safeTotal, freeAmount);
+    return {
+      discountedTotal: Math.max(0, safeTotal - discountAmount),
+      discountAmount,
+      freeUnits,
+    };
   }
 
-  return safeTotal;
+  return { discountedTotal: safeTotal, discountAmount: 0, freeUnits: 0 };
+}
+
+function applyAdminComboDiscount(total, config, quantity = 0, unitPrices = []) {
+  return getAdminComboDiscountBreakdown(total, config, quantity, unitPrices).discountedTotal;
 }
 
 /* ─────────────────────────── Loader ─────────────────────────── */
@@ -384,8 +399,8 @@ export default function CreateSpecificComboBoxPage() {
     return comboDynamicSelectedPrices.reduce((sum, price) => sum + price, 0);
   }, [comboDynamicSelectedPrices]);
 
-  const comboDynamicPrice = useMemo(() => {
-    return applyAdminComboDiscount(
+  const comboDynamicDiscountBreakdown = useMemo(() => {
+    return getAdminComboDiscountBreakdown(
       comboDynamicMrp,
       comboConfig,
       comboDynamicSelectedPrices.length,
@@ -399,6 +414,7 @@ export default function CreateSpecificComboBoxPage() {
     comboConfig.getQuantity,
     comboDynamicSelectedPrices,
   ]);
+  const comboDynamicPrice = comboDynamicDiscountBreakdown.discountedTotal;
 
   const comboConfigJson = JSON.stringify({
     ...comboConfig,
@@ -635,9 +651,18 @@ export default function CreateSpecificComboBoxPage() {
                                 </>
                               )}
                               {comboConfig.discountType === "buy_x_get_y" && (
-                                <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "6px" }}>
-                                  Example: Buy 3 and Get 1 free. This creates Shopify Buy X Get Y discount.
-                                </div>
+                                <>
+                                  <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "6px" }}>
+                                    Example: Buy 3 and Get 1 free. This creates Shopify Buy X Get Y discount.
+                                  </div>
+                                  {comboDynamicDiscountBreakdown.discountAmount > 0 && (
+                                    <div style={{ marginTop: "6px", fontSize: "11px", color: "#166534" }}>
+                                      Product discount: Rs {comboDynamicDiscountBreakdown.discountAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                      {" "}({comboDynamicDiscountBreakdown.freeUnits} free)
+                                      {" "} | Order discount: Rs {comboDynamicDiscountBreakdown.discountAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                    </div>
+                                  )}
+                                </>
                               )}
                             </div>
                           )}

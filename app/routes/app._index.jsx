@@ -1,4 +1,5 @@
 /* eslint-disable react/prop-types */
+import { useState } from "react";
 import { useLoaderData, useLocation, useNavigate } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -415,6 +416,7 @@ export default function DashboardPage() {
   } = useLoaderData();
   const location = useLocation();
   const navigate = useNavigate();
+  const [showCreateBoxModal, setShowCreateBoxModal] = useState(false);
   const justSubscribed = new URLSearchParams(location.search).get("subscribed") === "1";
 
   const stats = STAT_CARDS(activeBoxCount, bundlesSold, bundleRevenue);
@@ -422,7 +424,7 @@ export default function DashboardPage() {
     navigate(withEmbeddedAppParams(path, location.search));
   }
 
-  const quickActions = [
+  const createBoxActions = [
     {
       key: "create-box",
       iconType: "package",
@@ -443,6 +445,9 @@ export default function DashboardPage() {
       border: "#86efac",
       href: "/app/boxes/specific-combo",
     },
+  ];
+
+  const quickActions = [
     {
       key: "manage-boxes",
       iconType: "collection-list",
@@ -478,11 +483,8 @@ export default function DashboardPage() {
   return (
     <s-page heading="MixBox – Box & Bundle Builder">
       <ui-title-bar>
-        <button onClick={() => navigateTo("/app/boxes/specific-combo")}>
-            Create Specific Combo Box
-        </button>
-        <button variant="primary" onClick={() => navigateTo("/app/boxes/new")}>
-           Create Combo Box
+        <button variant="primary" onClick={() => setShowCreateBoxModal(true)}>
+          Create Box
         </button>
       </ui-title-bar>
 
@@ -504,6 +506,26 @@ export default function DashboardPage() {
           <div style={{ fontSize: "15px", fontWeight: "800", color: "#000000", letterSpacing: "-0.2px" }}>Quick Actions</div>
         </div>
         <div style={{ padding: "12px 12px 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+          <button
+            type="button"
+            onClick={() => setShowCreateBoxModal(true)}
+            style={{
+              width: "100%",
+              border: "1px solid #111827",
+              borderRadius: "5px",
+              background: "#111827",
+              color: "#ffffff",
+              fontSize: "14px",
+              fontWeight: "700",
+              padding: "10px 12px",
+              cursor: "pointer",
+            }}
+          >
+            Create Box
+          </button>
+          <div style={{ fontSize: "12px", color: "#6b7280", padding: "2px 4px 8px" }}>
+            Click Create Box to choose combo type in popup.
+          </div>
           {quickActions.map((action) => (
             <a
               key={action.key}
@@ -622,6 +644,87 @@ export default function DashboardPage() {
         </div>
         </div>
       </div>
+
+      {showCreateBoxModal && (
+        <div
+          role="presentation"
+          onClick={() => setShowCreateBoxModal(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            background: "rgba(17,24,39,0.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px",
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Create Box"
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: "520px",
+              borderRadius: "6px",
+              background: "#ffffff",
+              border: "1px solid #e5e7eb",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.20)",
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ padding: "16px 18px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ fontSize: "16px", fontWeight: "800", color: "#111827" }}>Create Box</div>
+              <button
+                type="button"
+                onClick={() => setShowCreateBoxModal(false)}
+                style={{ border: "none", background: "transparent", color: "#6b7280", fontSize: "18px", cursor: "pointer", lineHeight: 1 }}
+                aria-label="Close"
+              >
+                x
+              </button>
+            </div>
+            <div style={{ padding: "14px", display: "flex", flexDirection: "column", gap: "10px" }}>
+              {createBoxActions.map((action) => (
+                <button
+                  key={action.key}
+                  type="button"
+                  onClick={() => {
+                    setShowCreateBoxModal(false);
+                    navigateTo(action.href);
+                  }}
+                  style={{
+                    width: "100%",
+                    textAlign: "left",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "5px",
+                    background: "#f9fafb",
+                    padding: "12px",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div style={{ width: "38px", height: "38px", borderRadius: "5px", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <AdminIcon type={action.iconType} size="large" />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "14px", fontWeight: "700", color: "#111827", lineHeight: 1.3 }}>
+                        {action.label}
+                      </div>
+                      <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "2px" }}>
+                        {action.sub}
+                      </div>
+                    </div>
+                    <div style={{ color: "#6b7280", fontSize: "16px", flexShrink: 0 }}>{"->"}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
     </s-page>
   );

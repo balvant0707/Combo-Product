@@ -82,17 +82,48 @@
     return Math.min(totalPrice, freeAmount);
   }
 
-  function applyComboDiscount(price, comboConfig, selectedItems) {
-    if (!comboConfig) return price;
+  function getComboDiscountBreakdown(totalPrice, comboConfig, selectedItems) {
+    var baseTotal = parseFloat(totalPrice) || 0;
+    if (baseTotal <= 0 || !comboConfig) {
+      return { discountedTotal: Math.max(0, baseTotal), discountAmount: 0, freeUnits: 0 };
+    }
+
     var discountType = comboConfig.discountType || 'none';
     var discountValue = parseFloat(comboConfig.discountValue) || 0;
-    if (discountType === 'percent') return Math.max(0, price * (1 - discountValue / 100));
-    if (discountType === 'fixed') return Math.max(0, price - discountValue);
-    if (discountType === 'buy_x_get_y') {
-      var bxgyDiscountAmount = getBuyXGetYDiscountAmount(price, comboConfig, selectedItems);
-      return Math.max(0, price - bxgyDiscountAmount);
+
+    if (discountType === 'percent') {
+      var percentDiscount = Math.min(baseTotal, Math.max(0, baseTotal * (discountValue / 100)));
+      return { discountedTotal: Math.max(0, baseTotal - percentDiscount), discountAmount: percentDiscount, freeUnits: 0 };
     }
-    return price;
+    if (discountType === 'fixed') {
+      var fixedDiscount = Math.min(baseTotal, Math.max(0, discountValue));
+      return { discountedTotal: Math.max(0, baseTotal - fixedDiscount), discountAmount: fixedDiscount, freeUnits: 0 };
+    }
+    if (discountType === 'buy_x_get_y') {
+      var bxgyDiscount = getBuyXGetYDiscountAmount(baseTotal, comboConfig, selectedItems);
+      var bxgyFreeUnits = 0;
+      if (Array.isArray(selectedItems)) {
+        var qty = 0;
+        selectedItems.forEach(function (item) {
+          if (!item) return;
+          var raw = item;
+          if (typeof item === 'object') raw = item.productPrice != null ? item.productPrice : item.price;
+          if ((parseFloat(raw) || 0) > 0) qty += 1;
+        });
+        bxgyFreeUnits = getBuyXGetYFreeUnits(qty, comboConfig.buyQuantity, comboConfig.getQuantity);
+      }
+      return {
+        discountedTotal: Math.max(0, baseTotal - bxgyDiscount),
+        discountAmount: Math.max(0, bxgyDiscount),
+        freeUnits: Math.max(0, bxgyFreeUnits),
+      };
+    }
+
+    return { discountedTotal: Math.max(0, baseTotal), discountAmount: 0, freeUnits: 0 };
+  }
+
+  function applyComboDiscount(price, comboConfig, selectedItems) {
+    return getComboDiscountBreakdown(price, comboConfig, selectedItems).discountedTotal;
   }
 
   function renderStickyTotal(totalEl, amount, currencySymbol) {
@@ -1486,7 +1517,10 @@
       });
       var totalMrp = getSelectedProductsTotal(slots);
       var isDynamic = isDynamicBundlePrice(box);
-      var dynamicEffectivePrice = isDynamic ? applyComboDiscount(totalMrp, box.comboConfig, slots) : 0;
+      var dynamicBreakdown = isDynamic
+        ? getComboDiscountBreakdown(totalMrp, box.comboConfig, slots)
+        : { discountedTotal: 0, discountAmount: 0, freeUnits: 0 };
+      var dynamicEffectivePrice = isDynamic ? dynamicBreakdown.discountedTotal : 0;
 
       if (_stickyTotalEl) {
         renderStickyTotal(
@@ -1502,14 +1536,19 @@
 
       if (_stickySavingsEl) {
         if (isDynamic) {
-          var dynSavings = totalMrp - dynamicEffectivePrice;
+          var dynSavings = dynamicBreakdown.discountAmount;
           if (hasSelected && dynSavings > 0.005) {
             var dynSavingsBadge = (ctx.settings && ctx.settings.showSavingsBadge)
               ? '<span class="cb-sticky-save">Save ' + formatPrice(dynSavings, ctx.currencySymbol) + '</span>'
               : '';
+            var dynFreeUnitsBadge =
+              box && box.comboConfig && box.comboConfig.discountType === 'buy_x_get_y' && dynamicBreakdown.freeUnits > 0
+                ? '<span class="cb-sticky-save">Free items: ' + dynamicBreakdown.freeUnits + '</span>'
+                : '';
             _stickySavingsEl.innerHTML =
               '<span class="cb-sticky-mrp">MRP: ' + formatPrice(totalMrp, ctx.currencySymbol) + '</span>' +
-              dynSavingsBadge;
+              dynSavingsBadge +
+              dynFreeUnitsBadge;
             _stickySavingsEl.style.display = 'flex';
           } else {
             _stickySavingsEl.style.display = 'none';
@@ -2355,9 +2394,11 @@
       var totalMrp = getSelectedProductsTotal(slots);
       var isDynamic = isDynamicBundlePrice(box);
       var bundlePriceRaw = parseFloat(box.bundlePrice) || 0;
+      var dynamicBreakdown = getComboDiscountBreakdown(totalMrp, box.comboConfig, slots);
+      var manualBreakdown = getComboDiscountBreakdown(bundlePriceRaw, box.comboConfig);
       var effectivePrice = isDynamic
-        ? applyComboDiscount(totalMrp, box.comboConfig, slots)
-        : applyComboDiscount(bundlePriceRaw, box.comboConfig);
+        ? dynamicBreakdown.discountedTotal
+        : manualBreakdown.discountedTotal;
       if (_stickyTotalEl) {
         renderStickyTotal(_stickyTotalEl, effectivePrice, ctx.currencySymbol);
       }
@@ -2367,14 +2408,19 @@
       if (_stickySavingsEl) {
         var hasAnyProduct = slots.some(Boolean);
         var originalPrice = isDynamic ? totalMrp : bundlePriceRaw;
-        var savings = originalPrice - effectivePrice;
+        var savings = isDynamic ? dynamicBreakdown.discountAmount : manualBreakdown.discountAmount;
         if (hasAnyProduct && savings > 0.005) {
           var savingsBadge = (ctx.settings && ctx.settings.showSavingsBadge)
             ? '<span class="cb-sticky-save">Save ' + formatPrice(savings, ctx.currencySymbol) + '</span>'
             : '';
+          var freeUnitsBadge =
+            box && box.comboConfig && box.comboConfig.discountType === 'buy_x_get_y' && dynamicBreakdown.freeUnits > 0
+              ? '<span class="cb-sticky-save">Free items: ' + dynamicBreakdown.freeUnits + '</span>'
+              : '';
           _stickySavingsEl.innerHTML =
             '<span class="cb-sticky-mrp">MRP: ' + formatPrice(originalPrice, ctx.currencySymbol) + '</span>' +
-            savingsBadge;
+            savingsBadge +
+            (isDynamic ? freeUnitsBadge : '');
           _stickySavingsEl.style.display = 'flex';
         } else {
           _stickySavingsEl.style.display = 'none';
@@ -3320,7 +3366,8 @@
 
       // For dynamic mode, effective cart price = sum of selected products minus any discount.
       // For manual mode, it is the fixed bundlePrice set by the merchant.
-      var effectivePrice = isDynamic ? applyComboDiscount(totalMrp, box.comboConfig, slots) : (parseFloat(box.bundlePrice) || 0);
+      var dynamicBreakdown = getComboDiscountBreakdown(totalMrp, box.comboConfig, slots);
+      var effectivePrice = isDynamic ? dynamicBreakdown.discountedTotal : (parseFloat(box.bundlePrice) || 0);
 
       var bundleProps = {
         '_bundle_price_item': 'true',
@@ -3357,6 +3404,16 @@
         bundleProps['_combo_discount_pct'] = String(savingsPct);
       }
 
+      if (isDynamic && dynamicBreakdown.discountAmount > 0) {
+        // Product discount and order discount are the same monetary impact in this
+        // bundle model, but we persist both keys for storefront/cart presentation.
+        bundleProps['_combo_product_discount'] = dynamicBreakdown.discountAmount.toFixed(2);
+        bundleProps['_combo_order_discount'] = dynamicBreakdown.discountAmount.toFixed(2);
+        if (dynamicBreakdown.freeUnits > 0) {
+          bundleProps['_combo_free_items'] = String(dynamicBreakdown.freeUnits);
+        }
+      }
+
       if (giftMessage) bundleProps['Gift Message'] = giftMessage;
       items.push({ id: box.shopifyVariantId, quantity: 1, properties: bundleProps });
     } else {
@@ -3378,7 +3435,8 @@
       if (dynamicTotal <= 0) {
         return Promise.reject(new Error('No product prices available for dynamic pricing'));
       }
-      var discountedTotal = applyComboDiscount(dynamicTotal, box.comboConfig, slots);
+      var dynamicBreakdown = getComboDiscountBreakdown(dynamicTotal, box.comboConfig, slots);
+      var discountedTotal = dynamicBreakdown.discountedTotal;
       if (discountedTotal <= 0) discountedTotal = dynamicTotal;
 
       var updateUrl = resolvedApiBase +

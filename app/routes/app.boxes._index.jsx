@@ -23,8 +23,11 @@ function getDiscountSummary(box) {
     const p = JSON.parse(src);
     const type = p?.discountType;
     const value = p?.discountValue;
-    if (!type || type === "none" || value == null) return null;
-    return { discountType: type, discountValue: value };
+    if (!type || type === "none") return null;
+    if (type !== "buy_x_get_y" && value == null) return null;
+    const buyQuantity = Math.max(1, parseInt(String(p?.buyQuantity ?? 1), 10) || 1);
+    const getQuantity = Math.max(1, parseInt(String(p?.getQuantity ?? 1), 10) || 1);
+    return { discountType: type, discountValue: value, buyQuantity, getQuantity };
   } catch { return null; }
 }
 
@@ -603,7 +606,7 @@ export default function ManageBoxesPage() {
                                   : box.discount.discountType === "fixed"
                                     ? `₹${box.discount.discountValue} off`
                                     : box.discount.discountType === "buy_x_get_y"
-                                      ? `Buy X Get Y (${box.discount.discountValue}% off)`
+                                      ? `Buy ${box.discount.buyQuantity || 1} Get ${box.discount.getQuantity || 1} Free`
                                       : `${box.discount.discountValue} off`}
                               </span>
                             )}

@@ -89,6 +89,8 @@ const DEFAULT_COMBO_CONFIG = {
   bundlePriceType: "manual",
   discountType: "percent",
   discountValue: "10",
+  buyQuantity: 1,
+  getQuantity: 1,
   isActive: true,
   showProductImages: true,
   showProgressBar: true,
@@ -164,11 +166,15 @@ export const loader = async ({ request, params }) => {
     try { steps = JSON.parse(cfg.stepsJson || "[]"); } catch {}
     let rawDiscountType = DEFAULT_COMBO_CONFIG.discountType;
     let rawDiscountValue = DEFAULT_COMBO_CONFIG.discountValue;
+    let rawBuyQuantity = DEFAULT_COMBO_CONFIG.buyQuantity;
+    let rawGetQuantity = DEFAULT_COMBO_CONFIG.getQuantity;
     if (box.comboStepsConfig) {
       try {
         const raw = JSON.parse(box.comboStepsConfig);
         rawDiscountType = raw?.discountType || rawDiscountType;
         rawDiscountValue = String(raw?.discountValue ?? rawDiscountValue);
+        rawBuyQuantity = Math.max(1, parseInt(String(raw?.buyQuantity ?? rawBuyQuantity), 10) || rawBuyQuantity);
+        rawGetQuantity = Math.max(1, parseInt(String(raw?.getQuantity ?? rawGetQuantity), 10) || rawGetQuantity);
       } catch {}
     }
     comboStepsConfig = JSON.stringify({
@@ -179,6 +185,8 @@ export const loader = async ({ request, params }) => {
       bundlePriceType:   cfg.bundlePriceType   ?? undefined,
       discountType:      rawDiscountType,
       discountValue:     rawDiscountValue,
+      buyQuantity:       rawBuyQuantity,
+      getQuantity:       rawGetQuantity,
       isActive:          cfg.isActive,
       showProductImages: cfg.showProductImages,
       showProgressBar:   cfg.showProgressBar,
@@ -685,7 +693,15 @@ export default function SpecificComboBoxPage() {
                         <label style={labelStyle}>Discount type</label>
                         <select
                           value={comboConfig.discountType}
-                          onChange={(e) => updateComboField("discountType", e.target.value)}
+                          onChange={(e) => {
+                            const nextType = e.target.value;
+                            updateComboField("discountType", nextType);
+                            if (nextType === "buy_x_get_y") {
+                              updateComboField("discountValue", "100");
+                              if (!(parseInt(String(comboConfig.buyQuantity), 10) > 0)) updateComboField("buyQuantity", 1);
+                              if (!(parseInt(String(comboConfig.getQuantity), 10) > 0)) updateComboField("getQuantity", 1);
+                            }
+                          }}
                           style={{ ...fieldStyle, borderColor: "#d1d5db" }}
                         >
                           <option value="percent">% Off</option>
@@ -698,41 +714,64 @@ export default function SpecificComboBoxPage() {
                       {/* Discount value input */}
                       {comboConfig.discountType !== "none" && (
                         <div style={{ marginBottom: "12px" }}>
-                          <label style={labelStyle}>
-                            {comboConfig.discountType === "buy_x_get_y"
-                              ? "Get Y discount (%)"
-                              : comboConfig.discountType === "percent"
-                                ? "Discount %"
-                                : "Discount amount (₹)"}
-                          </label>
-                          <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                            <span style={{
-                              position: "absolute", left: "11px",
-                              fontSize: "13px", fontWeight: "700", color: "#374151",
-                              pointerEvents: "none", userSelect: "none",
-                            }}>
-                              {comboConfig.discountType === "fixed" ? "₹" : "%"}
-                            </span>
-                            <input
-                              type="number"
-                              min="0"
-                              step={comboConfig.discountType === "fixed" ? "0.01" : "1"}
-                              max={comboConfig.discountType === "fixed" ? undefined : "100"}
-                              value={comboConfig.discountValue}
-                              onChange={(e) => updateComboField("discountValue", e.target.value)}
-                              style={{ ...fieldStyle, borderColor: "#d1d5db", paddingLeft: "28px", paddingRight: "60px" }}
-                            />
-                            <span style={{
-                              position: "absolute", right: "11px",
-                              fontSize: "11px", fontWeight: "600", color: "#9ca3af",
-                              pointerEvents: "none",
-                            }}>
-                              {comboConfig.discountType === "fixed" ? "rupees" : "percent"}
-                            </span>
-                          </div>
+                          {comboConfig.discountType === "buy_x_get_y" ? (
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                              <div>
+                                <label style={labelStyle}>Buy X quantity</label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  step="1"
+                                  value={comboConfig.buyQuantity ?? 1}
+                                  onChange={(e) => updateComboField("buyQuantity", Math.max(1, parseInt(e.target.value || "1", 10) || 1))}
+                                  style={{ ...fieldStyle, borderColor: "#d1d5db" }}
+                                />
+                              </div>
+                              <div>
+                                <label style={labelStyle}>Get Y free quantity</label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  step="1"
+                                  value={comboConfig.getQuantity ?? 1}
+                                  onChange={(e) => updateComboField("getQuantity", Math.max(1, parseInt(e.target.value || "1", 10) || 1))}
+                                  style={{ ...fieldStyle, borderColor: "#d1d5db" }}
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <label style={labelStyle}>{comboConfig.discountType === "percent" ? "Discount %" : "Discount amount (₹)"}</label>
+                              <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                                <span style={{
+                                  position: "absolute", left: "11px",
+                                  fontSize: "13px", fontWeight: "700", color: "#374151",
+                                  pointerEvents: "none", userSelect: "none",
+                                }}>
+                                  {comboConfig.discountType === "fixed" ? "₹" : "%"}
+                                </span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step={comboConfig.discountType === "fixed" ? "0.01" : "1"}
+                                  max={comboConfig.discountType === "fixed" ? undefined : "100"}
+                                  value={comboConfig.discountValue}
+                                  onChange={(e) => updateComboField("discountValue", e.target.value)}
+                                  style={{ ...fieldStyle, borderColor: "#d1d5db", paddingLeft: "28px", paddingRight: "60px" }}
+                                />
+                                <span style={{
+                                  position: "absolute", right: "11px",
+                                  fontSize: "11px", fontWeight: "600", color: "#9ca3af",
+                                  pointerEvents: "none",
+                                }}>
+                                  {comboConfig.discountType === "fixed" ? "rupees" : "percent"}
+                                </span>
+                              </div>
+                            </>
+                          )}
                           {comboConfig.discountType === "buy_x_get_y" && (
                             <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "6px" }}>
-                              Applied as Shopify automatic Buy X Get Y discount in checkout.
+                              Example: Buy 3 and Get 1 free. This creates Shopify Buy X Get Y discount.
                             </div>
                           )}
                         </div>
@@ -749,7 +788,7 @@ export default function SpecificComboBoxPage() {
                               {/* <div style={{ fontSize: "10px", fontWeight: "600", color: "#166534", textTransform: "uppercase", letterSpacing: "0.05em" }}>Est. after discount</div> */}
                               <div style={{ fontSize: "10px", color: "#4ade80", marginTop: "1px" }}>
                                 {comboConfig.discountType === "buy_x_get_y"
-                                  ? `Buy X Get Y with ${comboConfig.discountValue || 0}% off on Y`
+                                  ? `Buy ${comboConfig.buyQuantity || 1} Get ${comboConfig.getQuantity || 1} free`
                                   : comboConfig.discountType === "percent"
                                     ? `${comboConfig.discountValue || 0}% off applied`
                                     : `₹${comboConfig.discountValue || 0} deducted`}

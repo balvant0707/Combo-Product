@@ -280,9 +280,11 @@ function buildBuyXGetYDiscountInput({
   const safeBuyQty = Math.max(1, parseInt(String(buyQuantity), 10) || 1);
   const safeGetQty = Math.max(1, parseInt(String(getQuantity), 10) || 1);
 
-  const customerGetsValue = discountType === "fixed"
-    ? { discountAmount: { amount: String(parsedValue), appliesOnEachItem: true } }
-    : { percentage: Math.min(1, Math.max(0, parsedValue / 100)) };
+  const customerGetsValue = discountType === "buy_x_get_y"
+    ? { percentage: 1 } // Free Y item
+    : discountType === "fixed"
+      ? { discountAmount: { amount: String(parsedValue), appliesOnEachItem: true } }
+      : { percentage: Math.min(1, Math.max(0, parsedValue / 100)) };
 
   return {
     title,
@@ -385,7 +387,7 @@ export async function syncShopifyBuyXGetYDiscount(
   const hasValidDiscount =
     discountType &&
     discountType !== "none" &&
-    parseFloat(discountValue) > 0;
+    (discountType === "buy_x_get_y" || parseFloat(discountValue) > 0);
 
   if (!hasValidDiscount) {
     if (existingDiscountId) {
@@ -1146,6 +1148,15 @@ export async function updateComboStepsConfig(id, shop, comboStepsConfig) {
  */
 export async function upsertComboConfig(boxId, config, admin = null) {
   const parsed = typeof config === "string" ? JSON.parse(config) : config;
+  const safeBuyQuantity = Math.max(1, parseInt(String(parsed?.buyQuantity ?? 1), 10) || 1);
+  const safeGetQuantity = Math.max(1, parseInt(String(parsed?.getQuantity ?? 1), 10) || 1);
+  if (parsed && typeof parsed === "object") {
+    parsed.buyQuantity = safeBuyQuantity;
+    parsed.getQuantity = safeGetQuantity;
+    if (parsed.discountType === "buy_x_get_y" && !(parseFloat(parsed.discountValue) > 0)) {
+      parsed.discountValue = "100";
+    }
+  }
   const requestedType = parseInt(parsed?.type, 10);
   const comboType = Number.isInteger(requestedType)
     ? clampComboStepCount(requestedType)
@@ -1266,8 +1277,8 @@ export async function upsertComboConfig(boxId, config, admin = null) {
         discountType: dynamicDiscountEnabled ? (parsed.discountType || "none") : "none",
         discountValue: dynamicDiscountEnabled ? (parsed.discountValue || "0") : "0",
         shopifyProductId: box.shopifyProductId,
-        buyQuantity: 1,
-        getQuantity: 1,
+        buyQuantity: dynamicDiscountEnabled ? (parsed.buyQuantity || 1) : 1,
+        getQuantity: dynamicDiscountEnabled ? (parsed.getQuantity || 1) : 1,
       });
     }
   }

@@ -99,6 +99,8 @@ const DEFAULT_COMBO = {
   bundlePriceType: "dynamic",
   discountType: "none",
   discountValue: "0",
+  buyQuantity: 1,
+  getQuantity: 1,
   isActive: true,
   showProductImages: true,
   showProgressBar: true,
@@ -512,7 +514,19 @@ export default function CreateSpecificComboBoxPage() {
                         <div style={{ display: "block", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: comboConfig.discountType !== "none" ? "10px" : "0" }}>
                           <div>
                             <label style={labelStyle}>Discount Type</label>
-                            <select value={comboConfig.discountType} onChange={(e) => updateComboField("discountType", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }}>
+                            <select
+                              value={comboConfig.discountType}
+                              onChange={(e) => {
+                                const nextType = e.target.value;
+                                updateComboField("discountType", nextType);
+                                if (nextType === "buy_x_get_y") {
+                                  updateComboField("discountValue", "100");
+                                  if (!(parseInt(String(comboConfig.buyQuantity), 10) > 0)) updateComboField("buyQuantity", 1);
+                                  if (!(parseInt(String(comboConfig.getQuantity), 10) > 0)) updateComboField("getQuantity", 1);
+                                }
+                              }}
+                              style={{ ...fieldStyle, borderColor: "#d1d5db" }}
+                            >
                               <option value="percent">% Off Total</option>
                               <option value="fixed">₹ Fixed Discount</option>
                               <option value="buy_x_get_y">Buy X Get Y</option>
@@ -521,25 +535,48 @@ export default function CreateSpecificComboBoxPage() {
                           </div>
                           {comboConfig.discountType !== "none" && (
                             <div>
-                              <label style={labelStyle}>
-                                {comboConfig.discountType === "buy_x_get_y"
-                                  ? "Get Y discount (%)"
-                                  : comboConfig.discountType === "percent"
-                                    ? "Discount %"
-                                    : "Amount (₹)"}
-                              </label>
-                              <input
-                                type="number"
-                                min="0"
-                                step={comboConfig.discountType === "fixed" ? "0.01" : "1"}
-                                max={comboConfig.discountType === "fixed" ? undefined : "100"}
-                                value={comboConfig.discountValue}
-                                onChange={(e) => updateComboField("discountValue", e.target.value)}
-                                style={{ ...fieldStyle, borderColor: "#d1d5db" }}
-                              />
+                              {comboConfig.discountType === "buy_x_get_y" ? (
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                                  <div>
+                                    <label style={labelStyle}>Buy X quantity</label>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      step="1"
+                                      value={comboConfig.buyQuantity ?? 1}
+                                      onChange={(e) => updateComboField("buyQuantity", Math.max(1, parseInt(e.target.value || "1", 10) || 1))}
+                                      style={{ ...fieldStyle, borderColor: "#d1d5db" }}
+                                    />
+                                  </div>
+                                  <div>
+                                    <label style={labelStyle}>Get Y free quantity</label>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      step="1"
+                                      value={comboConfig.getQuantity ?? 1}
+                                      onChange={(e) => updateComboField("getQuantity", Math.max(1, parseInt(e.target.value || "1", 10) || 1))}
+                                      style={{ ...fieldStyle, borderColor: "#d1d5db" }}
+                                    />
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <label style={labelStyle}>{comboConfig.discountType === "percent" ? "Discount %" : "Amount (₹)"}</label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step={comboConfig.discountType === "fixed" ? "0.01" : "1"}
+                                    max={comboConfig.discountType === "fixed" ? undefined : "100"}
+                                    value={comboConfig.discountValue}
+                                    onChange={(e) => updateComboField("discountValue", e.target.value)}
+                                    style={{ ...fieldStyle, borderColor: "#d1d5db" }}
+                                  />
+                                </>
+                              )}
                               {comboConfig.discountType === "buy_x_get_y" && (
                                 <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "6px" }}>
-                                  Applied as Shopify automatic Buy X Get Y discount in checkout.
+                                  Example: Buy 3 and Get 1 free. This creates Shopify Buy X Get Y discount.
                                 </div>
                               )}
                             </div>

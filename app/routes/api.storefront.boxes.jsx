@@ -76,12 +76,14 @@ export const loader = async ({ request }) => {
           try { steps = JSON.parse(box.config.stepsJson || '[]'); } catch {}
           steps = attachStepImages(steps);
           // discountType/discountValue live only in the raw JSON blob (ComboBoxConfig lacks these columns)
-          let discountType = 'none', discountValue = '0';
+          let discountType = 'none', discountValue = '0', buyQuantity = 1, getQuantity = 1;
           if (box.comboStepsConfig) {
             try {
               const raw = JSON.parse(box.comboStepsConfig);
               discountType = raw.discountType || 'none';
               discountValue = String(raw.discountValue || '0');
+              buyQuantity = Math.max(1, parseInt(String(raw.buyQuantity ?? 1), 10) || 1);
+              getQuantity = Math.max(1, parseInt(String(raw.getQuantity ?? 1), 10) || 1);
             } catch {}
           }
           return {
@@ -92,6 +94,8 @@ export const loader = async ({ request }) => {
             bundlePrice: box.config.bundlePrice != null ? parseFloat(box.config.bundlePrice) : 0,
             discountType,
             discountValue,
+            buyQuantity,
+            getQuantity,
             showProgressBar: box.config.showProgressBar !== false,
             showProductImages: box.config.showProductImages !== false,
             allowReselection: box.config.allowReselection !== false,
@@ -111,6 +115,8 @@ export const loader = async ({ request }) => {
               bundlePrice: parsed.bundlePrice != null ? parseFloat(parsed.bundlePrice) : 0,
               discountType: parsed.discountType || 'none',
               discountValue: String(parsed.discountValue || '0'),
+              buyQuantity: Math.max(1, parseInt(String(parsed.buyQuantity ?? 1), 10) || 1),
+              getQuantity: Math.max(1, parseInt(String(parsed.getQuantity ?? 1), 10) || 1),
               showProgressBar: parsed.showProgressBar !== false,
               showProductImages: parsed.showProductImages !== false,
               allowReselection: parsed.allowReselection !== false,

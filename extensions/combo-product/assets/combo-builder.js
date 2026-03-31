@@ -979,7 +979,9 @@
       var discountBadge = document.createElement('span');
       discountBadge.className = 'cb-discount-badge';
       if (_discountType === 'buy_x_get_y') {
-        discountBadge.textContent = 'BUY X GET Y';
+        var _buyQty = Math.max(1, parseInt(String(_discountCfg.buyQuantity || 1), 10) || 1);
+        var _getQty = Math.max(1, parseInt(String(_discountCfg.getQuantity || 1), 10) || 1);
+        discountBadge.textContent = 'BUY ' + _buyQty + ' GET ' + _getQty;
       } else {
         discountBadge.textContent = _discountType === 'percent'
           ? _discountValue + '% OFF'

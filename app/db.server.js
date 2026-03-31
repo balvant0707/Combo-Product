@@ -240,6 +240,9 @@ export async function withDbRetry(fn, { retries = 3, delayMs = 500 } = {}) {
         err?.message?.includes("ECONNREFUSED") ||
         err?.message?.includes("ETIMEDOUT") ||
         err?.message?.includes("Timed out fetching a new connection") ||
+        err?.code === "P1001" ||       // Prisma: unreachable
+        err?.code === "P1002" ||       // Prisma: timed out
+        err?.code === "P2024" ||       // Prisma: connection pool timeout
         err?.errorCode === "P1001" ||   // Prisma: unreachable
         err?.errorCode === "P1002" ||   // Prisma: timed out
         err?.errorCode === "P2024";     // Prisma: connection pool timeout
@@ -280,4 +283,3 @@ export function ensureAppTables() {
 }
 
 export default prisma;
-

@@ -10,6 +10,7 @@ import {
   repairMissingShopifyProducts,
   repairMissingShopifyVariantIds,
   upsertComboConfig,
+  getBoxListImageSrc,
 } from "../models/boxes.server";
 import { AdminIcon } from "../components/admin-icons";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
@@ -52,7 +53,7 @@ export const loader = async ({ request }) => {
   const { session, admin } = await authenticate.admin(request);
   await repairMissingShopifyProducts(session.shop, admin);
   await repairMissingShopifyVariantIds(session.shop, admin);
-  let boxes = await listBoxes(session.shop);
+  let boxes = await listBoxes(session.shop, false, true);
   const boxesMissingTypedComboConfig = boxes.filter((box) => {
     if (box.config || !box.comboStepsConfig) return false;
     try { const p = JSON.parse(box.comboStepsConfig); return parseInt(p?.type) >= 2; } catch { return false; }
@@ -65,7 +66,7 @@ export const loader = async ({ request }) => {
         })
       )
     );
-    boxes = await listBoxes(session.shop);
+    boxes = await listBoxes(session.shop, false, true);
   }
   activateAllBundleProducts(session.shop, admin).catch(() => {});
   return {
@@ -83,6 +84,7 @@ export const loader = async ({ request }) => {
       orderCount: b._count?.orders ?? 0,
       comboConfig: getComboConfigSummary(b),
       discount: getDiscountSummary(b),
+      listImageSrc: getBoxListImageSrc(b),
     })),
   };
 };
@@ -321,6 +323,14 @@ export default function ManageBoxesPage() {
           display: flex; align-items: center; justify-content: center;
           font-weight: 800; font-size: 14px; flex-shrink: 0;
           letter-spacing: -0.5px;
+          overflow: hidden;
+          border: 1px solid rgba(0,0,0,0.04);
+        }
+        .cb-avatar-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
         }
 
         /* ── Badges ── */
@@ -547,7 +557,11 @@ export default function ManageBoxesPage() {
                       <td style={{ minWidth: 220 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                           <div className="cb-avatar" style={{ background: avatar.bg, color: avatar.color }}>
-                            {box.boxName.charAt(0).toUpperCase()}
+                            {box.listImageSrc ? (
+                              <img className="cb-avatar-img" src={box.listImageSrc} alt={`${box.boxName} image`} />
+                            ) : (
+                              box.boxName.charAt(0).toUpperCase()
+                            )}
                           </div>
                           <div>
                             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>

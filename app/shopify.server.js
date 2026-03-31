@@ -5,7 +5,7 @@ import {
   shopifyApp,
 } from "@shopify/shopify-app-react-router/server";
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
-import prisma, { ensureAppTables } from "./db.server";
+import prisma, { ensureAppTables, withDbRetry } from "./db.server";
 import { upsertSessionFromAuth, upsertShopFromAdmin } from "./models/shop.server";
 import { sendMail } from "./utils/mailer.server";
 import { installedEmailHtml } from "./emails/app-installed";
@@ -23,7 +23,32 @@ if (shouldEnsureAppTables) {
   });
 }
 
-const prismaSessionStorage = new PrismaSessionStorage(prisma, {
+const sessionDbRetries = Number.parseInt(process.env.SESSION_DB_RETRIES || "2", 10) || 2;
+const sessionDbRetryDelayMs = Number.parseInt(process.env.SESSION_DB_RETRY_DELAY_MS || "800", 10) || 800;
+
+class RetryPrismaSessionStorage extends PrismaSessionStorage {
+  async loadSession(id) {
+    return withDbRetry(() => super.loadSession(id), { retries: sessionDbRetries, delayMs: sessionDbRetryDelayMs });
+  }
+
+  async storeSession(session) {
+    return withDbRetry(() => super.storeSession(session), { retries: sessionDbRetries, delayMs: sessionDbRetryDelayMs });
+  }
+
+  async deleteSession(id) {
+    return withDbRetry(() => super.deleteSession(id), { retries: sessionDbRetries, delayMs: sessionDbRetryDelayMs });
+  }
+
+  async deleteSessions(ids) {
+    return withDbRetry(() => super.deleteSessions(ids), { retries: sessionDbRetries, delayMs: sessionDbRetryDelayMs });
+  }
+
+  async findSessionsByShop(shop) {
+    return withDbRetry(() => super.findSessionsByShop(shop), { retries: sessionDbRetries, delayMs: sessionDbRetryDelayMs });
+  }
+}
+
+const prismaSessionStorage = new RetryPrismaSessionStorage(prisma, {
   connectionRetries: 5,
   connectionRetryIntervalMs: 2000,
 });

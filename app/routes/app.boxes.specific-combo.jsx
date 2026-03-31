@@ -62,31 +62,18 @@ async function parseBannerImage(formData, errors) {
   return { bytes: new Uint8Array(await file.arrayBuffer()), mimeType: file.type, fileName: file.name || null };
 }
 
-async function parseStepImages(formData, errors) {
-  const images = [];
-  const rawStepCount = parseInt(formData.get("stepCount") || String(MIN_COMBO_STEPS), 10);
-  const stepCount = Number.isInteger(rawStepCount)
-    ? Math.max(MIN_COMBO_STEPS, Math.min(MAX_COMBO_STEPS, rawStepCount))
-    : MIN_COMBO_STEPS;
-  for (let i = 0; i < stepCount; i++) {
-    const file = formData.get(`stepImage_${i}`);
-    if (!file || typeof file !== "object" || typeof file.arrayBuffer !== "function" || !file.size) {
-      images.push(null);
-      continue;
-    }
-    if (!ALLOWED_IMAGE_MIME_TYPES.has(file.type)) {
-      errors[`stepImage_${i}`] = "Only JPG, PNG, WEBP, GIF, and AVIF files are allowed";
-      images.push(null);
-      continue;
-    }
-    if (file.size > MAX_STEP_IMAGE_SIZE) {
-      errors[`stepImage_${i}`] = "Step image must be 2MB or smaller";
-      images.push(null);
-      continue;
-    }
-    images.push({ stepIndex: i, bytes: new Uint8Array(await file.arrayBuffer()), mimeType: file.type, fileName: file.name || null });
+async function parseComboImage(formData, errors) {
+  const file = formData.get("comboImage");
+  if (!file || typeof file !== "object" || typeof file.arrayBuffer !== "function" || !file.size) return null;
+  if (!ALLOWED_IMAGE_MIME_TYPES.has(file.type)) {
+    errors.comboImage = "Only JPG, PNG, WEBP, GIF, and AVIF files are allowed";
+    return null;
   }
-  return images;
+  if (file.size > MAX_STEP_IMAGE_SIZE) {
+    errors.comboImage = "Combo image must be 2MB or smaller";
+    return null;
+  }
+  return { stepIndex: 0, bytes: new Uint8Array(await file.arrayBuffer()), mimeType: file.type, fileName: file.name || null };
 }
 
 function buildDefaultStep(index) {
@@ -166,7 +153,7 @@ export const action = async ({ request }) => {
   const comboStepsConfig = formData.get("comboStepsConfig");
   const errors = {};
   const bannerImage = await parseBannerImage(formData, errors);
-  const stepImages = await parseStepImages(formData, errors);
+  const comboImage = await parseComboImage(formData, errors);
   const comboValidation = validateComboConfig(comboStepsConfig);
 
   const comboName = formData.get("comboName")?.trim() || "";
@@ -209,12 +196,11 @@ export const action = async ({ request }) => {
     const box = await createBox(session.shop, data, admin);
     if (comboStepsConfig) {
       let savedComboStepsConfig = comboStepsConfig;
-      const validStepImages = stepImages.filter(Boolean);
       try { await upsertComboConfig(box.id, comboStepsConfig, admin); } catch (e) {
         console.error("[app.boxes.specific-combo] upsertComboConfig error:", e);
       }
-      if (validStepImages.length > 0) {
-        try { await saveComboStepImages(box.id, validStepImages); } catch (e) {
+      if (comboImage) {
+        try { await saveComboStepImages(box.id, [comboImage]); } catch (e) {
           console.error("[app.boxes.specific-combo] saveComboStepImages error:", e);
         }
       }
@@ -283,7 +269,8 @@ export default function CreateSpecificComboBoxPage() {
   useEffect(() => { if (collProdsFetcher6.data?.collectionProducts) setStepProducts((p) => { const n = [...p]; n[6] = collProdsFetcher6.data.collectionProducts; return n; }); }, [collProdsFetcher6.data]);
   useEffect(() => { if (collProdsFetcher7.data?.collectionProducts) setStepProducts((p) => { const n = [...p]; n[7] = collProdsFetcher7.data.collectionProducts; return n; }); }, [collProdsFetcher7.data]);
 
-  /* ── Step image previews (data URLs set by FileReader) ── */
+  /* Combo image preview (data URL set by FileReader) */
+  const [comboImagePreview, setComboImagePreview] = useState(null);
   const [stepImagePreviews, setStepImagePreviews] = useState(Array(8).fill(null));
 
   /* ── Collection modal ── */
@@ -467,6 +454,30 @@ export default function CreateSpecificComboBoxPage() {
                   <div>
                     <label style={labelStyle}>Subtitle</label>
                     <input value={comboConfig.subtitle} onChange={(e) => updateComboField("subtitle", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Choose a product for each step" />
+                  </div>
+                  {/* Combo image */}
+                  <div>
+                    <label style={labelStyle}>Combo image (optional)</label>
+                    {comboImagePreview && (
+                      <div style={{ marginBottom: "8px" }}>
+                        <img src={comboImagePreview} alt="Combo preview" style={{ width: "100%", maxHeight: "140px", objectFit: "cover", borderRadius: "6px", border: "1.5px solid #e5e7eb", display: "block" }} />
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      name="comboImage"
+                      accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                      style={{ ...fieldStyle, padding: "7px 12px" }}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = (ev) => setComboImagePreview(ev.target.result);
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                    <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "6px" }}>JPG, PNG, WEBP, GIF, or AVIF - max 2MB. Used as the image for all combo steps.</div>
+                    {errors.comboImage && <div style={errorStyle}><AdminIcon type="alert-triangle" size="small" /> {errors.comboImage}</div>}
                   </div>
                   {/* Bundle Price */}
                   <div>
@@ -703,8 +714,8 @@ export default function CreateSpecificComboBoxPage() {
                       </div>
                     </div>
 
-                    {/* Step Image Upload card */}
-                    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                    {/* Combo image upload is configured in the sidebar */}
+                    <div style={{ display: "none" }}>
                       <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#111827", display: "flex", alignItems: "center", gap: "8px" }}>
                         <AdminIcon type="image" size="small" /> Step image
                       </div>

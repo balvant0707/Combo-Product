@@ -228,6 +228,17 @@ const DISCOUNT_AUTOMATIC_BASIC_UPDATE_MUTATION = `#graphql
   }
 `;
 
+const DISCOUNT_AUTOMATIC_BXGY_CREATE_MUTATION = `#graphql
+  mutation discountAutomaticBxgyCreate($automaticBxgyDiscount: DiscountAutomaticBxgyInput!) {
+    discountAutomaticBxgyCreate(automaticBxgyDiscount: $automaticBxgyDiscount) {
+      automaticDiscountNode {
+        id
+      }
+      userErrors { field message }
+    }
+  }
+`;
+
 const DISCOUNT_AUTOMATIC_DELETE_MUTATION = `#graphql
   mutation discountAutomaticDelete($id: ID!) {
     discountAutomaticDelete(id: $id) {
@@ -251,6 +262,40 @@ function buildDiscountInput({ title, discountType, discountValue }) {
     title,
     startsAt: new Date().toISOString(),
     customerGets,
+  };
+}
+
+/**
+ * Build the DiscountAutomaticBxgyInput object for create mutation.
+ * Default behavior: buy 1 bundle, get 1 bundle discount.
+ */
+function buildBuyXGetYDiscountInput({
+  title,
+  discountType,
+  discountValue,
+  buyQuantity = 1,
+  getQuantity = 1,
+}) {
+  const parsedValue = parseFloat(discountValue) || 0;
+  const safeBuyQty = Math.max(1, parseInt(String(buyQuantity), 10) || 1);
+  const safeGetQty = Math.max(1, parseInt(String(getQuantity), 10) || 1);
+
+  const customerGetsValue = discountType === "fixed"
+    ? { discountAmount: { amount: String(parsedValue), appliesOnEachItem: true } }
+    : { percentage: Math.min(1, Math.max(0, parsedValue / 100)) };
+
+  return {
+    title,
+    startsAt: new Date().toISOString(),
+    customerBuys: {
+      value: { quantity: String(safeBuyQty) },
+      items: { all: true },
+    },
+    customerGets: {
+      value: customerGetsValue,
+      items: { all: true },
+      quantity: { quantity: String(safeGetQty) },
+    },
   };
 }
 
@@ -312,6 +357,103 @@ export async function syncShopifyDiscount(admin, { boxId, existingDiscountId, ti
       console.warn("[syncShopifyDiscount] write_discounts scope not yet granted — discount skipped until merchant re-authorizes.");
     } else {
       console.error("[syncShopifyDiscount] error:", e);
+    }
+    return existingDiscountId || null;
+  }
+}
+
+/**
+ * Create a Buy X Get Y automatic discount in Shopify.
+ * For specific combo boxes this is called only when bundlePriceType is dynamic.
+ * Existing discount (basic or bxgy) is deleted and recreated to avoid type mismatch.
+ */
+export async function syncShopifyBuyXGetYDiscount(
+  admin,
+  {
+    boxId,
+    existingDiscountId,
+    title,
+    discountType,
+    discountValue,
+    shopifyProductId,
+    buyQuantity = 1,
+    getQuantity = 1,
+  },
+) {
+  if (!admin || !shopifyProductId) return null;
+
+  const hasValidDiscount =
+    discountType &&
+    discountType !== "none" &&
+    parseFloat(discountValue) > 0;
+
+  if (!hasValidDiscount) {
+    if (existingDiscountId) {
+      try {
+        await admin.graphql(DISCOUNT_AUTOMATIC_DELETE_MUTATION, {
+          variables: { id: existingDiscountId },
+        });
+        await db.comboBox.update({
+          where: { id: parseInt(boxId) },
+          data: { shopifyDiscountId: null },
+        });
+      } catch (e) {
+        if (!isScopeError(e)) {
+          console.error("[syncShopifyBuyXGetYDiscount] delete error:", e);
+        }
+      }
+    }
+    return null;
+  }
+
+  const input = buildBuyXGetYDiscountInput({
+    title,
+    discountType,
+    discountValue,
+    buyQuantity,
+    getQuantity,
+  });
+
+  try {
+    // Recreate as BXGY every time to guarantee correct discount type.
+    if (existingDiscountId) {
+      try {
+        await admin.graphql(DISCOUNT_AUTOMATIC_DELETE_MUTATION, {
+          variables: { id: existingDiscountId },
+        });
+      } catch (e) {
+        if (!isScopeError(e)) {
+          console.warn("[syncShopifyBuyXGetYDiscount] delete before recreate failed:", e);
+        }
+      }
+    }
+
+    const resp = await admin.graphql(DISCOUNT_AUTOMATIC_BXGY_CREATE_MUTATION, {
+      variables: { automaticBxgyDiscount: input },
+    });
+    const json = await resp.json();
+    const errors = json?.data?.discountAutomaticBxgyCreate?.userErrors || [];
+    if (errors.length) {
+      console.error("[syncShopifyBuyXGetYDiscount] create userErrors:", errors);
+      return existingDiscountId || null;
+    }
+
+    const discountId =
+      json?.data?.discountAutomaticBxgyCreate?.automaticDiscountNode?.id || null;
+
+    if (boxId) {
+      await db.comboBox.update({
+        where: { id: parseInt(boxId) },
+        data: { shopifyDiscountId: discountId || null },
+      });
+    }
+
+    return discountId;
+  } catch (e) {
+    if (isScopeError(e)) {
+      console.warn("[syncShopifyBuyXGetYDiscount] write_discounts scope not granted yet.");
+    } else {
+      console.error("[syncShopifyBuyXGetYDiscount] error:", e);
     }
     return existingDiscountId || null;
   }
@@ -610,7 +752,7 @@ export async function syncSpecificComboProductMedia(
   const persistedStepImages = Array.isArray(stepImages)
     ? stepImages
     : await getComboStepImages(box.id);
-  const activeStepImages = persistedStepImages
+  const sortedStepImages = persistedStepImages
     .filter((image) => image && (image.bytes || image.imageData))
     .filter((image) => activeStepCount === 0 || image.stepIndex < activeStepCount)
     .sort((a, b) => a.stepIndex - b.stepIndex)
@@ -619,6 +761,7 @@ export async function syncSpecificComboProductMedia(
       mimeType: image.mimeType || "image/jpeg",
       fileName: image.fileName || `combo-step-${image.stepIndex + 1}.jpg`,
     }));
+  const activeStepImages = sortedStepImages.length > 0 ? [sortedStepImages[0]] : [];
 
   if (activeStepImages.length > 0) {
     await deleteAllProductMedia(admin, box.shopifyProductId);
@@ -800,6 +943,17 @@ export function getBannerImageSrc(box) {
   return box?.bannerImageUrl || getBannerImageDataUri(box);
 }
 
+function getPrimaryStepImageDataUri(box) {
+  const primaryStepImage = Array.isArray(box?.stepImages) ? box.stepImages[0] : null;
+  if (!primaryStepImage?.imageData || !primaryStepImage?.mimeType) return null;
+  const base64 = Buffer.from(primaryStepImage.imageData).toString("base64");
+  return `data:${primaryStepImage.mimeType};base64,${base64}`;
+}
+
+export function getBoxListImageSrc(box) {
+  return getBannerImageSrc(box) || getPrimaryStepImageDataUri(box);
+}
+
 export async function listBoxes(shop, activeOnly = false, includeBannerBinary = false) {
   await ensureAppTables();
   const where = {
@@ -813,6 +967,15 @@ export async function listBoxes(shop, activeOnly = false, includeBannerBinary = 
     include: {
       products: true,
       config: true,
+      ...(includeBannerBinary
+        ? {
+            stepImages: {
+              orderBy: { stepIndex: "asc" },
+              take: 1,
+              select: { stepIndex: true, mimeType: true, imageData: true },
+            },
+          }
+        : {}),
       _count: { select: { orders: true } },
     },
     orderBy: { sortOrder: "asc" },
@@ -837,6 +1000,7 @@ export async function listBoxes(shop, activeOnly = false, includeBannerBinary = 
     delete sanitized.bannerImageData;
     // Keep bannerImageMimeType as a marker that a binary upload exists
     delete sanitized.bannerImageFileName;
+    delete sanitized.stepImages;
     return sanitized;
   });
 }
@@ -1089,17 +1253,21 @@ export async function upsertComboConfig(boxId, config, admin = null) {
     update: payload,
   });
 
-  // Sync Shopify automatic discount for specific combo boxes (both manual and dynamic pricing)
+  // Sync Shopify automatic Buy X Get Y discount for specific combo boxes
+  // only when bundle price type is dynamic.
   if (admin) {
     const box = await db.comboBox.findUnique({ where: { id: parseInt(boxId) }, select: { shopifyProductId: true, shopifyDiscountId: true, boxName: true, displayTitle: true } });
     if (box?.shopifyProductId) {
-      await syncShopifyDiscount(admin, {
+      const dynamicDiscountEnabled = payload.bundlePriceType === "dynamic";
+      await syncShopifyBuyXGetYDiscount(admin, {
         boxId: parseInt(boxId),
         existingDiscountId: box.shopifyDiscountId || null,
         title: `${box.boxName || box.displayTitle} Bundle Discount`,
-        discountType: parsed.discountType || "none",
-        discountValue: parsed.discountValue || "0",
+        discountType: dynamicDiscountEnabled ? (parsed.discountType || "none") : "none",
+        discountValue: dynamicDiscountEnabled ? (parsed.discountValue || "0") : "0",
         shopifyProductId: box.shopifyProductId,
+        buyQuantity: 1,
+        getQuantity: 1,
       });
     }
   }

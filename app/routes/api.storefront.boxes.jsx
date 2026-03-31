@@ -59,14 +59,15 @@ export const loader = async ({ request }) => {
       pageHandle: box.pageHandle || null,
       comboConfig: (() => {
         const boxStepImgs = stepImagesByBox[box.id] || [];
+        const primaryImageRecord = boxStepImgs.find((img) => img.imageData);
+        const primaryStepImageUrl = primaryImageRecord
+          ? `data:${primaryImageRecord.mimeType};base64,${Buffer.from(primaryImageRecord.imageData).toString("base64")}`
+          : null;
         function attachStepImages(stepsArr) {
-          return stepsArr.map((step, idx) => {
-            const imgRecord = boxStepImgs.find((img) => img.stepIndex === idx && img.imageData);
+          return stepsArr.map((step) => {
             return {
               ...step,
-              stepImageUrl: imgRecord
-                ? `data:${imgRecord.mimeType};base64,${Buffer.from(imgRecord.imageData).toString("base64")}`
-                : null,
+              stepImageUrl: primaryStepImageUrl,
             };
           });
         }

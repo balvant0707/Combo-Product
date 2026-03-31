@@ -633,18 +633,6 @@ export default function CreateSpecificComboBoxPage() {
                           </select>
                           <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "13px", color: "#6b7280", pointerEvents: "none" }}>⌃⌄</span>
                         </div>
-                        <div style={{ marginBottom: "12px" }}>
-                          <label style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: "600", color: "#374151", cursor: "pointer" }}>
-                            <input
-                              type="checkbox"
-                              checked={step.optional === true}
-                              onChange={(e) => updateComboStep(ai, "optional", e.target.checked)}
-                              style={{ width: "14px", height: "14px", accentColor: "#000000", cursor: "pointer" }}
-                            />
-                            Optional
-                            <span style={{ fontSize: "11px", fontWeight: "700", color: "#6b7280" }}>{step.optional === true ? "true" : "false"}</span>
-                          </label>
-                        </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                           {(step.scope || "collection") === "collection" ? (
                             <button type="button" onClick={() => { setCollModalStepIdx(ai); setTempColls([...step.collections]); setCollSearch(""); setShowCollModal(true); }} style={{ padding: "7px 16px", border: "1px solid #000000", borderRadius: "5px", background: "#000000", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}>Select collections</button>
@@ -701,6 +689,15 @@ export default function CreateSpecificComboBoxPage() {
                             <label style={labelStyle}>Confirm button text</label>
                             <input value={step.popup.btn} onChange={(e) => updateComboStepPopup(ai, "btn", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Confirm selection" />
                             <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>CTA label inside the popup drawer</div>
+                            <label style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: "600", color: "#374151", cursor: "pointer", marginTop: "10px" }}>
+                              <input
+                                type="checkbox"
+                                checked={step.optional === true}
+                                onChange={(e) => updateComboStep(ai, "optional", e.target.checked)}
+                                style={{ width: "14px", height: "14px", accentColor: "#000000", cursor: "pointer" }}
+                              />
+                              Optional
+                            </label>
                           </div>
                         </div>
                       </div>

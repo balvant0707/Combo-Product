@@ -1032,10 +1032,29 @@ export async function upsertComboConfig(boxId, config, admin = null) {
     }
   }
 
-  const activeSteps = allSteps.slice(0, comboType).map((step) => ({
-    ...(step || {}),
-    optional: step?.optional === true || String(step?.optional).toLowerCase() === "true",
-  }));
+  const activeSteps = allSteps.slice(0, comboType).map((step, index) => {
+    const safeStep = step && typeof step === "object" ? step : {};
+    const defaultLabel = `Step ${index + 1}`;
+    const rawLabel = typeof safeStep.label === "string" ? safeStep.label.trim() : "";
+    const popup = safeStep.popup && typeof safeStep.popup === "object" ? safeStep.popup : {};
+    return {
+      ...safeStep,
+      label: rawLabel || defaultLabel,
+      optional: safeStep.optional === true || String(safeStep.optional).toLowerCase() === "true",
+      popup: {
+        ...popup,
+        title: typeof popup.title === "string" && popup.title.trim()
+          ? popup.title.trim()
+          : `Choose product for ${rawLabel || defaultLabel}`,
+        desc: typeof popup.desc === "string" && popup.desc.trim()
+          ? popup.desc.trim()
+          : "Select a product for this step.",
+        btn: typeof popup.btn === "string" && popup.btn.trim()
+          ? popup.btn.trim()
+          : "Confirm selection",
+      },
+    };
+  });
   const stepsJson = JSON.stringify(activeSteps);
   const rawJson = JSON.stringify({ ...parsed, type: comboType, steps: activeSteps });
 

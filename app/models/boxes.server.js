@@ -446,11 +446,36 @@ async function addImageToProduct(admin, productId, imageSource) {
 function extractStepImageUrls(parsedCombo) {
   const seen = new Set();
   const urls = [];
-  for (const step of parsedCombo?.steps || []) {
+  const allSteps = Array.isArray(parsedCombo?.steps) ? parsedCombo.steps : [];
+  const requestedType = parseInt(parsedCombo?.type, 10);
+  const comboType =
+    Number.isInteger(requestedType) && requestedType >= 2
+      ? requestedType
+      : allSteps.length;
+
+  for (const step of allSteps.slice(0, comboType)) {
+    const selectedProductImageUrls = Array.isArray(step?.selectedProducts)
+      ? step.selectedProducts.map((product) => product?.imageUrl).filter(Boolean)
+      : [];
+    const collectionImageUrls = Array.isArray(step?.collections)
+      ? step.collections.map((collection) => collection?.imageUrl).filter(Boolean)
+      : [];
+    const resolvedProductImageUrls = Array.isArray(step?.resolvedProducts)
+      ? step.resolvedProducts.map((product) => product?.imageUrl).filter(Boolean)
+      : [];
+    const fallbackResolvedImageUrls =
+      collectionImageUrls.length === 0
+        ? resolvedProductImageUrls.slice(0, Math.max(step?.collections?.length || 0, 1))
+        : [];
     const sources =
-      step.scope === "product"
-        ? (step.selectedProducts || []).map((p) => p.imageUrl)
-        : (step.collections || []).map((c) => c.imageUrl);
+      step?.scope === "product"
+        ? selectedProductImageUrls
+        // Collection records often have no image, so use expanded product images
+        // from the saved combo config as representative media for that step.
+        : collectionImageUrls.length > 0
+          ? collectionImageUrls
+          : fallbackResolvedImageUrls;
+
     for (const url of sources) {
       if (url && !seen.has(url)) {
         seen.add(url);

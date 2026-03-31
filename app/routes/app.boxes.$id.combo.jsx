@@ -242,7 +242,11 @@ export const action = async ({ request, params }) => {
         console.error("[app.boxes.$id.combo] syncShopifyBundleProduct error:", e);
       }
       try {
-        await addComboStepImagesToProduct(admin, box.shopifyProductId, comboStepsConfig);
+        await addComboStepImagesToProduct(
+          admin,
+          box.shopifyProductId,
+          box.comboStepsConfig || comboStepsConfig,
+        );
       } catch (e) {
         console.error("[app.boxes.$id.combo] addComboStepImagesToProduct error:", e);
       }

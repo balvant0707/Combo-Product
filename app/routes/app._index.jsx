@@ -532,72 +532,85 @@ export default function DashboardPage() {
         <div style={{ padding: "20px 20px 14px", borderBottom: "1px solid #e5e7eb" }}>
           <div style={{ fontSize: "15px", fontWeight: "800", color: "#000000", letterSpacing: "-0.2px" }}>Quick Actions</div>
         </div>
-        <div style={{ padding: "12px 12px 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
-          <button
-            type="button"
-            onClick={() => setShowCreateBoxModal(true)}
-            style={{
-              width: "100%",
-              border: "1px solid #111827",
-              borderRadius: "5px",
-              background: "#111827",
-              color: "#ffffff",
-              fontSize: "14px",
-              fontWeight: "700",
-              padding: "10px 12px",
-              cursor: "pointer",
-            }}
-          >
-            Create Box
-          </button>
-          <div style={{ fontSize: "12px", color: "#6b7280", padding: "2px 4px 8px" }}>
+        <div style={{ padding: "12px 12px 16px" }}>
+          <div style={{ fontSize: "12px", color: "#6b7280", padding: "2px 4px 10px" }}>
             Click Create Box to choose combo type in popup.
           </div>
-          {quickActions.map((action) => (
-            <a
-              key={action.key}
-              href={action.externalUrl || "#"}
-              target={action.externalUrl ? "_blank" : undefined}
-              rel={action.externalUrl ? "noreferrer" : undefined}
-              onClick={(event) => {
-                if (action.externalUrl) return;
-                event.preventDefault();
-                navigateTo(action.href);
-              }}
+          <div
+            style={{
+              display: "flex",
+              gap: "8px",
+              flexWrap: "nowrap",
+              overflowX: "auto",
+              paddingBottom: "2px",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowCreateBoxModal(true)}
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "14px",
-                padding: "5px 10px",
-                background: "#f9fafb",
-                border: "1.5px solid #e5e7eb",
+                minWidth: "220px",
+                flex: "1 1 0",
+                border: "1px solid #111827",
                 borderRadius: "5px",
-                textDecoration: "none",
+                background: "#111827",
+                color: "#ffffff",
+                fontSize: "14px",
+                fontWeight: "700",
+                padding: "10px 12px",
+                height: "58px",
                 cursor: "pointer",
-                transition: "transform 0.13s, background 0.13s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateX(3px)";
-                e.currentTarget.style.background = "#f3f4f6";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateX(0)";
-                e.currentTarget.style.background = "#f9fafb";
               }}
             >
-              <div style={{ width: "42px", height: "42px", borderRadius: "5px", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>
-                <AdminIcon type={action.iconType} size="large" />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "14px", fontWeight: "700", color: "#000000", lineHeight: 1.3 }}>{action.label}</div>
-                <div style={{ fontSize: "12px", color: "#6b7280", fontWeight: "600", marginTop: "2px" }}>{action.sub}</div>
-              </div>
-              <div style={{ color: "#6b7280", fontSize: "16px", flexShrink: 0 }}>→</div>
-            </a>
-          ))}
+              Create Box
+            </button>
+            {quickActions.map((action) => (
+              <a
+                key={action.key}
+                href={action.externalUrl || "#"}
+                target={action.externalUrl ? "_blank" : undefined}
+                rel={action.externalUrl ? "noreferrer" : undefined}
+                onClick={(event) => {
+                  if (action.externalUrl) return;
+                  event.preventDefault();
+                  navigateTo(action.href);
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "7px 10px",
+                  background: "#f9fafb",
+                  border: "1.5px solid #e5e7eb",
+                  borderRadius: "5px",
+                  textDecoration: "none",
+                  cursor: "pointer",
+                  transition: "transform 0.13s, background 0.13s",
+                  minWidth: "220px",
+                  flex: "1 1 0",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                  e.currentTarget.style.background = "#f3f4f6";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.background = "#f9fafb";
+                }}
+              >
+                <div style={{ width: "42px", height: "42px", borderRadius: "5px", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>
+                  <AdminIcon type={action.iconType} size="large" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: "14px", fontWeight: "700", color: "#000000", lineHeight: 1.3 }}>{action.label}</div>
+                  <div style={{ fontSize: "12px", color: "#6b7280", fontWeight: "600", marginTop: "2px" }}>{action.sub}</div>
+                </div>
+                <div style={{ color: "#6b7280", fontSize: "16px", flexShrink: 0 }}>&rarr;</div>
+              </a>
+            ))}
+          </div>
         </div>
       </div>
-
       {/* Stats */}
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>
         <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: "12px" }}>
@@ -742,10 +755,26 @@ export default function DashboardPage() {
                         {action.sub}
                       </div>
                     </div>
-                    <div style={{ color: "#6b7280", fontSize: "16px", flexShrink: 0 }}>{"->"}</div>
                   </div>
                 </button>
               ))}
+              <div
+                style={{
+                  marginTop: "2px",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "5px",
+                  background: "#f9fafb",
+                  padding: "10px 12px",
+                }}
+              >
+                <div style={{ fontSize: "12px", fontWeight: "700", color: "#111827", marginBottom: "4px" }}>
+                  Help customers choose easily
+                </div>
+                <div style={{ fontSize: "12px", color: "#4b5563", lineHeight: 1.5 }}>
+                  Use Create Combo Box for simple bundle offers where all items are selected together. Use Create
+                  Specific Combo Box for a guided, step-by-step flow where customers choose items one by one.
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -758,4 +787,5 @@ export default function DashboardPage() {
 export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
+
 

@@ -9,7 +9,7 @@ import { getBox, upsertComboConfig, saveComboStepImages, getComboStepImages, syn
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ GraphQL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─────────────────────────── GraphQL ─────────────────────────── */
 const PRODUCTS_QUERY = `#graphql
   query GetProducts($first: Int!, $query: String) {
     products(first: $first, query: $query) {
@@ -63,7 +63,7 @@ const COLLECTION_PRODUCTS_QUERY = `#graphql
   }
 `;
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Constants Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─────────────────────────── Constants ─────────────────────────── */
 const MIN_COMBO_STEPS = 2;
 const MAX_COMBO_STEPS = 8;
 
@@ -86,8 +86,6 @@ const DEFAULT_COMBO_CONFIG = {
   type: MIN_COMBO_STEPS,
   title: "Build Your Perfect Bundle",
   subtitle: "Choose a product for each step",
-  ctaButtonLabel: "BUILD YOUR OWN BOX",
-  addToCartLabel: "Add To Cart",
   highlightText: "",
   supportText: "",
   bundlePrice: 0,
@@ -97,9 +95,6 @@ const DEFAULT_COMBO_CONFIG = {
   buyQuantity: 1,
   getQuantity: 1,
   isActive: true,
-  isGiftBox: false,
-  allowDuplicates: false,
-  giftMessageEnabled: false,
   showProductImages: true,
   showProgressBar: true,
   allowReselection: true,
@@ -172,12 +167,12 @@ function applyAdminComboDiscount(total, config, quantity = 0, unitPrices = []) {
   return getAdminComboDiscountBreakdown(total, config, quantity, unitPrices).discountedTotal;
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Loader Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─────────────────────────── Loader ─────────────────────────── */
 export const loader = async ({ request, params }) => {
   const { admin, session, redirect } = await authenticate.admin(request);
   const shop = session.shop;
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬ Fast path: fetch products for a specific collection (used by per-step pickers) Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ── Fast path: fetch products for a specific collection (used by per-step pickers) ── */
   const url = new URL(request.url);
   const collectionId = url.searchParams.get("collectionId");
   if (collectionId) {
@@ -244,11 +239,6 @@ export const loader = async ({ request, params }) => {
     let rawDiscountValue = DEFAULT_COMBO_CONFIG.discountValue;
     let rawBuyQuantity = DEFAULT_COMBO_CONFIG.buyQuantity;
     let rawGetQuantity = DEFAULT_COMBO_CONFIG.getQuantity;
-    let rawCtaButtonLabel = DEFAULT_COMBO_CONFIG.ctaButtonLabel;
-    let rawAddToCartLabel = DEFAULT_COMBO_CONFIG.addToCartLabel;
-    let rawIsGiftBox = cfg.isGiftBox === true;
-    let rawAllowDuplicates = cfg.allowDuplicates === true;
-    let rawGiftMessageEnabled = cfg.giftMessageEnabled === true;
     if (box.comboStepsConfig) {
       try {
         const raw = JSON.parse(box.comboStepsConfig);
@@ -258,15 +248,6 @@ export const loader = async ({ request, params }) => {
         rawDiscountValue = String(raw?.discountValue ?? rawDiscountValue);
         rawBuyQuantity = Math.max(1, parseInt(String(raw?.buyQuantity ?? rawBuyQuantity), 10) || rawBuyQuantity);
         rawGetQuantity = Math.max(1, parseInt(String(raw?.getQuantity ?? rawGetQuantity), 10) || rawGetQuantity);
-        rawCtaButtonLabel = typeof raw?.ctaButtonLabel === "string" && raw.ctaButtonLabel.trim()
-          ? raw.ctaButtonLabel.trim()
-          : rawCtaButtonLabel;
-        rawAddToCartLabel = typeof raw?.addToCartLabel === "string" && raw.addToCartLabel.trim()
-          ? raw.addToCartLabel.trim()
-          : rawAddToCartLabel;
-        rawIsGiftBox = raw?.isGiftBox === true || String(raw?.isGiftBox).toLowerCase() === "true";
-        rawAllowDuplicates = raw?.allowDuplicates === true || String(raw?.allowDuplicates).toLowerCase() === "true";
-        rawGiftMessageEnabled = raw?.giftMessageEnabled === true || String(raw?.giftMessageEnabled).toLowerCase() === "true";
       } catch {}
     }
     comboStepsConfig = JSON.stringify({
@@ -281,12 +262,7 @@ export const loader = async ({ request, params }) => {
       discountValue:     rawDiscountValue,
       buyQuantity:       rawBuyQuantity,
       getQuantity:       rawGetQuantity,
-      ctaButtonLabel:    rawCtaButtonLabel,
-      addToCartLabel:    rawAddToCartLabel,
       isActive:          cfg.isActive,
-      isGiftBox:         rawIsGiftBox,
-      allowDuplicates:   rawAllowDuplicates,
-      giftMessageEnabled: rawGiftMessageEnabled,
       showProductImages: cfg.showProductImages,
       showProgressBar:   cfg.showProgressBar,
       allowReselection:  cfg.allowReselection,
@@ -311,7 +287,7 @@ export const loader = async ({ request, params }) => {
   };
 };
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Combo Image Helpers Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─────────────────────────── Combo Image Helpers ─────────────────────────── */
 const MAX_STEP_IMAGE_SIZE = 2 * 1024 * 1024;
 const ALLOWED_STEP_IMAGE_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif", "image/avif"]);
 
@@ -329,7 +305,7 @@ async function parseComboImage(formData, errors) {
   return { stepIndex: 0, bytes: new Uint8Array(await file.arrayBuffer()), mimeType: file.type, fileName: file.name || null };
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Action Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─────────────────────────── Action ─────────────────────────── */
 export const action = async ({ request, params }) => {
   const { session, admin, redirect } = await authenticate.admin(request);
   const formData = await request.formData();
@@ -384,7 +360,7 @@ export const action = async ({ request, params }) => {
   return { ok: false, errors: { _global: "Unknown action" } };
 };
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Styles Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─────────────────────────── Styles ─────────────────────────── */
 const fieldStyle = {
   width: "100%", padding: "9px 12px", border: "1.5px solid #e5e7eb",
   borderRadius: "5px", fontSize: "13px", color: "#111827", background: "#fff",
@@ -401,7 +377,7 @@ const sectionHeadingStyle = {
   borderBottom: "1.5px solid #f3f4f6", display: "flex", alignItems: "center", gap: "8px",
 };
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Component Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ─────────────────────────── Component ─────────────────────────── */
 export default function SpecificComboBoxPage() {
   const { box, products, collections, stepImagesBase64 } = useLoaderData();
   const comboFetcher = useFetcher();
@@ -438,7 +414,7 @@ export default function SpecificComboBoxPage() {
   }, [comboFetcher.data]);
 
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬ Combo Config state Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ── Combo Config state ── */
   const [comboConfig, setComboConfig] = useState(() => {
     function normalizeStepCount(value) {
       return Math.max(MIN_COMBO_STEPS, Math.min(MAX_COMBO_STEPS, value));
@@ -486,9 +462,6 @@ export default function SpecificComboBoxPage() {
           bundlePrice:      box.config.bundlePrice != null ? parseFloat(box.config.bundlePrice) : DEFAULT_COMBO_CONFIG.bundlePrice,
           bundlePriceType:  box.config.bundlePriceType    ?? DEFAULT_COMBO_CONFIG.bundlePriceType,
           isActive:         box.config.isActive,
-          isGiftBox:        box.config.isGiftBox,
-          allowDuplicates:  box.config.allowDuplicates,
-          giftMessageEnabled: box.config.giftMessageEnabled,
           showProductImages:box.config.showProductImages,
           showProgressBar:  box.config.showProgressBar,
           allowReselection: box.config.allowReselection,
@@ -563,7 +536,7 @@ export default function SpecificComboBoxPage() {
   const [stepProdSearch, setStepProdSearch] = useState("");
   const [tempStepProds, setTempStepProds] = useState([]);
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬ Combo Config helpers Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ── Combo Config helpers ── */
   function updateComboField(field, value) { setComboConfig((prev) => ({ ...prev, [field]: value })); }
   function setStepCount(nextCount) {
     const clamped = Math.max(MIN_COMBO_STEPS, Math.min(MAX_COMBO_STEPS, nextCount));
@@ -577,7 +550,7 @@ export default function SpecificComboBoxPage() {
     setComboActiveStep((prev) => Math.min(prev, clamped - 1));
   }
 
-  // comboDynamicPrice Ã¢â‚¬â€ estimated price for dynamic pricing mode (after discount)
+  // comboDynamicPrice — estimated price for dynamic pricing mode (after discount)
   const comboDynamicDiscountBreakdown = useMemo(() => {
     const allProds = products || [];
     const avgPrice = allProds.length > 0 ? allProds.reduce((s, p) => s + (parseFloat(p.price) || 0), 0) / allProds.length : 0;
@@ -595,7 +568,7 @@ export default function SpecificComboBoxPage() {
   ]);
   const comboDynamicPrice = comboDynamicDiscountBreakdown.discountedTotal;
 
-  // comboManualDiscountedPrice Ã¢â‚¬â€ manual bundle price after discount
+  // comboManualDiscountedPrice — manual bundle price after discount
   const comboManualDiscountBreakdown = useMemo(() => {
     const price = parseFloat(comboConfig.bundlePrice) || 0;
     return getAdminComboDiscountBreakdown(price, comboConfig, comboConfig.type || 0);
@@ -631,16 +604,16 @@ export default function SpecificComboBoxPage() {
     }));
   }
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬ Pending collection load Ã¢â‚¬â€ deferred so it runs after React finishes
+  /* ── Pending collection load — deferred so it runs after React finishes
         batching the state updates in confirmColl(), avoiding the
-        "Transition was aborted because of invalid state" error.        Ã¢â€â‚¬Ã¢â€â‚¬ */
+        "Transition was aborted because of invalid state" error.        ── */
   const [pendingCollLoad, setPendingCollLoad] = useState(null); // { stepIdx, collId }
 
   useEffect(() => {
     if (!pendingCollLoad) return;
     const { stepIdx, collId } = pendingCollLoad;
     setPendingCollLoad(null);
-    // Plain path Ã¢â‚¬â€ fetcher.load() is not a page navigation so embedded
+    // Plain path — fetcher.load() is not a page navigation so embedded
     // app params are not needed and can confuse Shopify App Bridge.
     collProdsFetchers[stepIdx].load(
       `/app/boxes/${box.id}/combo?collectionId=${encodeURIComponent(collId)}`
@@ -676,7 +649,7 @@ export default function SpecificComboBoxPage() {
   const isLoadingStepProds = stepProdModalIdx !== null && collProdsFetchers[stepProdModalIdx]?.state === "loading";
   const filteredStepProds = activeScopedProducts.filter((p) => !stepProdSearch || p.title.toLowerCase().includes(stepProdSearch.toLowerCase()));
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬ Shared modal styles Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ── Shared modal styles ── */
   const modalOverlayStyle = { position: "fixed", inset: 0, background: "rgba(17,24,39,0.55)", backdropFilter: "blur(3px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" };
   const modalBoxStyle = { background: "#fff", borderRadius: "8px", width: "100%", maxWidth: "560px", maxHeight: "85vh", display: "flex", flexDirection: "column", boxShadow: "0 20px 60px rgba(0,0,0,0.18)", overflow: "hidden" };
   const modalHeaderStyle = { padding: "16px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fafafa" };
@@ -685,7 +658,7 @@ export default function SpecificComboBoxPage() {
   const modalCloseBtn = { background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: "#9ca3af", padding: "4px 8px", borderRadius: "5px", lineHeight: 1 };
   const searchInputStyle = { ...fieldStyle, borderColor: "#d1d5db", paddingLeft: "14px", fontSize: "13px" };
 
-  /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Render Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+  /* ─────────────── Render ─────────────── */
   return (
     <s-page
       inlineSize="large"
@@ -703,22 +676,9 @@ export default function SpecificComboBoxPage() {
 
       {/* Hero banner */}
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.06)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
-          <div style={{ flex: "1 1 420px", minWidth: "320px" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}><AdminIcon type="target" size="small" /> Specific Combo Box</div>
-            <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>{box.boxName}</div>
-            <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Configure combo steps, collections, and product pickers for this box.</div>
-          </div>
-          <div style={{ flex: "0 1 420px", minWidth: "320px" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "10px 12px", background: comboConfig.isActive ? "#f9fafb" : "#fff", border: `1.5px solid ${comboConfig.isActive ? "#000000" : "#e5e7eb"}`, borderRadius: "7px", transition: "border-color 0.15s, background 0.15s" }}>
-              <ToggleSwitch checked={comboConfig.isActive} onChange={(e) => updateComboField("isActive", e.target.checked)} showStateText={false} />
-              <div>
-                <div style={{ fontSize: "12px", fontWeight: "600", color: "#111827", lineHeight: 1.3 }}>Active on Storefront</div>
-                <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>Uncheck to hide from customers</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}><AdminIcon type="target" size="small" /> Specific Combo Box</div>
+        <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>{box.boxName}</div>
+        <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Configure combo steps, collections, and product pickers for this box.</div>
       </div>
 
     <s-section>
@@ -727,7 +687,7 @@ export default function SpecificComboBoxPage() {
         <div style={{ position: "fixed", top: "20px", right: "20px", zIndex: 99999, display: "flex", alignItems: "center", gap: "10px", padding: "13px 18px", borderRadius: "8px", boxShadow: "0 8px 28px rgba(0,0,0,0.18)", fontSize: "13px", fontWeight: "600", color: "#fff", background: toast.type === "success" ? "#166534" : "#991b1b", minWidth: "280px", maxWidth: "380px", animation: "cb-toast-in 0.25s ease" }}>
           <AdminIcon type={toast.type === "success" ? "check-circle" : "alert-triangle"} size="small" style={{ color: "#fff", flexShrink: 0 }} />
           <span style={{ flex: 1 }}>{toast.message}</span>
-          <button type="button" onClick={() => setToast(null)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", fontSize: "16px", lineHeight: 1, opacity: 0.7, padding: "0 0 0 4px" }}>Ãƒâ€”</button>
+          <button type="button" onClick={() => setToast(null)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", fontSize: "16px", lineHeight: 1, opacity: 0.7, padding: "0 0 0 4px" }}>×</button>
         </div>
       )}
       <style>{`@keyframes cb-toast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
@@ -748,13 +708,12 @@ export default function SpecificComboBoxPage() {
       {/* 2-column layout */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "20px", alignItems: "start" }}>
 
-        {/* Ã¢â€â‚¬Ã¢â€â‚¬ SIDEBAR Ã¢â€â‚¬Ã¢â€â‚¬ */}
+        {/* ── SIDEBAR ── */}
         <div>
           {/* Combo Configuration */}
           <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", marginBottom: "16px" }}>
             <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#111827" }}>Combo configuration</div>
             <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "14px" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "10px", alignItems: "start" }}>
               {/* Combo type */}
               <div>
                 <label style={labelStyle}>Number of steps</label>
@@ -778,62 +737,52 @@ export default function SpecificComboBoxPage() {
                 </div>
                 <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "5px" }}>{comboConfig.type} product selections required (2-8)</div>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px", gridColumn: "2 / -1" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "10px" }}>
                 <div>
-                  <label style={labelStyle}>Title</label>
+                  <label style={labelStyle}>Combo title</label>
                   <input value={comboConfig.title} onChange={(e) => updateComboField("title", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Build Your Perfect Bundle" />
                 </div>
                 <div>
-                  <label style={labelStyle}>Descriptions</label>
+                  <label style={labelStyle}>Subtitle</label>
                   <input value={comboConfig.subtitle} onChange={(e) => updateComboField("subtitle", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Choose a product for each step" />
                 </div>
-              </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px" }}>
                 <div>
-                  <label style={labelStyle}>Combo Product Button Title</label>
-                  <input value={comboConfig.ctaButtonLabel || ""} onChange={(e) => updateComboField("ctaButtonLabel", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="BUILD YOUR OWN BOX" />
-                </div>
-                <div>
-                  <label style={labelStyle}>Product Button Title</label>
-                  <input value={comboConfig.addToCartLabel || ""} onChange={(e) => updateComboField("addToCartLabel", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Add To Cart" />
+                  <label style={labelStyle}>Highlight text</label>
+                  <input value={comboConfig.highlightText || ""} onChange={(e) => updateComboField("highlightText", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Limited time combo" />
                 </div>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px", alignItems: "start" }}>
+              <div>
+                <label style={labelStyle}>Support text</label>
+                <input value={comboConfig.supportText || ""} onChange={(e) => updateComboField("supportText", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Pick products and save more at checkout" />
+              </div>
               {/* Combo image */}
               <div>
-                <label style={labelStyle}>Image</label>
-                <div style={{ display: "grid", gridTemplateColumns: "100px minmax(0, 1fr)", gap: "12px", alignItems: "start" }}>
-                  <div style={{ width: "100px", height: "100px", borderRadius: "6px", border: "1.5px solid #e5e7eb", background: "#f9fafb", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    {comboImagePreview ? (
-                      <img src={comboImagePreview} alt="Combo preview" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                    ) : (
-                      <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: "600", letterSpacing: "0.04em" }}>NO IMAGE</span>
-                    )}
+                <label style={labelStyle}>Combo image (optional)</label>
+                {comboImagePreview && (
+                  <div style={{ marginBottom: "8px" }}>
+                    <img src={comboImagePreview} alt="Combo preview" style={{ width: "100%", maxHeight: "140px", objectFit: "cover", borderRadius: "6px", border: "1.5px solid #e5e7eb", display: "block" }} />
                   </div>
-                  <div>
-                    <input
-                      type="file"
-                      name="comboImage"
-                      form="combo-config-form"
-                      accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-                      style={{ ...fieldStyle, padding: "7px 12px" }}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = (ev) => setComboImagePreview(ev.target?.result || null);
-                        reader.readAsDataURL(file);
-                      }}
-                    />
-                    <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "6px" }}>JPG, PNG, WEBP, GIF, or AVIF - max 2MB. Used as the image for all combo steps.</div>
-                    {comboErrors.comboImage && <div style={errorStyle}><AdminIcon type="alert-triangle" size="small" /> {comboErrors.comboImage}</div>}
-                  </div>
-                </div>
+                )}
+                <input
+                  type="file"
+                  name="comboImage"
+                  form="combo-config-form"
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                  style={{ ...fieldStyle, padding: "7px 12px" }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => setComboImagePreview(ev.target.result);
+                    reader.readAsDataURL(file);
+                  }}
+                />
+                <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "6px" }}>JPG, PNG, WEBP, GIF, or AVIF - max 2MB. Used as the image for all combo steps.</div>
+                {comboErrors.comboImage && <div style={errorStyle}><AdminIcon type="alert-triangle" size="small" /> {comboErrors.comboImage}</div>}
               </div>
               {/* Bundle Price */}
               <div>
-                <label style={labelStyle}>Bundle Price (Ã¢â€šÂ¹)</label>
+                <label style={labelStyle}>Bundle Price (₹)</label>
                 <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "5px", overflow: "hidden", marginBottom: "8px" }}>
                   {["manual", "dynamic"].map((mode) => (
                     <button key={mode} type="button" onClick={() => updateComboField("bundlePriceType", mode)} style={{ flex: 1, padding: "6px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: comboConfig.bundlePriceType === mode ? "#000000" : "#f9fafb", color: comboConfig.bundlePriceType === mode ? "#ffffff" : "#374151", transition: "background 0.15s" }}>
@@ -900,14 +849,14 @@ export default function SpecificComboBoxPage() {
                             </div>
                           ) : (
                             <>
-                              <label style={labelStyle}>{comboConfig.discountType === "percent" ? "Discount %" : "Discount amount (Ã¢â€šÂ¹)"}</label>
+                              <label style={labelStyle}>{comboConfig.discountType === "percent" ? "Discount %" : "Discount amount (₹)"}</label>
                               <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
                                 <span style={{
                                   position: "absolute", left: "11px",
                                   fontSize: "13px", fontWeight: "700", color: "#374151",
                                   pointerEvents: "none", userSelect: "none",
                                 }}>
-                                  {comboConfig.discountType === "fixed" ? "Ã¢â€šÂ¹" : "%"}
+                                  {comboConfig.discountType === "fixed" ? "₹" : "%"}
                                 </span>
                                 <input
                                   type="number"
@@ -959,17 +908,17 @@ export default function SpecificComboBoxPage() {
                                   ? `Buy ${comboConfig.buyQuantity || 1} Get ${comboConfig.getQuantity || 1} free`
                                   : comboConfig.discountType === "percent"
                                     ? `${comboConfig.discountValue || 0}% off applied`
-                                    : `Ã¢â€šÂ¹${comboConfig.discountValue || 0} deducted`}
+                                    : `₹${comboConfig.discountValue || 0} deducted`}
                               </div>
                             </div>
                           </div>
                           <div style={{ textAlign: "right" }}>
                             <div style={{ fontSize: "16px", fontWeight: "800", color: "#15803d", lineHeight: 1 }}>
-                              Ã¢â€šÂ¹{comboDynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                              ₹{comboDynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                             </div>
                             {comboDynamicPrice < (comboDynamicPrice / (1 - (parseFloat(comboConfig.discountValue) || 0) / 100)) && comboConfig.discountType === "percent" && (
                               <div style={{ fontSize: "10px", color: "#86efac", textDecoration: "line-through", marginTop: "2px" }}>
-                                Ã¢â€šÂ¹{(comboDynamicPrice / (1 - (parseFloat(comboConfig.discountValue) || 0.001) / 100)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                ₹{(comboDynamicPrice / (1 - (parseFloat(comboConfig.discountValue) || 0.001) / 100)).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                               </div>
                             )}
                           </div>
@@ -978,7 +927,7 @@ export default function SpecificComboBoxPage() {
 
                       {comboConfig.discountType === "none" && (
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 12px", borderRadius: "6px", background: "#f9fafb", border: "1px solid #e5e7eb" }}>
-                          <span style={{ fontSize: "12px", color: "#9ca3af" }}>No discount applied â€” full product prices sum is charged</span>
+                          <span style={{ fontSize: "12px", color: "#9ca3af" }}>No discount applied — full product prices sum is charged</span>
                         </div>
                       )}
                     </div>
@@ -987,31 +936,32 @@ export default function SpecificComboBoxPage() {
               </div>
             </div>
             </div>
-          </div>
-        </div>
 
-        {/* Ã¢â€â‚¬Ã¢â€â‚¬ MAIN Ã¢â€â‚¬Ã¢â€â‚¬ */}
-        <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", marginBottom: "16px" }}>
-          <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", display: "flex", alignItems: "center", gap: "6px" }}>
-            <AdminIcon type="settings" size="small" /> Options
-          </div>
-          <div style={{ padding: "12px", display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "8px" }}>
-            {[
-              { key: "isGiftBox", label: "Gift Box Mode", desc: "Shows gift wrapping option to customers", iconType: "gift-card" },
-              { key: "allowDuplicates", label: "Allow Duplicates", desc: "Same product can fill multiple slots", iconType: "duplicate" },
-              { key: "giftMessageEnabled", label: "Gift Message Field", desc: "Show text area for gift message", iconType: "email" },
-            ].map((opt) => (
-              <div key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "10px 12px", background: comboConfig[opt.key] ? "#f9fafb" : "#fff", border: `1.5px solid ${comboConfig[opt.key] ? "#000000" : "#e5e7eb"}`, borderRadius: "7px", transition: "border-color 0.15s, background 0.15s" }}>
-                <ToggleSwitch checked={comboConfig[opt.key]} onChange={(e) => updateComboField(opt.key, e.target.checked)} showStateText={false} />
-                <div>
-                  <div style={{ fontSize: "12px", fontWeight: "600", color: "#111827", lineHeight: 1.3, display: "flex", alignItems: "center", gap: "5px" }}><AdminIcon type={opt.iconType} size="small" /> {opt.label}</div>
-                  <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>{opt.desc}</div>
+          {/* OPTIONS 2×2 grid */}
+          <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <div style={{ padding: "11px 16px", borderBottom: "1px solid #f3f4f6", fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", display: "flex", alignItems: "center", gap: "6px" }}>
+              <AdminIcon type="settings" size="small" /> Options
+            </div>
+            <div style={{ padding: "12px", display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "8px" }}>
+              {[
+                { key: "isActive",          label: "Active on Storefront", desc: "Uncheck to hide from customers" },
+                { key: "showProductImages", label: "Show Product Images",  desc: "Display images in picker" },
+                { key: "showProgressBar",   label: "Show Progress Bar",    desc: "Display step progress indicator" },
+                { key: "allowReselection",  label: "Allow Re-selection",   desc: "Customers can change selection" },
+              ].map((opt) => (
+                <div key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "10px 12px", background: comboConfig[opt.key] ? "#f9fafb" : "#fff", border: `1.5px solid ${comboConfig[opt.key] ? "#000000" : "#e5e7eb"}`, borderRadius: "7px", transition: "border-color 0.15s, background 0.15s" }}>
+                  <ToggleSwitch checked={comboConfig[opt.key]} onChange={(e) => updateComboField(opt.key, e.target.checked)} showStateText={false} />
+                  <div>
+                    <div style={{ fontSize: "12px", fontWeight: "600", color: "#111827", lineHeight: 1.3 }}>{opt.label}</div>
+                    <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>{opt.desc}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
+        {/* ── MAIN ── */}
         <div style={{ minHeight: "calc(100vh - 260px)", height: "auto" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
             <div style={{ fontSize: "12px", fontWeight: "700", color: "#111827", letterSpacing: "0.04em", textTransform: "uppercase" }}>Steps</div>
@@ -1041,7 +991,7 @@ export default function SpecificComboBoxPage() {
                 : "collection";
             return (
               <div>
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ Pickers card Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* ── Pickers card ── */}
                 <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", marginBottom: "16px" }}>
                   {/* Step header */}
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", background: "#f9fafb", borderBottom: "1px solid #f3f4f6", borderRadius: "8px 8px 0 0" }}>
@@ -1054,70 +1004,61 @@ export default function SpecificComboBoxPage() {
                     </div>
                   </div>
                   <div style={{ padding: "16px" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "12px", alignItems: "start", marginBottom: "10px" }}>
-                      <div>
-                        <label style={labelStyle}>Step label</label>
-                        <input value={step.label} onChange={(e) => updateComboStep(ai, "label", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Main Product" />
-                        <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>Heading shown on the storefront step</div>
-                      </div>
-                      <div>
-                        <label style={labelStyle}>Scope</label>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "8px" }}>
-                          {[
-                            { value: "collection", label: "Specific collections" },
-                            { value: "product", label: "Specific products" },
-                          ].map((opt) => (
-                            <label
-                              key={opt.value}
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                                padding: "0 10px",
-                                minHeight: "40px",
-                                border: `1.5px solid ${stepScope === opt.value ? "#000000" : "#d1d5db"}`,
-                                borderRadius: "6px",
-                                background: stepScope === opt.value ? "#f9fafb" : "#fff",
-                                cursor: "pointer",
-                              }}
-                            >
-                              <input
-                                type="radio"
-                                name={`step-scope-${ai}`}
-                                value={opt.value}
-                                checked={stepScope === opt.value}
-                                onChange={() => updateStepScope(ai, opt.value)}
-                                style={{ width: "16px", height: "16px", accentColor: "#6b7280", cursor: "pointer", margin: 0, flexShrink: 0 }}
-                              />
-                              <span style={{ fontSize: "12px", color: "#4b5563", fontWeight: stepScope === opt.value ? "700" : "600" }}>{opt.label}</span>
-                            </label>
-                          ))}
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "10px" }}>
-                          {stepScope === "collection" ? (
-                            <button
-                              type="button"
-                              onClick={() => { setCollModalStepIdx(ai); setTempColls([...step.collections]); setCollSearch(""); setShowCollModal(true); }}
-                              style={{ padding: "7px 16px", border: "1px solid #000000", borderRadius: "5px", background: "#000000", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}
-                            >
-                              Select collections
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => { setStepProdModalIdx(ai); setTempStepProds([...(step.selectedProducts || [])]); setStepProdSearch(""); setShowStepProdModal(true); }}
-                              style={{ padding: "7px 16px", border: "1px solid #000000", borderRadius: "5px", background: "#000000", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}
-                            >
-                              Select products
-                            </button>
-                          )}
-                          <span style={{ fontSize: "13px", color: "#6b7280" }}>
-                            {stepScope === "collection"
-                              ? `${step.collections.length} selected`
-                              : `${(step.selectedProducts || []).length} selected`}
-                          </span>
-                        </div>
-                      </div>
+                    <label style={labelStyle}>Scope</label>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "8px", marginBottom: "10px" }}>
+                      {[
+                        { value: "collection", label: "Specific collections" },
+                        { value: "product", label: "Specific products" },
+                      ].map((opt) => (
+                        <label
+                          key={opt.value}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            padding: "0 10px",
+                            minHeight: "40px",
+                            border: `1.5px solid ${stepScope === opt.value ? "#000000" : "#d1d5db"}`,
+                            borderRadius: "6px",
+                            background: stepScope === opt.value ? "#f9fafb" : "#fff",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <input
+                            type="radio"
+                            name={`step-scope-${ai}`}
+                            value={opt.value}
+                            checked={stepScope === opt.value}
+                            onChange={() => updateStepScope(ai, opt.value)}
+                            style={{ width: "16px", height: "16px", accentColor: "#6b7280", cursor: "pointer", margin: 0, flexShrink: 0 }}
+                          />
+                          <span style={{ fontSize: "12px", color: "#4b5563", fontWeight: stepScope === opt.value ? "700" : "600" }}>{opt.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      {stepScope === "collection" ? (
+                        <button
+                          type="button"
+                          onClick={() => { setCollModalStepIdx(ai); setTempColls([...step.collections]); setCollSearch(""); setShowCollModal(true); }}
+                          style={{ padding: "7px 16px", border: "1px solid #000000", borderRadius: "5px", background: "#000000", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}
+                        >
+                          Select collections
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => { setStepProdModalIdx(ai); setTempStepProds([...(step.selectedProducts || [])]); setStepProdSearch(""); setShowStepProdModal(true); }}
+                          style={{ padding: "7px 16px", border: "1px solid #000000", borderRadius: "5px", background: "#000000", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}
+                        >
+                          Select products
+                        </button>
+                      )}
+                      <span style={{ fontSize: "13px", color: "#6b7280" }}>
+                        {stepScope === "collection"
+                          ? `${step.collections.length} selected`
+                          : `${(step.selectedProducts || []).length} selected`}
+                      </span>
                     </div>
                     {step.collections.length > 0 && stepScope === "collection" && (
                       <div style={{ border: "1px solid #e5e7eb", borderRadius: "6px", marginTop: "10px", overflow: "hidden" }}>
@@ -1141,7 +1082,7 @@ export default function SpecificComboBoxPage() {
                                 aria-label={`Remove ${c.title}`}
                                 onClick={() => updateComboStep(ai, "collections", step.collections.filter((x) => x.id !== c.id))}
                                 style={{ position: "absolute", top: "4px", right: "4px", width: "18px", height: "18px", borderRadius: "50%", background: "rgba(0,0,0,0.55)", border: "none", color: "#fff", fontSize: "11px", lineHeight: 1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
-                              >Ãƒâ€”</button>
+                              >×</button>
                             </div>
                           ))}
                         </div>
@@ -1166,7 +1107,7 @@ export default function SpecificComboBoxPage() {
                               </div>
                               {p.price && (
                                 <div style={{ padding: "0 6px 5px", fontSize: "10px", color: "#6b7280" }}>
-                                  Ã¢â€šÂ¹{parseFloat(p.price).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                  ₹{parseFloat(p.price).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                                 </div>
                               )}
                               <button
@@ -1174,7 +1115,7 @@ export default function SpecificComboBoxPage() {
                                 aria-label={`Remove ${p.title}`}
                                 onClick={() => updateComboStep(ai, "selectedProducts", step.selectedProducts.filter((x) => x.id !== p.id))}
                                 style={{ position: "absolute", top: "4px", right: "4px", width: "18px", height: "18px", borderRadius: "50%", background: "rgba(0,0,0,0.55)", border: "none", color: "#fff", fontSize: "11px", lineHeight: 1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
-                              >Ãƒâ€”</button>
+                              >×</button>
                             </div>
                           ))}
                         </div>
@@ -1183,38 +1124,37 @@ export default function SpecificComboBoxPage() {
                   </div>
                 </div>
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ General Settings card Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* ── General Settings card ── */}
                 <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", marginBottom: "16px" }}>
                   <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#111827" }}>General settings</div>
                   <div style={{ padding: "16px" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "12px", alignItems: "start" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
                       <div>
-                        <label style={labelStyle}>Heading</label>
+                        <label style={labelStyle}>Step label</label>
+                        <input value={step.label} onChange={(e) => updateComboStep(ai, "label", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Main Product" />
+                        <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>Heading shown on the storefront step</div>
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Popup title</label>
                         <input value={step.popup.title} onChange={(e) => updateComboStepPopup(ai, "title", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Choose your main product" />
                       </div>
                       <div>
-                        <label style={labelStyle}>Description</label>
-                        <input value={step.popup.desc} onChange={(e) => updateComboStepPopup(ai, "desc", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Select the primary product." />
+                        <label style={labelStyle}>Popup description</label>
+                        <textarea value={step.popup.desc} onChange={(e) => updateComboStepPopup(ai, "desc", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db", resize: "vertical", minHeight: "64px" }} placeholder="Select the primary product." />
                       </div>
                       <div>
-                        <label style={labelStyle}>Product Button Label</label>
+                        <label style={labelStyle}>Confirm button text</label>
                         <input value={step.popup.btn} onChange={(e) => updateComboStepPopup(ai, "btn", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Confirm selection" />
                         <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>CTA label inside the popup drawer</div>
-                      </div>
-                      <div>
-                        <label style={labelStyle}>Optional</label>
-                        <div style={{ border: "1px solid #e5e7eb", borderRadius: "7px", background: "#fafafa", padding: "10px 12px", minHeight: "76px" }}>
-                          <ToggleSwitch
-                            checked={step.optional === true}
-                            onChange={(e) => updateComboStep(ai, "optional", e.target.checked)}
-                            label="Optional"
-                            showStateText={false}
-                          />
-                          <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "8px", lineHeight: 1.35 }}>
-                            If enabled, customers can skip this step.
+                            <div style={{ marginTop: "10px" }}>
+                              <ToggleSwitch
+                                checked={step.optional === true}
+                                onChange={(e) => updateComboStep(ai, "optional", e.target.checked)}
+                                label="Optional"
+                                showStateText={false}
+                              />
+                            </div>
                           </div>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -1252,7 +1192,7 @@ export default function SpecificComboBoxPage() {
                       </div>
                     )}
                     <label style={labelStyle}>Upload step image (optional)</label>
-                    {/* All step inputs Ã¢â‚¬â€ active step shown, others hidden but included via form= */}
+                    {/* All step inputs — active step shown, others hidden but included via form= */}
                     {Array.from({ length: comboConfig.type }, (_, si) => (
                       <input
                         key={si}
@@ -1270,7 +1210,7 @@ export default function SpecificComboBoxPage() {
                         }}
                       />
                     ))}
-                    <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "6px" }}>JPG, PNG, WEBP, GIF, or AVIF Ã¢â‚¬â€ max 2MB. Shown on storefront step card.</div>
+                    <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "6px" }}>JPG, PNG, WEBP, GIF, or AVIF — max 2MB. Shown on storefront step card.</div>
                     {comboStepImgErrors[`stepImage_${ai}`] && (
                       <div style={{ ...errorStyle, marginTop: "6px" }}><AdminIcon type="alert-triangle" size="small" /> {comboStepImgErrors[`stepImage_${ai}`]}</div>
                     )}
@@ -1283,9 +1223,9 @@ export default function SpecificComboBoxPage() {
         </div>
       </div>
 
-      {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-          MODAL: Combo Ã¢â‚¬â€ Collection Picker
-      Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
+      {/* ════════════════════════════════════════
+          MODAL: Combo — Collection Picker
+      ════════════════════════════════════════ */}
       {isPageLoading && (
         <div
           aria-live="polite"
@@ -1316,7 +1256,7 @@ export default function SpecificComboBoxPage() {
               <button type="button" aria-label="Close collection picker" onClick={() => setShowCollModal(false)} style={{ ...modalCloseBtn, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><AdminIcon type="x" size="small" style={{ color: "#9ca3af" }} /></button>
             </div>
             <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
-              <input type="text" placeholder="Search collectionsÃ¢â‚¬Â¦" value={collSearch} onChange={(e) => setCollSearch(e.target.value)} autoFocus style={searchInputStyle} />
+              <input type="text" placeholder="Search collections…" value={collSearch} onChange={(e) => setCollSearch(e.target.value)} autoFocus style={searchInputStyle} />
             </div>
             <div style={modalBodyStyle}>
               {filteredColls.length === 0 ? (
@@ -1354,9 +1294,9 @@ export default function SpecificComboBoxPage() {
         </div>
       )}
 
-      {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-          MODAL: Combo Ã¢â‚¬â€ Step Product Picker
-      Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
+      {/* ════════════════════════════════════════
+          MODAL: Combo — Step Product Picker
+      ════════════════════════════════════════ */}
       {showStepProdModal && (
         <div style={modalOverlayStyle} onClick={(e) => { if (e.target === e.currentTarget) setShowStepProdModal(false); }}>
           <div style={modalBoxStyle}>
@@ -1365,18 +1305,18 @@ export default function SpecificComboBoxPage() {
                 <div style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>Select product</div>
                 <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>
                   {stepProdModalIdx !== null && stepProducts[stepProdModalIdx]
-                    ? `${stepProducts[stepProdModalIdx].length} products Ã‚Â· scoped to collection`
-                    : `All products Ã‚Â· ${comboConfig.steps[stepProdModalIdx]?.label}`}
+                    ? `${stepProducts[stepProdModalIdx].length} products · scoped to collection`
+                    : `All products · ${comboConfig.steps[stepProdModalIdx]?.label}`}
                 </div>
               </div>
               <button type="button" aria-label="Close product picker" onClick={() => setShowStepProdModal(false)} style={{ ...modalCloseBtn, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><AdminIcon type="x" size="small" style={{ color: "#9ca3af" }} /></button>
             </div>
             <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
-              <input type="text" placeholder="Search productsÃ¢â‚¬Â¦" value={stepProdSearch} onChange={(e) => setStepProdSearch(e.target.value)} autoFocus style={searchInputStyle} />
+              <input type="text" placeholder="Search products…" value={stepProdSearch} onChange={(e) => setStepProdSearch(e.target.value)} autoFocus style={searchInputStyle} />
             </div>
             <div style={modalBodyStyle}>
               {isLoadingStepProds ? (
-                <div style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>Loading productsÃ¢â‚¬Â¦</div>
+                <div style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>Loading products…</div>
               ) : filteredStepProds.length === 0 ? (
                 <div style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>No products found</div>
               ) : filteredStepProds.map((product, idx) => {
@@ -1391,7 +1331,7 @@ export default function SpecificComboBoxPage() {
                       <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{product.title}</div>
                       <div style={{ fontSize: "11px", color: "#9ca3af", fontFamily: "monospace" }}>{product.handle}</div>
                     </div>
-                    {product.price && parseFloat(product.price) > 0 && <div style={{ fontSize: "13px", fontWeight: "700", color: "#374151", fontFamily: "monospace", flexShrink: 0 }}>Ã¢â€šÂ¹{parseFloat(product.price).toLocaleString("en-IN")}</div>}
+                    {product.price && parseFloat(product.price) > 0 && <div style={{ fontSize: "13px", fontWeight: "700", color: "#374151", fontFamily: "monospace", flexShrink: 0 }}>₹{parseFloat(product.price).toLocaleString("en-IN")}</div>}
                   </div>
                 );
               })}
@@ -1414,3 +1354,4 @@ export default function SpecificComboBoxPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
+

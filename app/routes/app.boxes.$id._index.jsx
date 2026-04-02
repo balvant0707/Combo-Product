@@ -144,8 +144,6 @@ export const loader = async ({ request, params }) => {
   let savedBoxSubtitle = "";
   let savedBuyQuantity = "1";
   let savedGetQuantity = "1";
-  let savedCtaButtonLabel = "BUILD YOUR OWN BOX";
-  let savedAddToCartLabel = "Add To Cart";
   if (comboStepsConfig) {
     try {
       const parsed = JSON.parse(comboStepsConfig);
@@ -155,28 +153,11 @@ export const loader = async ({ request, params }) => {
       if (typeof parsed.boxSubtitle === "string") savedBoxSubtitle = parsed.boxSubtitle;
       if (parsed.buyQuantity != null) savedBuyQuantity = String(parsed.buyQuantity);
       if (parsed.getQuantity != null) savedGetQuantity = String(parsed.getQuantity);
-      if (typeof parsed.ctaButtonLabel === "string" && parsed.ctaButtonLabel.trim()) {
-        savedCtaButtonLabel = parsed.ctaButtonLabel.trim();
-      }
-      if (typeof parsed.addToCartLabel === "string" && parsed.addToCartLabel.trim()) {
-        savedAddToCartLabel = parsed.addToCartLabel.trim();
-      }
     } catch {}
   }
 
   return {
-    box: {
-      ...boxWithoutBinary,
-      bundlePrice: effectiveBundlePrice,
-      bannerImageSrc,
-      discountType: savedDiscountType,
-      discountValue: savedDiscountValue,
-      boxSubtitle: savedBoxSubtitle,
-      buyQuantity: savedBuyQuantity,
-      getQuantity: savedGetQuantity,
-      ctaButtonLabel: savedCtaButtonLabel,
-      addToCartLabel: savedAddToCartLabel,
-    },
+    box: { ...boxWithoutBinary, bundlePrice: effectiveBundlePrice, bannerImageSrc, discountType: savedDiscountType, discountValue: savedDiscountValue, boxSubtitle: savedBoxSubtitle, buyQuantity: savedBuyQuantity, getQuantity: savedGetQuantity },
     products,
     collections,
   };
@@ -208,8 +189,6 @@ export const action = async ({ request, params }) => {
     boxName: formData.get("boxName"),
     displayTitle: formData.get("displayTitle"),
     boxSubtitle: formData.get("boxSubtitle") || "",
-    ctaButtonLabel: formData.get("ctaButtonLabel") || "",
-    addToCartLabel: formData.get("addToCartLabel") || "",
     itemCount: formData.get("itemCount"),
     bundlePrice: formData.get("bundlePrice"),
     bundlePriceType: formData.get("bundlePriceType"),
@@ -329,7 +308,6 @@ export default function BoxSettingsPage() {
   });
   const [showScopePicker, setShowScopePicker] = useState(false);
   const [scopeSearch, setScopeSearch] = useState("");
-  const [bannerImagePreview, setBannerImagePreview] = useState(box.bannerImageSrc || null);
 
   const numItemCount = Math.max(1, parseInt(itemCount) || 1);
   const dynamicPrice = 0;
@@ -432,20 +410,12 @@ export default function BoxSettingsPage() {
               <input type="text" name="boxSubtitle" defaultValue={box.boxSubtitle || ""} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
             </div>
             <div>
-              <label style={labelStyle}>Combo Product Button Title</label>
-              <input type="text" name="ctaButtonLabel" defaultValue={box.ctaButtonLabel || "BUILD YOUR OWN BOX"} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
-            </div>
-            <div>
-              <label style={labelStyle}>Product Button Title</label>
-              <input type="text" name="addToCartLabel" defaultValue={box.addToCartLabel || "Add To Cart"} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
-            </div>
-            <div>
-              <label style={labelStyle}>Number of Products *</label>
+              <label style={labelStyle}>Number of Items *</label>
               <input type="number" placeholder="e.g. 4" min="1" max="20" value={itemCount} onChange={(e) => setItemCount(e.target.value)} style={{ ...fieldStyle, borderColor: errors.itemCount ? "#e11d48" : "#d1d5db" }} />
               {errors.itemCount && <div style={errorStyle}>{errors.itemCount}</div>}
             </div>
             <div>
-              <label style={labelStyle}>Price (₹) *</label>
+              <label style={labelStyle}>Bundle Price (₹) *</label>
               <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "5px", overflow: "hidden", marginBottom: "10px" }}>
                 {["manual", "dynamic"].map((mode) => (
                   <button key={mode} type="button" onClick={() => setPriceMode(mode)} style={{ flex: 1, padding: "7px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: priceMode === mode ? "#000000" : "#f9fafb", color: priceMode === mode ? "#ffffff" : "#374151", transition: "background 0.15s" }}>
@@ -499,38 +469,17 @@ export default function BoxSettingsPage() {
             </div>
             <div>
               <label style={labelStyle}>Banner Image (optional)</label>
-              <div style={{ display: "grid", gridTemplateColumns: "100px minmax(0, 1fr)", gap: "12px", alignItems: "start" }}>
-                <div style={{ width: "100px", height: "100px", borderRadius: "6px", border: "1.5px solid #e5e7eb", background: "#f9fafb", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {bannerImagePreview ? (
-                    <img src={bannerImagePreview} alt="Current banner" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                  ) : (
-                    <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: "600", letterSpacing: "0.04em" }}>NO IMAGE</span>
-                  )}
+              <input type="file" name="bannerImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ ...fieldStyle, padding: "7px 12px" }} />
+              {box.bannerImageSrc && (
+                <div style={{ marginTop: "10px" }}>
+                  <img src={box.bannerImageSrc} alt="Current banner" style={{ width: "100%", maxWidth: "360px", borderRadius: "5px", border: "1px solid #e5e7eb" }} />
                 </div>
-                <div>
-                  <input
-                    type="file"
-                    name="bannerImage"
-                    accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-                    style={{ ...fieldStyle, padding: "7px 12px" }}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) {
-                        setBannerImagePreview(box.bannerImageSrc || null);
-                        return;
-                      }
-                      const reader = new FileReader();
-                      reader.onload = (ev) => setBannerImagePreview(ev.target?.result || null);
-                      reader.readAsDataURL(file);
-                    }}
-                  />
-                  <div style={{ marginTop: "8px" }}>
-                    <ToggleSwitch name="removeBannerImage" value="true" label="Remove current image" showStateText={false} />
-                  </div>
-                  <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>JPG, PNG, WEBP, GIF, or AVIF - max 5MB</div>
-                  {errors.bannerImage && <div style={errorStyle}>{errors.bannerImage}</div>}
-                </div>
+              )}
+              <div style={{ marginTop: "8px" }}>
+                <ToggleSwitch name="removeBannerImage" value="true" label="Remove current image" showStateText={false} />
               </div>
+              <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>JPG, PNG, WEBP, GIF, or AVIF — max 5MB</div>
+              {errors.bannerImage && <div style={errorStyle}>{errors.bannerImage}</div>}
             </div>
           </div>
         </div>

@@ -1094,12 +1094,6 @@ export async function createBox(shop, data, admin) {
         getQuantity: parseInt(data.getQuantity) || 1,
         bundlePrice: bundlePrice,
         boxSubtitle: typeof data.boxSubtitle === "string" ? data.boxSubtitle.trim() : "",
-        ctaButtonLabel: typeof data.ctaButtonLabel === "string" && data.ctaButtonLabel.trim()
-          ? data.ctaButtonLabel.trim()
-          : "BUILD YOUR OWN BOX",
-        addToCartLabel: typeof data.addToCartLabel === "string" && data.addToCartLabel.trim()
-          ? data.addToCartLabel.trim()
-          : "Add To Cart",
       }),
     },
   });
@@ -1177,8 +1171,6 @@ export async function upsertComboConfig(boxId, config, admin = null) {
     parsed.getQuantity = safeGetQuantity;
     parsed.highlightText = typeof parsed.highlightText === "string" ? parsed.highlightText.trim() : "";
     parsed.supportText = typeof parsed.supportText === "string" ? parsed.supportText.trim() : "";
-    parsed.ctaButtonLabel = typeof parsed.ctaButtonLabel === "string" ? parsed.ctaButtonLabel.trim() : "";
-    parsed.addToCartLabel = typeof parsed.addToCartLabel === "string" ? parsed.addToCartLabel.trim() : "";
     if (parsed.discountType === "buy_x_get_y" && !(parseFloat(parsed.discountValue) > 0)) {
       parsed.discountValue = "100";
     }
@@ -1266,9 +1258,6 @@ export async function upsertComboConfig(boxId, config, admin = null) {
     bundlePrice:       parsed.bundlePrice != null ? parseFloat(parsed.bundlePrice) : null,
     bundlePriceType:   parsed.bundlePriceType  ?? "manual",
     isActive:          parsed.isActive         !== false,
-    isGiftBox:         parsed.isGiftBox === true || String(parsed.isGiftBox).toLowerCase() === "true",
-    allowDuplicates:   parsed.allowDuplicates === true || String(parsed.allowDuplicates).toLowerCase() === "true",
-    giftMessageEnabled: parsed.giftMessageEnabled === true || String(parsed.giftMessageEnabled).toLowerCase() === "true",
     showProductImages: parsed.showProductImages !== false,
     showProgressBar:   parsed.showProgressBar  !== false,
     allowReselection:  parsed.allowReselection !== false,
@@ -1280,9 +1269,6 @@ export async function upsertComboConfig(boxId, config, admin = null) {
     comboStepsConfig: rawJson,
     itemCount: payload.comboType,
     bundlePriceType: payload.bundlePriceType,
-    isGiftBox: payload.isGiftBox,
-    allowDuplicates: payload.allowDuplicates,
-    giftMessageEnabled: payload.giftMessageEnabled,
   };
   if (payload.bundlePrice != null) comboBoxUpdate.bundlePrice = payload.bundlePrice;
   await db.comboBox.update({
@@ -1530,13 +1516,7 @@ export async function updateBox(id, shop, data, admin) {
   }
 
   // Persist discount settings into comboStepsConfig (merge, preserve existing steps/config)
-  if (
-    data.discountType !== undefined ||
-    data.discountValue !== undefined ||
-    data.boxSubtitle !== undefined ||
-    data.ctaButtonLabel !== undefined ||
-    data.addToCartLabel !== undefined
-  ) {
+  if (data.discountType !== undefined || data.discountValue !== undefined || data.boxSubtitle !== undefined) {
     let rawConfig = {};
     if (existing.comboStepsConfig) {
       try { rawConfig = JSON.parse(existing.comboStepsConfig); } catch {}
@@ -1549,12 +1529,6 @@ export async function updateBox(id, shop, data, admin) {
     rawConfig.bundlePrice = bundlePrice;
     if (data.boxSubtitle !== undefined) {
       rawConfig.boxSubtitle = typeof data.boxSubtitle === "string" ? data.boxSubtitle.trim() : "";
-    }
-    if (data.ctaButtonLabel !== undefined) {
-      rawConfig.ctaButtonLabel = typeof data.ctaButtonLabel === "string" ? data.ctaButtonLabel.trim() : "";
-    }
-    if (data.addToCartLabel !== undefined) {
-      rawConfig.addToCartLabel = typeof data.addToCartLabel === "string" ? data.addToCartLabel.trim() : "";
     }
     await db.comboBox.update({
       where: { id: parseInt(id) },

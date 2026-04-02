@@ -365,10 +365,7 @@ export default function CreateSpecificComboBoxPage() {
       }
       return { ...prev, type: clampedN, steps: newSteps.slice(0, clampedN) };
     });
-    setComboActiveStep((prev) => {
-      if (prev === "all") return "all";
-      return Math.min(prev, clampedN - 1);
-    });
+    setComboActiveStep((prev) => Math.min(prev, clampedN - 1));
   }
 
   /* ── Combo helpers ── */
@@ -498,7 +495,7 @@ export default function CreateSpecificComboBoxPage() {
             </div>
           )}
 
-          <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: "20px", alignItems: "start" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "20px", alignItems: "start" }}>
 
             {/* ── SIDEBAR ── */}
             <div>
@@ -722,10 +719,6 @@ export default function CreateSpecificComboBoxPage() {
                 <div style={{ fontSize: "11px", fontWeight: "700", color: "#6b7280" }}>{comboConfig.type} total</div>
               </div>
               <div style={{ display: "flex", borderBottom: "1px solid #e5e7eb", marginBottom: "16px", flexWrap: "wrap", gap: "2px" }}>
-                <button type="button" onClick={() => setComboActiveStep("all")}
-                  style={{ padding: "8px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none", borderRadius: "6px 6px 0 0", background: comboActiveStep === "all" ? "#000000" : "#f9fafb", borderBottom: comboActiveStep === "all" ? "2px solid #000000" : "2px solid transparent", marginBottom: "-1px", color: comboActiveStep === "all" ? "#ffffff" : "#6b7280", transition: "color 0.15s, border-color 0.15s, background 0.15s" }}>
-                  All Steps
-                </button>
                 {Array.from({ length: comboConfig.type }, (_, i) => (
                   <button key={i} type="button" onClick={() => setComboActiveStep(i)}
                     style={{ padding: "8px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none", borderRadius: "6px 6px 0 0", background: comboActiveStep === i ? "#000000" : comboStepErrors[i] ? "#fff5f5" : "#f9fafb", borderBottom: comboActiveStep === i ? "2px solid #000000" : comboStepErrors[i] ? "2px solid #dc2626" : "2px solid transparent", marginBottom: "-1px", color: comboStepErrors[i] ? "#dc2626" : comboActiveStep === i ? "#ffffff" : "#6b7280", transition: "color 0.15s, border-color 0.15s, background 0.15s" }}>
@@ -734,36 +727,7 @@ export default function CreateSpecificComboBoxPage() {
                 ))}
               </div>
 
-              {comboActiveStep === "all" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  {comboConfig.steps.map((step, idx) => {
-                    const hasError = !!comboStepErrors[idx];
-                    const scopeLabel = step.scope === "collection" ? "Collections" : "Products";
-                    const selectionCount = step.scope === "collection" ? step.collections.length : (step.selectedProducts || []).length;
-                    return (
-                      <div key={idx} style={{ background: "#fff", border: `1.5px solid ${hasError ? "#fecaca" : "#e5e7eb"}`, borderRadius: "8px", padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1, minWidth: 0 }}>
-                          <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#000000", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: "800", flexShrink: 0 }}>{idx + 1}</div>
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: "13px", fontWeight: "700", color: "#111827", display: "flex", alignItems: "center", gap: "8px" }}>
-                              <span>Step {idx + 1} — {step.label}</span>
-                              <span style={{ fontSize: "10px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", color: step.optional ? "#0f766e" : "#6b7280", background: step.optional ? "#ccfbf1" : "#f3f4f6", border: `1px solid ${step.optional ? "#99f6e4" : "#e5e7eb"}`, borderRadius: "999px", padding: "2px 8px" }}>
-                                {step.optional ? "Optional" : "Required"}
-                              </span>
-                            </div>
-                            <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>
-                              {scopeLabel} · {selectionCount > 0 ? `${selectionCount} selected` : <span style={{ color: hasError ? "#dc2626" : "#9ca3af" }}>{hasError ? "⚠ No selection" : "None selected"}</span>}
-                            </div>
-                          </div>
-                        </div>
-                        <button type="button" onClick={() => setComboActiveStep(idx)} style={{ padding: "6px 14px", fontSize: "12px", fontWeight: "600", border: "1.5px solid #000000", borderRadius: "5px", background: "#000000", color: "#fff", cursor: "pointer", flexShrink: 0 }}>Configure →</button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {comboActiveStep !== "all" && (() => {
+              {(() => {
                 const ai = comboActiveStep;
                 const step = comboConfig.steps[ai];
                 return (

@@ -66,6 +66,7 @@ export default function SettingsPage() {
   const actionData = useActionData();
   const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
+  const isPageLoading = navigation.state !== "idle";
   const [buttonColor, setButtonColor] = useState(settings.buttonColor || "#2A7A4F");
   const [activeSlotColor, setActiveSlotColor] = useState(settings.activeSlotColor || "#2A7A4F");
   const [selectedTheme, setSelectedTheme] = useState(settings.presetTheme || "custom");
@@ -568,6 +569,24 @@ export default function SettingsPage() {
 
         </div>{/* ── end sections wrapper ── */}
       </Form>
+
+      {isPageLoading && (
+        <div
+          aria-live="polite"
+          aria-busy="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 10001,
+            background: "rgba(255,255,255,0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <s-spinner accessibilityLabel="Loading page" size="large" />
+        </div>
+      )}
     </s-page>
   );
 }

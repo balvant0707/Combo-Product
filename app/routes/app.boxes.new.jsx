@@ -4,6 +4,7 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { createBox } from "../models/boxes.server";
 import { AdminIcon } from "../components/admin-icons";
+import { ToggleSwitch } from "../components/toggle-switch";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
 const COLLECTIONS_QUERY = `#graphql
@@ -394,13 +395,13 @@ export default function CreateBoxPage() {
                 { key: "giftMessageEnabled", label: "Gift Message Field", desc: "Show text area for gift message", iconType: "email" },
                 { key: "isActive", label: "Active on Storefront", desc: "Uncheck to save as draft", iconType: "check-circle" },
               ].map((opt) => (
-                <label key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px 14px", border: options[opt.key] ? "1.5px solid #000000" : "1.5px solid #e5e7eb", borderRadius: "5px", background: options[opt.key] ? "#f9fafb" : "#fafafa", transition: "border-color 0.15s, background 0.15s" }}>
-                  <input type="checkbox" checked={options[opt.key]} onChange={() => toggleOption(opt.key)} style={{ marginTop: "3px", width: "14px", height: "14px", accentColor: "#000000", flexShrink: 0 }} />
+                <div key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px 14px", border: options[opt.key] ? "1.5px solid #000000" : "1.5px solid #e5e7eb", borderRadius: "5px", background: options[opt.key] ? "#f9fafb" : "#fafafa", transition: "border-color 0.15s, background 0.15s" }}>
+                  <ToggleSwitch checked={options[opt.key]} onChange={() => toggleOption(opt.key)} showStateText={false} />
                   <div>
                     <div style={{ fontSize: "13px", fontWeight: "600", color: "#000000", display: "flex", alignItems: "center", gap: "5px" }}><AdminIcon type={opt.iconType} size="small" /> {opt.label}</div>
                     <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>{opt.desc}</div>
                   </div>
-                </label>
+                </div>
               ))}
             </div>
           </div>
@@ -416,7 +417,7 @@ export default function CreateBoxPage() {
                   { value: "specific_products", label: "Specific products" },
                   { value: "wholestore", label: "Whole store" },
                 ].map((opt) => (
-                  <div
+                  <label
                     key={opt.value}
                     style={{
                       display: "flex",
@@ -429,17 +430,17 @@ export default function CreateBoxPage() {
                       background: scope === opt.value ? "#f9fafb" : "#fff",
                       cursor: "pointer",
                     }}
-                    onClick={() => selectScope(opt.value)}
                   >
-                    <s-choice
+                    <input
+                      type="radio"
+                      name="scope-radio"
                       value={opt.value}
-                      selected={scope === opt.value}
-                      accessibilityLabel={opt.label}
-                      onInput={() => selectScope(opt.value)}
+                      checked={scope === opt.value}
                       onChange={() => selectScope(opt.value)}
+                      style={{ width: "16px", height: "16px", accentColor: "#6b7280", cursor: "pointer", margin: 0, flexShrink: 0 }}
                     />
-                    <span style={{ fontSize: "12px", color: "#374151", fontWeight: scope === opt.value ? "700" : "600" }}>{opt.label}</span>
-                  </div>
+                    <span style={{ fontSize: "12px", color: "#4b5563", fontWeight: scope === opt.value ? "700" : "600" }}>{opt.label}</span>
+                  </label>
                 ))}
               </div>
             </div>
@@ -522,7 +523,7 @@ export default function CreateBoxPage() {
                   const selected = isScopeSelected(item.id);
                   return (
                     <label key={item.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filtered.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", background: selected ? "#f9fafb" : "#fff", transition: "background 0.1s" }}>
-                      <input type="checkbox" checked={selected} onChange={() => toggleScopeItem(item)} style={{ width: "15px", height: "15px", flexShrink: 0, accentColor: "#000000" }} />
+                      <ToggleSwitch checked={selected} onChange={() => toggleScopeItem(item)} showStateText={false} />
                       {item.imageUrl
                         ? <img src={item.imageUrl} alt={item.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} />
                         : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}><AdminIcon type={isCollections ? "folder" : "product"} size="small" /></div>

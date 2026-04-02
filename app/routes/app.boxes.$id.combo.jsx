@@ -4,6 +4,7 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { Buffer } from "node:buffer";
 import { AdminIcon } from "../components/admin-icons";
+import { ToggleSwitch } from "../components/toggle-switch";
 import { getBox, upsertComboConfig, saveComboStepImages, getComboStepImages, syncShopifyBundleProduct, syncSpecificComboProductMedia } from "../models/boxes.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
@@ -943,13 +944,13 @@ export default function SpecificComboBoxPage() {
                 { key: "showProgressBar",   label: "Show Progress Bar",    desc: "Display step progress indicator" },
                 { key: "allowReselection",  label: "Allow Re-selection",   desc: "Customers can change selection" },
               ].map((opt) => (
-                <label key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "10px 12px", background: comboConfig[opt.key] ? "#f9fafb" : "#fff", border: `1.5px solid ${comboConfig[opt.key] ? "#000000" : "#e5e7eb"}`, borderRadius: "7px", transition: "border-color 0.15s, background 0.15s" }}>
-                  <input type="checkbox" checked={comboConfig[opt.key]} onChange={(e) => updateComboField(opt.key, e.target.checked)} style={{ width: "15px", height: "15px", marginTop: "2px", accentColor: "#000", cursor: "pointer", flexShrink: 0 }} />
+                <div key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "10px 12px", background: comboConfig[opt.key] ? "#f9fafb" : "#fff", border: `1.5px solid ${comboConfig[opt.key] ? "#000000" : "#e5e7eb"}`, borderRadius: "7px", transition: "border-color 0.15s, background 0.15s" }}>
+                  <ToggleSwitch checked={comboConfig[opt.key]} onChange={(e) => updateComboField(opt.key, e.target.checked)} showStateText={false} />
                   <div>
                     <div style={{ fontSize: "12px", fontWeight: "600", color: "#111827", lineHeight: 1.3 }}>{opt.label}</div>
                     <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>{opt.desc}</div>
                   </div>
-                </label>
+                </div>
               ))}
             </div>
           </div>
@@ -1004,7 +1005,7 @@ export default function SpecificComboBoxPage() {
                         { value: "collection", label: "Specific collections" },
                         { value: "product", label: "Specific products" },
                       ].map((opt) => (
-                        <div
+                        <label
                           key={opt.value}
                           style={{
                             display: "flex",
@@ -1017,17 +1018,17 @@ export default function SpecificComboBoxPage() {
                             background: stepScope === opt.value ? "#f9fafb" : "#fff",
                             cursor: "pointer",
                           }}
-                          onClick={() => updateStepScope(ai, opt.value)}
                         >
-                          <s-choice
+                          <input
+                            type="radio"
+                            name={`step-scope-${ai}`}
                             value={opt.value}
-                            selected={stepScope === opt.value}
-                            accessibilityLabel={opt.label}
-                            onInput={() => updateStepScope(ai, opt.value)}
+                            checked={stepScope === opt.value}
                             onChange={() => updateStepScope(ai, opt.value)}
+                            style={{ width: "16px", height: "16px", accentColor: "#6b7280", cursor: "pointer", margin: 0, flexShrink: 0 }}
                           />
-                          <span style={{ fontSize: "12px", color: "#374151", fontWeight: stepScope === opt.value ? "700" : "600" }}>{opt.label}</span>
-                        </div>
+                          <span style={{ fontSize: "12px", color: "#4b5563", fontWeight: stepScope === opt.value ? "700" : "600" }}>{opt.label}</span>
+                        </label>
                       ))}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -1140,16 +1141,15 @@ export default function SpecificComboBoxPage() {
                         <label style={labelStyle}>Confirm button text</label>
                         <input value={step.popup.btn} onChange={(e) => updateComboStepPopup(ai, "btn", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Confirm selection" />
                         <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>CTA label inside the popup drawer</div>
-                        <label style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: "600", color: "#374151", cursor: "pointer", marginTop: "10px" }}>
-                          <input
-                            type="checkbox"
-                            checked={step.optional === true}
-                            onChange={(e) => updateComboStep(ai, "optional", e.target.checked)}
-                            style={{ width: "14px", height: "14px", accentColor: "#000000", cursor: "pointer" }}
-                          />
-                          Optional
-                        </label>
-                      </div>
+                            <div style={{ marginTop: "10px" }}>
+                              <ToggleSwitch
+                                checked={step.optional === true}
+                                onChange={(e) => updateComboStep(ai, "optional", e.target.checked)}
+                                label="Optional"
+                                showStateText={false}
+                              />
+                            </div>
+                          </div>
                     </div>
                   </div>
                 </div>

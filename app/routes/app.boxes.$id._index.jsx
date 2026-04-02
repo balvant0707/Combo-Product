@@ -3,6 +3,7 @@ import { Form, useActionData, useLoaderData, useLocation, useNavigation, useRout
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { AdminIcon } from "../components/admin-icons";
+import { ToggleSwitch } from "../components/toggle-switch";
 import { getBox, updateBox, deleteBox, getBannerImageSrc } from "../models/boxes.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
@@ -444,10 +445,9 @@ export default function BoxSettingsPage() {
                   <img src={box.bannerImageSrc} alt="Current banner" style={{ width: "100%", maxWidth: "360px", borderRadius: "5px", border: "1px solid #e5e7eb" }} />
                 </div>
               )}
-              <label style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#6b7280", marginTop: "8px" }}>
-                <input type="checkbox" name="removeBannerImage" value="true" style={{ accentColor: "#dc2626" }} />
-                Remove current image
-              </label>
+              <div style={{ marginTop: "8px" }}>
+                <ToggleSwitch name="removeBannerImage" value="true" label="Remove current image" showStateText={false} />
+              </div>
               <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>JPG, PNG, WEBP, GIF, or AVIF — max 5MB</div>
               {errors.bannerImage && <div style={errorStyle}>{errors.bannerImage}</div>}
             </div>
@@ -464,13 +464,13 @@ export default function BoxSettingsPage() {
               { key: "giftMessageEnabled", label: "Gift Message Field", desc: "Show text area for gift message", iconType: "email" },
               { key: "isActive", label: "Active on Storefront", desc: "Uncheck to hide from customers", iconType: "check-circle" },
             ].map((opt) => (
-              <label key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px 14px", border: options[opt.key] ? "1.5px solid #000000" : "1.5px solid #e5e7eb", borderRadius: "5px", background: options[opt.key] ? "#f9fafb" : "#fafafa", transition: "border-color 0.15s, background 0.15s" }}>
-                <input type="checkbox" checked={options[opt.key]} onChange={() => toggleOption(opt.key)} style={{ marginTop: "3px", width: "14px", height: "14px", accentColor: "#000000", flexShrink: 0 }} />
+              <div key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px 14px", border: options[opt.key] ? "1.5px solid #000000" : "1.5px solid #e5e7eb", borderRadius: "5px", background: options[opt.key] ? "#f9fafb" : "#fafafa", transition: "border-color 0.15s, background 0.15s" }}>
+                <ToggleSwitch checked={options[opt.key]} onChange={() => toggleOption(opt.key)} showStateText={false} />
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: "600", color: "#000000", display: "flex", alignItems: "center", gap: "5px" }}><AdminIcon type={opt.iconType} size="small" />{opt.label}</div>
                   <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>{opt.desc}</div>
                 </div>
-              </label>
+              </div>
             ))}
           </div>
         </div>
@@ -486,7 +486,7 @@ export default function BoxSettingsPage() {
                 { value: "specific_products", label: "Specific products" },
                 { value: "wholestore", label: "Whole store" },
               ].map((opt) => (
-                <div
+                <label
                   key={opt.value}
                   style={{
                     display: "flex",
@@ -499,17 +499,17 @@ export default function BoxSettingsPage() {
                     background: scope === opt.value ? "#f9fafb" : "#fff",
                     cursor: "pointer",
                   }}
-                  onClick={() => selectScope(opt.value)}
                 >
-                  <s-choice
+                  <input
+                    type="radio"
+                    name="scope-radio"
                     value={opt.value}
-                    selected={scope === opt.value}
-                    accessibilityLabel={opt.label}
-                    onInput={() => selectScope(opt.value)}
+                    checked={scope === opt.value}
                     onChange={() => selectScope(opt.value)}
+                    style={{ width: "16px", height: "16px", accentColor: "#6b7280", cursor: "pointer", margin: 0, flexShrink: 0 }}
                   />
-                  <span style={{ fontSize: "12px", color: "#374151", fontWeight: scope === opt.value ? "700" : "600" }}>{opt.label}</span>
-                </div>
+                  <span style={{ fontSize: "12px", color: "#4b5563", fontWeight: scope === opt.value ? "700" : "600" }}>{opt.label}</span>
+                </label>
               ))}
             </div>
           </div>
@@ -617,7 +617,7 @@ export default function BoxSettingsPage() {
                   const selected = isScopeSelected(item.id);
                   return (
                     <label key={item.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filtered.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", background: selected ? "#f9fafb" : "#fff", transition: "background 0.1s" }}>
-                      <input type="checkbox" checked={selected} onChange={() => toggleScopeItem(item)} style={{ width: "15px", height: "15px", flexShrink: 0, accentColor: "#000000" }} />
+                      <ToggleSwitch checked={selected} onChange={() => toggleScopeItem(item)} showStateText={false} />
                       {item.imageUrl
                         ? <img src={item.imageUrl} alt={item.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} />
                         : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}><AdminIcon type={isCollections ? "folder" : "product"} size="small" /></div>

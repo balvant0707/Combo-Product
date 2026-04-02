@@ -3,6 +3,7 @@ import { useLoaderData, useActionData, Form, useNavigation } from "react-router"
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { AdminIcon } from "../components/admin-icons";
+import { ToggleSwitch } from "../components/toggle-switch";
 import { getSettings, upsertSettings } from "../models/settings.server";
 
 export const loader = async ({ request }) => {
@@ -503,7 +504,7 @@ export default function SettingsPage() {
               { name: "allowDuplicates", label: "Allow Duplicate Products", desc: "Let customers pick the same product more than once", defaultChecked: settings.allowDuplicates },
               { name: "forceShowOos", label: "Show Out-of-Stock Products", desc: "Show out-of-stock products (greyed out) in the selection grid", defaultChecked: settings.forceShowOos },
             ].map((toggle) => (
-              <label
+              <div
                 key={toggle.name}
                 style={{
                   display: "flex",
@@ -512,21 +513,18 @@ export default function SettingsPage() {
                   padding: "12px",
                   border: "1px solid #e5e1d8",
                   borderRadius: "5px",
-                  cursor: "pointer",
                 }}
               >
-                <input
-                  type="checkbox"
+                <ToggleSwitch
                   name={toggle.name}
                   value="true"
                   defaultChecked={toggle.defaultChecked}
-                  style={{ marginTop: "2px", width: "16px", height: "16px", accentColor: "#000000", flexShrink: 0 }}
                 />
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: "500", color: "#1a1814" }}>{toggle.label}</div>
                   <div style={{ fontSize: "12px", color: "#7a7670", marginTop: "2px" }}>{toggle.desc}</div>
                 </div>
-              </label>
+              </div>
             ))}
           </div>
         </s-section>
@@ -539,7 +537,7 @@ export default function SettingsPage() {
               { name: "analyticsTracking", label: "Enable Analytics Tracking", desc: "Track bundle orders for analytics (recommended)", defaultChecked: settings.analyticsTracking },
               { name: "emailNotifications", label: "Email Notifications", desc: "Send email notifications for new bundle orders", defaultChecked: settings.emailNotifications },
             ].map((toggle) => (
-              <label
+              <div
                 key={toggle.name}
                 style={{
                   display: "flex",
@@ -548,21 +546,18 @@ export default function SettingsPage() {
                   padding: "12px",
                   border: "1px solid #e5e1d8",
                   borderRadius: "5px",
-                  cursor: "pointer",
                 }}
               >
-                <input
-                  type="checkbox"
+                <ToggleSwitch
                   name={toggle.name}
                   value="true"
                   defaultChecked={toggle.defaultChecked}
-                  style={{ marginTop: "2px", width: "16px", height: "16px", accentColor: "#000000", flexShrink: 0 }}
                 />
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: "500", color: "#1a1814" }}>{toggle.label}</div>
                   <div style={{ fontSize: "12px", color: "#7a7670", marginTop: "2px" }}>{toggle.desc}</div>
                 </div>
-              </label>
+              </div>
             ))}
           </div>
         </s-section>

@@ -264,12 +264,15 @@ function EmbedBlockCard({ embedBlockUrl, enabled }) {
 }
 
 function ThemeCustomizationCard({ themeEditorUrl }) {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const accordionPanelId = "guided-setup-panel";
   const steps = [
     { iconType: "desktop", text: "Opens Theme Customization on your live product template." },
     { iconType: "apps", text: "Combo Builder block is auto-added to the Apps section." },
     { iconType: "drag-handle", text: "Drag the block to the right position." },
     { iconType: "save", text: "Click Save and your storefront is live." },
   ];
+
   return (
     <div style={{ marginBottom: "20px" }}>
       <div
@@ -282,12 +285,11 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
           position: "relative",
         }}
       >
-
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "1fr auto",
-            alignItems: "center",
+            alignItems: "start",
             padding: "15px 15px",
           }}
         >
@@ -335,69 +337,97 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
                 lineHeight: "normal",
               }}
             >
-              One click opens the theme editor with the block pre-loaded — just drag, drop, and save.
+              One click opens the theme editor with the block pre-loaded &mdash; just drag, drop, and save.
             </p>
 
-            {/* Steps — 4 equal columns */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, 1fr)",
-                gap: "12px",
-                marginBottom: "32px",
-              }}
-            >
-              {steps.map((step, i) => (
-                <div
-                  key={i}
-                  style={{
-                    background: "#f9fafb",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "5px",
-                    padding: "16px 14px",
-                    display: "flex",
-                    gap: "10px",
-                  }}
-                >
-                  <AdminIcon type={step.iconType} size="large" />
-                  <div style={{ fontSize: "12px", color: "#374151", lineHeight: 1.55 }}>
-                    {step.text}
+            <div id={accordionPanelId} style={{ display: isExpanded ? "block" : "none" }}>
+              {/* Steps - 2 columns */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, 1fr)",
+                  gap: "12px",
+                  marginBottom: "32px",
+                }}
+              >
+                {steps.map((step, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      background: "#f9fafb",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "5px",
+                      padding: "16px 14px",
+                      display: "flex",
+                      gap: "10px",
+                    }}
+                  >
+                    <AdminIcon type={step.iconType} size="large" />
+                    <div style={{ fontSize: "12px", color: "#374151", lineHeight: 1.55 }}>
+                      {step.text}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
 
-            {/* CTA */}
-            <a
-              href={themeEditorUrl}
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "10px",
-                textDecoration: "none",
-                padding: "14px 28px",
-                background: "#000000",
-                color: "#ffffff",
-                fontSize: "15px",
-                fontWeight: "800",
-                cursor: "pointer",
-                boxShadow: "0 4px 20px rgba(0,0,0,0.18)",
-                transition: "transform 0.12s, box-shadow 0.12s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = "0 10px 28px rgba(0,0,0,0.24)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.18)";
-              }}
-            >
-              Open Theme Editor
-            </a>
+              {/* CTA */}
+              <a
+                href={themeEditorUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  textDecoration: "none",
+                  padding: "14px 28px",
+                  background: "#000000",
+                  color: "#ffffff",
+                  fontSize: "15px",
+                  fontWeight: "800",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.18)",
+                  transition: "transform 0.12s, box-shadow 0.12s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 10px 28px rgba(0,0,0,0.24)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.18)";
+                }}
+              >
+                Open Theme Editor
+              </a>
+            </div>
           </div>
+
+          <button
+            type="button"
+            aria-expanded={isExpanded}
+            aria-controls={accordionPanelId}
+            onClick={() => setIsExpanded((prev) => !prev)}
+            style={{
+              marginTop: "2px",
+              width: "28px",
+              height: "28px",
+              borderRadius: "999px",
+              border: "1px solid #e5e7eb",
+              background: "#f9fafb",
+              color: "#111827",
+              fontSize: "18px",
+              fontWeight: "700",
+              lineHeight: 1,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            aria-label={isExpanded ? "Collapse guided setup steps" : "Expand guided setup steps"}
+          >
+            {isExpanded ? "-" : "+"}
+          </button>
         </div>
       </div>
     </div>
@@ -733,3 +763,4 @@ export default function DashboardPage() {
 export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
+

@@ -371,6 +371,11 @@ const labelStyle = {
   marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.6px",
 };
 const errorStyle = { color: "#dc2626", fontSize: "11px", marginTop: "5px", display: "flex", alignItems: "center", gap: "4px" };
+const sectionHeadingStyle = {
+  fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase",
+  letterSpacing: "0.8px", marginBottom: "16px", paddingBottom: "10px",
+  borderBottom: "1.5px solid #f3f4f6", display: "flex", alignItems: "center", gap: "8px",
+};
 
 /* ─────────────────────────── Component ─────────────────────────── */
 export default function SpecificComboBoxPage() {
@@ -734,15 +739,15 @@ export default function SpecificComboBoxPage() {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "10px" }}>
                 <div>
-                  <label style={labelStyle}>Combo title</label>
+                  <label style={labelStyle}>Title</label>
                   <input value={comboConfig.title} onChange={(e) => updateComboField("title", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Build Your Perfect Bundle" />
                 </div>
                 <div>
-                  <label style={labelStyle}>Subtitle</label>
+                  <label style={labelStyle}>Descriptions</label>
                   <input value={comboConfig.subtitle} onChange={(e) => updateComboField("subtitle", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Choose a product for each step" />
                 </div>
                 <div>
-                  <label style={labelStyle}>Highlight text</label>
+                  <label style={labelStyle}>Heading</label>
                   <input value={comboConfig.highlightText || ""} onChange={(e) => updateComboField("highlightText", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Limited time combo" />
                 </div>
               </div>
@@ -752,7 +757,7 @@ export default function SpecificComboBoxPage() {
               </div>
               {/* Combo image */}
               <div>
-                <label style={labelStyle}>Combo image (optional)</label>
+                <label style={labelStyle}>image</label>
                 {comboImagePreview && (
                   <div style={{ marginBottom: "8px" }}>
                     <img src={comboImagePreview} alt="Combo preview" style={{ width: "100%", maxHeight: "140px", objectFit: "cover", borderRadius: "6px", border: "1.5px solid #e5e7eb", display: "block" }} />
@@ -937,7 +942,7 @@ export default function SpecificComboBoxPage() {
             <div style={{ padding: "11px 16px", borderBottom: "1px solid #f3f4f6", fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", display: "flex", alignItems: "center", gap: "6px" }}>
               <AdminIcon type="settings" size="small" /> Options
             </div>
-            <div style={{ padding: "12px", display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "8px" }}>
+            <div style={{ padding: "12px", display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "8px" }}>
               {[
                 { key: "isActive",          label: "Active on Storefront", desc: "Uncheck to hide from customers" },
                 { key: "showProductImages", label: "Show Product Images",  desc: "Display images in picker" },

@@ -396,26 +396,26 @@ export default function BoxSettingsPage() {
           <div style={sectionHeadingStyle}><AdminIcon type="clipboard" size="small" /> Basic Information</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "14px" }}>
             <div>
-              <label style={labelStyle}>Box Internal Name *</label>
+              <label style={labelStyle}>Title *</label>
               <input type="text" name="boxName" defaultValue={box.boxName} style={{ ...fieldStyle, borderColor: errors.boxName ? "#e11d48" : "#d1d5db" }} />
               {errors.boxName && <div style={errorStyle}>{errors.boxName}</div>}
             </div>
             <div>
-              <label style={labelStyle}>Display Title (Storefront) *</label>
+              <label style={labelStyle}>Heading *</label>
               <input type="text" name="displayTitle" defaultValue={box.displayTitle} style={{ ...fieldStyle, borderColor: errors.displayTitle ? "#e11d48" : "#d1d5db" }} />
               {errors.displayTitle && <div style={errorStyle}>{errors.displayTitle}</div>}
             </div>
             <div>
-              <label style={labelStyle}>Box Subtitle (optional)</label>
+              <label style={labelStyle}>Descriptions</label>
               <input type="text" name="boxSubtitle" defaultValue={box.boxSubtitle || ""} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
             </div>
             <div>
-              <label style={labelStyle}>Number of Items *</label>
+              <label style={labelStyle}>Number of Products *</label>
               <input type="number" placeholder="e.g. 4" min="1" max="20" value={itemCount} onChange={(e) => setItemCount(e.target.value)} style={{ ...fieldStyle, borderColor: errors.itemCount ? "#e11d48" : "#d1d5db" }} />
               {errors.itemCount && <div style={errorStyle}>{errors.itemCount}</div>}
             </div>
             <div>
-              <label style={labelStyle}>Bundle Price (₹) *</label>
+              <label style={labelStyle}>Price (₹) *</label>
               <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "5px", overflow: "hidden", marginBottom: "10px" }}>
                 {["manual", "dynamic"].map((mode) => (
                   <button key={mode} type="button" onClick={() => setPriceMode(mode)} style={{ flex: 1, padding: "7px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: priceMode === mode ? "#000000" : "#f9fafb", color: priceMode === mode ? "#ffffff" : "#374151", transition: "background 0.15s" }}>

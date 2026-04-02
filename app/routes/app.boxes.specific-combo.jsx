@@ -539,25 +539,25 @@ export default function CreateSpecificComboBoxPage() {
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "10px" }}>
                     <div>
-                      <label style={labelStyle}>Combo title</label>
+                      <label style={labelStyle}>Title</label>
                       <input value={comboConfig.title} onChange={(e) => updateComboField("title", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Build Your Perfect Bundle" />
                     </div>
                     <div>
-                      <label style={labelStyle}>Subtitle</label>
+                      <label style={labelStyle}>Descriptions</label>
                       <input value={comboConfig.subtitle} onChange={(e) => updateComboField("subtitle", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Choose a product for each step" />
                     </div>
                     <div>
-                      <label style={labelStyle}>Highlight text</label>
+                      <label style={labelStyle}>Heading</label>
                       <input value={comboConfig.highlightText || ""} onChange={(e) => updateComboField("highlightText", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Limited time combo" />
                     </div>
                   </div>
-                  <div>
-                    <label style={labelStyle}>Support text</label>
+                  {/* <div>
+                    <label style={labelStyle}>Descriptions</label>
                     <input value={comboConfig.supportText || ""} onChange={(e) => updateComboField("supportText", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Pick products and save more at checkout" />
-                  </div>
+                  </div> */}
                   {/* Combo image */}
                   <div>
-                    <label style={labelStyle}>Combo image (optional)</label>
+                    <label style={labelStyle}>image</label>
                     {comboImagePreview && (
                       <div style={{ marginBottom: "8px" }}>
                         <img src={comboImagePreview} alt="Combo preview" style={{ width: "100%", maxHeight: "140px", objectFit: "cover", borderRadius: "6px", border: "1.5px solid #e5e7eb", display: "block" }} />

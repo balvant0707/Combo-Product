@@ -527,11 +527,8 @@ export default function DashboardPage() {
       <EmbedBlockCard embedBlockUrl={embedBlockUrl} enabled={embedBlockEnabled} />
       <ThemeCustomizationCard themeEditorUrl={themeEditorUrl} />
 
-      {/* Row: Quick Actions (35%) + Stats (65%) */}
-      <div style={{ display: "grid", gridTemplateColumns: "35fr 65fr", gap: "20px", marginBottom: "20px", alignItems: "start" }}>
-
       {/* Quick Actions */}
-      <div style={{ borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>
+      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>
         <div style={{ padding: "20px 20px 14px", borderBottom: "1px solid #e5e7eb" }}>
           <div style={{ fontSize: "15px", fontWeight: "800", color: "#000000", letterSpacing: "-0.2px" }}>Quick Actions</div>
         </div>
@@ -602,7 +599,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div style={{ borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>
+      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>
         <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000" }}>
             <AdminIcon type="chart-line" size="small" /> Performance
@@ -615,8 +612,6 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
-
-      </div>{/* end 35/65 row */}
 
       {/* Recent Bundle Orders */}
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>

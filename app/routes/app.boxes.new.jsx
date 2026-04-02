@@ -338,11 +338,11 @@ export default function CreateBoxPage() {
                 <input type="text" name="boxSubtitle" placeholder="Shown below the main title on storefront" style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
               </div>
               <div>
-                <label style={labelStyle}>CTA Button Label</label>
+                <label style={labelStyle}>Combo Product Button Title</label>
                 <input type="text" name="ctaButtonLabel" placeholder="BUILD YOUR OWN BOX" style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
               </div>
               <div>
-                <label style={labelStyle}>Add to Cart Label</label>
+                <label style={labelStyle}>Product Button Title</label>
                 <input type="text" name="addToCartLabel" placeholder="Add To Cart" style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
               </div>
               <div>

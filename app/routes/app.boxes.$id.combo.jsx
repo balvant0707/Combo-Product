@@ -791,11 +791,11 @@ export default function SpecificComboBoxPage() {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px" }}>
                 <div>
-                  <label style={labelStyle}>CTA Button Label</label>
+                  <label style={labelStyle}>Combo Product Button Title</label>
                   <input value={comboConfig.ctaButtonLabel || ""} onChange={(e) => updateComboField("ctaButtonLabel", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="BUILD YOUR OWN BOX" />
                 </div>
                 <div>
-                  <label style={labelStyle}>Add to Cart Label</label>
+                  <label style={labelStyle}>Product Button Title</label>
                   <input value={comboConfig.addToCartLabel || ""} onChange={(e) => updateComboField("addToCartLabel", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Add To Cart" />
                 </div>
               </div>

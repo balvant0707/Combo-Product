@@ -431,11 +431,11 @@ export default function BoxSettingsPage() {
               <input type="text" name="boxSubtitle" defaultValue={box.boxSubtitle || ""} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
             </div>
             <div>
-              <label style={labelStyle}>CTA Button Label</label>
+              <label style={labelStyle}>Combo Product Button Title</label>
               <input type="text" name="ctaButtonLabel" defaultValue={box.ctaButtonLabel || "BUILD YOUR OWN BOX"} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
             </div>
             <div>
-              <label style={labelStyle}>Add to Cart Label</label>
+              <label style={labelStyle}>Product Button Title</label>
               <input type="text" name="addToCartLabel" defaultValue={box.addToCartLabel || "Add To Cart"} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
             </div>
             <div>

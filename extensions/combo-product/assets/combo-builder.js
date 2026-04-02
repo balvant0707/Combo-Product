@@ -143,9 +143,8 @@
     // Indicator is styled via CSS class — no content insertion needed
   }
 
-  function resolveAddToCartLabel(settings, ctxOverride, boxOverride) {
+  function resolveAddToCartLabel(settings, ctxOverride) {
     if (ctxOverride && String(ctxOverride).trim()) return String(ctxOverride).trim();
-    if (boxOverride && String(boxOverride).trim()) return String(boxOverride).trim();
     var label = settings && settings.addToCartLabel != null
       ? String(settings.addToCartLabel).trim()
       : '';
@@ -160,6 +159,15 @@
       : '';
     if (!label) return 'BUILD YOUR OWN BOX';
     return label;
+  }
+
+  function resolveProductGridButtonLabel(box) {
+    var label = '';
+    if (box && box.addToCartLabel != null) label = String(box.addToCartLabel).trim();
+    if (!label && box && box.comboConfig && box.comboConfig.addToCartLabel != null) {
+      label = String(box.comboConfig.addToCartLabel).trim();
+    }
+    return label || 'ADD TO BOX';
   }
 
   // ─── Preset Theme Palettes ────────────────────────────────────────────────────
@@ -659,7 +667,7 @@
     btn.className = 'cb-sticky-btn';
     btn.type = 'button';
     btn.disabled = true;
-    btn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel, box.addToCartLabel);
+    btn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
     btn.addEventListener('click', onCartClick);
     footer.appendChild(btn);
 
@@ -1353,7 +1361,7 @@
     inlineCartBtn.className = 'cb-inline-cart-btn';
     inlineCartBtn.type = 'button';
     inlineCartBtn.disabled = true;
-    inlineCartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel, box.addToCartLabel);
+    inlineCartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
 
     function hydrateProductPricing(done) {
       var tasks = products.map(function (p) {
@@ -1502,7 +1510,7 @@
         step3CartBtn = document.createElement('button');
         step3CartBtn.type = 'button';
         step3CartBtn.className = 'cb-step3-cart-btn';
-        step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel, box.addToCartLabel);
+        step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
         step3Btns.appendChild(step3CartBtn);
       }
 
@@ -1556,7 +1564,7 @@
       var filled = slots.filter(Boolean).length;
       var remaining = box.itemCount - filled;
       var allFilled = remaining === 0;
-      var addLabel = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel, box.addToCartLabel);
+      var addLabel = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
 
       // Inline button
       inlineCartBtn.disabled = !allFilled;
@@ -1653,7 +1661,7 @@
           step3CartBtn.disabled = !allFilled;
           if (!allFilled) {
             step3CartBtn.classList.remove('cb-step3-cart-btn--loading');
-            step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel, box.addToCartLabel);
+            step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
           }
         }
         if (step3CheckoutBtn) {
@@ -1913,13 +1921,14 @@
 
         // ADD TO BOX / REMOVE FROM BOX button
         var addBtn = document.createElement('button');
+        var productGridBtnLabel = resolveProductGridButtonLabel(box);
         addBtn.type = 'button';
         if (isCurrentSlot || isUsed) {
           addBtn.className = 'cb-add-btn cb-add-btn--remove';
           addBtn.innerHTML = '&times; REMOVE FROM BOX';
         } else {
           addBtn.className = 'cb-add-btn';
-          addBtn.innerHTML = '+ ADD TO BOX';
+          addBtn.textContent = '+ ' + productGridBtnLabel;
         }
 
         card.appendChild(addBtn);
@@ -1963,7 +1972,7 @@
         } else {
           ;(function (p, aBtn, blockedVariantIdsForProduct) {
             function doAddToSlot(variantId, variantTitle, variantPrice, variantCompareAtPrice) {
-              aBtn.innerHTML = '&#10003; Added';
+              aBtn.textContent = '\u2713 ' + productGridBtnLabel;
               aBtn.classList.add('cb-add-btn--added');
 
               var resolvedPrice = p.productPrice;
@@ -2109,7 +2118,7 @@
           giftInput ? giftInput.value : null,
           inlineCartBtn,
           _stickyBtn,
-          resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel, box.addToCartLabel),
+          resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel),
           ctx.currencySymbol,
           ctx.apiBase,
           ctx.shop,
@@ -2288,7 +2297,7 @@
     inlineCartBtn.className = 'cb-inline-cart-btn';
     inlineCartBtn.type = 'button';
     inlineCartBtn.disabled = true;
-    inlineCartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel, box.addToCartLabel);
+    inlineCartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
 
     function renderSlots() {
       slotSteps.innerHTML = '';
@@ -2417,7 +2426,7 @@
         step3CartBtn = document.createElement('button');
         step3CartBtn.type = 'button';
         step3CartBtn.className = 'cb-step3-cart-btn';
-        step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel, box.addToCartLabel);
+        step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
         step3Btns.appendChild(step3CartBtn);
       }
 
@@ -2474,7 +2483,7 @@
       var filled = slots.filter(Boolean).length;
       var allFilled = filled === numSteps;
       var cartReady = areRequiredStepsFilled();
-      var addLabel = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel, box.addToCartLabel);
+      var addLabel = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
 
       inlineCartBtn.disabled = !cartReady;
       if (cartReady) inlineCartBtn.classList.add('cb-inline-cart-btn--ready');
@@ -2537,7 +2546,7 @@
           step3CartBtn.disabled = !cartReady;
           if (!cartReady) {
             step3CartBtn.classList.remove('cb-step3-cart-btn--loading');
-            step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel, box.addToCartLabel);
+            step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
           }
         }
         if (step3CheckoutBtn) {
@@ -2823,13 +2832,14 @@
 
         // ADD TO BOX / REMOVE FROM BOX button
         var addBtn = document.createElement('button');
+        var productGridBtnLabel = resolveProductGridButtonLabel(box);
         addBtn.type = 'button';
         if (isCurrentSlot || isUsed) {
           addBtn.className = 'cb-add-btn cb-add-btn--remove';
           addBtn.innerHTML = '&times; REMOVE FROM BOX';
         } else {
           addBtn.className = 'cb-add-btn';
-          addBtn.innerHTML = '+ ADD TO BOX';
+          addBtn.textContent = '+ ' + productGridBtnLabel;
         }
         card.appendChild(addBtn);
 
@@ -2871,7 +2881,7 @@
         } else {
           ;(function (p, aBtn) {
             function doAddToSlot(variantId, variantTitle, variantPrice, variantCompareAtPrice) {
-              aBtn.innerHTML = '&#10003; Added';
+              aBtn.textContent = '\u2713 ' + productGridBtnLabel;
               aBtn.classList.add('cb-add-btn--added');
 
               var resolvedPrice = p.productPrice;
@@ -3009,7 +3019,7 @@
         btn.innerHTML = '<span class="cb-btn-spinner" aria-hidden="true"></span><span class="cb-btn-label">Adding\u2026</span>';
       });
       showPageLoader('Adding products to cart\u2026');
-      addToCart(box, slots, sessionId, null, inlineCartBtn, _stickyBtn, resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel, box.addToCartLabel), ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo);
+      addToCart(box, slots, sessionId, null, inlineCartBtn, _stickyBtn, resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel), ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo);
     }
 
     inlineCartBtn.addEventListener('click', doCart);
@@ -3022,7 +3032,7 @@
           step3CartBtn.innerHTML = '<span class="cb-btn-spinner" aria-hidden="true"></span><span>Adding\u2026</span>';
           if (step3CheckoutBtn) step3CheckoutBtn.disabled = true;
           showPageLoader('Adding products to cart\u2026');
-          addToCart(box, slots, sessionId, null, inlineCartBtn, _stickyBtn, resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel, box.addToCartLabel), ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo);
+          addToCart(box, slots, sessionId, null, inlineCartBtn, _stickyBtn, resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel), ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo);
         });
       }
       if (step3CheckoutBtn) {

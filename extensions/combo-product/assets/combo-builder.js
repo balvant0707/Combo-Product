@@ -1090,6 +1090,16 @@
     titleText.textContent = box.displayTitle || box.boxName || ('Buy ' + box.itemCount);
     body.appendChild(titleText);
 
+    if (box.boxSubtitle) {
+      var subtitleText = document.createElement('div');
+      subtitleText.style.fontSize = '12px';
+      subtitleText.style.color = 'var(--cb-text-muted)';
+      subtitleText.style.lineHeight = '1.35';
+      subtitleText.style.marginTop = '2px';
+      subtitleText.textContent = box.boxSubtitle;
+      body.appendChild(subtitleText);
+    }
+
     var buyText = document.createElement('div');
     buyText.className = 'cb-box-buy-text';
     buyText.textContent = box.boxName || ('Buy ' + box.itemCount + ' products');
@@ -2175,11 +2185,36 @@
     step2Head.textContent = ctx.step2Heading || ('Step 2: ' + (comboConfig.title || 'Select your products'));
     container.appendChild(step2Head);
 
+    if (comboConfig.highlightText) {
+      var highlightEl = document.createElement('div');
+      highlightEl.style.display = 'inline-flex';
+      highlightEl.style.alignItems = 'center';
+      highlightEl.style.padding = '4px 10px';
+      highlightEl.style.marginBottom = '8px';
+      highlightEl.style.borderRadius = '999px';
+      highlightEl.style.fontSize = '11px';
+      highlightEl.style.fontWeight = '700';
+      highlightEl.style.letterSpacing = '0.03em';
+      highlightEl.style.background = 'rgba(17,24,39,0.06)';
+      highlightEl.style.color = '#111827';
+      highlightEl.textContent = comboConfig.highlightText;
+      container.appendChild(highlightEl);
+    }
+
     if (comboConfig.subtitle) {
       var subEl = document.createElement('p');
       subEl.className = 'cb-combo-subtitle';
       subEl.textContent = comboConfig.subtitle;
       container.appendChild(subEl);
+    }
+
+    if (comboConfig.supportText) {
+      var supportEl = document.createElement('p');
+      supportEl.style.margin = '0 0 12px';
+      supportEl.style.fontSize = '12px';
+      supportEl.style.color = 'var(--cb-text-muted)';
+      supportEl.textContent = comboConfig.supportText;
+      container.appendChild(supportEl);
     }
 
     // ── Slot Steps Row (identical to renderBuilder) ──

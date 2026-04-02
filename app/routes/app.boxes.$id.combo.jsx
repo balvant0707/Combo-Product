@@ -85,6 +85,8 @@ const DEFAULT_COMBO_CONFIG = {
   type: MIN_COMBO_STEPS,
   title: "Build Your Perfect Bundle",
   subtitle: "Choose a product for each step",
+  highlightText: "",
+  supportText: "",
   bundlePrice: 0,
   bundlePriceType: "manual",
   discountType: "none",
@@ -230,6 +232,8 @@ export const loader = async ({ request, params }) => {
     const cfg = box.config;
     let steps = [];
     try { steps = JSON.parse(cfg.stepsJson || "[]"); } catch {}
+    let rawHighlightText = "";
+    let rawSupportText = "";
     let rawDiscountType = DEFAULT_COMBO_CONFIG.discountType;
     let rawDiscountValue = DEFAULT_COMBO_CONFIG.discountValue;
     let rawBuyQuantity = DEFAULT_COMBO_CONFIG.buyQuantity;
@@ -237,6 +241,8 @@ export const loader = async ({ request, params }) => {
     if (box.comboStepsConfig) {
       try {
         const raw = JSON.parse(box.comboStepsConfig);
+        rawHighlightText = typeof raw?.highlightText === "string" ? raw.highlightText : "";
+        rawSupportText = typeof raw?.supportText === "string" ? raw.supportText : "";
         rawDiscountType = normalizeSpecificDiscountType(raw?.discountType || rawDiscountType);
         rawDiscountValue = String(raw?.discountValue ?? rawDiscountValue);
         rawBuyQuantity = Math.max(1, parseInt(String(raw?.buyQuantity ?? rawBuyQuantity), 10) || rawBuyQuantity);
@@ -247,6 +253,8 @@ export const loader = async ({ request, params }) => {
       type:              cfg.comboType,
       title:             cfg.title             ?? undefined,
       subtitle:          cfg.subtitle          ?? undefined,
+      highlightText:     rawHighlightText,
+      supportText:       rawSupportText,
       bundlePrice:       cfg.bundlePrice != null ? parseFloat(cfg.bundlePrice) : undefined,
       bundlePriceType:   cfg.bundlePriceType   ?? undefined,
       discountType:      rawDiscountType,
@@ -723,6 +731,16 @@ export default function SpecificComboBoxPage() {
               <div>
                 <label style={labelStyle}>Subtitle</label>
                 <input value={comboConfig.subtitle} onChange={(e) => updateComboField("subtitle", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Choose a product for each step" />
+              </div>
+              {/* Highlight text */}
+              <div>
+                <label style={labelStyle}>Highlight text</label>
+                <input value={comboConfig.highlightText || ""} onChange={(e) => updateComboField("highlightText", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Limited time combo" />
+              </div>
+              {/* Support text */}
+              <div>
+                <label style={labelStyle}>Support text</label>
+                <input value={comboConfig.supportText || ""} onChange={(e) => updateComboField("supportText", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Pick products and save more at checkout" />
               </div>
               {/* Combo image */}
               <div>

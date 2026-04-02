@@ -95,6 +95,8 @@ const DEFAULT_COMBO = {
   type: MIN_COMBO_STEPS,
   title: "Build Your Perfect Bundle",
   subtitle: "Choose a product for each step",
+  highlightText: "",
+  supportText: "",
   bundlePrice: 0,
   bundlePriceType: "dynamic",
   discountType: "none",
@@ -534,6 +536,16 @@ export default function CreateSpecificComboBoxPage() {
                   <div>
                     <label style={labelStyle}>Subtitle</label>
                     <input value={comboConfig.subtitle} onChange={(e) => updateComboField("subtitle", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Choose a product for each step" />
+                  </div>
+                  {/* Highlight Text */}
+                  <div>
+                    <label style={labelStyle}>Highlight text</label>
+                    <input value={comboConfig.highlightText || ""} onChange={(e) => updateComboField("highlightText", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Limited time combo" />
+                  </div>
+                  {/* Support Text */}
+                  <div>
+                    <label style={labelStyle}>Support text</label>
+                    <input value={comboConfig.supportText || ""} onChange={(e) => updateComboField("supportText", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Pick products and save more at checkout" />
                   </div>
                   {/* Combo image */}
                   <div>

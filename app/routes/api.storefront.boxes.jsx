@@ -43,11 +43,16 @@ export const loader = async ({ request }) => {
     const bannerImageUrl = box.bannerImageUrl || null;
     // Flag so the widget can build the URL via the app proxy (avoids cross-origin issues)
     const hasUploadedBanner = !bannerImageUrl && !!box.bannerImageMimeType;
+    let rawComboConfig = null;
+    if (box.comboStepsConfig) {
+      try { rawComboConfig = JSON.parse(box.comboStepsConfig); } catch {}
+    }
     return {
       id: box.id,
       boxCode: box.boxCode || null,
       boxName: box.boxName,
       displayTitle: box.displayTitle,
+      boxSubtitle: typeof rawComboConfig?.boxSubtitle === "string" ? rawComboConfig.boxSubtitle : null,
       itemCount: box.itemCount,
       bundlePrice: parseFloat(box.bundlePrice),
       isGiftBox: box.isGiftBox,
@@ -80,19 +85,18 @@ export const loader = async ({ request }) => {
           steps = attachStepImages(steps);
           // discountType/discountValue live only in the raw JSON blob (ComboBoxConfig lacks these columns)
           let discountType = 'none', discountValue = '0', buyQuantity = 1, getQuantity = 1;
-          if (box.comboStepsConfig) {
-            try {
-              const raw = JSON.parse(box.comboStepsConfig);
-              discountType = raw.discountType || 'none';
-              discountValue = String(raw.discountValue || '0');
-              buyQuantity = Math.max(1, parseInt(String(raw.buyQuantity ?? 1), 10) || 1);
-              getQuantity = Math.max(1, parseInt(String(raw.getQuantity ?? 1), 10) || 1);
-            } catch {}
+          if (rawComboConfig) {
+            discountType = rawComboConfig.discountType || 'none';
+            discountValue = String(rawComboConfig.discountValue || '0');
+            buyQuantity = Math.max(1, parseInt(String(rawComboConfig.buyQuantity ?? 1), 10) || 1);
+            getQuantity = Math.max(1, parseInt(String(rawComboConfig.getQuantity ?? 1), 10) || 1);
           }
           return {
             comboType: box.config.comboType || steps.length || 2,
             title: box.config.title || null,
             subtitle: box.config.subtitle || null,
+            highlightText: typeof rawComboConfig?.highlightText === "string" ? rawComboConfig.highlightText : "",
+            supportText: typeof rawComboConfig?.supportText === "string" ? rawComboConfig.supportText : "",
             bundlePriceType: box.config.bundlePriceType || 'manual',
             bundlePrice: box.config.bundlePrice != null ? parseFloat(box.config.bundlePrice) : 0,
             discountType,
@@ -114,6 +118,8 @@ export const loader = async ({ request }) => {
               comboType: parseInt(parsed.type) || 0,
               title: parsed.title || null,
               subtitle: parsed.subtitle || null,
+              highlightText: typeof parsed.highlightText === "string" ? parsed.highlightText : "",
+              supportText: typeof parsed.supportText === "string" ? parsed.supportText : "",
               bundlePriceType: parsed.bundlePriceType || box.bundlePriceType || 'manual',
               bundlePrice: parsed.bundlePrice != null ? parseFloat(parsed.bundlePrice) : 0,
               discountType: parsed.discountType || 'none',

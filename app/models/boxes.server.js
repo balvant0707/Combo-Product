@@ -1091,6 +1091,7 @@ export async function createBox(shop, data, admin) {
         discountType: data.discountType || "none",
         discountValue: data.discountValue || "0",
         bundlePrice: bundlePrice,
+        boxSubtitle: typeof data.boxSubtitle === "string" ? data.boxSubtitle.trim() : "",
       }),
     },
   });
@@ -1153,6 +1154,8 @@ export async function upsertComboConfig(boxId, config, admin = null) {
   if (parsed && typeof parsed === "object") {
     parsed.buyQuantity = safeBuyQuantity;
     parsed.getQuantity = safeGetQuantity;
+    parsed.highlightText = typeof parsed.highlightText === "string" ? parsed.highlightText.trim() : "";
+    parsed.supportText = typeof parsed.supportText === "string" ? parsed.supportText.trim() : "";
     if (parsed.discountType === "buy_x_get_y" && !(parseFloat(parsed.discountValue) > 0)) {
       parsed.discountValue = "100";
     }
@@ -1495,7 +1498,7 @@ export async function updateBox(id, shop, data, admin) {
   }
 
   // Persist discount settings into comboStepsConfig (merge, preserve existing steps/config)
-  if (data.discountType !== undefined || data.discountValue !== undefined) {
+  if (data.discountType !== undefined || data.discountValue !== undefined || data.boxSubtitle !== undefined) {
     let rawConfig = {};
     if (existing.comboStepsConfig) {
       try { rawConfig = JSON.parse(existing.comboStepsConfig); } catch {}
@@ -1504,6 +1507,9 @@ export async function updateBox(id, shop, data, admin) {
     rawConfig.discountType = data.discountType || "none";
     rawConfig.discountValue = data.discountValue || "0";
     rawConfig.bundlePrice = bundlePrice;
+    if (data.boxSubtitle !== undefined) {
+      rawConfig.boxSubtitle = typeof data.boxSubtitle === "string" ? data.boxSubtitle.trim() : "";
+    }
     await db.comboBox.update({
       where: { id: parseInt(id) },
       data: { comboStepsConfig: JSON.stringify(rawConfig) },

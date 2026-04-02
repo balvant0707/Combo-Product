@@ -140,17 +140,19 @@ export const loader = async ({ request, params }) => {
   let effectiveBundlePrice = parseFloat(box.bundlePrice) || 0;
   let savedDiscountType = "percent";
   let savedDiscountValue = "10";
+  let savedBoxSubtitle = "";
   if (comboStepsConfig) {
     try {
       const parsed = JSON.parse(comboStepsConfig);
       if (effectiveBundlePrice === 0) effectiveBundlePrice = parseFloat(parsed.bundlePrice) || 0;
       if (parsed.discountType) savedDiscountType = parsed.discountType;
       if (parsed.discountValue != null) savedDiscountValue = String(parsed.discountValue);
+      if (typeof parsed.boxSubtitle === "string") savedBoxSubtitle = parsed.boxSubtitle;
     } catch {}
   }
 
   return {
-    box: { ...boxWithoutBinary, bundlePrice: effectiveBundlePrice, bannerImageSrc, discountType: savedDiscountType, discountValue: savedDiscountValue },
+    box: { ...boxWithoutBinary, bundlePrice: effectiveBundlePrice, bannerImageSrc, discountType: savedDiscountType, discountValue: savedDiscountValue, boxSubtitle: savedBoxSubtitle },
     products,
     collections,
   };
@@ -181,6 +183,7 @@ export const action = async ({ request, params }) => {
   const data = {
     boxName: formData.get("boxName"),
     displayTitle: formData.get("displayTitle"),
+    boxSubtitle: formData.get("boxSubtitle") || "",
     itemCount: formData.get("itemCount"),
     bundlePrice: formData.get("bundlePrice"),
     bundlePriceType: formData.get("bundlePriceType"),
@@ -382,6 +385,10 @@ export default function BoxSettingsPage() {
               <label style={labelStyle}>Display Title (Storefront) *</label>
               <input type="text" name="displayTitle" defaultValue={box.displayTitle} style={{ ...fieldStyle, borderColor: errors.displayTitle ? "#e11d48" : "#d1d5db" }} />
               {errors.displayTitle && <div style={errorStyle}>{errors.displayTitle}</div>}
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={labelStyle}>Box Subtitle (optional)</label>
+              <input type="text" name="boxSubtitle" defaultValue={box.boxSubtitle || ""} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
             </div>
             <div>
               <label style={labelStyle}>Number of Items *</label>

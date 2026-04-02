@@ -120,6 +120,7 @@ export const action = async ({ request }) => {
   const data = {
     boxName: formData.get("boxName"),
     displayTitle: formData.get("displayTitle"),
+    boxSubtitle: formData.get("boxSubtitle") || "",
     itemCount: formData.get("itemCount"),
     bundlePrice: formData.get("bundlePrice"),
     bundlePriceType: formData.get("bundlePriceType"),
@@ -317,6 +318,10 @@ export default function CreateBoxPage() {
                 <label style={labelStyle}>Display Title (Storefront) *</label>
                 <input type="text" name="displayTitle" placeholder="Shown to customers" style={{ ...fieldStyle, borderColor: errors.displayTitle ? "#e11d48" : "#d1d5db" }} />
                 {errors.displayTitle && <div style={errorStyle}>{errors.displayTitle}</div>}
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={labelStyle}>Box Subtitle (optional)</label>
+                <input type="text" name="boxSubtitle" placeholder="Shown below the main title on storefront" style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
               </div>
               <div>
                 <label style={labelStyle}>Number of Items *</label>

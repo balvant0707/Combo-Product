@@ -2504,7 +2504,7 @@
 
       var scope = stepCfg.scope || 'collection';
 
-      if (scope === 'product') {
+      if (scope === 'product' || scope === 'wholestore') {
         var prods = (stepCfg.selectedProducts || []).map(normalizeProduct);
         stepProductsCache[stepIdx] = prods;
         cb(null, prods);

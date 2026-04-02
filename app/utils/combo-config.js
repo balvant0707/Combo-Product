@@ -30,7 +30,9 @@ export function validateComboConfig(configInput) {
     const step = steps[index] || {};
     const isOptionalStep = step?.optional === true || String(step?.optional).toLowerCase() === "true";
     if (isOptionalStep) continue;
-    const scope = step?.scope === "product" ? "product" : "collection";
+    const scope = step?.scope === "product" || step?.scope === "wholestore"
+      ? "product"
+      : "collection";
     const hasCollections =
       Array.isArray(step?.collections) && step.collections.length > 0;
     const hasProducts =

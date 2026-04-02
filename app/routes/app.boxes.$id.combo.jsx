@@ -954,6 +954,10 @@ export default function SpecificComboBoxPage() {
           {(() => {
             const ai = comboActiveStep;
             const step = comboConfig.steps[ai] || buildDefaultStep(ai);
+            const stepScope =
+              step.scope === "product" || step.scope === "wholestore"
+                ? "product"
+                : "collection";
             return (
               <div>
                 {/* ── Pickers card ── */}
@@ -970,25 +974,46 @@ export default function SpecificComboBoxPage() {
                   </div>
                   <div style={{ padding: "16px" }}>
                     <label style={labelStyle}>Scope</label>
-                    <div style={{ position: "relative", marginBottom: "10px" }}>
-                      <select
-                        value={step.scope || "collection"}
-                        onChange={(e) => {
-                          const newScope = e.target.value;
-                          setComboConfig((prev) => {
-                            const steps = prev.steps.map((s, i) => i !== ai ? s : { ...s, scope: newScope, collections: [], selectedProducts: [] });
-                            return { ...prev, steps };
-                          });
-                        }}
-                        style={{ width: "100%", padding: "9px 32px 9px 12px", border: "1.5px solid #d1d5db", borderRadius: "6px", background: "#fff", fontSize: "13px", color: "#374151", cursor: "pointer", appearance: "none", WebkitAppearance: "none", outline: "none" }}
-                      >
-                        <option value="collection">Specific collections</option>
-                        <option value="product">Specific products</option>
-                      </select>
-                      <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "13px", color: "#6b7280", pointerEvents: "none" }}>⌃⌄</span>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "8px", marginBottom: "10px" }}>
+                      {[
+                        { value: "collection", label: "Specific collections" },
+                        { value: "product", label: "Specific products" },
+                      ].map((opt) => (
+                        <label
+                          key={opt.value}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            padding: "8px 10px",
+                            border: `1.5px solid ${stepScope === opt.value ? "#000000" : "#d1d5db"}`,
+                            borderRadius: "6px",
+                            background: stepScope === opt.value ? "#f9fafb" : "#fff",
+                            cursor: "pointer",
+                            fontSize: "12px",
+                            color: "#374151",
+                            fontWeight: stepScope === opt.value ? "700" : "600",
+                          }}
+                        >
+                          <input
+                            type="radio"
+                            name={`step-scope-${ai}`}
+                            value={opt.value}
+                            checked={stepScope === opt.value}
+                            onChange={() => {
+                              setComboConfig((prev) => {
+                                const steps = prev.steps.map((s, i) => i !== ai ? s : { ...s, scope: opt.value, collections: [], selectedProducts: [] });
+                                return { ...prev, steps };
+                              });
+                            }}
+                            style={{ accentColor: "#000000", cursor: "pointer" }}
+                          />
+                          <span>{opt.label}</span>
+                        </label>
+                      ))}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      {(step.scope || "collection") === "collection" ? (
+                      {stepScope === "collection" ? (
                         <button
                           type="button"
                           onClick={() => { setCollModalStepIdx(ai); setTempColls([...step.collections]); setCollSearch(""); setShowCollModal(true); }}
@@ -1006,12 +1031,12 @@ export default function SpecificComboBoxPage() {
                         </button>
                       )}
                       <span style={{ fontSize: "13px", color: "#6b7280" }}>
-                        {(step.scope || "collection") === "collection"
+                        {stepScope === "collection"
                           ? `${step.collections.length} selected`
                           : `${(step.selectedProducts || []).length} selected`}
                       </span>
                     </div>
-                    {step.collections.length > 0 && (step.scope || "collection") === "collection" && (
+                    {step.collections.length > 0 && stepScope === "collection" && (
                       <div style={{ border: "1px solid #e5e7eb", borderRadius: "6px", marginTop: "10px", overflow: "hidden" }}>
                         <div style={{ padding: "7px 12px", background: "#f9fafb", borderBottom: "1px solid #e5e7eb", fontSize: "10px", fontWeight: "700", color: "#6b7280", letterSpacing: "0.07em", textTransform: "uppercase" }}>
                           Selected Collections ({step.collections.length})
@@ -1039,7 +1064,7 @@ export default function SpecificComboBoxPage() {
                         </div>
                       </div>
                     )}
-                    {(step.selectedProducts || []).length > 0 && (step.scope || "collection") === "product" && (
+                    {(step.selectedProducts || []).length > 0 && stepScope === "product" && (
                       <div style={{ border: "1px solid #e5e7eb", borderRadius: "6px", marginTop: "10px", overflow: "hidden" }}>
                         <div style={{ padding: "7px 12px", background: "#f9fafb", borderBottom: "1px solid #e5e7eb", fontSize: "10px", fontWeight: "700", color: "#6b7280", letterSpacing: "0.07em", textTransform: "uppercase" }}>
                           Selected Products ({step.selectedProducts.length})

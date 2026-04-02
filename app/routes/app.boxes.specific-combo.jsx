@@ -770,18 +770,6 @@ export default function CreateSpecificComboBoxPage() {
                             <label style={labelStyle}>Step label</label>
                             <input value={step.label} onChange={(e) => updateComboStep(ai, "label", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Main Product" />
                             <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>Heading shown on the storefront step</div>
-                            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "10px" }}>
-                              {stepScope === "collection" ? (
-                                <button type="button" onClick={() => { setCollModalStepIdx(ai); setTempColls([...step.collections]); setCollSearch(""); setShowCollModal(true); }} style={{ padding: "7px 16px", border: "1px solid #000000", borderRadius: "5px", background: "#000000", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}>Select collections</button>
-                              ) : (
-                                <button type="button" onClick={() => { setStepProdModalIdx(ai); setTempStepProds([...(step.selectedProducts || [])]); setStepProdSearch(""); setShowStepProdModal(true); }} style={{ padding: "7px 16px", border: "1px solid #000000", borderRadius: "5px", background: "#000000", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}>Select products</button>
-                              )}
-                              <span style={{ fontSize: "13px", color: "#6b7280" }}>
-                                {stepScope === "collection"
-                                  ? `${step.collections.length} selected`
-                                  : `${(step.selectedProducts || []).length} selected`}
-                              </span>
-                            </div>
                           </div>
                           <div>
                             <label style={labelStyle}>Scope</label>
@@ -815,6 +803,18 @@ export default function CreateSpecificComboBoxPage() {
                                   <span style={{ fontSize: "12px", color: "#4b5563", fontWeight: stepScope === opt.value ? "700" : "600" }}>{opt.label}</span>
                                 </label>
                               ))}
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "10px" }}>
+                              {stepScope === "collection" ? (
+                                <button type="button" onClick={() => { setCollModalStepIdx(ai); setTempColls([...step.collections]); setCollSearch(""); setShowCollModal(true); }} style={{ padding: "7px 16px", border: "1px solid #000000", borderRadius: "5px", background: "#000000", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}>Select collections</button>
+                              ) : (
+                                <button type="button" onClick={() => { setStepProdModalIdx(ai); setTempStepProds([...(step.selectedProducts || [])]); setStepProdSearch(""); setShowStepProdModal(true); }} style={{ padding: "7px 16px", border: "1px solid #000000", borderRadius: "5px", background: "#000000", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}>Select products</button>
+                              )}
+                              <span style={{ fontSize: "13px", color: "#6b7280" }}>
+                                {stepScope === "collection"
+                                  ? `${step.collections.length} selected`
+                                  : `${(step.selectedProducts || []).length} selected`}
+                              </span>
                             </div>
                           </div>
                         </div>

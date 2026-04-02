@@ -376,7 +376,7 @@ export default function CreateBoxPage() {
                 )}
 
               </div>
-              <div style={{ gridColumn: "1 / -1" }}>
+              <div>
                 <label style={labelStyle}>Banner Image (optional)</label>
                 <input type="file" name="bannerImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ ...fieldStyle, padding: "7px 12px" }} />
                 <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>JPG, PNG, WEBP, GIF, or AVIF — max 5MB</div>

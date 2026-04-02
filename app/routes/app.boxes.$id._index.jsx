@@ -437,7 +437,7 @@ export default function BoxSettingsPage() {
                 </div>
               )}
             </div>
-            <div style={{ gridColumn: "1 / -1" }}>
+            <div>
               <label style={labelStyle}>Banner Image (optional)</label>
               <input type="file" name="bannerImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ ...fieldStyle, padding: "7px 12px" }} />
               {box.bannerImageSrc && (

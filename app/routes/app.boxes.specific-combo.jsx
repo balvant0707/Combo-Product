@@ -308,6 +308,7 @@ export default function CreateSpecificComboBoxPage() {
   const location = useLocation();
   const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
+  const isPageLoading = navigation.state !== "idle";
 
   const collProdsFetcher0 = useFetcher();
   const collProdsFetcher1 = useFetcher();
@@ -901,6 +902,23 @@ export default function CreateSpecificComboBoxPage() {
       </Form>
 
       {/* ── MODAL: Collection Picker ── */}
+      {isPageLoading && (
+        <div
+          aria-live="polite"
+          aria-busy="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 10001,
+            background: "rgba(255,255,255,0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <s-spinner accessibilityLabel="Loading page" size="large" />
+        </div>
+      )}
       {showCollModal && (
         <div style={modalOverlayStyle} onClick={(e) => { if (e.target === e.currentTarget) setShowCollModal(false); }}>
           <div style={{ ...modalBoxStyle, maxWidth: "520px" }}>
@@ -983,3 +1001,4 @@ export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
 export const headers = (headersArgs) => boundary.headers(headersArgs);
+

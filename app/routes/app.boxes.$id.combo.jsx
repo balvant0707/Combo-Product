@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useFetcher, useLoaderData, useLocation, useRouteError } from "react-router";
+import { useFetcher, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { Buffer } from "node:buffer";
@@ -367,6 +367,7 @@ const errorStyle = { color: "#dc2626", fontSize: "11px", marginTop: "5px", displ
 export default function SpecificComboBoxPage() {
   const { box, products, collections, stepImagesBase64 } = useLoaderData();
   const comboFetcher = useFetcher();
+  const navigation = useNavigation();
   /* One fetcher per step for lazy-loading collection-scoped products */
   const collProdsFetcher0 = useFetcher();
   const collProdsFetcher1 = useFetcher();
@@ -381,6 +382,7 @@ export default function SpecificComboBoxPage() {
 
   const comboErrors = comboFetcher.data?.errors || {};
   const comboStepImgErrors = {};
+  const isPageLoading = comboFetcher.state !== "idle" || navigation.state !== "idle";
 
   // Toast state
   const [toast, setToast] = useState(null); // { type: "success"|"error", message: string }
@@ -1212,6 +1214,23 @@ export default function SpecificComboBoxPage() {
       {/* ════════════════════════════════════════
           MODAL: Combo — Collection Picker
       ════════════════════════════════════════ */}
+      {isPageLoading && (
+        <div
+          aria-live="polite"
+          aria-busy="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 10001,
+            background: "rgba(255,255,255,0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <s-spinner accessibilityLabel="Loading page" size="large" />
+        </div>
+      )}
       {showCollModal && (
         <div style={modalOverlayStyle} onClick={(e) => { if (e.target === e.currentTarget) setShowCollModal(false); }}>
           <div style={{ ...modalBoxStyle, maxWidth: "520px" }}>
@@ -1323,3 +1342,4 @@ export default function SpecificComboBoxPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
+

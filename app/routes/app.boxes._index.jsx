@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useFetcher, useLoaderData, useLocation, useNavigate } from "react-router";
+import { useState, useMemo, useEffect } from "react";
+import { useFetcher, useLoaderData, useLocation, useNavigate, useNavigation } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import {
@@ -153,13 +153,30 @@ export default function ManageBoxesPage() {
   const { boxes } = useLoaderData();
   const location = useLocation();
   const navigate = useNavigate();
+  const navigation = useNavigation();
   const fetcher = useFetcher();
 
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [manualPageLoading, setManualPageLoading] = useState(false);
+  const isDeleteSubmitting =
+    fetcher.state !== "idle" &&
+    fetcher.formData?.get("_action") === "delete";
+  const isPageLoading = manualPageLoading || navigation.state !== "idle" || isDeleteSubmitting;
+
+  function startPageLoading() {
+    setManualPageLoading(true);
+  }
+
+  useEffect(() => {
+    if (manualPageLoading && navigation.state === "idle" && !isDeleteSubmitting) {
+      setManualPageLoading(false);
+    }
+  }, [manualPageLoading, navigation.state, isDeleteSubmitting]);
 
   function navigateTo(path) {
+    startPageLoading();
     navigate(withEmbeddedAppParams(path, location.search));
   }
 
@@ -167,6 +184,7 @@ export default function ManageBoxesPage() {
 
   function confirmDelete() {
     if (deleteConfirm) {
+      startPageLoading();
       fetcher.submit({ _action: "delete", id: String(deleteConfirm.id) }, { method: "POST" });
     }
     setDeleteConfirm(null);
@@ -668,6 +686,24 @@ export default function ManageBoxesPage() {
           </div>
         )}
       </s-section>
+
+      {isPageLoading && (
+        <div
+          aria-live="polite"
+          aria-busy="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 10001,
+            background: "rgba(255,255,255,0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <s-spinner accessibilityLabel="Loading page" size="large" />
+        </div>
+      )}
 
       {/* Delete modal */}
       {deleteConfirm && (

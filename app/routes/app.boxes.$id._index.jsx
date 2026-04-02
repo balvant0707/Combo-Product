@@ -262,6 +262,7 @@ export default function BoxSettingsPage() {
   const location = useLocation();
   const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
+  const isPageLoading = navigation.state !== "idle";
 
   const errors = actionData?.errors || {};
 
@@ -508,6 +509,24 @@ export default function BoxSettingsPage() {
           </button>
         </Form>
       </div>
+
+      {isPageLoading && (
+        <div
+          aria-live="polite"
+          aria-busy="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 10001,
+            background: "rgba(255,255,255,0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <s-spinner accessibilityLabel="Loading page" size="large" />
+        </div>
+      )}
 
       {/* Scope Picker Modal */}
       {showScopePicker && (() => {

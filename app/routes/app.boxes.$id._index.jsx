@@ -329,6 +329,7 @@ export default function BoxSettingsPage() {
   });
   const [showScopePicker, setShowScopePicker] = useState(false);
   const [scopeSearch, setScopeSearch] = useState("");
+  const [bannerImagePreview, setBannerImagePreview] = useState(box.bannerImageSrc || null);
 
   const numItemCount = Math.max(1, parseInt(itemCount) || 1);
   const dynamicPrice = 0;
@@ -498,17 +499,38 @@ export default function BoxSettingsPage() {
             </div>
             <div>
               <label style={labelStyle}>Banner Image (optional)</label>
-              <input type="file" name="bannerImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ ...fieldStyle, padding: "7px 12px" }} />
-              {box.bannerImageSrc && (
-                <div style={{ marginTop: "10px" }}>
-                  <img src={box.bannerImageSrc} alt="Current banner" style={{ width: "100%", maxWidth: "360px", borderRadius: "5px", border: "1px solid #e5e7eb" }} />
+              <div style={{ display: "grid", gridTemplateColumns: "100px minmax(0, 1fr)", gap: "12px", alignItems: "start" }}>
+                <div style={{ width: "100px", height: "100px", borderRadius: "6px", border: "1.5px solid #e5e7eb", background: "#f9fafb", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {bannerImagePreview ? (
+                    <img src={bannerImagePreview} alt="Current banner" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                  ) : (
+                    <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: "600", letterSpacing: "0.04em" }}>NO IMAGE</span>
+                  )}
                 </div>
-              )}
-              <div style={{ marginTop: "8px" }}>
-                <ToggleSwitch name="removeBannerImage" value="true" label="Remove current image" showStateText={false} />
+                <div>
+                  <input
+                    type="file"
+                    name="bannerImage"
+                    accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                    style={{ ...fieldStyle, padding: "7px 12px" }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) {
+                        setBannerImagePreview(box.bannerImageSrc || null);
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onload = (ev) => setBannerImagePreview(ev.target?.result || null);
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                  <div style={{ marginTop: "8px" }}>
+                    <ToggleSwitch name="removeBannerImage" value="true" label="Remove current image" showStateText={false} />
+                  </div>
+                  <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>JPG, PNG, WEBP, GIF, or AVIF - max 5MB</div>
+                  {errors.bannerImage && <div style={errorStyle}>{errors.bannerImage}</div>}
+                </div>
               </div>
-              <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>JPG, PNG, WEBP, GIF, or AVIF — max 5MB</div>
-              {errors.bannerImage && <div style={errorStyle}>{errors.bannerImage}</div>}
             </div>
           </div>
         </div>

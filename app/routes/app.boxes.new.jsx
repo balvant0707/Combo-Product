@@ -222,6 +222,7 @@ export default function CreateBoxPage() {
   const [discountValue, setDiscountValue] = useState("10");
   const [buyQuantity, setBuyQuantity] = useState("1");
   const [getQuantity, setGetQuantity] = useState("1");
+  const [bannerImagePreview, setBannerImagePreview] = useState(null);
 
   const errors = actionData?.errors || {};
 
@@ -409,9 +410,35 @@ export default function CreateBoxPage() {
               </div>
               <div>
                 <label style={labelStyle}>Banner Image (optional)</label>
-                <input type="file" name="bannerImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ ...fieldStyle, padding: "7px 12px" }} />
-                <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>JPG, PNG, WEBP, GIF, or AVIF — max 5MB</div>
-                {errors.bannerImage && <div style={errorStyle}>{errors.bannerImage}</div>}
+                <div style={{ display: "grid", gridTemplateColumns: "100px minmax(0, 1fr)", gap: "12px", alignItems: "start" }}>
+                  <div style={{ width: "100px", height: "100px", borderRadius: "6px", border: "1.5px solid #e5e7eb", background: "#f9fafb", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {bannerImagePreview ? (
+                      <img src={bannerImagePreview} alt="Banner preview" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                    ) : (
+                      <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: "600", letterSpacing: "0.04em" }}>NO IMAGE</span>
+                    )}
+                  </div>
+                  <div>
+                    <input
+                      type="file"
+                      name="bannerImage"
+                      accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                      style={{ ...fieldStyle, padding: "7px 12px" }}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) {
+                          setBannerImagePreview(null);
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = (ev) => setBannerImagePreview(ev.target?.result || null);
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                    <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>JPG, PNG, WEBP, GIF, or AVIF - max 5MB</div>
+                    {errors.bannerImage && <div style={errorStyle}>{errors.bannerImage}</div>}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

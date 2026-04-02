@@ -508,9 +508,35 @@ export default function CreateSpecificComboBoxPage() {
           {/* Banner Image */}
           {/* <div style={{ marginBottom: "20px" }}>
             <label style={labelStyle}>Banner Image (optional)</label>
-            <input type="file" name="bannerImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ ...fieldStyle, padding: "7px 12px" }} />
-            <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>JPG, PNG, WEBP, GIF, or AVIF â€” max 5MB. Added as product image in Shopify Admin.</div>
-            {errors.bannerImage && <div style={errorStyle}>{errors.bannerImage}</div>}
+            <div style={{ display: "grid", gridTemplateColumns: "100px minmax(0, 1fr)", gap: "12px", alignItems: "start" }}>
+              <div style={{ width: "100px", height: "100px", borderRadius: "6px", border: "1.5px solid #e5e7eb", background: "#f9fafb", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {bannerImagePreview ? (
+                  <img src={bannerImagePreview} alt="Banner preview" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                ) : (
+                  <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: "600", letterSpacing: "0.04em" }}>NO IMAGE</span>
+                )}
+              </div>
+              <div>
+                <input
+                  type="file"
+                  name="bannerImage"
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                  style={{ ...fieldStyle, padding: "7px 12px" }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) {
+                      setBannerImagePreview(null);
+                      return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = (ev) => setBannerImagePreview(ev.target?.result || null);
+                    reader.readAsDataURL(file);
+                  }}
+                />
+                <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>JPG, PNG, WEBP, GIF, or AVIF - max 5MB. Added as product image in Shopify Admin.</div>
+                {errors.bannerImage && <div style={errorStyle}>{errors.bannerImage}</div>}
+              </div>
+            </div>
           </div> */}
 
           {/* Combo Config Error */}
@@ -581,26 +607,32 @@ export default function CreateSpecificComboBoxPage() {
                   {/* Combo image */}
                   <div>
                     <label style={labelStyle}>Image</label>
-                    {comboImagePreview && (
-                      <div style={{ marginBottom: "8px" }}>
-                        <img src={comboImagePreview} alt="Combo preview" style={{ width: "100%", maxHeight: "140px", objectFit: "cover", borderRadius: "6px", border: "1.5px solid #e5e7eb", display: "block" }} />
+                    <div style={{ display: "grid", gridTemplateColumns: "100px minmax(0, 1fr)", gap: "12px", alignItems: "start" }}>
+                      <div style={{ width: "100px", height: "100px", borderRadius: "6px", border: "1.5px solid #e5e7eb", background: "#f9fafb", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {comboImagePreview ? (
+                          <img src={comboImagePreview} alt="Combo preview" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                        ) : (
+                          <span style={{ fontSize: "10px", color: "#9ca3af", fontWeight: "600", letterSpacing: "0.04em" }}>NO IMAGE</span>
+                        )}
                       </div>
-                    )}
-                    <input
-                      type="file"
-                      name="comboImage"
-                      accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-                      style={{ ...fieldStyle, padding: "7px 12px" }}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = (ev) => setComboImagePreview(ev.target.result);
-                        reader.readAsDataURL(file);
-                      }}
-                    />
-                    <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "6px" }}>JPG, PNG, WEBP, GIF, or AVIF - max 2MB. Used as the image for all combo steps.</div>
-                    {errors.comboImage && <div style={errorStyle}><AdminIcon type="alert-triangle" size="small" /> {errors.comboImage}</div>}
+                      <div>
+                        <input
+                          type="file"
+                          name="comboImage"
+                          accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                          style={{ ...fieldStyle, padding: "7px 12px" }}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onload = (ev) => setComboImagePreview(ev.target?.result || null);
+                            reader.readAsDataURL(file);
+                          }}
+                        />
+                        <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "6px" }}>JPG, PNG, WEBP, GIF, or AVIF - max 2MB. Used as the image for all combo steps.</div>
+                        {errors.comboImage && <div style={errorStyle}><AdminIcon type="alert-triangle" size="small" /> {errors.comboImage}</div>}
+                      </div>
+                    </div>
                   </div>
                   {/* Bundle Price */}
                   <div>

@@ -482,18 +482,18 @@ export default function CreateSpecificComboBoxPage() {
         <s-section>
           {/* Combo Name */}
           <div style={{ marginBottom: "20px" }}>
-            <label style={labelStyle}>Combo Name *</label>
+            <label style={labelStyle}>Title *</label>
             <input type="text" name="comboName" placeholder="e.g. Premium Bundle" style={{ ...fieldStyle, borderColor: errors.comboName ? "#e11d48" : "#d1d5db" }} />
             {errors.comboName && <div style={errorStyle}>{errors.comboName}</div>}
           </div>
 
           {/* Banner Image */}
-          <div style={{ marginBottom: "20px" }}>
+          {/* <div style={{ marginBottom: "20px" }}>
             <label style={labelStyle}>Banner Image (optional)</label>
             <input type="file" name="bannerImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ ...fieldStyle, padding: "7px 12px" }} />
             <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>JPG, PNG, WEBP, GIF, or AVIF — max 5MB. Added as product image in Shopify Admin.</div>
             {errors.bannerImage && <div style={errorStyle}>{errors.bannerImage}</div>}
-          </div>
+          </div> */}
 
           {/* Combo Config Error */}
           {comboFormError && (
@@ -612,7 +612,7 @@ export default function CreateSpecificComboBoxPage() {
                     )}
                     {comboConfig.bundlePriceType === "dynamic" && (
                       <div style={{ border: "1px solid #e5e7eb", borderRadius: "5px", padding: "12px", background: "#f9fafb" }}>
-                        <div style={{ display: "block", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: comboConfig.discountType !== "none" ? "10px" : "0" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: comboConfig.discountType !== "none" ? "10px" : "0" }}>
                           <div>
                             <label style={labelStyle}>Discount Type</label>
                             <select
@@ -625,7 +625,7 @@ export default function CreateSpecificComboBoxPage() {
                             >
                               <option value="percent">% Off Total</option>
                               <option value="fixed">₹ Fixed Discount</option>
-                              <option value="none">Combo product</option>
+                              <option value="none">None </option>
                             </select>
                           </div>
                           {comboConfig.discountType !== "none" && (
@@ -765,6 +765,11 @@ export default function CreateSpecificComboBoxPage() {
                         </div>
                       </div>
                       <div style={{ padding: "16px" }}>
+                        <div style={{ marginBottom: "12px" }}>
+                          <label style={labelStyle}>Step label</label>
+                          <input value={step.label} onChange={(e) => updateComboStep(ai, "label", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Main Product" />
+                          <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>Heading shown on the storefront step</div>
+                        </div>
                         <label style={labelStyle}>Scope</label>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "8px", marginBottom: "10px" }}>
                           {[
@@ -838,11 +843,6 @@ export default function CreateSpecificComboBoxPage() {
                       <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#111827" }}>General settings</div>
                       <div style={{ padding: "16px" }}>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-                          <div>
-                            <label style={labelStyle}>Step label</label>
-                            <input value={step.label} onChange={(e) => updateComboStep(ai, "label", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Main Product" />
-                            <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>Heading shown on the storefront step</div>
-                          </div>
                           <div>
                             <label style={labelStyle}>Popup title</label>
                             <input value={step.popup.title} onChange={(e) => updateComboStepPopup(ai, "title", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Choose your main product" />

@@ -5,6 +5,7 @@ import { authenticate } from "../shopify.server";
 import {
   listBoxes,
   deleteBox,
+  toggleBoxStatus,
   reorderBoxes,
   activateAllBundleProducts,
   repairMissingShopifyProducts,
@@ -107,6 +108,12 @@ export const action = async ({ request }) => {
     await reorderBoxes(shop, orderedIds);
     return { ok: true };
   }
+  if (intent === "toggle_status") {
+    const id = formData.get("id");
+    const isActive = formData.get("isActive") === "true";
+    await toggleBoxStatus(id, shop, isActive);
+    return { ok: true };
+  }
   return { ok: false };
 };
 
@@ -155,6 +162,7 @@ export default function ManageBoxesPage() {
   const navigate = useNavigate();
   const navigation = useNavigation();
   const fetcher = useFetcher();
+  const toggleFetcher = useFetcher();
 
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [search, setSearch] = useState("");
@@ -163,17 +171,36 @@ export default function ManageBoxesPage() {
   const isDeleteSubmitting =
     fetcher.state !== "idle" &&
     fetcher.formData?.get("_action") === "delete";
-  const isPageLoading = manualPageLoading || navigation.state !== "idle" || isDeleteSubmitting;
+  const isReorderSubmitting =
+    fetcher.state !== "idle" &&
+    fetcher.formData?.get("_action") === "reorder";
+  const isToggleSubmitting =
+    toggleFetcher.state !== "idle" &&
+    toggleFetcher.formData?.get("_action") === "toggle_status";
+  const pendingToggleId = isToggleSubmitting ? parseInt(toggleFetcher.formData?.get("id"), 10) : null;
+  const pendingToggleState = isToggleSubmitting ? toggleFetcher.formData?.get("isActive") === "true" : null;
+  const isPageLoading =
+    manualPageLoading ||
+    navigation.state !== "idle" ||
+    isDeleteSubmitting ||
+    isReorderSubmitting ||
+    isToggleSubmitting;
 
   function startPageLoading() {
     setManualPageLoading(true);
   }
 
   useEffect(() => {
-    if (manualPageLoading && navigation.state === "idle" && !isDeleteSubmitting) {
+    if (
+      manualPageLoading &&
+      navigation.state === "idle" &&
+      !isDeleteSubmitting &&
+      !isReorderSubmitting &&
+      !isToggleSubmitting
+    ) {
       setManualPageLoading(false);
     }
-  }, [manualPageLoading, navigation.state, isDeleteSubmitting]);
+  }, [manualPageLoading, navigation.state, isDeleteSubmitting, isReorderSubmitting, isToggleSubmitting]);
 
   function navigateTo(path) {
     startPageLoading();
@@ -188,6 +215,13 @@ export default function ManageBoxesPage() {
       fetcher.submit({ _action: "delete", id: String(deleteConfirm.id) }, { method: "POST" });
     }
     setDeleteConfirm(null);
+  }
+
+  function toggleStatus(id, nextState) {
+    toggleFetcher.submit(
+      { _action: "toggle_status", id: String(id), isActive: String(nextState) },
+      { method: "POST" },
+    );
   }
 
   let dragSrcId = null;
@@ -215,8 +249,17 @@ export default function ManageBoxesPage() {
       ? boxes.filter((b) => b.id !== parseInt(fetcher.formData.get("id")))
       : boxes;
 
+  const boxesWithPendingToggle = useMemo(
+    () => (
+      pendingToggleId === null
+        ? baseBoxes
+        : baseBoxes.map((b) => (b.id === pendingToggleId ? { ...b, isActive: pendingToggleState } : b))
+    ),
+    [baseBoxes, pendingToggleId, pendingToggleState],
+  );
+
   const displayBoxes = useMemo(() => {
-    let result = baseBoxes;
+    let result = boxesWithPendingToggle;
     if (statusFilter === "active") result = result.filter((b) => b.isActive);
     if (statusFilter === "inactive") result = result.filter((b) => !b.isActive);
     if (search.trim()) {
@@ -226,11 +269,11 @@ export default function ManageBoxesPage() {
       );
     }
     return result;
-  }, [baseBoxes, statusFilter, search]);
+  }, [boxesWithPendingToggle, statusFilter, search]);
 
   const totalOrders = baseBoxes.reduce((s, b) => s + b.orderCount, 0);
-  const activeCount = baseBoxes.filter((b) => b.isActive).length;
-  const inactiveCount = baseBoxes.length - activeCount;
+  const activeCount = boxesWithPendingToggle.filter((b) => b.isActive).length;
+  const inactiveCount = boxesWithPendingToggle.length - activeCount;
 
   return (
     <s-page heading="Combo Boxes" inlineSize="large">
@@ -386,6 +429,49 @@ export default function ManageBoxesPage() {
         .cb-btn.del:hover { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
 
         /* ── Drag handle ── */
+        .cb-toggle-wrap {
+          display: inline-flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 8px;
+          min-width: 96px;
+        }
+        .cb-toggle-label {
+          font-size: 11px;
+          font-weight: 700;
+          color: #6b7280;
+          min-width: 42px;
+          text-align: right;
+        }
+        .cb-toggle-btn {
+          position: relative;
+          width: 42px;
+          height: 24px;
+          border: none;
+          border-radius: 999px;
+          background: #d1d5db;
+          padding: 0;
+          cursor: pointer;
+          transition: background 0.16s;
+        }
+        .cb-toggle-btn.is-on { background: #111827; }
+        .cb-toggle-btn:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+        .cb-toggle-knob {
+          position: absolute;
+          top: 3px;
+          left: 3px;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: #ffffff;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.24);
+          transition: left 0.16s;
+        }
+        .cb-toggle-btn.is-on .cb-toggle-knob { left: 21px; }
+
         .cb-drag {
           color: #d1d5db; cursor: grab; font-size: 15px;
           line-height: 1; user-select: none; padding: 0 2px;
@@ -454,9 +540,6 @@ export default function ManageBoxesPage() {
       `}</style>
 
       <ui-title-bar title="Combo Boxes">
-        <button onClick={() => navigateTo("/app/storefront-visibility")}>
-          Frontend Visibility
-        </button>
         <button onClick={() => navigateTo("/app/boxes/specific-combo")}>
           Specific Combo
         </button>
@@ -552,12 +635,14 @@ export default function ManageBoxesPage() {
                   <th>Price</th>
                   <th>Type</th>
                   <th>Orders</th>
+                  <th>Enabled</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {displayBoxes.map((box) => {
                   const avatar = getAvatarColor(box.id);
+                  const isRowTogglePending = isToggleSubmitting && pendingToggleId === box.id;
                   return (
                     <tr
                       key={box.id}
@@ -656,6 +741,28 @@ export default function ManageBoxesPage() {
                           </span>
                         ) : (
                           <span className="cb-orders-zero">—</span>
+                        )}
+                      </td>
+
+                      {/* Enabled */}
+                      <td>
+                        <div className="cb-toggle-wrap">
+                          <span className="cb-toggle-label">{box.isActive ? "On" : "Off"}</span>
+                          <button
+                            type="button"
+                            className={`cb-toggle-btn ${box.isActive ? "is-on" : ""}`}
+                            disabled={isToggleSubmitting}
+                            aria-label={box.isActive ? "Disable box" : "Enable box"}
+                            title={box.isActive ? "Disable on storefront" : "Enable on storefront"}
+                            onClick={() => toggleStatus(box.id, !box.isActive)}
+                          >
+                            <span className="cb-toggle-knob" />
+                          </button>
+                        </div>
+                        {isRowTogglePending && (
+                          <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 4, textAlign: "right" }}>
+                            Updating...
+                          </div>
                         )}
                       </td>
 

@@ -857,18 +857,20 @@
   // ─── API ──────────────────────────────────────────────────────────────────────
 
   function fetchBoxes(shop, apiBase, cb) {
-    fetch(apiBase + '/api/storefront/boxes?shop=' + encodeURIComponent(shop))
+    fetch(apiBase + '/api/storefront/boxes?shop=' + encodeURIComponent(shop), { cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (data) {
-        if (data && Array.isArray(data.boxes)) cb(null, data.boxes, data.settings || {});
-        else if (Array.isArray(data)) cb(null, data, {});
+        if (data && Array.isArray(data.boxes)) {
+          cb(null, data.boxes.filter(function (b) { return b && b.isActive !== false; }), data.settings || {});
+        }
+        else if (Array.isArray(data)) cb(null, data.filter(function (b) { return b && b.isActive !== false; }), {});
         else cb(null, [], {});
       })
       .catch(function (e) { cb(e, null, {}); });
   }
 
   function fetchProducts(boxId, shop, apiBase, cb) {
-    fetch(apiBase + '/api/storefront/boxes/' + boxId + '/products?shop=' + encodeURIComponent(shop))
+    fetch(apiBase + '/api/storefront/boxes/' + boxId + '/products?shop=' + encodeURIComponent(shop), { cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (data) { cb(null, data); })
       .catch(function (e) { cb(e, null); });

@@ -1476,10 +1476,13 @@ export async function updateBox(id, shop, data, admin) {
     }
   }
 
-  // Replace eligible products only when a non-empty list is submitted (prevents accidental wipe)
-  if (data.eligibleProducts && Array.isArray(data.eligibleProducts) && data.eligibleProducts.length > 0) {
+  // Replace eligible products when explicitly requested, or when a non-empty list is submitted.
+  const shouldReplaceEligibleProducts =
+    data.replaceEligibleProducts === true || data.replaceEligibleProducts === "true";
+  if (shouldReplaceEligibleProducts || (data.eligibleProducts && Array.isArray(data.eligibleProducts) && data.eligibleProducts.length > 0)) {
     await db.comboBoxProduct.deleteMany({ where: { boxId: parseInt(id) } });
-    const productRows = data.eligibleProducts.map((p) => {
+    const nextEligibleProducts = Array.isArray(data.eligibleProducts) ? data.eligibleProducts : [];
+    const productRows = nextEligibleProducts.map((p) => {
       const rawIds = Array.isArray(p.variantIds) ? p.variantIds : [];
       const numericIds = rawIds.map((id) => (typeof id === 'string' && id.includes('/') ? id.split('/').pop() : String(id)));
       return {

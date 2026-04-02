@@ -228,6 +228,9 @@ export const action = async ({ request, params }) => {
     data.eligibleProducts = allProds;
   } else if (scopeType === "specific_products" && eligibleProducts.length > 0) {
     data.eligibleProducts = eligibleProducts;
+  } else if (scopeType === "wholestore") {
+    data.eligibleProducts = [];
+    data.replaceEligibleProducts = true;
   }
 
   try {
@@ -472,28 +475,58 @@ export default function BoxSettingsPage() {
           <div style={sectionHeadingStyle}><AdminIcon type="target" size="small" /> Scope</div>
           <div style={{ marginBottom: "12px" }}>
             <label style={labelStyle}>Select Scope</label>
-            <select
-              value={scope}
-              onChange={(e) => { setScope(e.target.value); setScopeItems([]); }}
-              style={{ width: "100%", padding: "9px 12px", border: "1.5px solid #d1d5db", borderRadius: "5px", fontSize: "13px", color: "#111827", background: "#fff", boxSizing: "border-box", outline: "none", cursor: "pointer", appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", paddingRight: "32px" }}
-            >
-              <option value="specific_collections">Specific collections</option>
-              <option value="specific_products">Specific products</option>
-            </select>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "8px" }}>
+              {[
+                { value: "specific_collections", label: "Specific collections" },
+                { value: "specific_products", label: "Specific products" },
+                { value: "wholestore", label: "Whole store" },
+              ].map((opt) => (
+                <label
+                  key={opt.value}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 10px",
+                    border: `1.5px solid ${scope === opt.value ? "#000000" : "#d1d5db"}`,
+                    borderRadius: "6px",
+                    background: scope === opt.value ? "#f9fafb" : "#fff",
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    color: "#374151",
+                    fontWeight: scope === opt.value ? "700" : "600",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="scope-radio"
+                    value={opt.value}
+                    checked={scope === opt.value}
+                    onChange={() => { setScope(opt.value); setScopeItems([]); }}
+                    style={{ accentColor: "#000000", cursor: "pointer" }}
+                  />
+                  <span>{opt.label}</span>
+                </label>
+              ))}
+            </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <button
-              type="button"
-              onClick={() => { setScopeSearch(""); setShowScopePicker(true); }}
-              style={{ padding: "8px 16px", background: "#000000", border: "1.5px solid #000000", borderRadius: "5px", fontSize: "13px", fontWeight: "600", color: "#ffffff", cursor: "pointer", transition: "background 0.12s, border-color 0.12s" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "#374151"; e.currentTarget.style.borderColor = "#374151"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "#000000"; e.currentTarget.style.borderColor = "#000000"; }}
-            >
-              {scope === "specific_collections" ? "Select collections" : "Select products"}
-            </button>
-            <span style={{ fontSize: "12px", color: "#6b7280", fontWeight: "500" }}>{scopeItems.length} selected</span>
+            {scope === "wholestore" ? (
+              <span style={{ fontSize: "12px", color: "#374151", fontWeight: "600" }}>All store products will be available in this combo.</span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => { setScopeSearch(""); setShowScopePicker(true); }}
+                style={{ padding: "8px 16px", background: "#000000", border: "1.5px solid #000000", borderRadius: "5px", fontSize: "13px", fontWeight: "600", color: "#ffffff", cursor: "pointer", transition: "background 0.12s, border-color 0.12s" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#374151"; e.currentTarget.style.borderColor = "#374151"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "#000000"; e.currentTarget.style.borderColor = "#000000"; }}
+              >
+                {scope === "specific_collections" ? "Select collections" : "Select products"}
+              </button>
+            )}
+            <span style={{ fontSize: "12px", color: "#6b7280", fontWeight: "500" }}>{scope === "wholestore" ? "Whole store" : `${scopeItems.length} selected`}</span>
           </div>
-          {scopeItems.length > 0 && (
+          {scope !== "wholestore" && scopeItems.length > 0 && (
             <div style={{ marginTop: "10px", padding: "10px 12px", background: "#f9fafb", borderRadius: "5px", border: "1px solid #e5e7eb" }}>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                 {scopeItems.map((item) => (
@@ -537,7 +570,7 @@ export default function BoxSettingsPage() {
       )}
 
       {/* Scope Picker Modal */}
-      {showScopePicker && (() => {
+      {showScopePicker && scope !== "wholestore" && (() => {
         const isCollections = scope === "specific_collections";
         const allItems = isCollections ? collections : products;
         const filtered = scopeSearch.trim()

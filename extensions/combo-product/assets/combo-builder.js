@@ -869,7 +869,57 @@
       .catch(function (e) { cb(e, null, {}); });
   }
 
-  function fetchProducts(boxId, shop, apiBase, cb) {
+  var _wholeStoreProductsCache = null;
+  function fetchWholeStoreProducts(cb) {
+    if (Array.isArray(_wholeStoreProductsCache)) { cb(null, _wholeStoreProductsCache); return; }
+
+    var allProds = [];
+    var seenIds = {};
+
+    function fetchPage(page) {
+      fetch('/products.json?limit=250&page=' + page, { cache: 'no-store' })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function (data) {
+          var batch = (data.products || []);
+          batch.forEach(function (p) {
+            if (seenIds[p.id]) return;
+            seenIds[p.id] = true;
+            var v0 = p.variants && p.variants[0] ? p.variants[0] : null;
+            allProds.push({
+              productId: p.id ? ('gid://shopify/Product/' + p.id) : null,
+              productTitle: p.title || '',
+              productHandle: p.handle || '',
+              productImageUrl: p.images && p.images[0] ? p.images[0].src : null,
+              productPrice: v0 ? parseFloat(v0.price) : 0,
+              variantIds: (p.variants || []).map(function (v) { return String(v.id); }),
+              isCollection: false,
+            });
+          });
+          if (batch.length === 250) {
+            fetchPage(page + 1);
+          } else {
+            _wholeStoreProductsCache = allProds;
+            cb(null, allProds);
+          }
+        })
+        .catch(function (err) {
+          if (allProds.length > 0) {
+            _wholeStoreProductsCache = allProds;
+            cb(null, allProds);
+          } else {
+            cb(err, null);
+          }
+        });
+    }
+
+    fetchPage(1);
+  }
+
+  function fetchProducts(boxId, shop, apiBase, scopeType, cb) {
+    if (scopeType === 'wholestore') {
+      fetchWholeStoreProducts(cb);
+      return;
+    }
     fetch(apiBase + '/api/storefront/boxes/' + boxId + '/products?shop=' + encodeURIComponent(shop), { cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (data) { cb(null, data); })
@@ -1252,7 +1302,7 @@
       }, 0);
     } else {
       showPageLoader('Loading products…');
-      fetchProducts(box.id, ctx.shop, ctx.apiBase, function (err, products) {
+      fetchProducts(box.id, ctx.shop, ctx.apiBase, box.scopeType, function (err, products) {
         hidePageLoader(true);
         if (ctx._openBoxId !== box.id) return;
         if (err || !products || products.length === 0) {

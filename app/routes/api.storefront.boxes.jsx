@@ -65,6 +65,7 @@ export const loader = async ({ request }) => {
       bundlePriceType: box.bundlePriceType || "manual",
       sortOrder: box.sortOrder,
       pageHandle: box.pageHandle || null,
+      scopeType: box.scopeType || "specific_collections",
       comboConfig: (() => {
         const boxStepImgs = stepImagesByBox[box.id] || [];
         const primaryImageRecord = boxStepImgs.find((img) => img.imageData);

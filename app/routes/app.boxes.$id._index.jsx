@@ -142,6 +142,8 @@ export const loader = async ({ request, params }) => {
   let savedDiscountType = "percent";
   let savedDiscountValue = "10";
   let savedBoxSubtitle = "";
+  let savedBuyQuantity = "1";
+  let savedGetQuantity = "1";
   if (comboStepsConfig) {
     try {
       const parsed = JSON.parse(comboStepsConfig);
@@ -149,11 +151,13 @@ export const loader = async ({ request, params }) => {
       if (parsed.discountType) savedDiscountType = parsed.discountType;
       if (parsed.discountValue != null) savedDiscountValue = String(parsed.discountValue);
       if (typeof parsed.boxSubtitle === "string") savedBoxSubtitle = parsed.boxSubtitle;
+      if (parsed.buyQuantity != null) savedBuyQuantity = String(parsed.buyQuantity);
+      if (parsed.getQuantity != null) savedGetQuantity = String(parsed.getQuantity);
     } catch {}
   }
 
   return {
-    box: { ...boxWithoutBinary, bundlePrice: effectiveBundlePrice, bannerImageSrc, discountType: savedDiscountType, discountValue: savedDiscountValue, boxSubtitle: savedBoxSubtitle },
+    box: { ...boxWithoutBinary, bundlePrice: effectiveBundlePrice, bannerImageSrc, discountType: savedDiscountType, discountValue: savedDiscountValue, boxSubtitle: savedBoxSubtitle, buyQuantity: savedBuyQuantity, getQuantity: savedGetQuantity },
     products,
     collections,
   };
@@ -190,6 +194,8 @@ export const action = async ({ request, params }) => {
     bundlePriceType: formData.get("bundlePriceType"),
     discountType: formData.get("discountType") || "none",
     discountValue: formData.get("discountValue") || "0",
+    buyQuantity: formData.get("buyQuantity") || "1",
+    getQuantity: formData.get("getQuantity") || "1",
     isGiftBox: formData.get("isGiftBox") === "true",
     allowDuplicates: formData.get("allowDuplicates") === "true",
     bannerImage,
@@ -282,6 +288,8 @@ export default function BoxSettingsPage() {
   const [manualPrice, setManualPrice] = useState(String(box.bundlePrice));
   const [discountType, setDiscountType] = useState(box.discountType || "percent");
   const [discountValue, setDiscountValue] = useState(box.discountValue || "10");
+  const [buyQuantity, setBuyQuantity] = useState(box.buyQuantity || "1");
+  const [getQuantity, setGetQuantity] = useState(box.getQuantity || "1");
   const [scope, setScope] = useState(box.scopeType || "specific_collections");
   const [scopeItems, setScopeItems] = useState(() => {
     // For specific_products: initialize from ComboBoxProduct records (full data) if available
@@ -360,7 +368,9 @@ export default function BoxSettingsPage() {
         <input type="hidden" name="bundlePrice" value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
         <input type="hidden" name="bundlePriceType" value={priceMode} />
         <input type="hidden" name="discountType" value={discountType} />
-        <input type="hidden" name="discountValue" value={discountValue} />
+        <input type="hidden" name="discountValue" value={discountType === "buy_x_get_y" ? "100" : discountValue} />
+        <input type="hidden" name="buyQuantity" value={buyQuantity} />
+        <input type="hidden" name="getQuantity" value={getQuantity} />
         <input type="hidden" name="itemCount" value={itemCount} />
         <input type="hidden" name="isGiftBox" value={String(options.isGiftBox)} />
         <input type="hidden" name="allowDuplicates" value={String(options.allowDuplicates)} />
@@ -424,15 +434,35 @@ export default function BoxSettingsPage() {
                       <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }}>
                         <option value="percent">% Off Total</option>
                         <option value="fixed">₹ Fixed Discount</option>
+                        <option value="buy_x_get_y">Buy X Get Y Free</option>
                         <option value="none">No Discount</option>
                       </select>
                     </div>
-                    {discountType !== "none" && (
+                    {discountType === "buy_x_get_y" ? (
+                      <>
+                        <div>
+                          <label style={{ ...labelStyle, fontSize: "10px" }}>Buy Qty (X)</label>
+                          <input type="number" min="1" step="1" value={buyQuantity} onChange={(e) => setBuyQuantity(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
+                        </div>
+                        <div style={{ gridColumn: "1 / -1" }}>
+                          <label style={{ ...labelStyle, fontSize: "10px" }}>Get Free (Y)</label>
+                          <input type="number" min="1" step="1" value={getQuantity} onChange={(e) => setGetQuantity(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
+                        </div>
+                      </>
+                    ) : discountType !== "none" ? (
                       <div>
                         <label style={{ ...labelStyle, fontSize: "10px" }}>{discountType === "percent" ? "Discount %" : "Amount (₹)"}</label>
                         <input type="number" min="0" step={discountType === "percent" ? "1" : "0.01"} max={discountType === "percent" ? "99" : undefined} value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
                       </div>
-                    )}
+                    ) : null}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "8px" }}>
+                    {discountType === "buy_x_get_y"
+                      ? <>Buy <strong>{buyQuantity}</strong>, get <strong>{getQuantity}</strong> free — <span style={{ color: "#166534", fontWeight: 600 }}>applied at checkout</span></>
+                      : discountType !== "none"
+                        ? <>Discount applied on MRP at checkout</>
+                        : <>No discount — full MRP charged</>
+                    }
                   </div>
                 </div>
               )}

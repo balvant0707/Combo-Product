@@ -218,6 +218,8 @@ export default function CreateBoxPage() {
   const [manualPrice, setManualPrice] = useState("");
   const [discountType, setDiscountType] = useState("percent");
   const [discountValue, setDiscountValue] = useState("10");
+  const [buyQuantity, setBuyQuantity] = useState("1");
+  const [getQuantity, setGetQuantity] = useState("1");
 
   const errors = actionData?.errors || {};
 
@@ -289,7 +291,9 @@ export default function CreateBoxPage() {
         <input type="hidden" name="bundlePrice" value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
         <input type="hidden" name="bundlePriceType" value={priceMode} />
         <input type="hidden" name="discountType" value={discountType} />
-        <input type="hidden" name="discountValue" value={discountValue} />
+        <input type="hidden" name="discountValue" value={discountType === "buy_x_get_y" ? "100" : discountValue} />
+        <input type="hidden" name="buyQuantity" value={buyQuantity} />
+        <input type="hidden" name="getQuantity" value={getQuantity} />
         <input type="hidden" name="itemCount" value={itemCount} />
         <input type="hidden" name="scope" value={scope} />
         <input type="hidden" name="scopeItems" value={JSON.stringify(scopeItems.map(i => ({ id: i.id, title: i.title })))} />
@@ -356,21 +360,38 @@ export default function CreateBoxPage() {
                         <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }}>
                           <option value="percent">% Off Total</option>
                           <option value="fixed">₹ Fixed Discount</option>
+                          <option value="buy_x_get_y">Buy X Get Y Free</option>
                           <option value="none">No Discount</option>
                         </select>
                       </div>
-                      {discountType !== "none" && (
+                      {discountType === "buy_x_get_y" ? (
+                        <>
+                          <div>
+                            <label style={{ ...labelStyle, fontSize: "10px" }}>Buy Qty (X)</label>
+                            <input type="number" min="1" step="1" value={buyQuantity} onChange={(e) => setBuyQuantity(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
+                          </div>
+                          <div style={{ gridColumn: "1 / -1" }}>
+                            <label style={{ ...labelStyle, fontSize: "10px" }}>Get Free (Y)</label>
+                            <input type="number" min="1" step="1" value={getQuantity} onChange={(e) => setGetQuantity(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
+                          </div>
+                        </>
+                      ) : discountType !== "none" ? (
                         <div>
                           <label style={{ ...labelStyle, fontSize: "10px" }}>{discountType === "percent" ? "Discount %" : "Amount (₹)"}</label>
                           <input type="number" min="0" step={discountType === "percent" ? "1" : "0.01"} max={discountType === "percent" ? "99" : undefined} value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
                         </div>
-                      )}
+                      ) : null}
                     </div>
                     <div style={{ fontSize: "11px", color: "#6b7280" }}>
-                      MRP est: ₹{estimatedTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                      {discountType !== "none" && dynamicPrice < estimatedTotal && (
-                        <> → <strong style={{ color: "#166534" }}>₹{dynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></>
-                      )}
+                      {discountType === "buy_x_get_y"
+                        ? <>Buy <strong>{buyQuantity}</strong>, get <strong>{getQuantity}</strong> free — <span style={{ color: "#166534", fontWeight: 600 }}>applied at checkout</span></>
+                        : <>
+                            MRP est: ₹{estimatedTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                            {discountType !== "none" && dynamicPrice < estimatedTotal && (
+                              <> → <strong style={{ color: "#166534" }}>₹{dynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></>
+                            )}
+                          </>
+                      }
                     </div>
                   </div>
                 )}

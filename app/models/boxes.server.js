@@ -1089,7 +1089,9 @@ export async function createBox(shop, data, admin) {
       comboStepsConfig: JSON.stringify({
         bundlePriceType: data.bundlePriceType === "dynamic" ? "dynamic" : "manual",
         discountType: data.discountType || "none",
-        discountValue: data.discountValue || "0",
+        discountValue: data.discountType === "buy_x_get_y" ? "100" : (data.discountValue || "0"),
+        buyQuantity: parseInt(data.buyQuantity) || 1,
+        getQuantity: parseInt(data.getQuantity) || 1,
         bundlePrice: bundlePrice,
         boxSubtitle: typeof data.boxSubtitle === "string" ? data.boxSubtitle.trim() : "",
       }),
@@ -1098,14 +1100,27 @@ export async function createBox(shop, data, admin) {
 
   // Create Shopify automatic discount for dynamic-priced boxes
   if (admin && data.bundlePriceType === "dynamic" && shopifyProductId) {
-    await syncShopifyDiscount(admin, {
-      boxId: box.id,
-      existingDiscountId: null,
-      title: `${data.boxName || data.displayTitle} Bundle Discount`,
-      discountType: data.discountType || "none",
-      discountValue: data.discountValue || "0",
-      shopifyProductId,
-    });
+    if (data.discountType === "buy_x_get_y") {
+      await syncShopifyBuyXGetYDiscount(admin, {
+        boxId: box.id,
+        existingDiscountId: null,
+        title: `${data.boxName || data.displayTitle} Bundle Discount`,
+        discountType: "buy_x_get_y",
+        discountValue: "100",
+        shopifyProductId,
+        buyQuantity: parseInt(data.buyQuantity) || 1,
+        getQuantity: parseInt(data.getQuantity) || 1,
+      });
+    } else {
+      await syncShopifyDiscount(admin, {
+        boxId: box.id,
+        existingDiscountId: null,
+        title: `${data.boxName || data.displayTitle} Bundle Discount`,
+        discountType: data.discountType || "none",
+        discountValue: data.discountValue || "0",
+        shopifyProductId,
+      });
+    }
   }
 
   // Save eligible products
@@ -1508,7 +1523,9 @@ export async function updateBox(id, shop, data, admin) {
     }
     rawConfig.bundlePriceType = data.bundlePriceType === "dynamic" ? "dynamic" : (rawConfig.bundlePriceType || "manual");
     rawConfig.discountType = data.discountType || "none";
-    rawConfig.discountValue = data.discountValue || "0";
+    rawConfig.discountValue = data.discountType === "buy_x_get_y" ? "100" : (data.discountValue || "0");
+    rawConfig.buyQuantity = parseInt(data.buyQuantity) || 1;
+    rawConfig.getQuantity = parseInt(data.getQuantity) || 1;
     rawConfig.bundlePrice = bundlePrice;
     if (data.boxSubtitle !== undefined) {
       rawConfig.boxSubtitle = typeof data.boxSubtitle === "string" ? data.boxSubtitle.trim() : "";
@@ -1524,14 +1541,28 @@ export async function updateBox(id, shop, data, admin) {
     const effectivePriceType = data.bundlePriceType !== undefined
       ? (data.bundlePriceType === "dynamic" ? "dynamic" : "manual")
       : existing.bundlePriceType;
-    await syncShopifyDiscount(admin, {
-      boxId: parseInt(id),
-      existingDiscountId: existing.shopifyDiscountId || null,
-      title: `${data.boxName ?? existing.boxName} Bundle Discount`,
-      discountType: effectivePriceType === "dynamic" ? (data.discountType || "none") : "none",
-      discountValue: data.discountValue || "0",
-      shopifyProductId: existing.shopifyProductId,
-    });
+    const effectiveDiscountType = effectivePriceType === "dynamic" ? (data.discountType || "none") : "none";
+    if (effectiveDiscountType === "buy_x_get_y") {
+      await syncShopifyBuyXGetYDiscount(admin, {
+        boxId: parseInt(id),
+        existingDiscountId: existing.shopifyDiscountId || null,
+        title: `${data.boxName ?? existing.boxName} Bundle Discount`,
+        discountType: "buy_x_get_y",
+        discountValue: "100",
+        shopifyProductId: existing.shopifyProductId,
+        buyQuantity: parseInt(data.buyQuantity) || 1,
+        getQuantity: parseInt(data.getQuantity) || 1,
+      });
+    } else {
+      await syncShopifyDiscount(admin, {
+        boxId: parseInt(id),
+        existingDiscountId: existing.shopifyDiscountId || null,
+        title: `${data.boxName ?? existing.boxName} Bundle Discount`,
+        discountType: effectiveDiscountType,
+        discountValue: data.discountValue || "0",
+        shopifyProductId: existing.shopifyProductId,
+      });
+    }
   }
 
   return db.comboBox.findUnique({

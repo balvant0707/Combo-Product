@@ -97,8 +97,8 @@ const DEFAULT_COMBO = {
   subtitle: "Choose a product for each step",
   bundlePrice: 0,
   bundlePriceType: "dynamic",
-  discountType: "buy_x_get_y",
-  discountValue: "100",
+  discountType: "none",
+  discountValue: "0",
   buyQuantity: 1,
   getQuantity: 1,
   isActive: true,
@@ -107,6 +107,10 @@ const DEFAULT_COMBO = {
   allowReselection: true,
   steps: Array.from({ length: MIN_COMBO_STEPS }, (_, index) => buildDefaultStep(index)),
 };
+
+function normalizeSpecificDiscountType(discountType) {
+  return discountType === "buy_x_get_y" ? "none" : (discountType || "none");
+}
 
 function getBuyXGetYFreeUnits(totalQty, buyQty, getQty) {
   const safeQty = Math.max(0, parseInt(String(totalQty || 0), 10) || 0);
@@ -591,22 +595,16 @@ export default function CreateSpecificComboBoxPage() {
                           <div>
                             <label style={labelStyle}>Discount Type</label>
                             <select
-                              value={comboConfig.discountType}
+                              value={normalizeSpecificDiscountType(comboConfig.discountType)}
                               onChange={(e) => {
-                                const nextType = e.target.value;
+                                const nextType = normalizeSpecificDiscountType(e.target.value);
                                 updateComboField("discountType", nextType);
-                                if (nextType === "buy_x_get_y") {
-                                  updateComboField("discountValue", "100");
-                                  if (!(parseInt(String(comboConfig.buyQuantity), 10) > 0)) updateComboField("buyQuantity", 1);
-                                  if (!(parseInt(String(comboConfig.getQuantity), 10) > 0)) updateComboField("getQuantity", 1);
-                                }
                               }}
                               style={{ ...fieldStyle, borderColor: "#d1d5db", color: "#000000", fontWeight: "600" }}
                             >
                               <option value="percent">% Off Total</option>
                               <option value="fixed">₹ Fixed Discount</option>
-                              <option value="buy_x_get_y">Buy X Get Discount</option>
-                              <option value="none">No Discount</option>
+                              <option value="none">Combo product</option>
                             </select>
                           </div>
                           {comboConfig.discountType !== "none" && (

@@ -87,8 +87,8 @@ const DEFAULT_COMBO_CONFIG = {
   subtitle: "Choose a product for each step",
   bundlePrice: 0,
   bundlePriceType: "manual",
-  discountType: "buy_x_get_y",
-  discountValue: "100",
+  discountType: "none",
+  discountValue: "0",
   buyQuantity: 1,
   getQuantity: 1,
   isActive: true,
@@ -97,6 +97,10 @@ const DEFAULT_COMBO_CONFIG = {
   allowReselection: true,
   steps: Array.from({ length: MIN_COMBO_STEPS }, (_, index) => buildDefaultStep(index)),
 };
+
+function normalizeSpecificDiscountType(discountType) {
+  return discountType === "buy_x_get_y" ? "none" : (discountType || "none");
+}
 
 function getBuyXGetYFreeUnits(totalQty, buyQty, getQty) {
   const safeQty = Math.max(0, parseInt(String(totalQty || 0), 10) || 0);
@@ -233,7 +237,7 @@ export const loader = async ({ request, params }) => {
     if (box.comboStepsConfig) {
       try {
         const raw = JSON.parse(box.comboStepsConfig);
-        rawDiscountType = raw?.discountType || rawDiscountType;
+        rawDiscountType = normalizeSpecificDiscountType(raw?.discountType || rawDiscountType);
         rawDiscountValue = String(raw?.discountValue ?? rawDiscountValue);
         rawBuyQuantity = Math.max(1, parseInt(String(raw?.buyQuantity ?? rawBuyQuantity), 10) || rawBuyQuantity);
         rawGetQuantity = Math.max(1, parseInt(String(raw?.getQuantity ?? rawGetQuantity), 10) || rawGetQuantity);
@@ -420,7 +424,13 @@ export default function SpecificComboBoxPage() {
       try {
         const parsed = JSON.parse(box.comboStepsConfig);
         const type = normalizeStepCount(parseInt(parsed.type, 10) || DEFAULT_COMBO_CONFIG.type);
-        return { ...DEFAULT_COMBO_CONFIG, ...parsed, type, steps: mergeSteps(parsed.steps, type) };
+        return {
+          ...DEFAULT_COMBO_CONFIG,
+          ...parsed,
+          discountType: normalizeSpecificDiscountType(parsed.discountType),
+          type,
+          steps: mergeSteps(parsed.steps, type),
+        };
       } catch {}
     }
     // Fallback: ComboBoxConfig relation (for records saved before the comboStepsConfig sync was added)
@@ -765,22 +775,16 @@ export default function SpecificComboBoxPage() {
                       <div style={{ marginBottom: "12px" }}>
                         <label style={labelStyle}>Discount type</label>
                         <select
-                          value={comboConfig.discountType}
+                          value={normalizeSpecificDiscountType(comboConfig.discountType)}
                           onChange={(e) => {
-                            const nextType = e.target.value;
+                            const nextType = normalizeSpecificDiscountType(e.target.value);
                             updateComboField("discountType", nextType);
-                            if (nextType === "buy_x_get_y") {
-                              updateComboField("discountValue", "100");
-                              if (!(parseInt(String(comboConfig.buyQuantity), 10) > 0)) updateComboField("buyQuantity", 1);
-                              if (!(parseInt(String(comboConfig.getQuantity), 10) > 0)) updateComboField("getQuantity", 1);
-                            }
                           }}
                           style={{ ...fieldStyle, borderColor: "#d1d5db", color: "#000000", fontWeight: "600" }}
                         >
                           <option value="percent">% Off</option>
                           <option value="fixed">Fixed Amount</option>
-                          <option value="buy_x_get_y">Buy X Get Discount</option>
-                          <option value="none">None</option>
+                          <option value="none">Combo product</option>
                         </select>
                       </div>
 

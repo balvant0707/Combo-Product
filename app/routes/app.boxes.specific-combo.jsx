@@ -120,6 +120,31 @@ function normalizeSpecificDiscountType(discountType) {
   return discountType === "buy_x_get_y" ? "none" : (discountType || "none");
 }
 
+function sanitizeSpecificComboPricing(config) {
+  const safeConfig = config && typeof config === "object" ? config : {};
+  const bundlePriceType = safeConfig.bundlePriceType === "dynamic" ? "dynamic" : "manual";
+  const discountType = bundlePriceType === "dynamic"
+    ? normalizeSpecificDiscountType(safeConfig.discountType)
+    : "none";
+  const buyQuantity = bundlePriceType === "dynamic"
+    ? Math.max(1, parseInt(String(safeConfig.buyQuantity ?? 1), 10) || 1)
+    : 1;
+  const getQuantity = bundlePriceType === "dynamic"
+    ? Math.max(1, parseInt(String(safeConfig.getQuantity ?? 1), 10) || 1)
+    : 1;
+  const discountValue = bundlePriceType === "dynamic"
+    ? (discountType === "buy_x_get_y" ? "100" : String(safeConfig.discountValue ?? "0"))
+    : "0";
+  return {
+    ...safeConfig,
+    bundlePriceType,
+    discountType,
+    discountValue,
+    buyQuantity,
+    getQuantity,
+  };
+}
+
 function getBuyXGetYFreeUnits(totalQty, buyQty, getQty) {
   const safeQty = Math.max(0, parseInt(String(totalQty || 0), 10) || 0);
   const safeBuyQty = Math.max(1, parseInt(String(buyQty || 1), 10) || 1);
@@ -226,7 +251,11 @@ export const action = async ({ request }) => {
   const { session, admin, redirect } = await authenticate.admin(request);
   const formData = await request.formData();
 
-  const comboStepsConfig = formData.get("comboStepsConfig");
+  const rawComboStepsConfig = formData.get("comboStepsConfig");
+  let parsedCombo = {};
+  try { parsedCombo = JSON.parse(rawComboStepsConfig || "{}"); } catch {}
+  const normalizedCombo = sanitizeSpecificComboPricing(parsedCombo);
+  const comboStepsConfig = JSON.stringify(normalizedCombo);
   const errors = {};
   const bannerImage = await parseBannerImage(formData, errors);
   const comboImage = await parseComboImage(formData, errors);
@@ -242,12 +271,9 @@ export const action = async ({ request }) => {
   if (Object.keys(errors).length > 0) return { errors };
 
   // Derive box fields from combo config
-  let parsedCombo = {};
-  try { parsedCombo = JSON.parse(comboStepsConfig); } catch {}
-
-  const bundlePriceType = parsedCombo.bundlePriceType || "dynamic";
-  const bundlePrice = parsedCombo.bundlePrice > 0 ? String(parsedCombo.bundlePrice) : (bundlePriceType === "dynamic" ? "0.01" : "0");
-  const itemCount = String(parsedCombo.type || 2);
+  const bundlePriceType = normalizedCombo.bundlePriceType || "dynamic";
+  const bundlePrice = normalizedCombo.bundlePrice > 0 ? String(normalizedCombo.bundlePrice) : (bundlePriceType === "dynamic" ? "0.01" : "0");
+  const itemCount = String(normalizedCombo.type || 2);
 
   if (bundlePriceType === "manual" && (!bundlePrice || parseFloat(bundlePrice) <= 0)) {
     errors.bundlePrice = "Set a bundle price or switch to Dynamic mode";
@@ -260,10 +286,10 @@ export const action = async ({ request }) => {
     itemCount,
     bundlePrice,
     bundlePriceType,
-    isGiftBox:          parsedCombo.isGiftBox === true || String(parsedCombo.isGiftBox).toLowerCase() === "true",
-    allowDuplicates:    parsedCombo.allowDuplicates === true || String(parsedCombo.allowDuplicates).toLowerCase() === "true",
-    giftMessageEnabled: parsedCombo.giftMessageEnabled === true || String(parsedCombo.giftMessageEnabled).toLowerCase() === "true",
-    isActive:           parsedCombo.isActive !== false,
+    isGiftBox:          normalizedCombo.isGiftBox === true || String(normalizedCombo.isGiftBox).toLowerCase() === "true",
+    allowDuplicates:    normalizedCombo.allowDuplicates === true || String(normalizedCombo.allowDuplicates).toLowerCase() === "true",
+    giftMessageEnabled: normalizedCombo.giftMessageEnabled === true || String(normalizedCombo.giftMessageEnabled).toLowerCase() === "true",
+    isActive:           normalizedCombo.isActive !== false,
     bannerImage,
     eligibleProducts:   [],
   };
@@ -435,12 +461,12 @@ export default function CreateSpecificComboBoxPage() {
   ]);
   const comboDynamicPrice = comboDynamicDiscountBreakdown.discountedTotal;
 
-  const comboConfigJson = JSON.stringify({
+  const comboConfigJson = JSON.stringify(sanitizeSpecificComboPricing({
     ...comboConfig,
     bundlePrice: comboConfig.bundlePriceType === "dynamic"
       ? comboDynamicPrice
       : parseFloat(comboConfig.bundlePrice) || 0,
-  });
+  }));
 
   const filteredColls = collections.filter((c) => !collSearch || c.title.toLowerCase().includes(collSearch.toLowerCase()));
   const activeScopedProducts = stepProdModalIdx !== null ? (stepProducts[stepProdModalIdx] ?? products) : products;

@@ -13,6 +13,55 @@ function clampComboStepCount(value) {
   return Math.max(MIN_COMBO_STEPS, Math.min(MAX_COMBO_STEPS, value));
 }
 
+function normalizeDiscountConfigForPriceType({
+  bundlePriceType,
+  discountType,
+  discountValue,
+  buyQuantity,
+  getQuantity,
+  fallbackDiscountType = "none",
+  fallbackDiscountValue = "0",
+  fallbackBuyQuantity = 1,
+  fallbackGetQuantity = 1,
+}) {
+  const safePriceType = bundlePriceType === "dynamic" ? "dynamic" : "manual";
+  if (safePriceType !== "dynamic") {
+    return {
+      bundlePriceType: "manual",
+      discountType: "none",
+      discountValue: "0",
+      buyQuantity: 1,
+      getQuantity: 1,
+    };
+  }
+
+  const requestedType = String(discountType ?? fallbackDiscountType ?? "none");
+  const normalizedType = ["none", "percent", "fixed", "buy_x_get_y"].includes(requestedType)
+    ? requestedType
+    : "none";
+  const safeBuyQuantity = Math.max(
+    1,
+    parseInt(String(buyQuantity ?? fallbackBuyQuantity ?? 1), 10) || 1,
+  );
+  const safeGetQuantity = Math.max(
+    1,
+    parseInt(String(getQuantity ?? fallbackGetQuantity ?? 1), 10) || 1,
+  );
+  const normalizedDiscountValue = normalizedType === "buy_x_get_y"
+    ? "100"
+    : normalizedType === "none"
+      ? "0"
+      : String(discountValue ?? fallbackDiscountValue ?? "0");
+
+  return {
+    bundlePriceType: "dynamic",
+    discountType: normalizedType,
+    discountValue: normalizedDiscountValue,
+    buyQuantity: safeBuyQuantity,
+    getQuantity: safeGetQuantity,
+  };
+}
+
 export class BoxCodeValidationError extends Error {
   constructor(message) {
     super(message);
@@ -1025,6 +1074,13 @@ export async function getBoxWithProducts(id, shop) {
 export async function createBox(shop, data, admin) {
   const itemCount = parseInt(data.itemCount) || 1;
   const bundlePrice = parseFloat(data.bundlePrice) || 0;
+  const discountConfig = normalizeDiscountConfigForPriceType({
+    bundlePriceType: data.bundlePriceType === "dynamic" ? "dynamic" : "manual",
+    discountType: data.discountType,
+    discountValue: data.discountValue,
+    buyQuantity: data.buyQuantity,
+    getQuantity: data.getQuantity,
+  });
   const bundleProductTitle = data.boxName || data.displayTitle;
 
   // Create hidden Shopify product for bundle pricing
@@ -1081,17 +1137,17 @@ export async function createBox(shop, data, admin) {
       isActive: data.isActive !== "false" && data.isActive !== false,
       giftMessageEnabled:
         data.giftMessageEnabled === "true" || data.giftMessageEnabled === true,
-      bundlePriceType: data.bundlePriceType === "dynamic" ? "dynamic" : "manual",
+      bundlePriceType: discountConfig.bundlePriceType,
       shopifyProductId,
       shopifyVariantId,
       scopeType: data.scopeType || "specific_collections",
       scopeItemsJson: Array.isArray(data.scopeItems) && data.scopeItems.length > 0 ? JSON.stringify(data.scopeItems) : null,
       comboStepsConfig: JSON.stringify({
-        bundlePriceType: data.bundlePriceType === "dynamic" ? "dynamic" : "manual",
-        discountType: data.discountType || "none",
-        discountValue: data.discountType === "buy_x_get_y" ? "100" : (data.discountValue || "0"),
-        buyQuantity: parseInt(data.buyQuantity) || 1,
-        getQuantity: parseInt(data.getQuantity) || 1,
+        bundlePriceType: discountConfig.bundlePriceType,
+        discountType: discountConfig.discountType,
+        discountValue: discountConfig.discountValue,
+        buyQuantity: discountConfig.buyQuantity,
+        getQuantity: discountConfig.getQuantity,
         bundlePrice: bundlePrice,
         boxSubtitle: typeof data.boxSubtitle === "string" ? data.boxSubtitle.trim() : "",
       }),
@@ -1099,8 +1155,8 @@ export async function createBox(shop, data, admin) {
   });
 
   // Create Shopify automatic discount for dynamic-priced boxes
-  if (admin && data.bundlePriceType === "dynamic" && shopifyProductId) {
-    if (data.discountType === "buy_x_get_y") {
+  if (admin && discountConfig.bundlePriceType === "dynamic" && shopifyProductId) {
+    if (discountConfig.discountType === "buy_x_get_y") {
       await syncShopifyBuyXGetYDiscount(admin, {
         boxId: box.id,
         existingDiscountId: null,
@@ -1108,16 +1164,16 @@ export async function createBox(shop, data, admin) {
         discountType: "buy_x_get_y",
         discountValue: "100",
         shopifyProductId,
-        buyQuantity: parseInt(data.buyQuantity) || 1,
-        getQuantity: parseInt(data.getQuantity) || 1,
+        buyQuantity: discountConfig.buyQuantity,
+        getQuantity: discountConfig.getQuantity,
       });
     } else {
       await syncShopifyDiscount(admin, {
         boxId: box.id,
         existingDiscountId: null,
         title: `${data.boxName || data.displayTitle} Bundle Discount`,
-        discountType: data.discountType || "none",
-        discountValue: data.discountValue || "0",
+        discountType: discountConfig.discountType,
+        discountValue: discountConfig.discountValue,
         shopifyProductId,
       });
     }
@@ -1164,16 +1220,21 @@ export async function updateComboStepsConfig(id, shop, comboStepsConfig) {
  */
 export async function upsertComboConfig(boxId, config, admin = null) {
   const parsed = typeof config === "string" ? JSON.parse(config) : config;
-  const safeBuyQuantity = Math.max(1, parseInt(String(parsed?.buyQuantity ?? 1), 10) || 1);
-  const safeGetQuantity = Math.max(1, parseInt(String(parsed?.getQuantity ?? 1), 10) || 1);
+  const discountConfig = normalizeDiscountConfigForPriceType({
+    bundlePriceType: parsed?.bundlePriceType === "dynamic" ? "dynamic" : "manual",
+    discountType: parsed?.discountType,
+    discountValue: parsed?.discountValue,
+    buyQuantity: parsed?.buyQuantity,
+    getQuantity: parsed?.getQuantity,
+  });
   if (parsed && typeof parsed === "object") {
-    parsed.buyQuantity = safeBuyQuantity;
-    parsed.getQuantity = safeGetQuantity;
+    parsed.bundlePriceType = discountConfig.bundlePriceType;
+    parsed.discountType = discountConfig.discountType;
+    parsed.discountValue = discountConfig.discountValue;
+    parsed.buyQuantity = discountConfig.buyQuantity;
+    parsed.getQuantity = discountConfig.getQuantity;
     parsed.highlightText = typeof parsed.highlightText === "string" ? parsed.highlightText.trim() : "";
     parsed.supportText = typeof parsed.supportText === "string" ? parsed.supportText.trim() : "";
-    if (parsed.discountType === "buy_x_get_y" && !(parseFloat(parsed.discountValue) > 0)) {
-      parsed.discountValue = "100";
-    }
   }
   const requestedType = parseInt(parsed?.type, 10);
   const comboType = Number.isInteger(requestedType)
@@ -1348,6 +1409,26 @@ export async function updateBox(id, shop, data, admin) {
   });
   if (!existing) throw new Error("Box not found");
 
+  let existingConfig = {};
+  if (existing.comboStepsConfig) {
+    try { existingConfig = JSON.parse(existing.comboStepsConfig); } catch {}
+  }
+
+  const effectiveBundlePriceType = data.bundlePriceType !== undefined
+    ? (data.bundlePriceType === "dynamic" ? "dynamic" : "manual")
+    : (existing.bundlePriceType === "dynamic" ? "dynamic" : "manual");
+  const discountConfig = normalizeDiscountConfigForPriceType({
+    bundlePriceType: effectiveBundlePriceType,
+    discountType: data.discountType,
+    discountValue: data.discountValue,
+    buyQuantity: data.buyQuantity,
+    getQuantity: data.getQuantity,
+    fallbackDiscountType: existingConfig.discountType,
+    fallbackDiscountValue: existingConfig.discountValue,
+    fallbackBuyQuantity: existingConfig.buyQuantity,
+    fallbackGetQuantity: existingConfig.getQuantity,
+  });
+
   const requestedBoxCode = data.boxCode !== undefined
     ? await getRequestedBoxCode(data.boxCode, id)
     : undefined;
@@ -1467,10 +1548,7 @@ export async function updateBox(id, shop, data, admin) {
           ? data.giftMessageEnabled === "true" ||
             data.giftMessageEnabled === true
           : existing.giftMessageEnabled,
-      bundlePriceType:
-        data.bundlePriceType !== undefined
-          ? data.bundlePriceType === "dynamic" ? "dynamic" : "manual"
-          : existing.bundlePriceType,
+      bundlePriceType: discountConfig.bundlePriceType,
       scopeType: data.scopeType !== undefined ? data.scopeType : existing.scopeType,
       scopeItemsJson: data.scopeItems !== undefined
         ? (Array.isArray(data.scopeItems) && data.scopeItems.length > 0 ? JSON.stringify(data.scopeItems) : null)
@@ -1516,16 +1594,23 @@ export async function updateBox(id, shop, data, admin) {
   }
 
   // Persist discount settings into comboStepsConfig (merge, preserve existing steps/config)
-  if (data.discountType !== undefined || data.discountValue !== undefined || data.boxSubtitle !== undefined) {
+  if (
+    data.bundlePriceType !== undefined ||
+    data.discountType !== undefined ||
+    data.discountValue !== undefined ||
+    data.buyQuantity !== undefined ||
+    data.getQuantity !== undefined ||
+    data.boxSubtitle !== undefined
+  ) {
     let rawConfig = {};
     if (existing.comboStepsConfig) {
       try { rawConfig = JSON.parse(existing.comboStepsConfig); } catch {}
     }
-    rawConfig.bundlePriceType = data.bundlePriceType === "dynamic" ? "dynamic" : (rawConfig.bundlePriceType || "manual");
-    rawConfig.discountType = data.discountType || "none";
-    rawConfig.discountValue = data.discountType === "buy_x_get_y" ? "100" : (data.discountValue || "0");
-    rawConfig.buyQuantity = parseInt(data.buyQuantity) || 1;
-    rawConfig.getQuantity = parseInt(data.getQuantity) || 1;
+    rawConfig.bundlePriceType = discountConfig.bundlePriceType;
+    rawConfig.discountType = discountConfig.discountType;
+    rawConfig.discountValue = discountConfig.discountValue;
+    rawConfig.buyQuantity = discountConfig.buyQuantity;
+    rawConfig.getQuantity = discountConfig.getQuantity;
     rawConfig.bundlePrice = bundlePrice;
     if (data.boxSubtitle !== undefined) {
       rawConfig.boxSubtitle = typeof data.boxSubtitle === "string" ? data.boxSubtitle.trim() : "";
@@ -1538,11 +1623,7 @@ export async function updateBox(id, shop, data, admin) {
 
   // Sync Shopify automatic discount for dynamic-priced boxes
   if (admin && existing.shopifyProductId) {
-    const effectivePriceType = data.bundlePriceType !== undefined
-      ? (data.bundlePriceType === "dynamic" ? "dynamic" : "manual")
-      : existing.bundlePriceType;
-    const effectiveDiscountType = effectivePriceType === "dynamic" ? (data.discountType || "none") : "none";
-    if (effectiveDiscountType === "buy_x_get_y") {
+    if (discountConfig.discountType === "buy_x_get_y") {
       await syncShopifyBuyXGetYDiscount(admin, {
         boxId: parseInt(id),
         existingDiscountId: existing.shopifyDiscountId || null,
@@ -1550,16 +1631,16 @@ export async function updateBox(id, shop, data, admin) {
         discountType: "buy_x_get_y",
         discountValue: "100",
         shopifyProductId: existing.shopifyProductId,
-        buyQuantity: parseInt(data.buyQuantity) || 1,
-        getQuantity: parseInt(data.getQuantity) || 1,
+        buyQuantity: discountConfig.buyQuantity,
+        getQuantity: discountConfig.getQuantity,
       });
     } else {
       await syncShopifyDiscount(admin, {
         boxId: parseInt(id),
         existingDiscountId: existing.shopifyDiscountId || null,
         title: `${data.boxName ?? existing.boxName} Bundle Discount`,
-        discountType: effectiveDiscountType,
-        discountValue: data.discountValue || "0",
+        discountType: discountConfig.discountType,
+        discountValue: discountConfig.discountValue,
         shopifyProductId: existing.shopifyProductId,
       });
     }

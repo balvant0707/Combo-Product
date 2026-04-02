@@ -144,16 +144,24 @@ export const loader = async ({ request, params }) => {
   let savedBoxSubtitle = "";
   let savedBuyQuantity = "1";
   let savedGetQuantity = "1";
+  let savedBundlePriceType = box.bundlePriceType || "manual";
   if (comboStepsConfig) {
     try {
       const parsed = JSON.parse(comboStepsConfig);
       if (effectiveBundlePrice === 0) effectiveBundlePrice = parseFloat(parsed.bundlePrice) || 0;
+      if (parsed.bundlePriceType) savedBundlePriceType = parsed.bundlePriceType;
       if (parsed.discountType) savedDiscountType = parsed.discountType;
       if (parsed.discountValue != null) savedDiscountValue = String(parsed.discountValue);
       if (typeof parsed.boxSubtitle === "string") savedBoxSubtitle = parsed.boxSubtitle;
       if (parsed.buyQuantity != null) savedBuyQuantity = String(parsed.buyQuantity);
       if (parsed.getQuantity != null) savedGetQuantity = String(parsed.getQuantity);
     } catch {}
+  }
+  if (savedBundlePriceType !== "dynamic") {
+    savedDiscountType = "none";
+    savedDiscountValue = "0";
+    savedBuyQuantity = "1";
+    savedGetQuantity = "1";
   }
 
   return {
@@ -184,6 +192,13 @@ export const action = async ({ request, params }) => {
   const bannerImage = await parseBannerImage(formData, errors);
   const removeBannerImage = formData.get("removeBannerImage") === "true" && !bannerImage;
   const scopeType = formData.get("scope") || "specific_collections";
+  const bundlePriceType = formData.get("bundlePriceType") === "dynamic" ? "dynamic" : "manual";
+  const discountType = bundlePriceType === "dynamic" ? (formData.get("discountType") || "none") : "none";
+  const discountValue = bundlePriceType === "dynamic"
+    ? (discountType === "buy_x_get_y" ? "100" : (formData.get("discountValue") || "0"))
+    : "0";
+  const buyQuantity = bundlePriceType === "dynamic" ? (formData.get("buyQuantity") || "1") : "1";
+  const getQuantity = bundlePriceType === "dynamic" ? (formData.get("getQuantity") || "1") : "1";
 
   const data = {
     boxName: formData.get("boxName"),
@@ -191,11 +206,11 @@ export const action = async ({ request, params }) => {
     boxSubtitle: formData.get("boxSubtitle") || "",
     itemCount: formData.get("itemCount"),
     bundlePrice: formData.get("bundlePrice"),
-    bundlePriceType: formData.get("bundlePriceType"),
-    discountType: formData.get("discountType") || "none",
-    discountValue: formData.get("discountValue") || "0",
-    buyQuantity: formData.get("buyQuantity") || "1",
-    getQuantity: formData.get("getQuantity") || "1",
+    bundlePriceType,
+    discountType,
+    discountValue,
+    buyQuantity,
+    getQuantity,
     isGiftBox: formData.get("isGiftBox") === "true",
     allowDuplicates: formData.get("allowDuplicates") === "true",
     bannerImage,
@@ -367,10 +382,10 @@ export default function BoxSettingsPage() {
         <input type="hidden" name="_action" value="save" />
         <input type="hidden" name="bundlePrice" value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
         <input type="hidden" name="bundlePriceType" value={priceMode} />
-        <input type="hidden" name="discountType" value={discountType} />
-        <input type="hidden" name="discountValue" value={discountType === "buy_x_get_y" ? "100" : discountValue} />
-        <input type="hidden" name="buyQuantity" value={buyQuantity} />
-        <input type="hidden" name="getQuantity" value={getQuantity} />
+        <input type="hidden" name="discountType" value={priceMode === "dynamic" ? discountType : "none"} />
+        <input type="hidden" name="discountValue" value={priceMode === "dynamic" ? (discountType === "buy_x_get_y" ? "100" : discountValue) : "0"} />
+        <input type="hidden" name="buyQuantity" value={priceMode === "dynamic" ? buyQuantity : "1"} />
+        <input type="hidden" name="getQuantity" value={priceMode === "dynamic" ? getQuantity : "1"} />
         <input type="hidden" name="itemCount" value={itemCount} />
         <input type="hidden" name="isGiftBox" value={String(options.isGiftBox)} />
         <input type="hidden" name="allowDuplicates" value={String(options.allowDuplicates)} />
@@ -468,11 +483,11 @@ export default function BoxSettingsPage() {
               )}
             </div>
             <div>
-              <label style={labelStyle}>Banner Image (optional)</label>
+              <label style={labelStyle}>Image</label>
               <input type="file" name="bannerImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ ...fieldStyle, padding: "7px 12px" }} />
               {box.bannerImageSrc && (
                 <div style={{ marginTop: "10px" }}>
-                  <img src={box.bannerImageSrc} alt="Current banner" style={{ width: "100%", maxWidth: "360px", borderRadius: "5px", border: "1px solid #e5e7eb" }} />
+                  <img src={box.bannerImageSrc} alt="Current banner" style={{ width: "100%", maxWidth: "100px", borderRadius: "5px", border: "1px solid #e5e7eb" }} />
                 </div>
               )}
               <div style={{ marginTop: "8px" }}>

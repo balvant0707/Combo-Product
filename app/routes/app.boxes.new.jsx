@@ -117,6 +117,13 @@ export const action = async ({ request }) => {
   const errors = {};
   const bannerImage = await parseBannerImage(formData, errors);
   const scopeType = formData.get("scope") || "specific_collections";
+  const bundlePriceType = formData.get("bundlePriceType") === "dynamic" ? "dynamic" : "manual";
+  const discountType = bundlePriceType === "dynamic" ? (formData.get("discountType") || "none") : "none";
+  const discountValue = bundlePriceType === "dynamic"
+    ? (discountType === "buy_x_get_y" ? "100" : (formData.get("discountValue") || "0"))
+    : "0";
+  const buyQuantity = bundlePriceType === "dynamic" ? (formData.get("buyQuantity") || "1") : "1";
+  const getQuantity = bundlePriceType === "dynamic" ? (formData.get("getQuantity") || "1") : "1";
 
   const data = {
     boxName: formData.get("boxName"),
@@ -124,9 +131,11 @@ export const action = async ({ request }) => {
     boxSubtitle: formData.get("boxSubtitle") || "",
     itemCount: formData.get("itemCount"),
     bundlePrice: formData.get("bundlePrice"),
-    bundlePriceType: formData.get("bundlePriceType"),
-    discountType: formData.get("discountType") || "none",
-    discountValue: formData.get("discountValue") || "0",
+    bundlePriceType,
+    discountType,
+    discountValue,
+    buyQuantity,
+    getQuantity,
     isGiftBox: formData.get("isGiftBox") === "true",
     allowDuplicates: formData.get("allowDuplicates") === "true",
     bannerImage,
@@ -290,10 +299,10 @@ export default function CreateBoxPage() {
       <Form id="create-box-form" method="POST" encType="multipart/form-data">
         <input type="hidden" name="bundlePrice" value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
         <input type="hidden" name="bundlePriceType" value={priceMode} />
-        <input type="hidden" name="discountType" value={discountType} />
-        <input type="hidden" name="discountValue" value={discountType === "buy_x_get_y" ? "100" : discountValue} />
-        <input type="hidden" name="buyQuantity" value={buyQuantity} />
-        <input type="hidden" name="getQuantity" value={getQuantity} />
+        <input type="hidden" name="discountType" value={priceMode === "dynamic" ? discountType : "none"} />
+        <input type="hidden" name="discountValue" value={priceMode === "dynamic" ? (discountType === "buy_x_get_y" ? "100" : discountValue) : "0"} />
+        <input type="hidden" name="buyQuantity" value={priceMode === "dynamic" ? buyQuantity : "1"} />
+        <input type="hidden" name="getQuantity" value={priceMode === "dynamic" ? getQuantity : "1"} />
         <input type="hidden" name="itemCount" value={itemCount} />
         <input type="hidden" name="scope" value={scope} />
         <input type="hidden" name="scopeItems" value={JSON.stringify(scopeItems.map(i => ({ id: i.id, title: i.title })))} />

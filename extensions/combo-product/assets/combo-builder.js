@@ -651,7 +651,7 @@
     totalRow.className = 'cb-sticky-total';
     renderStickyTotal(
       totalRow,
-      isDynamicBundlePrice(box) ? 0 : applyComboDiscount(parseFloat(box.bundlePrice) || 0, box.comboConfig),
+      isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0),
       ctx.currencySymbol
     );
     center.appendChild(totalRow);
@@ -1126,7 +1126,7 @@
     var _discountCfg = box.comboConfig || {};
     var _discountType = _discountCfg.discountType || 'none';
     var _discountValue = parseFloat(_discountCfg.discountValue) || 0;
-    var _hasDiscount = _discountType === 'buy_x_get_y' || (_discountType !== 'none' && _discountValue > 0);
+    var _hasDiscount = isDynamicBundlePrice(box) && (_discountType === 'buy_x_get_y' || (_discountType !== 'none' && _discountValue > 0));
     if (_hasDiscount) {
       var discountBadge = document.createElement('span');
       discountBadge.className = 'cb-discount-badge';
@@ -1175,24 +1175,10 @@
 
     var priceText = document.createElement('div');
     priceText.className = 'cb-box-price-text';
-    var _initPrice = isDynamicBundlePrice(box) ? 0 : applyComboDiscount(parseFloat(box.bundlePrice) || 0, box.comboConfig);
+    var _initPrice = isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0);
     priceText.textContent = formatPrice(_initPrice, ctx.currencySymbol);
     box._priceTextEl = priceText;
     body.appendChild(priceText);
-
-    // MRP / savings row — only for manual pricing with a discount (we know original price)
-    if (!isDynamicBundlePrice(box) && _discountType !== 'none' && _discountValue > 0) {
-      var _origPrice = parseFloat(box.bundlePrice) || 0;
-      var _savings = _origPrice - _initPrice;
-      if (_savings > 0.005) {
-        var mrpRow = document.createElement('div');
-        mrpRow.className = 'cb-box-mrp-row';
-        mrpRow.innerHTML =
-          '<span class="cb-box-mrp-strike">MRP: ' + formatPrice(_origPrice, ctx.currencySymbol) + '</span>' +
-          '<span class="cb-box-save-badge">Save ' + formatPrice(_savings, ctx.currencySymbol) + '</span>';
-        body.appendChild(mrpRow);
-      }
-    }
 
     // CTA button
     var ctaBtn = document.createElement('button');
@@ -2064,7 +2050,7 @@
 
         setBoxCardPrice(
           box,
-          isDynamicBundlePrice(box) ? 0 : applyComboDiscount(parseFloat(box.bundlePrice) || 0, box.comboConfig),
+          isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0),
           ctx.currencySymbol
         );
 
@@ -2501,20 +2487,19 @@
       var isDynamic = isDynamicBundlePrice(box);
       var bundlePriceRaw = parseFloat(box.bundlePrice) || 0;
       var dynamicBreakdown = getComboDiscountBreakdown(totalMrp, box.comboConfig, slots);
-      var manualBreakdown = getComboDiscountBreakdown(bundlePriceRaw, box.comboConfig);
       var effectivePrice = isDynamic
         ? dynamicBreakdown.discountedTotal
-        : manualBreakdown.discountedTotal;
+        : bundlePriceRaw;
       if (_stickyTotalEl) {
         renderStickyTotal(_stickyTotalEl, effectivePrice, ctx.currencySymbol);
       }
       setBoxCardPrice(box, effectivePrice, ctx.currencySymbol);
 
-      // Savings / MRP row for specific combo (both dynamic and manual with discount)
+      // Savings / MRP row for specific combo
       if (_stickySavingsEl) {
         var hasAnyProduct = slots.some(Boolean);
         var originalPrice = isDynamic ? totalMrp : bundlePriceRaw;
-        var savings = isDynamic ? dynamicBreakdown.discountAmount : manualBreakdown.discountAmount;
+        var savings = isDynamic ? dynamicBreakdown.discountAmount : Math.max(0, totalMrp - bundlePriceRaw);
         if (hasAnyProduct && savings > 0.005) {
           var savingsBadge = (ctx.settings && ctx.settings.showSavingsBadge)
             ? '<span class="cb-sticky-save">Save ' + formatPrice(savings, ctx.currencySymbol) + '</span>'
@@ -2987,7 +2972,7 @@
       setTimeout(function () {
         for (var i = 0; i < slots.length; i++) slots[i] = null;
         activeSlotIndex = 0;
-        setBoxCardPrice(box, isDynamicBundlePrice(box) ? 0 : applyComboDiscount(parseFloat(box.bundlePrice) || 0, box.comboConfig), ctx.currencySymbol);
+        setBoxCardPrice(box, isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0), ctx.currencySymbol);
         renderSlots();
         loadAndRenderGrid();
         updateCartButton();

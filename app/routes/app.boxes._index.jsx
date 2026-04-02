@@ -747,7 +747,6 @@ export default function ManageBoxesPage() {
                       {/* Enabled */}
                       <td>
                         <div className="cb-toggle-wrap">
-                          <span className="cb-toggle-label">{box.isActive ? "On" : "Off"}</span>
                           <button
                             type="button"
                             className={`cb-toggle-btn ${box.isActive ? "is-on" : ""}`}

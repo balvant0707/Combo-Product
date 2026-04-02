@@ -105,6 +105,31 @@ function normalizeSpecificDiscountType(discountType) {
   return discountType === "buy_x_get_y" ? "none" : (discountType || "none");
 }
 
+function sanitizeSpecificComboPricing(config) {
+  const safeConfig = config && typeof config === "object" ? config : {};
+  const bundlePriceType = safeConfig.bundlePriceType === "dynamic" ? "dynamic" : "manual";
+  const discountType = bundlePriceType === "dynamic"
+    ? normalizeSpecificDiscountType(safeConfig.discountType)
+    : "none";
+  const buyQuantity = bundlePriceType === "dynamic"
+    ? Math.max(1, parseInt(String(safeConfig.buyQuantity ?? 1), 10) || 1)
+    : 1;
+  const getQuantity = bundlePriceType === "dynamic"
+    ? Math.max(1, parseInt(String(safeConfig.getQuantity ?? 1), 10) || 1)
+    : 1;
+  const discountValue = bundlePriceType === "dynamic"
+    ? (discountType === "buy_x_get_y" ? "100" : String(safeConfig.discountValue ?? "0"))
+    : "0";
+  return {
+    ...safeConfig,
+    bundlePriceType,
+    discountType,
+    discountValue,
+    buyQuantity,
+    getQuantity,
+  };
+}
+
 function getBuyXGetYFreeUnits(totalQty, buyQty, getQty) {
   const safeQty = Math.max(0, parseInt(String(totalQty || 0), 10) || 0);
   const safeBuyQty = Math.max(1, parseInt(String(buyQty || 1), 10) || 1);
@@ -250,6 +275,13 @@ export const loader = async ({ request, params }) => {
         rawGetQuantity = Math.max(1, parseInt(String(raw?.getQuantity ?? rawGetQuantity), 10) || rawGetQuantity);
       } catch {}
     }
+    const isDynamicPricing = cfg.bundlePriceType === "dynamic";
+    if (!isDynamicPricing) {
+      rawDiscountType = "none";
+      rawDiscountValue = "0";
+      rawBuyQuantity = 1;
+      rawGetQuantity = 1;
+    }
     comboStepsConfig = JSON.stringify({
       type:              cfg.comboType,
       title:             cfg.title             ?? undefined,
@@ -312,7 +344,10 @@ export const action = async ({ request, params }) => {
   const intent = formData.get("_action");
 
   if (intent === "save_combo") {
-    const comboStepsConfig = formData.get("comboStepsConfig");
+    const rawComboStepsConfig = formData.get("comboStepsConfig");
+    let parsedConfig = {};
+    try { parsedConfig = JSON.parse(rawComboStepsConfig || "{}"); } catch {}
+    const comboStepsConfig = JSON.stringify(sanitizeSpecificComboPricing(parsedConfig));
     const errors = {};
     const comboImage = await parseComboImage(formData, errors);
     if (Object.keys(errors).length > 0) {
@@ -337,9 +372,9 @@ export const action = async ({ request, params }) => {
     const box = await getBox(params.id, session.shop);
     if (box?.shopifyProductId) {
       try {
-        const parsedConfig = typeof comboStepsConfig === "string" ? JSON.parse(comboStepsConfig) : comboStepsConfig;
-        const bundleTitle = box.boxName || box.displayTitle || parsedConfig.title;
-        const bundlePrice = parsedConfig.bundlePrice != null ? parseFloat(parsedConfig.bundlePrice) : null;
+        const parsedForSync = typeof comboStepsConfig === "string" ? JSON.parse(comboStepsConfig) : comboStepsConfig;
+        const bundleTitle = box.boxName || box.displayTitle || parsedForSync.title;
+        const bundlePrice = parsedForSync.bundlePrice != null ? parseFloat(parsedForSync.bundlePrice) : null;
         await syncShopifyBundleProduct(admin, box.shopifyProductId, box.shopifyVariantId, { title: bundleTitle, bundlePrice });
       } catch (e) {
         console.error("[app.boxes.$id.combo] syncShopifyBundleProduct error:", e);
@@ -440,10 +475,10 @@ export default function SpecificComboBoxPage() {
       try {
         const parsed = JSON.parse(box.comboStepsConfig);
         const type = normalizeStepCount(parseInt(parsed.type, 10) || DEFAULT_COMBO_CONFIG.type);
+        const normalizedPricing = sanitizeSpecificComboPricing(parsed);
         return {
           ...DEFAULT_COMBO_CONFIG,
-          ...parsed,
-          discountType: normalizeSpecificDiscountType(parsed.discountType),
+          ...normalizedPricing,
           type,
           steps: mergeSteps(parsed.steps, type),
         };
@@ -695,7 +730,14 @@ export default function SpecificComboBoxPage() {
       {/* Hidden form for saving (encType for file uploads) */}
       <comboFetcher.Form id="combo-config-form" method="POST" encType="multipart/form-data" action={`/app/boxes/${box.id}/combo${location.search}`}>
         <input type="hidden" name="_action" value="save_combo" />
-        <input type="hidden" name="comboStepsConfig" value={JSON.stringify({ ...comboConfig, bundlePrice: comboConfig.bundlePriceType === "dynamic" ? comboDynamicPrice : parseFloat(comboConfig.bundlePrice) || 0 })} />
+        <input
+          type="hidden"
+          name="comboStepsConfig"
+          value={JSON.stringify(sanitizeSpecificComboPricing({
+            ...comboConfig,
+            bundlePrice: comboConfig.bundlePriceType === "dynamic" ? comboDynamicPrice : parseFloat(comboConfig.bundlePrice) || 0,
+          }))}
+        />
         <input type="hidden" name="stepCount" value={comboConfig.type} />
       </comboFetcher.Form>
 

@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState } from "react";
-import { useLoaderData, useLocation, useNavigate } from "react-router";
+import { useLoaderData, useLocation, useNavigate, useNavigation } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { getActiveBoxCount } from "../models/boxes.server";
@@ -148,7 +148,7 @@ function StatCard({ label, value, accent, sub }) {
   );
 }
 
-function EmbedBlockCard({ embedBlockUrl, enabled }) {
+function EmbedBlockCard({ embedBlockUrl, enabled, onStartLoading }) {
   return (
     <div style={{ marginBottom: "20px" }}>
       <div
@@ -229,6 +229,7 @@ function EmbedBlockCard({ embedBlockUrl, enabled }) {
             href={embedBlockUrl}
             target="_blank"
             rel="noreferrer"
+            onClick={() => onStartLoading?.()}
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -263,7 +264,7 @@ function EmbedBlockCard({ embedBlockUrl, enabled }) {
   );
 }
 
-function ThemeCustomizationCard({ themeEditorUrl }) {
+function ThemeCustomizationCard({ themeEditorUrl, onStartLoading }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const accordionPanelId = "guided-setup-panel";
   const steps = [
@@ -375,6 +376,7 @@ function ThemeCustomizationCard({ themeEditorUrl }) {
                 href={themeEditorUrl}
                 target="_blank"
                 rel="noreferrer"
+                onClick={() => onStartLoading?.()}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -446,11 +448,22 @@ export default function DashboardPage() {
   } = useLoaderData();
   const location = useLocation();
   const navigate = useNavigate();
+  const navigation = useNavigation();
   const [showCreateBoxModal, setShowCreateBoxModal] = useState(false);
+  const [manualPageLoading, setManualPageLoading] = useState(false);
   const justSubscribed = new URLSearchParams(location.search).get("subscribed") === "1";
+  const isPageLoading = manualPageLoading || navigation.state !== "idle";
 
   const stats = STAT_CARDS(activeBoxCount, bundlesSold, bundleRevenue);
+  function startPageLoading({ transient = false } = {}) {
+    setManualPageLoading(true);
+    if (transient) {
+      window.setTimeout(() => setManualPageLoading(false), 900);
+    }
+  }
+
   function navigateTo(path) {
+    startPageLoading();
     navigate(withEmbeddedAppParams(path, location.search));
   }
 
@@ -524,8 +537,8 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <EmbedBlockCard embedBlockUrl={embedBlockUrl} enabled={embedBlockEnabled} />
-      <ThemeCustomizationCard themeEditorUrl={themeEditorUrl} />
+      <EmbedBlockCard embedBlockUrl={embedBlockUrl} enabled={embedBlockEnabled} onStartLoading={() => startPageLoading({ transient: true })} />
+      <ThemeCustomizationCard themeEditorUrl={themeEditorUrl} onStartLoading={() => startPageLoading({ transient: true })} />
 
       {/* Quick Actions */}
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>
@@ -680,6 +693,26 @@ export default function DashboardPage() {
         </div>
         </div>
       </div>
+
+      {isPageLoading && (
+        <div
+          aria-live="polite"
+          aria-busy="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 10001,
+            background: "rgba(255,255,255,0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <s-spinner accessibilityLabel="Loading page" size="large" />
+          </div>
+        </div>
+      )}
 
       {showCreateBoxModal && (
         <div

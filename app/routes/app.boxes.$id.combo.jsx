@@ -1009,6 +1009,7 @@ export default function SpecificComboBoxPage() {
                           style={{
                             display: "flex",
                             alignItems: "center",
+                            gap: "8px",
                             padding: "0 10px",
                             minHeight: "40px",
                             border: `1.5px solid ${stepScope === opt.value ? "#000000" : "#d1d5db"}`,
@@ -1024,9 +1025,8 @@ export default function SpecificComboBoxPage() {
                             accessibilityLabel={opt.label}
                             onInput={() => updateStepScope(ai, opt.value)}
                             onChange={() => updateStepScope(ai, opt.value)}
-                          >
-                            {opt.label}
-                          </s-choice>
+                          />
+                          <span style={{ fontSize: "12px", color: "#374151", fontWeight: stepScope === opt.value ? "700" : "600" }}>{opt.label}</span>
                         </div>
                       ))}
                     </div>

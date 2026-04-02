@@ -491,6 +491,7 @@ export default function BoxSettingsPage() {
                   style={{
                     display: "flex",
                     alignItems: "center",
+                    gap: "8px",
                     padding: "0 10px",
                     minHeight: "40px",
                     border: `1.5px solid ${scope === opt.value ? "#000000" : "#d1d5db"}`,
@@ -506,9 +507,8 @@ export default function BoxSettingsPage() {
                     accessibilityLabel={opt.label}
                     onInput={() => selectScope(opt.value)}
                     onChange={() => selectScope(opt.value)}
-                  >
-                    {opt.label}
-                  </s-choice>
+                  />
+                  <span style={{ fontSize: "12px", color: "#374151", fontWeight: scope === opt.value ? "700" : "600" }}>{opt.label}</span>
                 </div>
               ))}
             </div>

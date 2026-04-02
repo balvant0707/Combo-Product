@@ -35,7 +35,7 @@ export function ToggleSwitch({
         opacity: disabled ? 0.6 : 1,
       }}
     >
-      <span style={{ position: "relative", width: "38px", height: "22px", flexShrink: 0 }}>
+      <span style={{ position: "relative", display: "inline-block", width: "38px", height: "22px", flexShrink: 0, verticalAlign: "middle" }}>
         <input
           id={inputId}
           name={name}

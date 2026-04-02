@@ -477,6 +477,7 @@ export default function SettingsPage() {
                   name={toggle.name}
                   value="true"
                   defaultChecked={toggle.defaultChecked}
+                  showStateText={false}
                 />
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: "500", color: "#1a1814" }}>{toggle.label}</div>
@@ -489,10 +490,9 @@ export default function SettingsPage() {
 
         {/* ── Advanced Settings ────────────────────────────────────────────── */}
         <s-section heading="Advanced Settings">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "14px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             {[
-              { name: "giftMessageField", label: "Enable Gift Message Field", desc: "Show a gift message text field during checkout", defaultChecked: settings.giftMessageField },
-              { name: "analyticsTracking", label: "Enable Analytics Tracking", desc: "Track bundle orders for analytics (recommended)", defaultChecked: settings.analyticsTracking },
+              { name: "analyticsTracking", label: "Analytics Tracking", desc: "Track bundle orders for analytics (recommended)", defaultChecked: settings.analyticsTracking },
               { name: "emailNotifications", label: "Email Notifications", desc: "Send email notifications for new bundle orders", defaultChecked: settings.emailNotifications },
             ].map((toggle) => (
               <div
@@ -510,6 +510,7 @@ export default function SettingsPage() {
                   name={toggle.name}
                   value="true"
                   defaultChecked={toggle.defaultChecked}
+                  showStateText={false}
                 />
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: "500", color: "#1a1814" }}>{toggle.label}</div>

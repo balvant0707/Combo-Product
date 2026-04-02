@@ -676,9 +676,28 @@ export default function SpecificComboBoxPage() {
 
       {/* Hero banner */}
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.06)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}><AdminIcon type="target" size="small" /> Specific Combo Box</div>
-        <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>{box.boxName}</div>
-        <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Configure combo steps, collections, and product pickers for this box.</div>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
+          <div style={{ flex: "1 1 420px", minWidth: "320px" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}><AdminIcon type="target" size="small" /> Specific Combo Box</div>
+            <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>{box.boxName}</div>
+            <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Configure combo steps, collections, and product pickers for this box.</div>
+          </div>
+          <div style={{ flex: "1 1 460px", minWidth: "320px", display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "8px" }}>
+            {[
+              { key: "showProductImages", label: "Show Product Images", desc: "Display images in picker" },
+              { key: "showProgressBar", label: "Show Progress Bar", desc: "Display step progress indicator" },
+              { key: "allowReselection", label: "Allow Re-selection", desc: "Customers can change selection" },
+            ].map((opt) => (
+              <div key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "10px 12px", background: comboConfig[opt.key] ? "#f9fafb" : "#fff", border: `1.5px solid ${comboConfig[opt.key] ? "#000000" : "#e5e7eb"}`, borderRadius: "7px", transition: "border-color 0.15s, background 0.15s" }}>
+                <ToggleSwitch checked={comboConfig[opt.key]} onChange={(e) => updateComboField(opt.key, e.target.checked)} showStateText={false} />
+                <div>
+                  <div style={{ fontSize: "12px", fontWeight: "600", color: "#111827", lineHeight: 1.3 }}>{opt.label}</div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>{opt.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
     <s-section>
@@ -946,12 +965,9 @@ export default function SpecificComboBoxPage() {
             <div style={{ padding: "11px 16px", borderBottom: "1px solid #f3f4f6", fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", display: "flex", alignItems: "center", gap: "6px" }}>
               <AdminIcon type="settings" size="small" /> Options
             </div>
-            <div style={{ padding: "12px", display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "8px" }}>
+            <div style={{ padding: "12px", display: "grid", gridTemplateColumns: "repeat(1, minmax(0, 1fr))", gap: "8px" }}>
               {[
                 { key: "isActive",          label: "Active on Storefront", desc: "Uncheck to hide from customers" },
-                { key: "showProductImages", label: "Show Product Images",  desc: "Display images in picker" },
-                { key: "showProgressBar",   label: "Show Progress Bar",    desc: "Display step progress indicator" },
-                { key: "allowReselection",  label: "Allow Re-selection",   desc: "Customers can change selection" },
               ].map((opt) => (
                 <div key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "10px 12px", background: comboConfig[opt.key] ? "#f9fafb" : "#fff", border: `1.5px solid ${comboConfig[opt.key] ? "#000000" : "#e5e7eb"}`, borderRadius: "7px", transition: "border-color 0.15s, background 0.15s" }}>
                   <ToggleSwitch checked={comboConfig[opt.key]} onChange={(e) => updateComboField(opt.key, e.target.checked)} showStateText={false} />
@@ -1008,13 +1024,12 @@ export default function SpecificComboBoxPage() {
                     </div>
                   </div>
                   <div style={{ padding: "16px" }}>
-                    <div style={{ marginBottom: "12px" }}>
-                      <label style={labelStyle}>Step label</label>
-                      <input value={step.label} onChange={(e) => updateComboStep(ai, "label", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Main Product" />
-                      <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>Heading shown on the storefront step</div>
-                    </div>
-                    <label style={labelStyle}>Scope</label>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "8px", marginBottom: "10px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "8px", alignItems: "end", marginBottom: "10px" }}>
+                      <div>
+                        <label style={labelStyle}>Step label</label>
+                        <input value={step.label} onChange={(e) => updateComboStep(ai, "label", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Main Product" />
+                        <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>Heading shown on the storefront step</div>
+                      </div>
                       {[
                         { value: "collection", label: "Specific collections" },
                         { value: "product", label: "Specific products" },

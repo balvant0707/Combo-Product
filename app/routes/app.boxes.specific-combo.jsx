@@ -765,13 +765,12 @@ export default function CreateSpecificComboBoxPage() {
                         </div>
                       </div>
                       <div style={{ padding: "16px" }}>
-                        <div style={{ marginBottom: "12px" }}>
-                          <label style={labelStyle}>Step label</label>
-                          <input value={step.label} onChange={(e) => updateComboStep(ai, "label", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Main Product" />
-                          <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>Heading shown on the storefront step</div>
-                        </div>
-                        <label style={labelStyle}>Scope</label>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "8px", marginBottom: "10px" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "8px", alignItems: "end", marginBottom: "10px" }}>
+                          <div>
+                            <label style={labelStyle}>Step label</label>
+                            <input value={step.label} onChange={(e) => updateComboStep(ai, "label", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Main Product" />
+                            <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>Heading shown on the storefront step</div>
+                          </div>
                           {[
                             { value: "collection", label: "Specific collections" },
                             { value: "product", label: "Specific products" },
@@ -844,15 +843,15 @@ export default function CreateSpecificComboBoxPage() {
                       <div style={{ padding: "16px" }}>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
                           <div>
-                            <label style={labelStyle}>Popup title</label>
+                            <label style={labelStyle}>Heading</label>
                             <input value={step.popup.title} onChange={(e) => updateComboStepPopup(ai, "title", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Choose your main product" />
                           </div>
                           <div>
-                            <label style={labelStyle}>Popup description</label>
-                            <textarea value={step.popup.desc} onChange={(e) => updateComboStepPopup(ai, "desc", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db", resize: "vertical", minHeight: "64px" }} placeholder="Select the primary product." />
+                            <label style={labelStyle}>Description</label>
+                            <input value={step.popup.desc} onChange={(e) => updateComboStepPopup(ai, "desc", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db", resize: "vertical", minHeight: "64px" }} placeholder="Select the primary product." />
                           </div>
                           <div>
-                            <label style={labelStyle}>Confirm button text</label>
+                            <label style={labelStyle}>Product Button Label</label>
                             <input value={step.popup.btn} onChange={(e) => updateComboStepPopup(ai, "btn", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Confirm selection" />
                             <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>CTA label inside the popup drawer</div>
                             <div style={{ marginTop: "10px" }}>

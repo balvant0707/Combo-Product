@@ -432,6 +432,7 @@ export default function SpecificComboBoxPage() {
   const comboErrors = comboFetcher.data?.errors || {};
   const comboStepImgErrors = {};
   const isPageLoading = comboFetcher.state !== "idle" || navigation.state !== "idle";
+  const isSaving = comboFetcher.state === "submitting";
 
   // Toast state
   const [toast, setToast] = useState(null); // { type: "success"|"error", message: string }
@@ -697,23 +698,36 @@ export default function SpecificComboBoxPage() {
   return (
     <s-page
       inlineSize="large"
-      heading={`Specific Combo Box: ${box.boxName}`}
+      heading="Update Specific Combo Box"
       back-url={withEmbeddedAppParams(`/app/boxes/${box.id}`, location.search)}
     >
       <s-button
         slot="primary-action"
         variant="primary"
-        disabled={comboFetcher.state === "submitting" || undefined}
+        disabled={isSaving || undefined}
         onClick={() => { const f = document.getElementById("combo-config-form"); if (f) f.requestSubmit(); }}
       >
-        {comboFetcher.state === "submitting" ? "Saving..." : "Save Combo Config"}
+        {isSaving ? "Saving..." : "Save & Publish"}
       </s-button>
 
       {/* Hero banner */}
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.06)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}><AdminIcon type="target" size="small" /> Specific Combo Box</div>
-        <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>{box.boxName}</div>
-        <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Configure combo steps, collections, and product pickers for this box.</div>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
+          <div style={{ flex: "1 1 420px", minWidth: "320px" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}><AdminIcon type="target" size="small" /> Specific Combo Box</div>
+            <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>Update Specific Combo Box</div>
+            <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>{box.boxName}</div>
+          </div>
+          <div style={{ flex: "0 1 420px", minWidth: "320px" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "10px 12px", background: comboConfig.isActive ? "#f9fafb" : "#fff", border: `1.5px solid ${comboConfig.isActive ? "#000000" : "#e5e7eb"}`, borderRadius: "7px", transition: "border-color 0.15s, background 0.15s" }}>
+              <ToggleSwitch checked={comboConfig.isActive} onChange={(e) => updateComboField("isActive", e.target.checked)} showStateText={false} />
+              <div>
+                <div style={{ fontSize: "12px", fontWeight: "600", color: "#111827", lineHeight: 1.3 }}>Active on Storefront</div>
+                <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>Uncheck to hide from customers</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
     <s-section>

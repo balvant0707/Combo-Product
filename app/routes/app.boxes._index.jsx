@@ -165,6 +165,7 @@ export default function ManageBoxesPage() {
   const toggleFetcher = useFetcher();
 
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [showCreateBoxModal, setShowCreateBoxModal] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [manualPageLoading, setManualPageLoading] = useState(false);
@@ -205,6 +206,16 @@ export default function ManageBoxesPage() {
   function navigateTo(path) {
     startPageLoading();
     navigate(withEmbeddedAppParams(path, location.search));
+  }
+  function openCreateBoxModal() {
+    setShowCreateBoxModal(true);
+  }
+  function closeCreateBoxModal() {
+    setShowCreateBoxModal(false);
+  }
+  function goToCreateRoute(path) {
+    closeCreateBoxModal();
+    navigateTo(path);
   }
 
   function handleDelete(id, name) { setDeleteConfirm({ id, name }); }
@@ -540,10 +551,7 @@ export default function ManageBoxesPage() {
       `}</style>
 
       <ui-title-bar title="Combo Boxes">
-        <button onClick={() => navigateTo("/app/boxes/specific-combo")}>
-          Specific Combo
-        </button>
-        <button variant="primary" onClick={() => navigateTo("/app/boxes/new")}>
+        <button variant="primary" onClick={openCreateBoxModal}>
           + Create Box
         </button>
       </ui-title-bar>
@@ -808,6 +816,171 @@ export default function ManageBoxesPage() {
           }}
         >
           <s-spinner accessibilityLabel="Loading page" size="large" />
+        </div>
+      )}
+
+      {/* Create Box modal */}
+      {showCreateBoxModal && (
+        <div
+          onClick={closeCreateBoxModal}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15,23,42,0.55)",
+            backdropFilter: "blur(3px)",
+            zIndex: 10000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px",
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Create Box"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: "680px",
+              background: "#ffffff",
+              borderRadius: "10px",
+              border: "1px solid #e5e7eb",
+              boxShadow: "0 24px 64px rgba(0,0,0,0.22)",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                padding: "16px 20px",
+                borderBottom: "1px solid #e5e7eb",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div style={{ fontSize: "20px", fontWeight: 700, color: "#111827", lineHeight: 1.2 }}>
+                Create Box
+              </div>
+              <button
+                type="button"
+                aria-label="Close"
+                onClick={closeCreateBoxModal}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  color: "#6b7280",
+                  fontSize: "26px",
+                  fontWeight: 700,
+                  lineHeight: 1,
+                  cursor: "pointer",
+                  padding: "4px 8px",
+                }}
+              >
+                X
+              </button>
+            </div>
+
+            <div style={{ padding: "16px 18px" }}>
+              <button
+                type="button"
+                onClick={() => goToCreateRoute("/app/boxes/new")}
+                style={{
+                  width: "100%",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "8px",
+                  background: "#f9fafb",
+                  padding: "16px 14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "14px",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  marginBottom: "10px",
+                }}
+              >
+                <div
+                  style={{
+                    width: "48px",
+                    height: "48px",
+                    borderRadius: "8px",
+                    background: "#f3f4f6",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#6b7280",
+                    flexShrink: 0,
+                  }}
+                >
+                  <AdminIcon type="package" size="base" />
+                </div>
+                <div>
+                  <div style={{ fontSize: "15px", fontWeight: 700, color: "#111827", lineHeight: 1.2 }}>Create Combo Box</div>
+                  <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "2px", lineHeight: 1.2 }}>Add a new bundle</div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => goToCreateRoute("/app/boxes/specific-combo")}
+                style={{
+                  width: "100%",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "8px",
+                  background: "#f9fafb",
+                  padding: "16px 14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "14px",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  marginBottom: "12px",
+                }}
+              >
+                <div
+                  style={{
+                    width: "48px",
+                    height: "48px",
+                    borderRadius: "8px",
+                    background: "#f3f4f6",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#6b7280",
+                    flexShrink: 0,
+                  }}
+                >
+                  <AdminIcon type="target" size="base" />
+                </div>
+                <div>
+                  <div style={{ fontSize: "15px", fontWeight: 700, color: "#111827", lineHeight: 1.2 }}>Create Specific Combo Box</div>
+                  <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "2px", lineHeight: 1.2 }}>Step-by-step combo experience</div>
+                </div>
+              </button>
+
+              <div
+                style={{
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "8px",
+                  background: "#f9fafb",
+                  padding: "14px 14px 12px",
+                }}
+              >
+                <div style={{ fontSize: "15px", fontWeight: 700, color: "#1f2937", marginBottom: "12px" }}>
+                  How each option works
+                </div>
+                <div style={{ fontSize: "13px", fontWeight: 700, color: "#1f2937", lineHeight: 1.35 }}>Create Combo Box</div>
+                <div style={{ fontSize: "12px", color: "#4b5563", lineHeight: 1.5, marginTop: "6px" }}>
+                  Best for quick bundle offers. You set up one complete box and customers can add it in a few clicks. Use this when you want a fast purchase flow, fixed combinations, and less decision-making for the customer.
+                </div>
+                <div style={{ borderTop: "1px dashed #d1d5db", margin: "12px 0" }} />
+                <div style={{ fontSize: "13px", fontWeight: 700, color: "#1f2937", lineHeight: 1.35 }}>Create Specific Combo Box</div>
+                <div style={{ fontSize: "12px", color: "#4b5563", lineHeight: 1.5, marginTop: "6px" }}>
+                  Best for guided customization. Customers choose items step by step, so they can build their own bundle with more control. Use this when product selection rules matter and you want a personalized shopping experience.
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

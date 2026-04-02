@@ -232,6 +232,11 @@ export default function CreateBoxPage() {
   const bundlePrice = priceMode === "manual" ? parseFloat(manualPrice) || 0 : dynamicPrice;
 
   function toggleOption(name) { setOptions((prev) => ({ ...prev, [name]: !prev[name] })); }
+  function selectScope(nextScope) {
+    if (!nextScope || nextScope === scope) return;
+    setScope(nextScope);
+    setScopeItems([]);
+  }
 
   const modalOverlayStyle = { position: "fixed", inset: 0, background: "rgba(17,24,39,0.55)", backdropFilter: "blur(3px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" };
   const modalBoxStyle = { background: "#fff", borderRadius: "8px", width: "100%", maxWidth: "560px", maxHeight: "85vh", display: "flex", flexDirection: "column", boxShadow: "0 20px 60px rgba(0,0,0,0.18)", overflow: "hidden" };
@@ -310,7 +315,7 @@ export default function CreateBoxPage() {
             <div style={sectionHeadingStyle}>
               <AdminIcon type="clipboard" size="small" /> Basic Information
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "14px" }}>
               <div>
                 <label style={labelStyle}>Box Internal Name *</label>
                 <input type="text" name="boxName" placeholder="e.g. Box of 4 Bestsellers" style={{ ...fieldStyle, borderColor: errors.boxName ? "#e11d48" : "#d1d5db" }} />
@@ -321,7 +326,7 @@ export default function CreateBoxPage() {
                 <input type="text" name="displayTitle" placeholder="Shown to customers" style={{ ...fieldStyle, borderColor: errors.displayTitle ? "#e11d48" : "#d1d5db" }} />
                 {errors.displayTitle && <div style={errorStyle}>{errors.displayTitle}</div>}
               </div>
-              <div style={{ gridColumn: "1 / -1" }}>
+              <div>
                 <label style={labelStyle}>Box Subtitle (optional)</label>
                 <input type="text" name="boxSubtitle" placeholder="Shown below the main title on storefront" style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
               </div>
@@ -382,7 +387,7 @@ export default function CreateBoxPage() {
           {/* Options */}
           <div style={{ marginBottom: "28px" }}>
             <div style={sectionHeadingStyle}><AdminIcon type="settings" size="small" /> Options</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "10px" }}>
               {[
                 { key: "isGiftBox", label: "Gift Box Mode", desc: "Shows gift wrapping option to customers", iconType: "gift-card" },
                 { key: "allowDuplicates", label: "Allow Duplicates", desc: "Same product can fill multiple slots", iconType: "duplicate" },
@@ -411,32 +416,30 @@ export default function CreateBoxPage() {
                   { value: "specific_products", label: "Specific products" },
                   { value: "wholestore", label: "Whole store" },
                 ].map((opt) => (
-                  <label
+                  <div
                     key={opt.value}
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "8px",
-                      padding: "8px 10px",
+                      padding: "0 10px",
+                      minHeight: "40px",
                       border: `1.5px solid ${scope === opt.value ? "#000000" : "#d1d5db"}`,
                       borderRadius: "6px",
                       background: scope === opt.value ? "#f9fafb" : "#fff",
                       cursor: "pointer",
-                      fontSize: "12px",
-                      color: "#374151",
-                      fontWeight: scope === opt.value ? "700" : "600",
                     }}
+                    onClick={() => selectScope(opt.value)}
                   >
-                    <input
-                      type="radio"
-                      name="scope-radio"
+                    <s-choice
                       value={opt.value}
-                      checked={scope === opt.value}
-                      onChange={() => { setScope(opt.value); setScopeItems([]); }}
-                      style={{ accentColor: "#000000", cursor: "pointer" }}
-                    />
-                    <span>{opt.label}</span>
-                  </label>
+                      selected={scope === opt.value}
+                      accessibilityLabel={opt.label}
+                      onInput={() => selectScope(opt.value)}
+                      onChange={() => selectScope(opt.value)}
+                    >
+                      {opt.label}
+                    </s-choice>
+                  </div>
                 ))}
               </div>
             </div>

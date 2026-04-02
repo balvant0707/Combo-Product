@@ -588,6 +588,15 @@ export default function SpecificComboBoxPage() {
       return { ...prev, steps };
     });
   }
+  function updateStepScope(stepIdx, nextScope) {
+    setComboConfig((prev) => ({
+      ...prev,
+      steps: prev.steps.map((st, i) => {
+        if (i !== stepIdx || st.scope === nextScope) return st;
+        return { ...st, scope: nextScope, collections: [], selectedProducts: [] };
+      }),
+    }));
+  }
 
   /* ── Pending collection load — deferred so it runs after React finishes
         batching the state updates in confirmColl(), avoiding the
@@ -722,22 +731,20 @@ export default function SpecificComboBoxPage() {
                 </div>
                 <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "5px" }}>{comboConfig.type} product selections required (2-8)</div>
               </div>
-              {/* Combo title */}
-              <div>
-                <label style={labelStyle}>Combo title</label>
-                <input value={comboConfig.title} onChange={(e) => updateComboField("title", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Build Your Perfect Bundle" />
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "10px" }}>
+                <div>
+                  <label style={labelStyle}>Combo title</label>
+                  <input value={comboConfig.title} onChange={(e) => updateComboField("title", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Build Your Perfect Bundle" />
+                </div>
+                <div>
+                  <label style={labelStyle}>Subtitle</label>
+                  <input value={comboConfig.subtitle} onChange={(e) => updateComboField("subtitle", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Choose a product for each step" />
+                </div>
+                <div>
+                  <label style={labelStyle}>Highlight text</label>
+                  <input value={comboConfig.highlightText || ""} onChange={(e) => updateComboField("highlightText", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Limited time combo" />
+                </div>
               </div>
-              {/* Subtitle */}
-              <div>
-                <label style={labelStyle}>Subtitle</label>
-                <input value={comboConfig.subtitle} onChange={(e) => updateComboField("subtitle", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Choose a product for each step" />
-              </div>
-              {/* Highlight text */}
-              <div>
-                <label style={labelStyle}>Highlight text</label>
-                <input value={comboConfig.highlightText || ""} onChange={(e) => updateComboField("highlightText", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Limited time combo" />
-              </div>
-              {/* Support text */}
               <div>
                 <label style={labelStyle}>Support text</label>
                 <input value={comboConfig.supportText || ""} onChange={(e) => updateComboField("supportText", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Pick products and save more at checkout" />
@@ -929,7 +936,7 @@ export default function SpecificComboBoxPage() {
             <div style={{ padding: "11px 16px", borderBottom: "1px solid #f3f4f6", fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", display: "flex", alignItems: "center", gap: "6px" }}>
               <AdminIcon type="settings" size="small" /> Options
             </div>
-            <div style={{ padding: "12px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+            <div style={{ padding: "12px", display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "8px" }}>
               {[
                 { key: "isActive",          label: "Active on Storefront", desc: "Uncheck to hide from customers" },
                 { key: "showProductImages", label: "Show Product Images",  desc: "Display images in picker" },
@@ -997,37 +1004,30 @@ export default function SpecificComboBoxPage() {
                         { value: "collection", label: "Specific collections" },
                         { value: "product", label: "Specific products" },
                       ].map((opt) => (
-                        <label
+                        <div
                           key={opt.value}
                           style={{
                             display: "flex",
                             alignItems: "center",
-                            gap: "8px",
-                            padding: "8px 10px",
+                            padding: "0 10px",
+                            minHeight: "40px",
                             border: `1.5px solid ${stepScope === opt.value ? "#000000" : "#d1d5db"}`,
                             borderRadius: "6px",
                             background: stepScope === opt.value ? "#f9fafb" : "#fff",
                             cursor: "pointer",
-                            fontSize: "12px",
-                            color: "#374151",
-                            fontWeight: stepScope === opt.value ? "700" : "600",
                           }}
+                          onClick={() => updateStepScope(ai, opt.value)}
                         >
-                          <input
-                            type="radio"
-                            name={`step-scope-${ai}`}
+                          <s-choice
                             value={opt.value}
-                            checked={stepScope === opt.value}
-                            onChange={() => {
-                              setComboConfig((prev) => {
-                                const steps = prev.steps.map((s, i) => i !== ai ? s : { ...s, scope: opt.value, collections: [], selectedProducts: [] });
-                                return { ...prev, steps };
-                              });
-                            }}
-                            style={{ accentColor: "#000000", cursor: "pointer" }}
-                          />
-                          <span>{opt.label}</span>
-                        </label>
+                            selected={stepScope === opt.value}
+                            accessibilityLabel={opt.label}
+                            onInput={() => updateStepScope(ai, opt.value)}
+                            onChange={() => updateStepScope(ai, opt.value)}
+                          >
+                            {opt.label}
+                          </s-choice>
+                        </div>
                       ))}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>

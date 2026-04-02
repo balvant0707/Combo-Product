@@ -378,6 +378,15 @@ export default function CreateSpecificComboBoxPage() {
   function updateComboStepPopup(stepIdx, field, value) {
     setComboConfig((prev) => ({ ...prev, steps: prev.steps.map((s, i) => i === stepIdx ? { ...s, popup: { ...s.popup, [field]: value } } : s) }));
   }
+  function updateStepScope(stepIdx, nextScope) {
+    setComboConfig((prev) => ({
+      ...prev,
+      steps: prev.steps.map((st, i) => {
+        if (i !== stepIdx || st.scope === nextScope) return st;
+        return { ...st, scope: nextScope, collections: [], selectedProducts: [] };
+      }),
+    }));
+  }
 
   function confirmColl() {
     if (tempColls.length === 0) return;
@@ -527,22 +536,20 @@ export default function CreateSpecificComboBoxPage() {
                     </div>
                     <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "5px" }}>{comboConfig.type} product selections required (2–8)</div>
                   </div>
-                  {/* Title */}
-                  <div>
-                    <label style={labelStyle}>Combo title</label>
-                    <input value={comboConfig.title} onChange={(e) => updateComboField("title", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Build Your Perfect Bundle" />
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "10px" }}>
+                    <div>
+                      <label style={labelStyle}>Combo title</label>
+                      <input value={comboConfig.title} onChange={(e) => updateComboField("title", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Build Your Perfect Bundle" />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Subtitle</label>
+                      <input value={comboConfig.subtitle} onChange={(e) => updateComboField("subtitle", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Choose a product for each step" />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Highlight text</label>
+                      <input value={comboConfig.highlightText || ""} onChange={(e) => updateComboField("highlightText", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Limited time combo" />
+                    </div>
                   </div>
-                  {/* Subtitle */}
-                  <div>
-                    <label style={labelStyle}>Subtitle</label>
-                    <input value={comboConfig.subtitle} onChange={(e) => updateComboField("subtitle", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Choose a product for each step" />
-                  </div>
-                  {/* Highlight Text */}
-                  <div>
-                    <label style={labelStyle}>Highlight text</label>
-                    <input value={comboConfig.highlightText || ""} onChange={(e) => updateComboField("highlightText", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Limited time combo" />
-                  </div>
-                  {/* Support Text */}
                   <div>
                     <label style={labelStyle}>Support text</label>
                     <input value={comboConfig.supportText || ""} onChange={(e) => updateComboField("supportText", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Pick products and save more at checkout" />
@@ -691,33 +698,26 @@ export default function CreateSpecificComboBoxPage() {
                     )}
                   </div>
                 </div>
-                {/* Combo active */}
-                <div style={{ padding: "10px 16px", borderTop: "1px solid #f3f4f6" }}>
-                  <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", padding: "8px 10px", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "5px" }}>
-                    <div>
-                      <div style={{ fontSize: "12px", fontWeight: "600", color: "#111827" }}>Combo active</div>
-                      <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "1px" }}>Show on storefront</div>
-                    </div>
-                    <input type="checkbox" checked={comboConfig.isActive} onChange={(e) => updateComboField("isActive", e.target.checked)} style={{ width: "16px", height: "16px", accentColor: "#000000", cursor: "pointer" }} />
-                  </label>
-                </div>
               </div>
 
-              {/* Display Settings */}
+              {/* Options */}
               <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-                <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#111827" }}>Display settings</div>
-                <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ padding: "11px 16px", borderBottom: "1px solid #f3f4f6", fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <AdminIcon type="settings" size="small" /> Options
+                </div>
+                <div style={{ padding: "12px", display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "8px" }}>
                   {[
-                    { key: "showProductImages", label: "Show product images" },
-                    { key: "showProgressBar",   label: "Show progress bar" },
-                    { key: "allowReselection",  label: "Allow re-selection", hint: "Customers can change selection" },
+                    { key: "isActive",          label: "Active on Storefront", desc: "Show on storefront" },
+                    { key: "showProductImages", label: "Show Product Images",  desc: "Display images in picker" },
+                    { key: "showProgressBar",   label: "Show Progress Bar",    desc: "Display step progress indicator" },
+                    { key: "allowReselection",  label: "Allow Re-selection",   desc: "Customers can change selection" },
                   ].map((opt) => (
-                    <label key={opt.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", padding: "8px 10px", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "5px" }}>
+                    <label key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "10px 12px", background: comboConfig[opt.key] ? "#f9fafb" : "#fff", border: `1.5px solid ${comboConfig[opt.key] ? "#000000" : "#e5e7eb"}`, borderRadius: "7px", transition: "border-color 0.15s, background 0.15s" }}>
+                      <input type="checkbox" checked={comboConfig[opt.key]} onChange={(e) => updateComboField(opt.key, e.target.checked)} style={{ width: "15px", height: "15px", marginTop: "2px", accentColor: "#000", cursor: "pointer", flexShrink: 0 }} />
                       <div>
-                        <div style={{ fontSize: "12px", fontWeight: "600", color: "#111827" }}>{opt.label}</div>
-                        {opt.hint && <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "1px" }}>{opt.hint}</div>}
+                        <div style={{ fontSize: "12px", fontWeight: "600", color: "#111827", lineHeight: 1.3 }}>{opt.label}</div>
+                        <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>{opt.desc}</div>
                       </div>
-                      <input type="checkbox" checked={comboConfig[opt.key]} onChange={(e) => updateComboField(opt.key, e.target.checked)} style={{ width: "16px", height: "16px", accentColor: "#000000", cursor: "pointer" }} />
                     </label>
                   ))}
                 </div>
@@ -766,39 +766,30 @@ export default function CreateSpecificComboBoxPage() {
                             { value: "collection", label: "Specific collections" },
                             { value: "product", label: "Specific products" },
                           ].map((opt) => (
-                            <label
+                            <div
                               key={opt.value}
                               style={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: "8px",
-                                padding: "8px 10px",
+                                padding: "0 10px",
+                                minHeight: "40px",
                                 border: `1.5px solid ${stepScope === opt.value ? "#000000" : "#d1d5db"}`,
                                 borderRadius: "6px",
                                 background: stepScope === opt.value ? "#f9fafb" : "#fff",
                                 cursor: "pointer",
-                                fontSize: "12px",
-                                color: "#374151",
-                                fontWeight: stepScope === opt.value ? "700" : "600",
                               }}
+                              onClick={() => updateStepScope(ai, opt.value)}
                             >
-                              <input
-                                type="radio"
-                                name={`step-scope-${ai}`}
+                              <s-choice
                                 value={opt.value}
-                                checked={stepScope === opt.value}
-                                onChange={() =>
-                                  setComboConfig((prev) => ({
-                                    ...prev,
-                                    steps: prev.steps.map((st, i) =>
-                                      i !== ai ? st : { ...st, scope: opt.value, collections: [], selectedProducts: [] },
-                                    ),
-                                  }))
-                                }
-                                style={{ accentColor: "#000000", cursor: "pointer" }}
-                              />
-                              <span>{opt.label}</span>
-                            </label>
+                                selected={stepScope === opt.value}
+                                accessibilityLabel={opt.label}
+                                onInput={() => updateStepScope(ai, opt.value)}
+                                onChange={() => updateStepScope(ai, opt.value)}
+                              >
+                                {opt.label}
+                              </s-choice>
+                            </div>
                           ))}
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>

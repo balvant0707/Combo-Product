@@ -541,7 +541,6 @@ export default function DashboardPage() {
               display: "flex",
               gap: "8px",
               flexWrap: "nowrap",
-              overflowX: "auto",
               paddingBottom: "2px",
             }}
           >
@@ -549,7 +548,7 @@ export default function DashboardPage() {
               type="button"
               onClick={() => setShowCreateBoxModal(true)}
               style={{
-                minWidth: "220px",
+                minWidth: 0,
                 flex: "1 1 0",
                 border: "1px solid #111827",
                 borderRadius: "5px",
@@ -586,7 +585,7 @@ export default function DashboardPage() {
                   textDecoration: "none",
                   cursor: "pointer",
                   transition: "transform 0.13s, background 0.13s",
-                  minWidth: "220px",
+                  minWidth: 0,
                   flex: "1 1 0",
                 }}
                 onMouseEnter={(e) => {
@@ -605,7 +604,6 @@ export default function DashboardPage() {
                   <div style={{ fontSize: "14px", fontWeight: "700", color: "#000000", lineHeight: 1.3 }}>{action.label}</div>
                   <div style={{ fontSize: "12px", color: "#6b7280", fontWeight: "600", marginTop: "2px" }}>{action.sub}</div>
                 </div>
-                <div style={{ color: "#6b7280", fontSize: "16px", flexShrink: 0 }}>&rarr;</div>
               </a>
             ))}
           </div>
@@ -768,11 +766,25 @@ export default function DashboardPage() {
                 }}
               >
                 <div style={{ fontSize: "12px", fontWeight: "700", color: "#111827", marginBottom: "4px" }}>
-                  Help customers choose easily
+                  How each option works
                 </div>
-                <div style={{ fontSize: "12px", color: "#4b5563", lineHeight: 1.5 }}>
-                  Use Create Combo Box for simple bundle offers where all items are selected together. Use Create
-                  Specific Combo Box for a guided, step-by-step flow where customers choose items one by one.
+                <div style={{ fontSize: "12px", color: "#111827", fontWeight: "700", marginTop: "6px" }}>
+                  Create Combo Box
+                </div>
+                <div style={{ fontSize: "12px", color: "#4b5563", lineHeight: 1.55, marginTop: "2px" }}>
+                  Best for quick bundle offers. You set up one complete box and customers can add it in a few clicks.
+                  Use this when you want a fast purchase flow, fixed combinations, and less decision-making for the
+                  customer.
+                </div>
+                <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px dashed #d1d5db" }}>
+                  <div style={{ fontSize: "12px", color: "#111827", fontWeight: "700" }}>
+                    Create Specific Combo Box
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#4b5563", lineHeight: 1.55, marginTop: "2px" }}>
+                    Best for guided customization. Customers choose items step by step, so they can build their own
+                    bundle with more control. Use this when product selection rules matter and you want a personalized
+                    shopping experience.
+                  </div>
                 </div>
               </div>
             </div>

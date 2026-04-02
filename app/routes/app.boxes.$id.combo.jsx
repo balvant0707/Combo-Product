@@ -773,13 +773,13 @@ export default function SpecificComboBoxPage() {
               </div>
               </div>
               <div>
-                <label style={labelStyle}>Support text</label>
+                <label style={labelStyle}>Support Text</label>
                 <input value={comboConfig.supportText || ""} onChange={(e) => updateComboField("supportText", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Pick products and save more at checkout" />
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px", alignItems: "start" }}>
               {/* Combo image */}
               <div>
-                <label style={labelStyle}>image</label>
+                <label style={labelStyle}>Image</label>
                 {comboImagePreview && (
                   <div style={{ marginBottom: "8px" }}>
                     <img src={comboImagePreview} alt="Combo preview" style={{ width: "100%", maxHeight: "140px", objectFit: "cover", borderRadius: "6px", border: "1.5px solid #e5e7eb", display: "block" }} />
@@ -1024,65 +1024,70 @@ export default function SpecificComboBoxPage() {
                     </div>
                   </div>
                   <div style={{ padding: "16px" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "8px", alignItems: "end", marginBottom: "10px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "12px", alignItems: "start", marginBottom: "10px" }}>
                       <div>
                         <label style={labelStyle}>Step label</label>
                         <input value={step.label} onChange={(e) => updateComboStep(ai, "label", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Main Product" />
                         <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>Heading shown on the storefront step</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "10px" }}>
+                          {stepScope === "collection" ? (
+                            <button
+                              type="button"
+                              onClick={() => { setCollModalStepIdx(ai); setTempColls([...step.collections]); setCollSearch(""); setShowCollModal(true); }}
+                              style={{ padding: "7px 16px", border: "1px solid #000000", borderRadius: "5px", background: "#000000", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}
+                            >
+                              Select collections
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => { setStepProdModalIdx(ai); setTempStepProds([...(step.selectedProducts || [])]); setStepProdSearch(""); setShowStepProdModal(true); }}
+                              style={{ padding: "7px 16px", border: "1px solid #000000", borderRadius: "5px", background: "#000000", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}
+                            >
+                              Select products
+                            </button>
+                          )}
+                          <span style={{ fontSize: "13px", color: "#6b7280" }}>
+                            {stepScope === "collection"
+                              ? `${step.collections.length} selected`
+                              : `${(step.selectedProducts || []).length} selected`}
+                          </span>
+                        </div>
                       </div>
-                      {[
-                        { value: "collection", label: "Specific collections" },
-                        { value: "product", label: "Specific products" },
-                      ].map((opt) => (
-                        <label
-                          key={opt.value}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            padding: "0 10px",
-                            minHeight: "40px",
-                            border: `1.5px solid ${stepScope === opt.value ? "#000000" : "#d1d5db"}`,
-                            borderRadius: "6px",
-                            background: stepScope === opt.value ? "#f9fafb" : "#fff",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <input
-                            type="radio"
-                            name={`step-scope-${ai}`}
-                            value={opt.value}
-                            checked={stepScope === opt.value}
-                            onChange={() => updateStepScope(ai, opt.value)}
-                            style={{ width: "16px", height: "16px", accentColor: "#6b7280", cursor: "pointer", margin: 0, flexShrink: 0 }}
-                          />
-                          <span style={{ fontSize: "12px", color: "#4b5563", fontWeight: stepScope === opt.value ? "700" : "600" }}>{opt.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      {stepScope === "collection" ? (
-                        <button
-                          type="button"
-                          onClick={() => { setCollModalStepIdx(ai); setTempColls([...step.collections]); setCollSearch(""); setShowCollModal(true); }}
-                          style={{ padding: "7px 16px", border: "1px solid #000000", borderRadius: "5px", background: "#000000", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}
-                        >
-                          Select collections
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => { setStepProdModalIdx(ai); setTempStepProds([...(step.selectedProducts || [])]); setStepProdSearch(""); setShowStepProdModal(true); }}
-                          style={{ padding: "7px 16px", border: "1px solid #000000", borderRadius: "5px", background: "#000000", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}
-                        >
-                          Select products
-                        </button>
-                      )}
-                      <span style={{ fontSize: "13px", color: "#6b7280" }}>
-                        {stepScope === "collection"
-                          ? `${step.collections.length} selected`
-                          : `${(step.selectedProducts || []).length} selected`}
-                      </span>
+                      <div>
+                        <label style={labelStyle}>Scope</label>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "8px" }}>
+                          {[
+                            { value: "collection", label: "Specific collections" },
+                            { value: "product", label: "Specific products" },
+                          ].map((opt) => (
+                            <label
+                              key={opt.value}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                padding: "0 10px",
+                                minHeight: "40px",
+                                border: `1.5px solid ${stepScope === opt.value ? "#000000" : "#d1d5db"}`,
+                                borderRadius: "6px",
+                                background: stepScope === opt.value ? "#f9fafb" : "#fff",
+                                cursor: "pointer",
+                              }}
+                            >
+                              <input
+                                type="radio"
+                                name={`step-scope-${ai}`}
+                                value={opt.value}
+                                checked={stepScope === opt.value}
+                                onChange={() => updateStepScope(ai, opt.value)}
+                                style={{ width: "16px", height: "16px", accentColor: "#6b7280", cursor: "pointer", margin: 0, flexShrink: 0 }}
+                              />
+                              <span style={{ fontSize: "12px", color: "#4b5563", fontWeight: stepScope === opt.value ? "700" : "600" }}>{opt.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                     {step.collections.length > 0 && stepScope === "collection" && (
                       <div style={{ border: "1px solid #e5e7eb", borderRadius: "6px", marginTop: "10px", overflow: "hidden" }}>
@@ -1152,28 +1157,34 @@ export default function SpecificComboBoxPage() {
                 <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", marginBottom: "16px" }}>
                   <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#111827" }}>General settings</div>
                   <div style={{ padding: "16px" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "12px", alignItems: "start" }}>
                       <div>
-                        <label style={labelStyle}>Popup title</label>
+                        <label style={labelStyle}>Heading</label>
                         <input value={step.popup.title} onChange={(e) => updateComboStepPopup(ai, "title", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Choose your main product" />
                       </div>
                       <div>
-                        <label style={labelStyle}>Popup description</label>
-                        <textarea value={step.popup.desc} onChange={(e) => updateComboStepPopup(ai, "desc", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db", resize: "vertical", minHeight: "64px" }} placeholder="Select the primary product." />
+                        <label style={labelStyle}>Description</label>
+                        <input value={step.popup.desc} onChange={(e) => updateComboStepPopup(ai, "desc", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Select the primary product." />
                       </div>
                       <div>
-                        <label style={labelStyle}>Confirm button text</label>
+                        <label style={labelStyle}>Product Button Label</label>
                         <input value={step.popup.btn} onChange={(e) => updateComboStepPopup(ai, "btn", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Confirm selection" />
                         <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>CTA label inside the popup drawer</div>
-                            <div style={{ marginTop: "10px" }}>
-                              <ToggleSwitch
-                                checked={step.optional === true}
-                                onChange={(e) => updateComboStep(ai, "optional", e.target.checked)}
-                                label="Optional"
-                                showStateText={false}
-                              />
-                            </div>
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Optional</label>
+                        <div style={{ border: "1px solid #e5e7eb", borderRadius: "7px", background: "#fafafa", padding: "10px 12px", minHeight: "76px" }}>
+                          <ToggleSwitch
+                            checked={step.optional === true}
+                            onChange={(e) => updateComboStep(ai, "optional", e.target.checked)}
+                            label="Optional"
+                            showStateText={false}
+                          />
+                          <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "8px", lineHeight: 1.35 }}>
+                            If enabled, customers can skip this step.
                           </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -524,7 +524,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <s-page heading="MixBox – Box & Bundle Builder">
+    <s-page heading="MixBox – Box & Bundle Builder" inlineSize="large">
       <ui-title-bar>
         <button variant="primary" onClick={() => setShowCreateBoxModal(true)}>
           Create Box

@@ -21,7 +21,7 @@ export const loader = async ({ request }) => {
 
 export default function BillingSuccessPage() {
   return (
-    <s-page heading="Finalizing billing">
+    <s-page heading="Finalizing billing" inlineSize="large">
       <div style={{ maxWidth: "520px", margin: "40px auto", padding: "24px", textAlign: "center", background: "#ffffff", border: "1px solid #e5e7eb", borderRadius: "8px" }}>
         <div style={{ fontSize: "16px", fontWeight: "700", color: "#111827", marginBottom: "8px" }}>
           Finalizing your subscription

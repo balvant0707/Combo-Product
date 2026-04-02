@@ -313,6 +313,7 @@ export default function BoxSettingsPage() {
   /* ─────────────── Render ─────────────── */
   return (
     <s-page
+      inlineSize="large"
       heading={`Box Settings: ${box.boxName}`}
       back-url={withEmbeddedAppParams("/app/boxes", location.search)}
     >

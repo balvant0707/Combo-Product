@@ -233,7 +233,7 @@ export default function ManageBoxesPage() {
   const inactiveCount = baseBoxes.length - activeCount;
 
   return (
-    <s-page heading="Combo Boxes">
+    <s-page heading="Combo Boxes" inlineSize="large">
       <style>{`
         /* ── Stats bar ── */
         .cb-stats {

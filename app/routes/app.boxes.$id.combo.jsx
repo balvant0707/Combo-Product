@@ -638,6 +638,7 @@ export default function SpecificComboBoxPage() {
   /* ─────────────── Render ─────────────── */
   return (
     <s-page
+      inlineSize="large"
       heading={`Specific Combo Box: ${box.boxName}`}
       back-url={withEmbeddedAppParams(`/app/boxes/${box.id}`, location.search)}
     >

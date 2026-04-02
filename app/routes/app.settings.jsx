@@ -85,7 +85,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <s-page heading="Settings">
+    <s-page heading="Settings" inlineSize="large">
       <s-button
         slot="primary-action"
         onClick={() => document.getElementById("settings-form").requestSubmit()}

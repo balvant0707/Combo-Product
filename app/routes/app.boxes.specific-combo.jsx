@@ -439,7 +439,7 @@ export default function CreateSpecificComboBoxPage() {
   const searchInputStyle = { ...fieldStyle, borderColor: "#d1d5db", fontSize: "13px" };
 
   return (
-    <s-page heading="Create Specific Combo Box" back-url={withEmbeddedAppParams("/app/boxes", location.search)}>
+    <s-page heading="Create Specific Combo Box" back-url={withEmbeddedAppParams("/app/boxes", location.search)} inlineSize="large">
 
       <s-button
         slot="primary-action"

@@ -166,8 +166,6 @@ function Banner({ tone, children }) {
       marginBottom: "20px",
       fontSize: "13px",
       color: s.color,
-      maxWidth: "760px",
-      margin: "0 auto 20px",
     }}>
       {children}
     </div>
@@ -386,8 +384,6 @@ export default function PricingPage() {
         justifyContent: "center",
         position: "relative",
         marginBottom: "36px",
-        maxWidth: "760px",
-        margin: "0 auto 36px",
       }}>
         {/* Monthly / Yearly pill */}
         <div style={{
@@ -469,8 +465,6 @@ export default function PricingPage() {
         display: "grid",
         gridTemplateColumns: "1fr 1fr",
         gap: "24px",
-        maxWidth: "760px",
-        margin: "0 auto",
       }}>
         <PlanCard
           title="Free Plan"

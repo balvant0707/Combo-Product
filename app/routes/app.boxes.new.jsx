@@ -240,6 +240,7 @@ export default function CreateBoxPage() {
 
   return (
     <s-page
+      inlineSize="large"
       heading="Create New Box"
       back-url={withEmbeddedAppParams("/app/boxes", location.search)}
     >

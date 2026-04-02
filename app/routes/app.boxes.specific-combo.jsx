@@ -514,6 +514,7 @@ export default function CreateSpecificComboBoxPage() {
               <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", marginBottom: "16px" }}>
                 <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#111827" }}>Combo configuration</div>
                 <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "14px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "10px", alignItems: "start" }}>
                   {/* Type */}
                   <div>
                     <label style={labelStyle}>Number of steps</label>
@@ -537,7 +538,7 @@ export default function CreateSpecificComboBoxPage() {
                     </div>
                     <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "5px" }}>{comboConfig.type} product selections required (2–8)</div>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "10px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "10px", gridColumn: "2 / -1" }}>
                     <div>
                       <label style={labelStyle}>Title</label>
                       <input value={comboConfig.title} onChange={(e) => updateComboField("title", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Build Your Perfect Bundle" />
@@ -551,10 +552,12 @@ export default function CreateSpecificComboBoxPage() {
                       <input value={comboConfig.highlightText || ""} onChange={(e) => updateComboField("highlightText", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Limited time combo" />
                     </div>
                   </div>
+                  </div>
                   {/* <div>
                     <label style={labelStyle}>Descriptions</label>
                     <input value={comboConfig.supportText || ""} onChange={(e) => updateComboField("supportText", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Pick products and save more at checkout" />
                   </div> */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px", alignItems: "start" }}>
                   {/* Combo image */}
                   <div>
                     <label style={labelStyle}>image</label>
@@ -697,6 +700,7 @@ export default function CreateSpecificComboBoxPage() {
                         </div>
                       </div>
                     )}
+                  </div>
                   </div>
                 </div>
               </div>

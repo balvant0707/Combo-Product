@@ -269,7 +269,7 @@ export const action = async ({ request, params }) => {
 const fieldStyle = {
   width: "100%", padding: "9px 12px", border: "1.5px solid #e5e7eb",
   borderRadius: "5px", fontSize: "13px", color: "#111827", background: "#fff",
-  boxSizing: "border-box", outline: "none", transition: "border-color 0.15s",
+  boxSizing: "border-box", outline: "none", transition: "border-color 0.15s, box-shadow 0.15s",
 };
 const labelStyle = {
   display: "block", fontSize: "11px", fontWeight: "700", color: "#4b5563",
@@ -349,32 +349,31 @@ export default function BoxSettingsPage() {
   return (
     <s-page
       inlineSize="large"
-      heading={`Box Settings: ${box.boxName}`}
+      heading={`Edit Box: ${box.boxName}`}
       back-url={withEmbeddedAppParams("/app/boxes", location.search)}
     >
-      <ui-title-bar title={`Box Settings: ${box.boxName}`}>
-        <button onClick={() => document.getElementById("delete-box-form")?.requestSubmit()}>
-          Delete Box
-        </button>
-        <button variant="primary" onClick={() => document.getElementById("edit-box-form")?.requestSubmit()}>
-          {isSaving ? "Saving..." : "Save Changes"}
-        </button>
-      </ui-title-bar>
+      <s-button
+        slot="primary-action"
+        variant="primary"
+        disabled={isSaving || undefined}
+        onClick={() => { const form = document.getElementById("edit-box-form"); if (form) form.requestSubmit(); }}
+      >
+        {isSaving ? "Saving..." : "Save Changes"}
+      </s-button>
 
       {/* Hero banner */}
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}><AdminIcon type="clipboard" size="small" /> Box Settings</div>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}>
+          <AdminIcon type="package" size="small" /> Edit Box
+        </div>
         <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>{box.boxName}</div>
         <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Update settings, pricing, and eligible products for this bundle.</div>
       </div>
 
-
-
-    <s-section>
-
       {errors._global && (
         <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "5px", padding: "12px 16px", marginBottom: "16px", color: "#991b1b", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
-          <AdminIcon type="alert-triangle" size="small" />{errors._global}
+          <AdminIcon type="alert-triangle" size="small" />
+          {errors._global}
         </div>
       )}
 
@@ -406,6 +405,7 @@ export default function BoxSettingsPage() {
           )} />
         )}
 
+        <s-section>
         {/* Basic Information */}
         <div style={{ marginBottom: "28px" }}>
           <div style={sectionHeadingStyle}><AdminIcon type="clipboard" size="small" /> Basic Information</div>
@@ -587,6 +587,7 @@ export default function BoxSettingsPage() {
           )}
         </div>
 
+        </s-section>
       </Form>
 
       {/* Delete form */}
@@ -690,7 +691,6 @@ export default function BoxSettingsPage() {
           </div>
         );
       })()}
-    </s-section>
     </s-page>
   );
 }

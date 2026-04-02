@@ -264,7 +264,7 @@ function EmbedBlockCard({ embedBlockUrl, enabled }) {
 }
 
 function ThemeCustomizationCard({ themeEditorUrl }) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const accordionPanelId = "guided-setup-panel";
   const steps = [
     { iconType: "desktop", text: "Opens Theme Customization on your live product template." },

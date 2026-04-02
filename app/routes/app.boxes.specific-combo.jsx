@@ -96,6 +96,8 @@ const DEFAULT_COMBO = {
   type: MIN_COMBO_STEPS,
   title: "Build Your Perfect Bundle",
   subtitle: "Choose a product for each step",
+  ctaButtonLabel: "BUILD YOUR OWN BOX",
+  addToCartLabel: "Add To Cart",
   highlightText: "",
   supportText: "",
   bundlePrice: 0,
@@ -105,6 +107,9 @@ const DEFAULT_COMBO = {
   buyQuantity: 1,
   getQuantity: 1,
   isActive: true,
+  isGiftBox: false,
+  allowDuplicates: false,
+  giftMessageEnabled: false,
   showProductImages: true,
   showProgressBar: true,
   allowReselection: true,
@@ -255,9 +260,9 @@ export const action = async ({ request }) => {
     itemCount,
     bundlePrice,
     bundlePriceType,
-    isGiftBox:          false,
-    allowDuplicates:    false,
-    giftMessageEnabled: false,
+    isGiftBox:          parsedCombo.isGiftBox === true || String(parsedCombo.isGiftBox).toLowerCase() === "true",
+    allowDuplicates:    parsedCombo.allowDuplicates === true || String(parsedCombo.allowDuplicates).toLowerCase() === "true",
+    giftMessageEnabled: parsedCombo.giftMessageEnabled === true || String(parsedCombo.giftMessageEnabled).toLowerCase() === "true",
     isActive:           parsedCombo.isActive !== false,
     bannerImage,
     eligibleProducts:   [],
@@ -562,6 +567,16 @@ export default function CreateSpecificComboBoxPage() {
                     </div>
                   </div>
                   </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px" }}>
+                    <div>
+                      <label style={labelStyle}>CTA Button Label</label>
+                      <input value={comboConfig.ctaButtonLabel || ""} onChange={(e) => updateComboField("ctaButtonLabel", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="BUILD YOUR OWN BOX" />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Add to Cart Label</label>
+                      <input value={comboConfig.addToCartLabel || ""} onChange={(e) => updateComboField("addToCartLabel", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Add To Cart" />
+                    </div>
+                  </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px", alignItems: "start" }}>
                   {/* Combo image */}
                   <div>
@@ -712,6 +727,27 @@ export default function CreateSpecificComboBoxPage() {
             </div>
 
             {/* â”€â”€ MAIN: Step Editor â”€â”€ */}
+            <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", marginBottom: "16px" }}>
+              <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", display: "flex", alignItems: "center", gap: "6px" }}>
+                <AdminIcon type="settings" size="small" /> Options
+              </div>
+              <div style={{ padding: "12px", display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "8px" }}>
+                {[
+                  { key: "isGiftBox", label: "Gift Box Mode", desc: "Shows gift wrapping option to customers", iconType: "gift-card" },
+                  { key: "allowDuplicates", label: "Allow Duplicates", desc: "Same product can fill multiple slots", iconType: "duplicate" },
+                  { key: "giftMessageEnabled", label: "Gift Message Field", desc: "Show text area for gift message", iconType: "email" },
+                ].map((opt) => (
+                  <div key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "10px 12px", background: comboConfig[opt.key] ? "#f9fafb" : "#fff", border: `1.5px solid ${comboConfig[opt.key] ? "#000000" : "#e5e7eb"}`, borderRadius: "7px", transition: "border-color 0.15s, background 0.15s" }}>
+                    <ToggleSwitch checked={comboConfig[opt.key]} onChange={(e) => updateComboField(opt.key, e.target.checked)} showStateText={false} />
+                    <div>
+                      <div style={{ fontSize: "12px", fontWeight: "600", color: "#111827", lineHeight: 1.3, display: "flex", alignItems: "center", gap: "5px" }}><AdminIcon type={opt.iconType} size="small" /> {opt.label}</div>
+                      <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>{opt.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div style={{ minHeight: "calc(100vh - 260px)", height: "auto" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
                 <div style={{ fontSize: "12px", fontWeight: "700", color: "#111827", letterSpacing: "0.04em", textTransform: "uppercase" }}>Steps</div>

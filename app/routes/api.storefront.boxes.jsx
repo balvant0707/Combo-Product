@@ -47,12 +47,20 @@ export const loader = async ({ request }) => {
     if (box.comboStepsConfig) {
       try { rawComboConfig = JSON.parse(box.comboStepsConfig); } catch {}
     }
+    const ctaButtonLabel = typeof rawComboConfig?.ctaButtonLabel === "string" && rawComboConfig.ctaButtonLabel.trim()
+      ? rawComboConfig.ctaButtonLabel.trim()
+      : null;
+    const addToCartLabel = typeof rawComboConfig?.addToCartLabel === "string" && rawComboConfig.addToCartLabel.trim()
+      ? rawComboConfig.addToCartLabel.trim()
+      : null;
     return {
       id: box.id,
       boxCode: box.boxCode || null,
       boxName: box.boxName,
       displayTitle: box.displayTitle,
       boxSubtitle: typeof rawComboConfig?.boxSubtitle === "string" ? rawComboConfig.boxSubtitle : null,
+      ctaButtonLabel,
+      addToCartLabel,
       itemCount: box.itemCount,
       bundlePrice: parseFloat(box.bundlePrice),
       isGiftBox: box.isGiftBox,
@@ -104,6 +112,8 @@ export const loader = async ({ request }) => {
             discountValue,
             buyQuantity,
             getQuantity,
+            ctaButtonLabel,
+            addToCartLabel,
             showProgressBar: box.config.showProgressBar !== false,
             showProductImages: box.config.showProductImages !== false,
             allowReselection: box.config.allowReselection !== false,
@@ -127,6 +137,12 @@ export const loader = async ({ request }) => {
               discountValue: String(parsed.discountValue || '0'),
               buyQuantity: Math.max(1, parseInt(String(parsed.buyQuantity ?? 1), 10) || 1),
               getQuantity: Math.max(1, parseInt(String(parsed.getQuantity ?? 1), 10) || 1),
+              ctaButtonLabel: typeof parsed.ctaButtonLabel === "string" && parsed.ctaButtonLabel.trim()
+                ? parsed.ctaButtonLabel.trim()
+                : ctaButtonLabel,
+              addToCartLabel: typeof parsed.addToCartLabel === "string" && parsed.addToCartLabel.trim()
+                ? parsed.addToCartLabel.trim()
+                : addToCartLabel,
               showProgressBar: parsed.showProgressBar !== false,
               showProductImages: parsed.showProductImages !== false,
               allowReselection: parsed.allowReselection !== false,

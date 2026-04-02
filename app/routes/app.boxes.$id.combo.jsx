@@ -86,6 +86,8 @@ const DEFAULT_COMBO_CONFIG = {
   type: MIN_COMBO_STEPS,
   title: "Build Your Perfect Bundle",
   subtitle: "Choose a product for each step",
+  ctaButtonLabel: "BUILD YOUR OWN BOX",
+  addToCartLabel: "Add To Cart",
   highlightText: "",
   supportText: "",
   bundlePrice: 0,
@@ -95,6 +97,9 @@ const DEFAULT_COMBO_CONFIG = {
   buyQuantity: 1,
   getQuantity: 1,
   isActive: true,
+  isGiftBox: false,
+  allowDuplicates: false,
+  giftMessageEnabled: false,
   showProductImages: true,
   showProgressBar: true,
   allowReselection: true,
@@ -239,6 +244,11 @@ export const loader = async ({ request, params }) => {
     let rawDiscountValue = DEFAULT_COMBO_CONFIG.discountValue;
     let rawBuyQuantity = DEFAULT_COMBO_CONFIG.buyQuantity;
     let rawGetQuantity = DEFAULT_COMBO_CONFIG.getQuantity;
+    let rawCtaButtonLabel = DEFAULT_COMBO_CONFIG.ctaButtonLabel;
+    let rawAddToCartLabel = DEFAULT_COMBO_CONFIG.addToCartLabel;
+    let rawIsGiftBox = cfg.isGiftBox === true;
+    let rawAllowDuplicates = cfg.allowDuplicates === true;
+    let rawGiftMessageEnabled = cfg.giftMessageEnabled === true;
     if (box.comboStepsConfig) {
       try {
         const raw = JSON.parse(box.comboStepsConfig);
@@ -248,6 +258,15 @@ export const loader = async ({ request, params }) => {
         rawDiscountValue = String(raw?.discountValue ?? rawDiscountValue);
         rawBuyQuantity = Math.max(1, parseInt(String(raw?.buyQuantity ?? rawBuyQuantity), 10) || rawBuyQuantity);
         rawGetQuantity = Math.max(1, parseInt(String(raw?.getQuantity ?? rawGetQuantity), 10) || rawGetQuantity);
+        rawCtaButtonLabel = typeof raw?.ctaButtonLabel === "string" && raw.ctaButtonLabel.trim()
+          ? raw.ctaButtonLabel.trim()
+          : rawCtaButtonLabel;
+        rawAddToCartLabel = typeof raw?.addToCartLabel === "string" && raw.addToCartLabel.trim()
+          ? raw.addToCartLabel.trim()
+          : rawAddToCartLabel;
+        rawIsGiftBox = raw?.isGiftBox === true || String(raw?.isGiftBox).toLowerCase() === "true";
+        rawAllowDuplicates = raw?.allowDuplicates === true || String(raw?.allowDuplicates).toLowerCase() === "true";
+        rawGiftMessageEnabled = raw?.giftMessageEnabled === true || String(raw?.giftMessageEnabled).toLowerCase() === "true";
       } catch {}
     }
     comboStepsConfig = JSON.stringify({
@@ -262,7 +281,12 @@ export const loader = async ({ request, params }) => {
       discountValue:     rawDiscountValue,
       buyQuantity:       rawBuyQuantity,
       getQuantity:       rawGetQuantity,
+      ctaButtonLabel:    rawCtaButtonLabel,
+      addToCartLabel:    rawAddToCartLabel,
       isActive:          cfg.isActive,
+      isGiftBox:         rawIsGiftBox,
+      allowDuplicates:   rawAllowDuplicates,
+      giftMessageEnabled: rawGiftMessageEnabled,
       showProductImages: cfg.showProductImages,
       showProgressBar:   cfg.showProgressBar,
       allowReselection:  cfg.allowReselection,
@@ -462,6 +486,9 @@ export default function SpecificComboBoxPage() {
           bundlePrice:      box.config.bundlePrice != null ? parseFloat(box.config.bundlePrice) : DEFAULT_COMBO_CONFIG.bundlePrice,
           bundlePriceType:  box.config.bundlePriceType    ?? DEFAULT_COMBO_CONFIG.bundlePriceType,
           isActive:         box.config.isActive,
+          isGiftBox:        box.config.isGiftBox,
+          allowDuplicates:  box.config.allowDuplicates,
+          giftMessageEnabled: box.config.giftMessageEnabled,
           showProductImages:box.config.showProductImages,
           showProgressBar:  box.config.showProgressBar,
           allowReselection: box.config.allowReselection,
@@ -762,6 +789,16 @@ export default function SpecificComboBoxPage() {
                 </div>
               </div>
               </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px" }}>
+                <div>
+                  <label style={labelStyle}>CTA Button Label</label>
+                  <input value={comboConfig.ctaButtonLabel || ""} onChange={(e) => updateComboField("ctaButtonLabel", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="BUILD YOUR OWN BOX" />
+                </div>
+                <div>
+                  <label style={labelStyle}>Add to Cart Label</label>
+                  <input value={comboConfig.addToCartLabel || ""} onChange={(e) => updateComboField("addToCartLabel", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Add To Cart" />
+                </div>
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px", alignItems: "start" }}>
               {/* Combo image */}
               <div>
@@ -948,6 +985,27 @@ export default function SpecificComboBoxPage() {
         </div>
 
         {/* Ã¢â€â‚¬Ã¢â€â‚¬ MAIN Ã¢â€â‚¬Ã¢â€â‚¬ */}
+        <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", marginBottom: "16px" }}>
+          <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", display: "flex", alignItems: "center", gap: "6px" }}>
+            <AdminIcon type="settings" size="small" /> Options
+          </div>
+          <div style={{ padding: "12px", display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "8px" }}>
+            {[
+              { key: "isGiftBox", label: "Gift Box Mode", desc: "Shows gift wrapping option to customers", iconType: "gift-card" },
+              { key: "allowDuplicates", label: "Allow Duplicates", desc: "Same product can fill multiple slots", iconType: "duplicate" },
+              { key: "giftMessageEnabled", label: "Gift Message Field", desc: "Show text area for gift message", iconType: "email" },
+            ].map((opt) => (
+              <div key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "10px 12px", background: comboConfig[opt.key] ? "#f9fafb" : "#fff", border: `1.5px solid ${comboConfig[opt.key] ? "#000000" : "#e5e7eb"}`, borderRadius: "7px", transition: "border-color 0.15s, background 0.15s" }}>
+                <ToggleSwitch checked={comboConfig[opt.key]} onChange={(e) => updateComboField(opt.key, e.target.checked)} showStateText={false} />
+                <div>
+                  <div style={{ fontSize: "12px", fontWeight: "600", color: "#111827", lineHeight: 1.3, display: "flex", alignItems: "center", gap: "5px" }}><AdminIcon type={opt.iconType} size="small" /> {opt.label}</div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>{opt.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div style={{ minHeight: "calc(100vh - 260px)", height: "auto" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
             <div style={{ fontSize: "12px", fontWeight: "700", color: "#111827", letterSpacing: "0.04em", textTransform: "uppercase" }}>Steps</div>

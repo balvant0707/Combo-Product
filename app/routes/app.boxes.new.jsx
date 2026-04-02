@@ -122,6 +122,8 @@ export const action = async ({ request }) => {
     boxName: formData.get("boxName"),
     displayTitle: formData.get("displayTitle"),
     boxSubtitle: formData.get("boxSubtitle") || "",
+    ctaButtonLabel: formData.get("ctaButtonLabel") || "",
+    addToCartLabel: formData.get("addToCartLabel") || "",
     itemCount: formData.get("itemCount"),
     bundlePrice: formData.get("bundlePrice"),
     bundlePriceType: formData.get("bundlePriceType"),
@@ -334,6 +336,14 @@ export default function CreateBoxPage() {
               <div>
                 <label style={labelStyle}>Descriptions</label>
                 <input type="text" name="boxSubtitle" placeholder="Shown below the main title on storefront" style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
+              </div>
+              <div>
+                <label style={labelStyle}>CTA Button Label</label>
+                <input type="text" name="ctaButtonLabel" placeholder="BUILD YOUR OWN BOX" style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
+              </div>
+              <div>
+                <label style={labelStyle}>Add to Cart Label</label>
+                <input type="text" name="addToCartLabel" placeholder="Add To Cart" style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
               </div>
               <div>
                 <label style={labelStyle}>Number of Products *</label>

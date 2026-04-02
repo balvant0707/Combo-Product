@@ -144,6 +144,8 @@ export const loader = async ({ request, params }) => {
   let savedBoxSubtitle = "";
   let savedBuyQuantity = "1";
   let savedGetQuantity = "1";
+  let savedCtaButtonLabel = "BUILD YOUR OWN BOX";
+  let savedAddToCartLabel = "Add To Cart";
   if (comboStepsConfig) {
     try {
       const parsed = JSON.parse(comboStepsConfig);
@@ -153,11 +155,28 @@ export const loader = async ({ request, params }) => {
       if (typeof parsed.boxSubtitle === "string") savedBoxSubtitle = parsed.boxSubtitle;
       if (parsed.buyQuantity != null) savedBuyQuantity = String(parsed.buyQuantity);
       if (parsed.getQuantity != null) savedGetQuantity = String(parsed.getQuantity);
+      if (typeof parsed.ctaButtonLabel === "string" && parsed.ctaButtonLabel.trim()) {
+        savedCtaButtonLabel = parsed.ctaButtonLabel.trim();
+      }
+      if (typeof parsed.addToCartLabel === "string" && parsed.addToCartLabel.trim()) {
+        savedAddToCartLabel = parsed.addToCartLabel.trim();
+      }
     } catch {}
   }
 
   return {
-    box: { ...boxWithoutBinary, bundlePrice: effectiveBundlePrice, bannerImageSrc, discountType: savedDiscountType, discountValue: savedDiscountValue, boxSubtitle: savedBoxSubtitle, buyQuantity: savedBuyQuantity, getQuantity: savedGetQuantity },
+    box: {
+      ...boxWithoutBinary,
+      bundlePrice: effectiveBundlePrice,
+      bannerImageSrc,
+      discountType: savedDiscountType,
+      discountValue: savedDiscountValue,
+      boxSubtitle: savedBoxSubtitle,
+      buyQuantity: savedBuyQuantity,
+      getQuantity: savedGetQuantity,
+      ctaButtonLabel: savedCtaButtonLabel,
+      addToCartLabel: savedAddToCartLabel,
+    },
     products,
     collections,
   };
@@ -189,6 +208,8 @@ export const action = async ({ request, params }) => {
     boxName: formData.get("boxName"),
     displayTitle: formData.get("displayTitle"),
     boxSubtitle: formData.get("boxSubtitle") || "",
+    ctaButtonLabel: formData.get("ctaButtonLabel") || "",
+    addToCartLabel: formData.get("addToCartLabel") || "",
     itemCount: formData.get("itemCount"),
     bundlePrice: formData.get("bundlePrice"),
     bundlePriceType: formData.get("bundlePriceType"),
@@ -408,6 +429,14 @@ export default function BoxSettingsPage() {
             <div>
               <label style={labelStyle}>Descriptions</label>
               <input type="text" name="boxSubtitle" defaultValue={box.boxSubtitle || ""} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
+            </div>
+            <div>
+              <label style={labelStyle}>CTA Button Label</label>
+              <input type="text" name="ctaButtonLabel" defaultValue={box.ctaButtonLabel || "BUILD YOUR OWN BOX"} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
+            </div>
+            <div>
+              <label style={labelStyle}>Add to Cart Label</label>
+              <input type="text" name="addToCartLabel" defaultValue={box.addToCartLabel || "Add To Cart"} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
             </div>
             <div>
               <label style={labelStyle}>Number of Products *</label>

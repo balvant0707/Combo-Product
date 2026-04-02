@@ -453,49 +453,7 @@ export default function SettingsPage() {
             </div>
           </div>
         </s-section>
-
-        <s-section heading="Widget Settings">
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            <div>
-              <label style={{ display: "block", fontSize: "13px", fontWeight: "500", color: "#1a1814", marginBottom: "6px" }}>
-                Widget Heading Text
-              </label>
-              <input
-                type="text"
-                name="widgetHeadingText"
-                defaultValue={settings.widgetHeadingText || "Pick your favorite products and build your own box!"}
-                style={inputStyle}
-              />
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-              <div>
-                <label style={{ display: "block", fontSize: "13px", fontWeight: "500", color: "#1a1814", marginBottom: "6px" }}>
-                  CTA Button Label
-                </label>
-                <input
-                  type="text"
-                  name="ctaButtonLabel"
-                  defaultValue={settings.ctaButtonLabel || "BUILD YOUR OWN BOX"}
-                  style={inputStyle}
-                />
-              </div>
-              <div>
-                <label style={{ display: "block", fontSize: "13px", fontWeight: "500", color: "#1a1814", marginBottom: "6px" }}>
-                  Add to Cart Label
-                </label>
-                <input
-                  type="text"
-                  name="addToCartLabel"
-                  defaultValue={settings.addToCartLabel || "Add To Cart"}
-                  style={inputStyle}
-                />
-              </div>
-            </div>
-          </div>
-        </s-section>
-
-        {/* ── Display Options ──────────────────────────────────────────────── */}
+        {/* -- Display Options ------------------------------------------------ */}
         <s-section heading="Display Options">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             {[

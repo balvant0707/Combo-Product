@@ -693,9 +693,6 @@ export default function ManageBoxesPage() {
                                 </span>
                               )}
                             </div>
-                            {box.displayTitle && box.displayTitle !== box.boxName && (
-                              <div style={{ fontSize: 11, color: "#9ca3af" }}>{box.displayTitle}</div>
-                            )}
                           </div>
                         </div>
                       </td>

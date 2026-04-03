@@ -204,9 +204,12 @@ export const action = async ({ request, params }) => {
   const buyQuantity = bundlePriceType === "dynamic" ? (formData.get("buyQuantity") || "1") : "1";
   const getQuantity = bundlePriceType === "dynamic" ? (formData.get("getQuantity") || "1") : "1";
 
+  const displayTitle = String(formData.get("displayTitle") || "").trim();
+  const boxName = String(formData.get("boxName") || displayTitle).trim();
+
   const data = {
-    boxName: formData.get("boxName"),
-    displayTitle: formData.get("displayTitle"),
+    boxName,
+    displayTitle,
     comboProductButtonTitle: formData.get("comboProductButtonTitle") || "",
     productButtonTitle: formData.get("productButtonTitle") || "",
     itemCount: formData.get("itemCount"),
@@ -225,7 +228,6 @@ export const action = async ({ request, params }) => {
     scopeType,
     scopeItems,
   };
-  if (!data.boxName?.trim()) errors.boxName = "Box name is required";
   if (!data.displayTitle?.trim()) errors.displayTitle = "Display title is required";
   if (!data.itemCount || parseInt(data.itemCount) < 1) errors.itemCount = "Invalid item count";
 
@@ -441,11 +443,6 @@ export default function BoxSettingsPage() {
         <div style={{ marginBottom: "28px" }}>
           <div style={sectionHeadingStyle}><AdminIcon type="clipboard" size="small" /> Basic Information</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "14px" }}>
-            <div>
-              <label style={labelStyle}>Title *</label>
-              <input type="text" name="boxName" defaultValue={box.boxName} style={{ ...fieldStyle, borderColor: errors.boxName ? "#e11d48" : "#d1d5db" }} />
-              {errors.boxName && <div style={errorStyle}>{errors.boxName}</div>}
-            </div>
             <div>
               <label style={labelStyle}>Heading *</label>
               <input type="text" name="displayTitle" defaultValue={box.displayTitle} style={{ ...fieldStyle, borderColor: errors.displayTitle ? "#e11d48" : "#d1d5db" }} />

@@ -128,9 +128,12 @@ export const action = async ({ request }) => {
   const buyQuantity = bundlePriceType === "dynamic" ? (formData.get("buyQuantity") || "1") : "1";
   const getQuantity = bundlePriceType === "dynamic" ? (formData.get("getQuantity") || "1") : "1";
 
+  const displayTitle = String(formData.get("displayTitle") || "").trim();
+  const boxName = String(formData.get("boxName") || displayTitle).trim();
+
   const data = {
-    boxName: formData.get("boxName"),
-    displayTitle: formData.get("displayTitle"),
+    boxName,
+    displayTitle,
     comboProductButtonTitle: formData.get("comboProductButtonTitle") || "",
     productButtonTitle: formData.get("productButtonTitle") || "",
     itemCount: formData.get("itemCount"),
@@ -149,7 +152,6 @@ export const action = async ({ request }) => {
     scopeItems,
   };
 
-  if (!data.boxName?.trim()) errors.boxName = "Box name is required";
   if (!data.displayTitle?.trim()) errors.displayTitle = "Display title is required";
   if (!data.itemCount || parseInt(data.itemCount) < 1 || parseInt(data.itemCount) > 20)
     errors.itemCount = "Item count must be between 1 and 20";
@@ -297,7 +299,7 @@ export default function CreateBoxPage() {
               <AdminIcon type="package" size="small" /> New Box
             </div>
             <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>Create a New Box</div>
-            <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Set the box name, price, item count, and options.</div>
+            <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Set heading, price, item count, and options.</div>
           </div>
           <div style={{ flex: "0 1 420px", minWidth: "320px" }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "10px 12px", background: options.isActive ? "#f9fafb" : "#fff", border: `1.5px solid ${options.isActive ? "#000000" : "#e5e7eb"}`, borderRadius: "7px", transition: "border-color 0.15s, background 0.15s" }}>
@@ -354,11 +356,6 @@ export default function CreateBoxPage() {
               <AdminIcon type="clipboard" size="small" /> Basic Information
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "14px" }}>
-              <div>
-                <label style={labelStyle}>Title *</label>
-                <input type="text" name="boxName" placeholder="e.g. Box of 4 Bestsellers" style={{ ...fieldStyle, borderColor: errors.boxName ? "#e11d48" : "#d1d5db" }} />
-                {errors.boxName && <div style={errorStyle}>{errors.boxName}</div>}
-              </div>
               <div>
                 <label style={labelStyle}>Heading *</label>
                 <input type="text" name="displayTitle" placeholder="Shown to customers" style={{ ...fieldStyle, borderColor: errors.displayTitle ? "#e11d48" : "#d1d5db" }} />

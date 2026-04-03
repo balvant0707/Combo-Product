@@ -455,6 +455,7 @@ export default function DashboardPage() {
   const navigation = useNavigation();
   const [showCreateBoxModal, setShowCreateBoxModal] = useState(false);
   const [manualPageLoading, setManualPageLoading] = useState(false);
+  const [isRecentOrdersOpen, setIsRecentOrdersOpen] = useState(false);
   const justSubscribed = new URLSearchParams(location.search).get("subscribed") === "1";
   const isPageLoading = manualPageLoading || navigation.state !== "idle";
 
@@ -524,6 +525,31 @@ export default function DashboardPage() {
       bg: "linear-gradient(135deg,#f9fafb,#f3f4f6)",
       border: "#e5e7eb",
       href: "/app/settings",
+    },
+  ];
+
+  const appsList = [
+    {
+      key: "cartlift",
+      initials: "CL",
+      title: "CartLift: Cart Drawer & Upsell",
+      tag: "Upsell",
+      description: "Grow average order value with cart drawer upsells and smart cart offers.",
+      logoFrom: "#22c55e",
+      logoTo: "#16a34a",
+      tagBg: "#dbeafe",
+      tagColor: "#1e3a8a",
+    },
+    {
+      key: "fomoify",
+      initials: "FP",
+      title: "Fomoify Sales Popup & Proof",
+      tag: "Social Proof",
+      description: "Increase trust using real-time sales popups and conversion proof nudges.",
+      logoFrom: "#6366f1",
+      logoTo: "#2563eb",
+      tagBg: "#ede9fe",
+      tagColor: "#5b21b6",
     },
   ];
 
@@ -642,64 +668,341 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
-
       {/* Recent Bundle Orders */}
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>
-        <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000" }}>
-            <AdminIcon type="order" size="small" /> Recent Orders
+        <button
+          type="button"
+          aria-expanded={isRecentOrdersOpen}
+          aria-controls="recent-orders-panel"
+          onClick={() => setIsRecentOrdersOpen((prev) => !prev)}
+          style={{
+            width: "100%",
+            padding: "24px 32px 20px",
+            border: "none",
+            borderBottom: isRecentOrdersOpen ? "1px solid #e5e7eb" : "none",
+            background: "transparent",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "12px",
+            textAlign: "left",
+            cursor: "pointer",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000" }}>
+              <AdminIcon type="order" size="small" /> Recent Orders
+            </div>
+            <span style={{ fontSize: "13px", color: "#000000" }}>Latest bundle purchases</span>
           </div>
-          <span style={{ fontSize: "13px", color: "#000000" }}>Latest bundle purchases</span>
-        </div>
-        <div style={{ padding: "16px 16px 16px" }}>
-        <div style={{ background: "#ffffff", borderRadius: "5px", padding: "0 16px 8px", overflow: "hidden" }}>
-          {recentOrders.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "56px 0" }}>
-              <AdminIcon type="order" size="large" style={{ marginBottom: "14px", color: "#9ca3af" }} />
-              <p style={{ fontSize: "15px", margin: "0 0 6px", color: "#374151", fontWeight: "700" }}>No bundle orders yet</p>
-              <p style={{ fontSize: "13px", margin: 0, color: "#9ca3af" }}>Add the Combo Builder block to your theme to start receiving orders.</p>
+          <AdminIcon type={isRecentOrdersOpen ? "minus" : "plus"} size="small" />
+        </button>
+        {isRecentOrdersOpen && (
+          <div id="recent-orders-panel" style={{ padding: "16px 16px 16px" }}>
+            <div style={{ background: "#ffffff", borderRadius: "5px", padding: "0 16px 8px", overflow: "hidden" }}>
+              {recentOrders.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "56px 0" }}>
+                  <AdminIcon type="order" size="large" style={{ marginBottom: "14px", color: "#9ca3af" }} />
+                  <p style={{ fontSize: "15px", margin: "0 0 6px", color: "#374151", fontWeight: "700" }}>No bundle orders yet</p>
+                  <p style={{ fontSize: "13px", margin: 0, color: "#9ca3af" }}>Add the Combo Builder block to your theme to start receiving orders.</p>
+                </div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                    <thead>
+                      <tr>
+                        {["Order #", "Box Type", "Items", "Amount", "Date"].map((h) => (
+                          <th key={h} style={{ textAlign: "left", padding: "14px 16px", borderBottom: "2px solid #f3f4f6", color: "#000000", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.9px", fontWeight: "700", whiteSpace: "nowrap" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentOrders.map((order, index) => (
+                        <tr
+                          key={order.id}
+                          style={{ background: index % 2 === 0 ? "#fff" : "#fafafa", transition: "background 0.12s" }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "#f0fdf4"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = index % 2 === 0 ? "#fff" : "#fafafa"; }}
+                        >
+                          <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                            <span style={{ fontFamily: "monospace", fontWeight: "700", color: "#111827", background: "#f3f4f6", padding: "3px 8px", borderRadius: "6px" }}>#{order.orderId}</span>
+                          </td>
+                          <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6", color: "#374151", fontWeight: "600" }}>{order.boxTitle}</td>
+                          <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                            <span style={{ display: "inline-block", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "5px", padding: "2px 10px", fontSize: "12px", fontWeight: "700", color: "#2563eb", fontFamily: "monospace" }}>{order.itemCount}</span>
+                          </td>
+                          <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                            <span style={{ fontFamily: "monospace", fontWeight: "800", color: "#2A7A4F", background: "#f0fdf4", padding: "3px 8px", borderRadius: "5px" }}>{`\u20B9${Number(order.bundlePrice).toLocaleString("en-IN")}`}</span>
+                          </td>
+                          <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6", color: "#9ca3af", fontSize: "12px", fontFamily: "monospace" }}>
+                            {new Date(order.orderDate).toLocaleDateString("en-IN")}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
-          ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-                <thead>
-                  <tr>
-                    {["Order #", "Box Type", "Items", "Amount", "Date"].map((h) => (
-                      <th key={h} style={{ textAlign: "left", padding: "14px 16px", borderBottom: "2px solid #f3f4f6", color: "#000000", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.9px", fontWeight: "700", whiteSpace: "nowrap" }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentOrders.map((order, index) => (
-                    <tr
-                      key={order.id}
-                      style={{ background: index % 2 === 0 ? "#fff" : "#fafafa", transition: "background 0.12s" }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "#f0fdf4"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = index % 2 === 0 ? "#fff" : "#fafafa"; }}
-                    >
-                      <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                        <span style={{ fontFamily: "monospace", fontWeight: "700", color: "#111827", background: "#f3f4f6", padding: "3px 8px", borderRadius: "6px" }}>#{order.orderId}</span>
-                      </td>
-                      <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6", color: "#374151", fontWeight: "600" }}>{order.boxTitle}</td>
-                      <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                        <span style={{ display: "inline-block", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "5px", padding: "2px 10px", fontSize: "12px", fontWeight: "700", color: "#2563eb", fontFamily: "monospace" }}>{order.itemCount}</span>
-                      </td>
-                      <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                        <span style={{ fontFamily: "monospace", fontWeight: "800", color: "#2A7A4F", background: "#f0fdf4", padding: "3px 8px", borderRadius: "5px" }}>₹{Number(order.bundlePrice).toLocaleString("en-IN")}</span>
-                      </td>
-                      <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6", color: "#9ca3af", fontSize: "12px", fontFamily: "monospace" }}>
-                        {new Date(order.orderDate).toLocaleDateString("en-IN")}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          </div>
+        )}
+      </div>
+
+      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden" }}>
+        <div style={{ padding: "20px 24px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ width: "30px", height: "30px", borderRadius: "5px", background: "#f3f4f6", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+            <AdminIcon type="apps" size="small" />
+          </div>
+          <span style={{ fontSize: "18px", fontWeight: "800", color: "#0f172a" }}>Apps List</span>
         </div>
+        <div style={{ padding: "16px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "14px" }}>
+          {appsList.map((appItem) => (
+            <div key={appItem.key} style={{ border: "1px solid #e5e7eb", borderRadius: "5px", background: "#ffffff", padding: "16px" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", marginBottom: "10px" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", minWidth: 0 }}>
+                  <span
+                    style={{
+                      width: "44px",
+                      height: "44px",
+                      borderRadius: "12px",
+                      background: `linear-gradient(180deg, ${appItem.logoFrom} 0%, ${appItem.logoTo} 100%)`,
+                      color: "#ffffff",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "13px",
+                      fontWeight: "700",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {appItem.initials}
+                  </span>
+                  <div style={{ fontSize: "17px", fontWeight: "800", color: "#0f172a", lineHeight: 1.2 }}>
+                    {appItem.title}
+                  </div>
+                </div>
+                <span style={{ background: appItem.tagBg, color: appItem.tagColor, borderRadius: "999px", padding: "6px 10px", fontSize: "12px", fontWeight: "700", whiteSpace: "nowrap" }}>
+                  {appItem.tag}
+                </span>
+              </div>
+              <div style={{ fontSize: "14px", color: "#475569", lineHeight: 1.4, marginBottom: "14px" }}>
+                {appItem.description}
+              </div>
+              <a
+                href="#"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textDecoration: "none",
+                  background: "#111827",
+                  color: "#ffffff",
+                  border: "1px solid #111827",
+                  borderRadius: "5px",
+                  padding: "10px 16px",
+                  fontSize: "13px",
+                  fontWeight: "700",
+                }}
+              >
+                + Add app
+              </a>
+            </div>
+          ))}
         </div>
       </div>
 
+
+      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden" }}>
+        <div style={{ padding: "20px 24px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ width: "26px", height: "26px", borderRadius: "50%", background: "#eff6ff", color: "#0284c7", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "700" }}>
+            +
+          </span>
+          <span style={{ fontSize: "18px", fontWeight: "800", color: "#0f172a", lineHeight: 1.1 }}>We're Here to Help You Succeed</span>
+        </div>
+
+        <div style={{ padding: "20px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px" }}>
+          <div>
+            <div style={{ fontSize: "16px", fontWeight: "800", color: "#0f172a", marginBottom: "10px", lineHeight: 1.25 }}>Book a Free 30-Minute Setup Call</div>
+            <div style={{ fontSize: "13px", color: "#475569", marginBottom: "12px", lineHeight: 1.4 }}>
+              Get personalized guidance to accelerate your growth.
+            </div>
+            <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", color: "#0f172a", fontSize: "13px", fontWeight: "700", marginBottom: "16px" }}>
+              <span>App configuration</span>
+              <span>Best practices</span>
+              <span>Growth strategy</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
+              <a
+                href="#"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textDecoration: "none",
+                  background: "#111827",
+                  color: "#ffffff",
+                  border: "1px solid #111827",
+                  borderRadius: "5px",
+                  padding: "10px 20px",
+                  fontSize: "13px",
+                  fontWeight: "700",
+                }}
+              >
+                Schedule Free Call
+              </a>
+              <span style={{ fontSize: "13px", color: "#334155", fontWeight: "700" }}>Free | 30 mins | No commitment</span>
+            </div>
+          </div>
+
+          <div style={{ border: "1px solid #e5e7eb", borderRadius: "5px", background: "#f8fafc", padding: "16px" }}>
+            <div style={{ fontSize: "16px", fontWeight: "800", color: "#0f172a", marginBottom: "8px", lineHeight: 1.25 }}>Need Quick Help?</div>
+            <div style={{ fontSize: "13px", color: "#475569", marginBottom: "14px", lineHeight: 1.4 }}>
+              Reach out anytime for support, feedback, or just to share your progress.
+            </div>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              <a
+                href="#"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textDecoration: "none",
+                  background: "#ffffff",
+                  color: "#000000",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "5px",
+                  padding: "9px 18px",
+                  fontSize: "13px",
+                  fontWeight: "700",
+                }}
+              >
+                WhatsApp
+              </a>
+              <a
+                href="#"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textDecoration: "none",
+                  background: "#ffffff",
+                  color: "#000000",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "5px",
+                  padding: "9px 18px",
+                  fontSize: "13px",
+                  fontWeight: "700",
+                }}
+              >
+                Live Chat
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ padding: "0 24px 20px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px" }}>
+          <div style={{ border: "1px solid #c4b5fd", borderRadius: "5px", background: "linear-gradient(180deg, #c4b5fd 0%, #c4b5fd 100%)", padding: "16px" }}>
+            <div style={{ fontSize: "15px", fontWeight: "800", color: "#111827", marginBottom: "10px" }}>Support</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
+              <div style={{ border: "1px solid rgba(255,255,255,0.45)", borderRadius: "5px", background: "rgba(255,255,255,0.1)", padding: "14px", textAlign: "center" }}>
+                <div style={{ fontSize: "14px", fontWeight: "800", color: "#1d4ed8", marginBottom: "6px" }}>Support Ticket</div>
+                <div style={{ fontSize: "13px", color: "#111827", lineHeight: 1.4, marginBottom: "10px" }}>
+                  Support, reply, and assist instantly in office hours.
+                </div>
+                <a
+                  href="#"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    textDecoration: "none",
+                    background: "#ffffff",
+                    color: "#000000",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "5px",
+                    padding: "8px 14px",
+                    fontSize: "12px",
+                    fontWeight: "700",
+                  }}
+                >
+                  Open Ticket
+                </a>
+              </div>
+              <div style={{ border: "1px solid rgba(255,255,255,0.45)", borderRadius: "5px", background: "rgba(255,255,255,0.1)", padding: "14px", textAlign: "center" }}>
+                <div style={{ fontSize: "14px", fontWeight: "800", color: "#1d4ed8", marginBottom: "6px" }}>Knowledge base</div>
+                <div style={{ fontSize: "13px", color: "#111827", lineHeight: 1.4, marginBottom: "10px" }}>
+                  Find a solution for your problem with our documents.
+                </div>
+                <a
+                  href="#"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    textDecoration: "none",
+                    background: "#ffffff",
+                    color: "#000000",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "5px",
+                    padding: "8px 14px",
+                    fontSize: "12px",
+                    fontWeight: "700",
+                  }}
+                >
+                  Open Docs
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ border: "1px solid #c4b5fd", borderRadius: "5px", background: "linear-gradient(180deg, #c4b5fd 0%, #c4b5fd 100%)", padding: "16px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ width: "56px", height: "56px", borderRadius: "18px", background: "linear-gradient(180deg, #fb7185 0%, #e11d48 100%)", color: "#ffffff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: "700", marginBottom: "12px" }}>
+              H
+            </span>
+            <div style={{ fontSize: "14px", color: "#111827", textAlign: "center", fontWeight: "700", lineHeight: 1.35, marginBottom: "12px" }}>
+              Motivate our team for future app development
+            </div>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
+              <a
+                href="#"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textDecoration: "none",
+                  background: "#111827",
+                  color: "#ffffff",
+                  border: "1px solid #111827",
+                  borderRadius: "5px",
+                  padding: "10px 16px",
+                  fontSize: "13px",
+                  fontWeight: "700",
+                }}
+              >
+                Write a review
+              </a>
+              <a
+                href="#"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textDecoration: "none",
+                  background: "#ffffff",
+                  color: "#000000",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "5px",
+                  padding: "10px 16px",
+                  fontSize: "13px",
+                  fontWeight: "700",
+                }}
+              >
+                Report an issue
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
       {isPageLoading && (
         <div
           aria-live="polite"
@@ -838,5 +1141,4 @@ export default function DashboardPage() {
 export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
-
 

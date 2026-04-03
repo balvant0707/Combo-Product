@@ -30,6 +30,8 @@ export async function getSettings(shop) {
 }
 
 export async function upsertSettings(shop, data) {
+  const existing = await db.appSettings.findUnique({ where: { shop } });
+
   const payload = {
     widgetHeadingText: data.widgetHeadingText ?? DEFAULTS.widgetHeadingText,
     ctaButtonLabel: data.ctaButtonLabel ?? DEFAULTS.ctaButtonLabel,
@@ -42,8 +44,14 @@ export async function upsertSettings(shop, data) {
     showProductPrices: parseBool(data.showProductPrices, false),
     forceShowOos: parseBool(data.forceShowOos, false),
     giftMessageField: parseBool(data.giftMessageField, false),
-    analyticsTracking: parseBool(data.analyticsTracking, false),
-    emailNotifications: parseBool(data.emailNotifications, false),
+    analyticsTracking:
+      data.analyticsTracking === undefined || data.analyticsTracking === null
+        ? (existing?.analyticsTracking ?? DEFAULTS.analyticsTracking)
+        : parseBool(data.analyticsTracking, false),
+    emailNotifications:
+      data.emailNotifications === undefined || data.emailNotifications === null
+        ? (existing?.emailNotifications ?? DEFAULTS.emailNotifications)
+        : parseBool(data.emailNotifications, false),
     presetTheme: data.presetTheme ?? DEFAULTS.presetTheme,
     widgetMaxWidth: parseWidgetMaxWidth(data.widgetMaxWidth),
     productCardsPerRow: parseProductCardsPerRow(data.productCardsPerRow),

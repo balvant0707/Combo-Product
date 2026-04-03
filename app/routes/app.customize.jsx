@@ -28,8 +28,6 @@ export const action = async ({ request }) => {
     showProductPrices: formData.get("showProductPrices"),
     forceShowOos: formData.get("forceShowOos"),
     giftMessageField: formData.get("giftMessageField"),
-    analyticsTracking: formData.get("analyticsTracking"),
-    emailNotifications: formData.get("emailNotifications"),
     presetTheme: formData.get("presetTheme"),
     widgetMaxWidth: formData.get("widgetMaxWidth"),
     productCardsPerRow: formData.get("productCardsPerRow"),
@@ -448,39 +446,6 @@ export default function SettingsPage() {
               { name: "showProductPrices", label: "Show Product Prices", desc: "Show individual product prices in the selection grid", defaultChecked: settings.showProductPrices },
               { name: "allowDuplicates", label: "Allow Duplicate Products", desc: "Let customers pick the same product more than once", defaultChecked: settings.allowDuplicates },
               { name: "forceShowOos", label: "Show Out-of-Stock Products", desc: "Show out-of-stock products (greyed out) in the selection grid", defaultChecked: settings.forceShowOos },
-            ].map((toggle) => (
-              <div
-                key={toggle.name}
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "12px",
-                  padding: "12px",
-                  border: "1px solid #e5e1d8",
-                  borderRadius: "5px",
-                }}
-              >
-                <ToggleSwitch
-                  name={toggle.name}
-                  value="true"
-                  defaultChecked={toggle.defaultChecked}
-                  showStateText={false}
-                />
-                <div>
-                  <div style={{ fontSize: "13px", fontWeight: "500", color: "#1a1814" }}>{toggle.label}</div>
-                  <div style={{ fontSize: "12px", color: "#7a7670", marginTop: "2px" }}>{toggle.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </s-section>
-
-        {/* ── Advanced Settings ────────────────────────────────────────────── */}
-        <s-section heading="Advanced Settings">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-            {[
-              { name: "analyticsTracking", label: "Analytics Tracking", desc: "Track bundle orders for analytics (recommended)", defaultChecked: settings.analyticsTracking },
-              { name: "emailNotifications", label: "Email Notifications", desc: "Send email notifications for new bundle orders", defaultChecked: settings.emailNotifications },
             ].map((toggle) => (
               <div
                 key={toggle.name}

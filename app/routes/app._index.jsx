@@ -17,6 +17,18 @@ export const loader = async ({ request }) => {
   const { session, admin, billing } = await authenticate.admin(request);
   const shop = session.shop;
   const url = new URL(request.url);
+  const rawWhatsappNumber =
+    process.env.WHATSAPP_NUMBER ||
+    process.env.WHATSAPP_PHONE ||
+    process.env.WHATSAPP_CONTACT_NUMBER ||
+    process.env.APP_WHATSAPP_NUMBER ||
+    "";
+  const whatsappDigits = String(rawWhatsappNumber).replace(/\D/g, "");
+  const whatsappLink = whatsappDigits ? `https://wa.me/${whatsappDigits}` : "#";
+  const supportTicketLink = process.env.SUPPORT_TICKET_URL || "#";
+  const knowledgeBaseLink = process.env.KNOWLEDGE_BASE_URL || "#";
+  const reviewLink = process.env.REVIEW_LINK || process.env.APP_REVIEW_URL || "#";
+  const reportIssueLink = process.env.REPORT_ISSUE_URL || "#";
 
   if (url.searchParams.get("subscribed") === "1") {
     const { syncSubscription } = await import("../models/billing.server.js");
@@ -49,6 +61,11 @@ export const loader = async ({ request }) => {
     themeEditorUrl,
     embedBlockUrl,
     embedBlockEnabled,
+    whatsappLink,
+    supportTicketLink,
+    knowledgeBaseLink,
+    reviewLink,
+    reportIssueLink,
     recentOrders: recentOrders.map((order) => ({
       id: order.id,
       orderId: order.orderId,
@@ -448,6 +465,11 @@ export default function DashboardPage() {
     themeEditorUrl,
     embedBlockUrl,
     embedBlockEnabled,
+    whatsappLink,
+    supportTicketLink,
+    knowledgeBaseLink,
+    reviewLink,
+    reportIssueLink,
     recentOrders,
   } = useLoaderData();
   const location = useLocation();
@@ -531,23 +553,23 @@ export default function DashboardPage() {
   const appsList = [
     {
       key: "cartlift",
-      initials: "CL",
+      logoSrc: "/app-icons/cartlift.png",
+      logoAlt: "CartLift logo",
       title: "CartLift: Cart Drawer & Upsell",
       tag: "Upsell",
+      url: "https://apps.shopify.com/cartlift-cart-drawer-upsell",
       description: "Grow average order value with cart drawer upsells and smart cart offers.",
-      logoFrom: "#22c55e",
-      logoTo: "#16a34a",
       tagBg: "#dbeafe",
       tagColor: "#1e3a8a",
     },
     {
       key: "fomoify",
-      initials: "FP",
+      logoSrc: "/app-icons/fomoify.png",
+      logoAlt: "Fomoify logo",
       title: "Fomoify Sales Popup & Proof",
       tag: "Social Proof",
+      url: "https://apps.shopify.com/fomoify-sales-popup-proof",
       description: "Increase trust using real-time sales popups and conversion proof nudges.",
-      logoFrom: "#6366f1",
-      logoTo: "#2563eb",
       tagBg: "#ede9fe",
       tagColor: "#5b21b6",
     },
@@ -753,30 +775,25 @@ export default function DashboardPage() {
           <div style={{ width: "30px", height: "30px", borderRadius: "5px", background: "#f3f4f6", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
             <AdminIcon type="apps" size="small" />
           </div>
-          <span style={{ fontSize: "18px", fontWeight: "800", color: "#0f172a" }}>Apps List</span>
+          <span style={{ fontSize: "18px", fontWeight: "800", color: "#0f172a" }}>Boost your store performance with our apps</span>
         </div>
         <div style={{ padding: "16px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "14px" }}>
           {appsList.map((appItem) => (
             <div key={appItem.key} style={{ border: "1px solid #e5e7eb", borderRadius: "5px", background: "#ffffff", padding: "16px" }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", marginBottom: "10px" }}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", minWidth: 0 }}>
-                  <span
+                  <img
+                    src={appItem.logoSrc}
+                    alt={appItem.logoAlt}
                     style={{
                       width: "44px",
                       height: "44px",
                       borderRadius: "12px",
-                      background: `linear-gradient(180deg, ${appItem.logoFrom} 0%, ${appItem.logoTo} 100%)`,
-                      color: "#ffffff",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "13px",
-                      fontWeight: "700",
+                      objectFit: "cover",
+                      display: "block",
                       flexShrink: 0,
                     }}
-                  >
-                    {appItem.initials}
-                  </span>
+                  />
                   <div style={{ fontSize: "17px", fontWeight: "800", color: "#0f172a", lineHeight: 1.2 }}>
                     {appItem.title}
                   </div>
@@ -789,7 +806,9 @@ export default function DashboardPage() {
                 {appItem.description}
               </div>
               <a
-                href="#"
+                href={appItem.url}
+                target="_blank"
+                rel="noreferrer"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -833,7 +852,9 @@ export default function DashboardPage() {
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
               <a
-                href="#"
+                href="https://outlook.office.com/book/ShopifyGrowthConsultationCall@m2webdesigning.com/?ismsaljsauthenabled=true"
+                target="_blank"
+                rel="noreferrer"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -861,7 +882,9 @@ export default function DashboardPage() {
             </div>
             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
               <a
-                href="#"
+                href={whatsappLink}
+                target="_blank"
+                rel="noreferrer"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -901,70 +924,46 @@ export default function DashboardPage() {
         </div>
 
         <div style={{ padding: "0 24px 20px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px" }}>
-          <div style={{ border: "1px solid #c4b5fd", borderRadius: "5px", background: "linear-gradient(180deg, #c4b5fd 0%, #c4b5fd 100%)", padding: "16px" }}>
+          <div style={{ border: "1px solid #e5e7eb", borderRadius: "5px", background: "#ffffff", padding: "16px" }}>
             <div style={{ fontSize: "15px", fontWeight: "800", color: "#111827", marginBottom: "10px" }}>Support</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
-              <div style={{ border: "1px solid rgba(255,255,255,0.45)", borderRadius: "5px", background: "rgba(255,255,255,0.1)", padding: "14px", textAlign: "center" }}>
+              <a
+                href={supportTicketLink}
+                target="_blank"
+                rel="noreferrer"
+                style={{ border: "1px solid #e5e7eb", borderRadius: "5px", background: "#ffffff", padding: "14px", textAlign: "center", textDecoration: "none", display: "block" }}
+              >
                 <div style={{ fontSize: "14px", fontWeight: "800", color: "#1d4ed8", marginBottom: "6px" }}>Support Ticket</div>
-                <div style={{ fontSize: "13px", color: "#111827", lineHeight: 1.4, marginBottom: "10px" }}>
+                <div style={{ fontSize: "13px", color: "#111827", lineHeight: 1.4 }}>
                   Support, reply, and assist instantly in office hours.
                 </div>
-                <a
-                  href="#"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    textDecoration: "none",
-                    background: "#ffffff",
-                    color: "#000000",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "5px",
-                    padding: "8px 14px",
-                    fontSize: "12px",
-                    fontWeight: "700",
-                  }}
-                >
-                  Open Ticket
-                </a>
-              </div>
-              <div style={{ border: "1px solid rgba(255,255,255,0.45)", borderRadius: "5px", background: "rgba(255,255,255,0.1)", padding: "14px", textAlign: "center" }}>
+              </a>
+              <a
+                href={knowledgeBaseLink}
+                target="_blank"
+                rel="noreferrer"
+                style={{ border: "1px solid #e5e7eb", borderRadius: "5px", background: "#ffffff", padding: "14px", textAlign: "center", textDecoration: "none", display: "block" }}
+              >
                 <div style={{ fontSize: "14px", fontWeight: "800", color: "#1d4ed8", marginBottom: "6px" }}>Knowledge base</div>
-                <div style={{ fontSize: "13px", color: "#111827", lineHeight: 1.4, marginBottom: "10px" }}>
+                <div style={{ fontSize: "13px", color: "#111827", lineHeight: 1.4 }}>
                   Find a solution for your problem with our documents.
                 </div>
-                <a
-                  href="#"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    textDecoration: "none",
-                    background: "#ffffff",
-                    color: "#000000",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "5px",
-                    padding: "8px 14px",
-                    fontSize: "12px",
-                    fontWeight: "700",
-                  }}
-                >
-                  Open Docs
-                </a>
-              </div>
+              </a>
             </div>
           </div>
 
-          <div style={{ border: "1px solid #c4b5fd", borderRadius: "5px", background: "linear-gradient(180deg, #c4b5fd 0%, #c4b5fd 100%)", padding: "16px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ width: "56px", height: "56px", borderRadius: "18px", background: "linear-gradient(180deg, #fb7185 0%, #e11d48 100%)", color: "#ffffff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: "700", marginBottom: "12px" }}>
-              H
+          <div style={{ border: "1px solid #e5e7eb", borderRadius: "5px", background: "#ffffff", padding: "16px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ width: "56px", height: "56px", borderRadius: "18px", background: "linear-gradient(180deg, #fb7185 0%, #e11d48 100%)", color: "#ffffff", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: "12px" }}>
+              <AdminIcon type="star" size="large" style={{ color: "#ffffff" }} />
             </span>
             <div style={{ fontSize: "14px", color: "#111827", textAlign: "center", fontWeight: "700", lineHeight: 1.35, marginBottom: "12px" }}>
               Motivate our team for future app development
             </div>
             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
               <a
-                href="#"
+                href={reviewLink}
+                target="_blank"
+                rel="noreferrer"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -982,7 +981,9 @@ export default function DashboardPage() {
                 Write a review
               </a>
               <a
-                href="#"
+                href={reportIssueLink}
+                target="_blank"
+                rel="noreferrer"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",

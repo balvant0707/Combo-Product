@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLoaderData, useActionData, Form, useNavigation } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { AdminIcon } from "../components/admin-icons";
 import { ToggleSwitch } from "../components/toggle-switch";
 import { getSettings, upsertSettings } from "../models/settings.server";
+import { showPolarisToast } from "../utils/polaris-toast";
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
@@ -74,6 +75,12 @@ export default function SettingsPage() {
   const [widgetMaxWidth, setWidgetMaxWidth] = useState(settings.widgetMaxWidth ?? 1140);
   const [productCardsPerRow, setProductCardsPerRow] = useState(settings.productCardsPerRow ?? 4);
 
+  useEffect(() => {
+    if (actionData?.success) {
+      showPolarisToast("Configuration saved successfully.");
+    }
+  }, [actionData?.success]);
+
   const inputStyle = {
     width: "100%",
     padding: "8px 12px",
@@ -94,22 +101,6 @@ export default function SettingsPage() {
       >
         {isSaving ? "Saving..." : "Save Settings"}
       </s-button>
-
-      {actionData?.success && (
-        <div
-          style={{
-            background: "#d1fae5",
-            border: "1px solid #6ee7b7",
-            borderRadius: "5px",
-            padding: "12px 16px",
-            marginBottom: "16px",
-            color: "#065f46",
-            fontSize: "13px",
-          }}
-        >
-          Settings saved successfully.
-        </div>
-      )}
 
       {/* Hero banner */}
       <div style={{ marginBottom: "20px", borderRadius: "20px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>

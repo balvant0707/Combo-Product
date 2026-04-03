@@ -6,7 +6,7 @@ import { Buffer } from "node:buffer";
 import { AdminIcon } from "../components/admin-icons";
 import { ToggleSwitch } from "../components/toggle-switch";
 import { getBox, upsertComboConfig, saveComboStepImages, getComboStepImages, syncShopifyBundleProduct, syncSpecificComboProductMedia } from "../models/boxes.server";
-import { withEmbeddedAppParams } from "../utils/embedded-app";
+import { withEmbeddedAppParams, withEmbeddedAppToastFromRequest } from "../utils/embedded-app";
 
 
 /* ─────────────────────────── GraphQL ─────────────────────────── */
@@ -396,7 +396,11 @@ export const action = async ({ request, params }) => {
       }
     }
 
-    throw redirect("/app/boxes");
+    throw redirect(
+      withEmbeddedAppToastFromRequest("/app/boxes", request, {
+        message: "Configuration saved successfully.",
+      }),
+    );
   }
   return { ok: false, errors: { _global: "Unknown action" } };
 };

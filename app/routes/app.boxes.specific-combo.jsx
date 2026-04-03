@@ -5,7 +5,7 @@ import { authenticate } from "../shopify.server";
 import { createBox, getBox, upsertComboConfig, saveComboStepImages, syncSpecificComboProductMedia } from "../models/boxes.server";
 import { AdminIcon } from "../components/admin-icons";
 import { ToggleSwitch } from "../components/toggle-switch";
-import { withEmbeddedAppParams } from "../utils/embedded-app";
+import { withEmbeddedAppParams, withEmbeddedAppToastFromRequest } from "../utils/embedded-app";
 import { validateComboConfig } from "../utils/combo-config";
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ GraphQL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -326,7 +326,11 @@ export const action = async ({ request }) => {
     return { errors: { _global: message } };
   }
 
-  throw redirect("/app/boxes");
+  throw redirect(
+    withEmbeddedAppToastFromRequest("/app/boxes", request, {
+      message: "Configuration saved successfully.",
+    }),
+  );
 };
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Styles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */

@@ -5,7 +5,7 @@ import { authenticate } from "../shopify.server";
 import { createBox } from "../models/boxes.server";
 import { AdminIcon } from "../components/admin-icons";
 import { ToggleSwitch } from "../components/toggle-switch";
-import { withEmbeddedAppParams } from "../utils/embedded-app";
+import { withEmbeddedAppParams, withEmbeddedAppToastFromRequest } from "../utils/embedded-app";
 
 const COLLECTIONS_QUERY = `#graphql
   query GetCollections($first: Int!) {
@@ -189,7 +189,11 @@ export const action = async ({ request }) => {
     return { errors: { _global: message } };
   }
 
-  throw redirect("/app/boxes");
+  throw redirect(
+    withEmbeddedAppToastFromRequest("/app/boxes", request, {
+      message: "Configuration saved successfully.",
+    }),
+  );
 };
 
 /* ── Styles ── */

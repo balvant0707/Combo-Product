@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Outlet, useFetcher, useLoaderData, useLocation, useRouteError } from "react-router";
+import { Outlet, useFetcher, useLoaderData, useLocation, useNavigate, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
 import { authenticate } from "../shopify.server";
@@ -11,6 +11,7 @@ import {
   upsertShopFromAdmin,
 } from "../models/shop.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
+import { showPolarisToast } from "../utils/polaris-toast";
 import { sendMail } from "../utils/mailer.server";
 import { installedEmailHtml } from "../emails/app-installed";
 import { ownerInstallNotifyHtml } from "../emails/owner-notify";
@@ -87,6 +88,7 @@ export const action = async ({ request }) => {
 export default function App() {
   const { apiKey, reviewPrompt } = useLoaderData();
   const location = useLocation();
+  const navigate = useNavigate();
   const reviewFetcher = useFetcher();
   const reviewActionUrl = withEmbeddedAppParams("/app", location.search);
 
@@ -99,6 +101,23 @@ export default function App() {
       setShowReviewPopup(false);
     }
   }, [reviewFetcher.state, reviewFetcher.data]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const message = params.get("toast");
+    if (!message) return;
+
+    const tone = params.get("toastTone");
+    showPolarisToast(message, { isError: tone === "error" });
+
+    params.delete("toast");
+    params.delete("toastTone");
+    const nextSearch = params.toString();
+    navigate(
+      { pathname: location.pathname, search: nextSearch ? `?${nextSearch}` : "" },
+      { replace: true },
+    );
+  }, [location.pathname, location.search, navigate]);
 
   function dismissPopup() {
     if (reviewFetcher.state !== "idle") return;

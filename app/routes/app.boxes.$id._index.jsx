@@ -5,7 +5,7 @@ import { authenticate } from "../shopify.server";
 import { AdminIcon } from "../components/admin-icons";
 import { ToggleSwitch } from "../components/toggle-switch";
 import { getBox, updateBox, deleteBox, getBannerImageSrc } from "../models/boxes.server";
-import { withEmbeddedAppParams } from "../utils/embedded-app";
+import { withEmbeddedAppParams, withEmbeddedAppToastFromRequest } from "../utils/embedded-app";
 
 /* ─────────────────────────── GraphQL ─────────────────────────── */
 const COLLECTIONS_QUERY = `#graphql
@@ -263,7 +263,11 @@ export const action = async ({ request, params }) => {
     return { errors: { _global: "Failed to save changes. Please try again." } };
   }
 
-  throw redirect("/app/boxes");
+  throw redirect(
+    withEmbeddedAppToastFromRequest("/app/boxes", request, {
+      message: "Configuration saved successfully.",
+    }),
+  );
 };
 
 /* ─────────────────────────── Styles ─────────────────────────── */

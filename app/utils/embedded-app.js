@@ -23,6 +23,20 @@ export function withEmbeddedAppParamsFromRequest(target, request) {
   return withEmbeddedAppParams(target, new URL(request.url).search);
 }
 
+export function withEmbeddedAppToastFromRequest(
+  target,
+  request,
+  { message, tone = "success" } = {},
+) {
+  const nextUrl = new URL(withEmbeddedAppParamsFromRequest(target, request), "https://app.local");
+  if (message) {
+    nextUrl.searchParams.set("toast", String(message));
+    if (tone && tone !== "success") nextUrl.searchParams.set("toastTone", String(tone));
+  }
+  const search = nextUrl.searchParams.toString();
+  return `${nextUrl.pathname}${search ? `?${search}` : ""}${nextUrl.hash}`;
+}
+
 function getStoreHandle(shop) {
   return String(shop || "").replace(/\.myshopify\.com$/i, "");
 }

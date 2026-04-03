@@ -1411,6 +1411,7 @@ export async function upsertComboConfig(boxId, config, admin = null) {
     comboStepsConfig: rawJson,
     itemCount: payload.comboType,
     bundlePriceType: payload.bundlePriceType,
+    isActive: payload.isActive,
   };
   if (parsed?.giftMessageEnabled !== undefined) {
     comboBoxUpdate.giftMessageEnabled =

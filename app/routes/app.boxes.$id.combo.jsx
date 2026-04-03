@@ -747,11 +747,26 @@ export default function SpecificComboBoxPage() {
 
       {/* Hero banner */}
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}>
-          <AdminIcon type="target" size="small" /> Specific Combo Box
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
+          <div style={{ flex: "1 1 420px", minWidth: "320px" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}>
+              <AdminIcon type="target" size="small" /> Specific Combo Box
+            </div>
+            <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>Update Specific Combo Box</div>
+            <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>{box.boxName}</div>
+          </div>
+          <div style={{ flex: "0 1 420px", minWidth: "320px" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "10px 12px", background: comboConfig.isActive ? "#f9fafb" : "#fff", border: `1.5px solid ${comboConfig.isActive ? "#000000" : "#e5e7eb"}`, borderRadius: "7px", transition: "border-color 0.15s, background 0.15s" }}>
+              <ToggleSwitch checked={comboConfig.isActive !== false} onChange={(e) => updateComboField("isActive", e.target.checked)} showStateText={false} />
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", lineHeight: 1.3, display: "flex", alignItems: "center", gap: "6px" }}>
+                  <AdminIcon type="check-circle" size="small" /> Active on Storefront
+                </div>
+                <div style={{ fontSize: "12px", color: "#000000", marginTop: "3px" }}>Uncheck to hide from customers</div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>Update Specific Combo Box</div>
-        <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>{box.boxName}</div>
       </div>
 
       {/* Toast notification */}

@@ -128,7 +128,6 @@ export const action = async ({ request }) => {
   const data = {
     boxName: formData.get("boxName"),
     displayTitle: formData.get("displayTitle"),
-    boxSubtitle: formData.get("boxSubtitle") || "",
     comboProductButtonTitle: formData.get("comboProductButtonTitle") || "",
     productButtonTitle: formData.get("productButtonTitle") || "",
     itemCount: formData.get("itemCount"),
@@ -356,10 +355,6 @@ export default function CreateBoxPage() {
                 <label style={labelStyle}>Heading *</label>
                 <input type="text" name="displayTitle" placeholder="Shown to customers" style={{ ...fieldStyle, borderColor: errors.displayTitle ? "#e11d48" : "#d1d5db" }} />
                 {errors.displayTitle && <div style={errorStyle}>{errors.displayTitle}</div>}
-              </div>
-              <div>
-                <label style={labelStyle}>Descriptions</label>
-                <input type="text" name="boxSubtitle" placeholder="Shown below the main title on storefront" style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
               </div>
               <div>
                 <label style={labelStyle}>Combo Product Button Title</label>

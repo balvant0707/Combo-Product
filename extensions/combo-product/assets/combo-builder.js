@@ -1182,21 +1182,6 @@
     titleText.textContent = box.displayTitle || box.boxName || ('Buy ' + box.itemCount);
     body.appendChild(titleText);
 
-    if (box.boxSubtitle) {
-      var subtitleText = document.createElement('div');
-      subtitleText.style.fontSize = '12px';
-      subtitleText.style.color = 'var(--cb-text-muted)';
-      subtitleText.style.lineHeight = '1.35';
-      subtitleText.style.marginTop = '2px';
-      subtitleText.textContent = box.boxSubtitle;
-      body.appendChild(subtitleText);
-    }
-
-    var buyText = document.createElement('div');
-    buyText.className = 'cb-box-buy-text';
-    buyText.textContent = box.boxName || ('Buy ' + box.itemCount + ' products');
-    body.appendChild(buyText);
-
     var priceText = document.createElement('div');
     priceText.className = 'cb-box-price-text';
     var _initPrice = isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0);
@@ -1210,14 +1195,6 @@
     ctaBtn.type = 'button';
     ctaBtn.textContent = resolveCtaButtonLabel(ctx.settings, box.ctaButtonLabel);
     body.appendChild(ctaBtn);
-
-    // Box code badge — shows the short code merchants use in block settings
-    if (box.boxCode) {
-      var idBadge = document.createElement('div');
-      idBadge.className = 'cb-box-id-badge';
-      idBadge.textContent = 'Code: ' + box.boxCode;
-      body.appendChild(idBadge);
-    }
 
     card.appendChild(body);
 

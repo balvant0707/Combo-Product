@@ -413,7 +413,7 @@ const labelStyle = {
 };
 const errorStyle = { color: "#dc2626", fontSize: "11px", marginTop: "5px", display: "flex", alignItems: "center", gap: "4px" };
 const sectionHeadingStyle = {
-  fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase",
+  fontSize: "11px", fontWeight: "700", color: "#000000", textTransform: "uppercase",
   letterSpacing: "0.8px", marginBottom: "16px", paddingBottom: "10px",
   borderBottom: "1.5px solid #f3f4f6", display: "flex", alignItems: "center", gap: "8px",
 };
@@ -795,7 +795,7 @@ export default function SpecificComboBoxPage() {
                     <button type="button" onClick={() => setStepCount(comboConfig.type + 1)} disabled={comboConfig.type >= MAX_COMBO_STEPS}
                       style={{ width: "30px", height: "30px", fontSize: "16px", fontWeight: "700", border: "1.5px solid #d1d5db", borderRadius: "5px", cursor: comboConfig.type >= MAX_COMBO_STEPS ? "not-allowed" : "pointer", background: comboConfig.type >= MAX_COMBO_STEPS ? "#f3f4f6" : "#fff", color: comboConfig.type >= MAX_COMBO_STEPS ? "#d1d5db" : "#111827", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>+</button>
                   </div>
-                  <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "5px" }}>{comboConfig.type} product selections required (2–8)</div>
+                  <div style={{ fontSize: "11px", color: "#000000", marginTop: "5px" }}>{comboConfig.type} product selections required (2–8)</div>
                 </div>
                 <div>
                   <label style={labelStyle}>Title</label>
@@ -890,7 +890,7 @@ export default function SpecificComboBoxPage() {
                           />
                         </div>
                       )}
-                      <div style={{ fontSize: "11px", color: "#6b7280" }}>Price calculated from selected step products</div>
+                      <div style={{ fontSize: "11px", color: "#000000" }}>Price calculated from selected step products</div>
                     </div>
                   )}
                 </div>
@@ -913,7 +913,7 @@ export default function SpecificComboBoxPage() {
                 <ToggleSwitch checked={!!comboConfig[opt.key]} onChange={(e) => updateComboField(opt.key, e.target.checked)} showStateText={false} />
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: "600", color: "#000000", display: "flex", alignItems: "center", gap: "5px" }}><AdminIcon type={opt.iconType} size="small" /> {opt.label}</div>
-                  <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>{opt.desc}</div>
+                  <div style={{ fontSize: "11px", color: "#000000", marginTop: "2px" }}>{opt.desc}</div>
                 </div>
               </div>
             ))}
@@ -924,7 +924,7 @@ export default function SpecificComboBoxPage() {
         <div>
           <div style={{ ...sectionHeadingStyle, justifyContent: "space-between" }}>
             <span style={{ display: "flex", alignItems: "center", gap: "8px" }}><AdminIcon type="list" size="small" /> Steps</span>
-            <span style={{ fontSize: "11px", fontWeight: "600", color: "#6b7280" }}>{comboConfig.type} total</span>
+            <span style={{ fontSize: "11px", fontWeight: "600", color: "#000000" }}>{comboConfig.type} total</span>
           </div>
 
           {/* Step tabs */}
@@ -934,7 +934,7 @@ export default function SpecificComboBoxPage() {
                 key={i}
                 type="button"
                 onClick={() => setComboActiveStep(i)}
-                style={{ padding: "8px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none", borderRadius: "6px 6px 0 0", background: comboActiveStep === i ? "#000000" : "#f9fafb", borderBottom: comboActiveStep === i ? "2px solid #000000" : "2px solid transparent", marginBottom: "-1px", color: comboActiveStep === i ? "#ffffff" : "#6b7280", transition: "color 0.15s, border-color 0.15s, background 0.15s" }}
+                style={{ padding: "8px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", border: "none", borderRadius: "6px 6px 0 0", background: comboActiveStep === i ? "#000000" : "#f9fafb", borderBottom: comboActiveStep === i ? "2px solid #000000" : "2px solid transparent", marginBottom: "-1px", color: comboActiveStep === i ? "#ffffff" : "#000000", transition: "color 0.15s, border-color 0.15s, background 0.15s" }}
               >
                 Step {i + 1}
               </button>
@@ -954,7 +954,7 @@ export default function SpecificComboBoxPage() {
                     <AdminIcon type="target" size="small" />
                     <div>
                       <div style={{ fontSize: "13px", fontWeight: "700", color: "#111827" }}>Picker setup</div>
-                      <div style={{ fontSize: "11px", color: "#6b7280" }}>Each step has its own independent collection and product selector</div>
+                      <div style={{ fontSize: "11px", color: "#000000" }}>Each step has its own independent collection and product selector</div>
                     </div>
                   </div>
                   <div style={{ padding: "16px" }}>
@@ -987,7 +987,7 @@ export default function SpecificComboBoxPage() {
                               Select products
                             </button>
                           )}
-                          <span style={{ fontSize: "12px", color: "#6b7280", fontWeight: "500" }}>
+                          <span style={{ fontSize: "12px", color: "#000000", fontWeight: "500" }}>
                             {stepScope === "collection" ? `${step.collections.length} selected` : `${(step.selectedProducts || []).length} selected`}
                           </span>
                         </div>
@@ -1045,7 +1045,7 @@ export default function SpecificComboBoxPage() {
                             label="Optional"
                             showStateText={false}
                           />
-                          <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "6px" }}>If enabled, customers can skip this step.</div>
+                          <div style={{ fontSize: "11px", color: "#000000", marginTop: "6px" }}>If enabled, customers can skip this step.</div>
                         </div>
                       </div>
                     </div>
@@ -1120,10 +1120,10 @@ export default function SpecificComboBoxPage() {
               })}
             </div>
             <div style={modalFooterStyle}>
-              <span style={{ fontSize: "12px", color: "#6b7280" }}>{tempColls.length > 0 ? `${tempColls.length} selected` : "No collection selected"}</span>
+              <span style={{ fontSize: "12px", color: "#000000" }}>{tempColls.length > 0 ? `${tempColls.length} selected` : "No collection selected"}</span>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button type="button" onClick={() => setShowCollModal(false)} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#111827" }}>Cancel</button>
-                <button type="button" disabled={tempColls.length === 0} onClick={confirmColl} style={{ background: tempColls.length > 0 ? "#000000" : "#d1d5db", border: tempColls.length > 0 ? "1px solid #000000" : "1px solid #d1d5db", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: tempColls.length > 0 ? "pointer" : "not-allowed", color: tempColls.length > 0 ? "#ffffff" : "#6b7280" }}>Confirm ({tempColls.length})</button>
+                <button type="button" disabled={tempColls.length === 0} onClick={confirmColl} style={{ background: tempColls.length > 0 ? "#000000" : "#d1d5db", border: tempColls.length > 0 ? "1px solid #000000" : "1px solid #d1d5db", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: tempColls.length > 0 ? "pointer" : "not-allowed", color: tempColls.length > 0 ? "#ffffff" : "#000000" }}>Confirm ({tempColls.length})</button>
               </div>
             </div>
           </div>
@@ -1173,10 +1173,10 @@ export default function SpecificComboBoxPage() {
               })}
             </div>
             <div style={modalFooterStyle}>
-              <span style={{ fontSize: "12px", color: "#6b7280" }}>{tempStepProds.length > 0 ? `${tempStepProds.length} product${tempStepProds.length !== 1 ? "s" : ""} selected` : "No product selected"}</span>
+              <span style={{ fontSize: "12px", color: "#000000" }}>{tempStepProds.length > 0 ? `${tempStepProds.length} product${tempStepProds.length !== 1 ? "s" : ""} selected` : "No product selected"}</span>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button type="button" onClick={() => setShowStepProdModal(false)} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#111827" }}>Cancel</button>
-                <button type="button" disabled={tempStepProds.length === 0} onClick={confirmStepProd} style={{ background: tempStepProds.length > 0 ? "#000000" : "#d1d5db", border: tempStepProds.length > 0 ? "1px solid #000000" : "1px solid #d1d5db", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: tempStepProds.length > 0 ? "pointer" : "not-allowed", color: tempStepProds.length > 0 ? "#ffffff" : "#6b7280" }}>Confirm ({tempStepProds.length})</button>
+                <button type="button" disabled={tempStepProds.length === 0} onClick={confirmStepProd} style={{ background: tempStepProds.length > 0 ? "#000000" : "#d1d5db", border: tempStepProds.length > 0 ? "1px solid #000000" : "1px solid #d1d5db", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: tempStepProds.length > 0 ? "pointer" : "not-allowed", color: tempStepProds.length > 0 ? "#ffffff" : "#000000" }}>Confirm ({tempStepProds.length})</button>
               </div>
             </div>
           </div>

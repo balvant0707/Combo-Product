@@ -85,7 +85,7 @@ function CalendarMonth({ year, month, fromDate, toDate, hoverDate, pickingEnd, o
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "1px", marginBottom: "4px" }}>
         {DAY_LABELS.map((d) => (
-          <div key={d} style={{ textAlign: "center", fontSize: "11px", color: "#6b7280", fontWeight: "600", padding: "3px 0" }}>
+          <div key={d} style={{ textAlign: "center", fontSize: "11px", color: "#000000", fontWeight: "600", padding: "3px 0" }}>
             {d}
           </div>
         ))}
@@ -473,7 +473,7 @@ function KpiCard({ label, value, subLabel, change, accentColor, iconType, subtit
         <AdminIcon type={iconType} size="base" style={{ color: accentColor }} />
       </div>
 
-      <div style={{ fontSize: "11px", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: "600", marginBottom: "6px" }}>
+      <div style={{ fontSize: "11px", color: "#000000", textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: "600", marginBottom: "6px" }}>
         {label}
       </div>
       <div style={{ fontSize: "28px", fontWeight: "800", color: "#111827", lineHeight: 1, letterSpacing: "-0.5px", marginBottom: "10px" }}>
@@ -783,7 +783,7 @@ function LineChart({
                     <text x={tx + 18} y={ty + 36} fontSize="11" fill="#f9fafb" fontFamily="monospace">
                       {formatY(data[hoverIdx].value)}
                     </text>
-                    <text x={tx + TW - 10} y={ty + 36} textAnchor="end" fontSize="9" fill="#6b7280" fontFamily="monospace">
+                    <text x={tx + TW - 10} y={ty + 36} textAnchor="end" fontSize="9" fill="#000000" fontFamily="monospace">
                       {periodLabel.slice(0, 16)}
                     </text>
                     {prevArr[hoverIdx] && (
@@ -806,7 +806,7 @@ function LineChart({
       </div>
 
       {/* Legend */}
-      <div style={{ display: "flex", gap: "20px", marginTop: "12px", fontSize: "12px", color: "#6b7280" }}>
+      <div style={{ display: "flex", gap: "20px", marginTop: "12px", fontSize: "12px", color: "#000000" }}>
         <span style={{ display: "flex", alignItems: "center", gap: "7px" }}>
           <svg width="24" height="4" style={{ verticalAlign: "middle" }}>
             <defs>
@@ -932,7 +932,7 @@ function BoxPerformanceChart({ data }) {
           <div key={b.boxId} style={{ marginBottom: "18px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "7px" }}>
               <div style={{ fontSize: "13px", fontWeight: "700", color: "#111827" }}>{b.boxTitle}</div>
-              <div style={{ display: "flex", gap: "10px", fontSize: "11px", color: "#6b7280", fontFamily: "monospace" }}>
+              <div style={{ display: "flex", gap: "10px", fontSize: "11px", color: "#000000", fontFamily: "monospace" }}>
                 <span style={{ color: "#2A7A4F", fontWeight: "700" }}>{shareRev}% rev</span>
                 <span>{b.orders} orders</span>
               </div>
@@ -983,8 +983,8 @@ function ComparisonBanner({ period, prevPeriod }) {
         <span style={{ fontWeight: "700", color: "#1d4ed8" }}>Current: </span>
         <span style={{ fontFamily: "monospace", color: "#374151" }}>{fmtDate(period.from)} → {fmtDate(period.to)}</span>
         <span style={{ margin: "0 14px", color: "#d1d5db" }}>vs</span>
-        <span style={{ fontWeight: "700", color: "#6b7280" }}>Previous: </span>
-        <span style={{ fontFamily: "monospace", color: "#6b7280" }}>{fmtDate(prevPeriod.from)} → {fmtDate(prevPeriod.to)}</span>
+        <span style={{ fontWeight: "700", color: "#000000" }}>Previous: </span>
+        <span style={{ fontFamily: "monospace", color: "#000000" }}>{fmtDate(prevPeriod.from)} → {fmtDate(prevPeriod.to)}</span>
       </div>
     </div>
   );

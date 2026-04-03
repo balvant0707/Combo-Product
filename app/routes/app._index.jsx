@@ -122,7 +122,7 @@ function StatCard({ label, value, accent, sub }) {
       <div
         style={{
           fontSize: "11px",
-          color: "#6b7280",
+          color: "#000000",
           textTransform: "uppercase",
           letterSpacing: "0.8px",
           fontWeight: "600",
@@ -219,7 +219,7 @@ function EmbedBlockCard({ embedBlockUrl, enabled, onStartLoading }) {
                   {enabled ? "Enabled" : "Not Enabled"}
                 </span>
               </div>
-              <p style={{ margin: "2px 0 0", fontSize: "12px", color: "#6b7280" }}>
+              <p style={{ margin: "2px 0 0", fontSize: "12px", color: "#000000" }}>
                 The embed block loads Combo Builder scripts globally on your storefront.
               </p>
             </div>
@@ -546,7 +546,7 @@ export default function DashboardPage() {
           <div style={{ fontSize: "15px", fontWeight: "800", color: "#000000", letterSpacing: "-0.2px" }}>Quick Actions</div>
         </div>
         <div style={{ padding: "12px 12px 16px" }}>
-          <div style={{ fontSize: "12px", color: "#6b7280", padding: "2px 4px 10px" }}>
+          <div style={{ fontSize: "12px", color: "#000000", padding: "2px 4px 10px" }}>
             Click Create Box to choose combo type in popup.
           </div>
           <div
@@ -615,7 +615,7 @@ export default function DashboardPage() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: "14px", fontWeight: "700", color: "#000000", lineHeight: 1.3 }}>{action.label}</div>
-                  <div style={{ fontSize: "12px", color: "#6b7280", fontWeight: "600", marginTop: "2px" }}>{action.sub}</div>
+                  <div style={{ fontSize: "12px", color: "#000000", fontWeight: "600", marginTop: "2px" }}>{action.sub}</div>
                 </div>
               </a>
             ))}
@@ -628,7 +628,7 @@ export default function DashboardPage() {
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000" }}>
             <AdminIcon type="chart-line" size="small" /> Performance
           </div>
-          <span style={{ fontSize: "13px", color: "#6b7280" }}>Last 30 days overview</span>
+          <span style={{ fontSize: "13px", color: "#000000" }}>Last 30 days overview</span>
         </div>
         <div style={{ padding: "20px 10px 20px;", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px" }}>
           {stats.map((stat) => (
@@ -643,7 +643,7 @@ export default function DashboardPage() {
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000" }}>
             <AdminIcon type="order" size="small" /> Recent Orders
           </div>
-          <span style={{ fontSize: "13px", color: "#6b7280" }}>Latest bundle purchases</span>
+          <span style={{ fontSize: "13px", color: "#000000" }}>Latest bundle purchases</span>
         </div>
         <div style={{ padding: "16px 16px 16px" }}>
         <div style={{ background: "#ffffff", borderRadius: "5px", padding: "0 16px 8px", overflow: "hidden" }}>
@@ -659,7 +659,7 @@ export default function DashboardPage() {
                 <thead>
                   <tr>
                     {["Order #", "Box Type", "Items", "Amount", "Date"].map((h) => (
-                      <th key={h} style={{ textAlign: "left", padding: "14px 16px", borderBottom: "2px solid #f3f4f6", color: "#6b7280", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.9px", fontWeight: "700", whiteSpace: "nowrap" }}>{h}</th>
+                      <th key={h} style={{ textAlign: "left", padding: "14px 16px", borderBottom: "2px solid #f3f4f6", color: "#000000", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.9px", fontWeight: "700", whiteSpace: "nowrap" }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -749,7 +749,7 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => setShowCreateBoxModal(false)}
-                style={{ border: "none", background: "transparent", color: "#6b7280", fontSize: "18px", cursor: "pointer", lineHeight: 1 }}
+                style={{ border: "none", background: "transparent", color: "#000000", fontSize: "18px", cursor: "pointer", lineHeight: 1 }}
                 aria-label="Close"
               >
                 x
@@ -782,7 +782,7 @@ export default function DashboardPage() {
                       <div style={{ fontSize: "14px", fontWeight: "700", color: "#111827", lineHeight: 1.3 }}>
                         {action.label}
                       </div>
-                      <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "2px" }}>
+                      <div style={{ fontSize: "12px", color: "#000000", marginTop: "2px" }}>
                         {action.sub}
                       </div>
                     </div>

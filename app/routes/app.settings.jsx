@@ -131,7 +131,7 @@ export default function SettingsPage() {
           {/* ── Theme Customizer ─────────────────────────────────────────────── */}
           <s-section heading="Theme Customizer">
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <p style={{ fontSize: "13px", color: "#6b7280", margin: 0 }}>
+              <p style={{ fontSize: "13px", color: "#000000", margin: 0 }}>
                 Select a preset theme for your storefront widget. The chosen theme overrides block-level color settings.
               </p>
 
@@ -283,7 +283,7 @@ export default function SettingsPage() {
           {/* ── Widget Width ─────────────────────────────────────────────────── */}
           <s-section heading="Widget Width">
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <p style={{ fontSize: "13px", color: "#6b7280", margin: 0 }}>
+              <p style={{ fontSize: "13px", color: "#000000", margin: 0 }}>
                 Controls the maximum width of the combo builder widget on the storefront. Choose a preset or enter a custom pixel value.
               </p>
 
@@ -385,7 +385,7 @@ export default function SettingsPage() {
                   </span>
                 </div>
                 {widgetMaxWidth === 0 && (
-                  <span style={{ fontSize: "12px", color: "#6b7280" }}>Full section width</span>
+                  <span style={{ fontSize: "12px", color: "#000000" }}>Full section width</span>
                 )}
               </div>
             </div>
@@ -396,7 +396,7 @@ export default function SettingsPage() {
         {/* ── Widget Text Labels ───────────────────────────────────────────── */}
         <s-section heading="Product Grid">
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            <p style={{ fontSize: "13px", color: "#6b7280", margin: 0 }}>
+            <p style={{ fontSize: "13px", color: "#000000", margin: 0 }}>
               Controls how many product cards appear in each row on desktop storefront layouts.
             </p>
 

@@ -143,7 +143,7 @@ export const action = async ({ request }) => {
 const labelStyle = {
   fontSize: "10px",
   fontWeight: "700",
-  color: "#6b7280",
+  color: "#000000",
   textTransform: "uppercase",
   letterSpacing: "0.07em",
   display: "block",
@@ -308,9 +308,9 @@ export default function PlanPage() {
             <div style={{ fontSize: "18px", fontWeight: "700", color: "#111827", marginBottom: "4px" }}>Free</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: "4px", marginBottom: "4px" }}>
               <span style={{ fontSize: "36px", fontWeight: "800", color: "#111827", lineHeight: 1 }}>$0</span>
-              <span style={{ fontSize: "13px", color: "#6b7280" }}>/month</span>
+              <span style={{ fontSize: "13px", color: "#000000" }}>/month</span>
             </div>
-            <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "20px" }}>Good for setup, testing, and a single live combo box.</div>
+            <div style={{ fontSize: "12px", color: "#000000", marginBottom: "20px" }}>Good for setup, testing, and a single live combo box.</div>
 
             <div>
               <CheckRow>1 combo box</CheckRow>
@@ -360,9 +360,9 @@ export default function PlanPage() {
             <div style={{ fontSize: "18px", fontWeight: "700", color: "#111827", marginBottom: "4px" }}>Pro</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: "4px", marginBottom: "4px" }}>
               <span style={{ fontSize: "36px", fontWeight: "800", color: "#111827", lineHeight: 1 }}>${planConfig.price}</span>
-              <span style={{ fontSize: "13px", color: "#6b7280" }}>/month</span>
+              <span style={{ fontSize: "13px", color: "#000000" }}>/month</span>
             </div>
-            <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "20px" }}>
+            <div style={{ fontSize: "12px", color: "#000000", marginBottom: "20px" }}>
               {planConfig.trialDays}-day free trial, then billed monthly through Shopify.
             </div>
 
@@ -424,7 +424,7 @@ export default function PlanPage() {
 
       {/* ── FAQ / note ── */}
       <div style={{ marginTop: "28px", padding: "16px 20px", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "8px" }}>
-        <div style={{ fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "10px" }}>Billing notes</div>
+        <div style={{ fontSize: "11px", fontWeight: "700", color: "#000000", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "10px" }}>Billing notes</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 24px" }}>
           {[
             ["Trial", `${planConfig.trialDays} days free, no charge until trial ends`],

@@ -117,7 +117,7 @@ export function installedEmailHtml({ ownerName, shopName, shopDomain }) {
                   </td>
                   <td style="padding-left:14px;vertical-align:top;">
                     <p style="margin:2px 0 5px;font-size:14px;font-weight:600;color:#111827;">${title}</p>
-                    <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.65;">${desc}</p>
+                    <p style="margin:0;font-size:13px;color: #000000;line-height:1.65;">${desc}</p>
                   </td>
                 </tr>
               </table>`).join("")}
@@ -148,7 +148,7 @@ export function installedEmailHtml({ ownerName, shopName, shopDomain }) {
               <p style="margin:0 0 4px;font-size:13px;color:#374151;font-weight:600;">
                 ${APP_NAME}
               </p>
-              <p style="margin:0 0 4px;font-size:12px;color:#6b7280;">
+              <p style="margin:0 0 4px;font-size:12px;color: #000000;">
                 A Shopify App by <strong>${ownerCompany}</strong>
               </p>
               <p style="margin:0;font-size:11px;color:#9ca3af;">

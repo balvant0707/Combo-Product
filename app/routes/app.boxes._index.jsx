@@ -315,7 +315,7 @@ export default function ManageBoxesPage() {
           flex-shrink: 0;
         }
         .cb-stat-val { font-size: 20px; font-weight: 800; color: #111827; line-height: 1; }
-        .cb-stat-lbl { font-size: 11px; color: #6b7280; margin-top: 2px; font-weight: 500; letter-spacing: 0.03em; }
+        .cb-stat-lbl { font-size: 11px; color: #000000; margin-top: 2px; font-weight: 500; letter-spacing: 0.03em; }
 
         /* ── Toolbar ── */
         .cb-toolbar {
@@ -356,7 +356,7 @@ export default function ManageBoxesPage() {
           border: 1.5px solid #e5e7eb;
           border-radius: 8px;
           background: #fff;
-          font-size: 12px; font-weight: 500; color: #6b7280;
+          font-size: 12px; font-weight: 500; color: #000000;
           cursor: pointer; transition: all 0.12s; white-space: nowrap;
         }
         .cb-ftab:hover { background: #f3f4f6; border-color: #d1d5db; color: #111827; }
@@ -416,9 +416,9 @@ export default function ManageBoxesPage() {
           text-transform: uppercase;
         }
         .b-live   { color: #166534; background: #dcfce7; }
-        .b-draft  { color: #6b7280; background: #f3f4f6; }
+        .b-draft  { color: #000000; background: #f3f4f6; }
         .b-combo  { color: #1d4ed8; background: #dbeafe; }
-        .b-single { color: #6b7280; background: #f3f4f6; }
+        .b-single { color: #000000; background: #f3f4f6; }
         .b-gift   { color: #7c3aed; background: #ede9fe; }
 
         /* ── Status dot ── */
@@ -434,7 +434,7 @@ export default function ManageBoxesPage() {
           width: 32px; height: 32px; border-radius: 7px;
           border: 1.5px solid #e5e7eb; background: #fff;
           cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
-          color: #6b7280; transition: all 0.13s;
+          color: #000000; transition: all 0.13s;
         }
         .cb-btn:hover { background: #f0fdf4; border-color: #2A7A4F; color: #2A7A4F; transform: scale(1.05); }
         .cb-btn.del:hover { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
@@ -447,7 +447,7 @@ export default function ManageBoxesPage() {
         .cb-toggle-label {
           font-size: 11px;
           font-weight: 700;
-          color: #6b7280;
+          color: #000000;
           min-width: 42px;
           text-align: right;
         }
@@ -866,7 +866,7 @@ export default function ManageBoxesPage() {
                 style={{
                   border: "none",
                   background: "transparent",
-                  color: "#6b7280",
+                  color: "#000000",
                   fontSize: "26px",
                   fontWeight: 700,
                   lineHeight: 1,
@@ -905,7 +905,7 @@ export default function ManageBoxesPage() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "#6b7280",
+                    color: "#000000",
                     flexShrink: 0,
                   }}
                 >
@@ -913,7 +913,7 @@ export default function ManageBoxesPage() {
                 </div>
                 <div>
                   <div style={{ fontSize: "15px", fontWeight: 700, color: "#111827", lineHeight: 1.2 }}>Create Combo Box</div>
-                  <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "2px", lineHeight: 1.2 }}>Add a new bundle</div>
+                  <div style={{ fontSize: "13px", color: "#000000", marginTop: "2px", lineHeight: 1.2 }}>Add a new bundle</div>
                 </div>
               </button>
 
@@ -943,7 +943,7 @@ export default function ManageBoxesPage() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "#6b7280",
+                    color: "#000000",
                     flexShrink: 0,
                   }}
                 >
@@ -951,7 +951,7 @@ export default function ManageBoxesPage() {
                 </div>
                 <div>
                   <div style={{ fontSize: "15px", fontWeight: 700, color: "#111827", lineHeight: 1.2 }}>Create Specific Combo Box</div>
-                  <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "2px", lineHeight: 1.2 }}>Step-by-step combo experience</div>
+                  <div style={{ fontSize: "13px", color: "#000000", marginTop: "2px", lineHeight: 1.2 }}>Step-by-step combo experience</div>
                 </div>
               </button>
 
@@ -991,7 +991,7 @@ export default function ManageBoxesPage() {
               </div>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>Delete box?</div>
-                <div style={{ fontSize: 13, color: "#6b7280", marginTop: 3 }}>
+                <div style={{ fontSize: 13, color: "#000000", marginTop: 3 }}>
                   <strong style={{ color: "#111827" }}>&ldquo;{deleteConfirm.name}&rdquo;</strong> and its Shopify product will be permanently removed.
                 </div>
               </div>

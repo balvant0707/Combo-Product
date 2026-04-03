@@ -203,7 +203,7 @@ const labelStyle = {
 };
 const errorStyle = { color: "#dc2626", fontSize: "11px", marginTop: "5px", display: "flex", alignItems: "center", gap: "4px" };
 const sectionHeadingStyle = {
-  fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase",
+  fontSize: "11px", fontWeight: "700", color: "#000000", textTransform: "uppercase",
   letterSpacing: "0.8px", marginBottom: "16px", paddingBottom: "10px",
   borderBottom: "1.5px solid #f3f4f6", display: "flex", alignItems: "center", gap: "8px",
 };
@@ -391,7 +391,7 @@ export default function CreateBoxPage() {
                         </div>
                       ) : null}
                     </div>
-                    <div style={{ fontSize: "11px", color: "#6b7280" }}>
+                    <div style={{ fontSize: "11px", color: "#000000" }}>
                       {discountType === "buy_x_get_y"
                         ? <>Buy <strong>{buyQuantity}</strong>, get <strong>{getQuantity}</strong> free — <span style={{ color: "#166534", fontWeight: 600 }}>applied at checkout</span></>
                         : <>
@@ -429,7 +429,7 @@ export default function CreateBoxPage() {
                   <ToggleSwitch checked={options[opt.key]} onChange={() => toggleOption(opt.key)} showStateText={false} />
                   <div>
                     <div style={{ fontSize: "13px", fontWeight: "600", color: "#000000", display: "flex", alignItems: "center", gap: "5px" }}><AdminIcon type={opt.iconType} size="small" /> {opt.label}</div>
-                    <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>{opt.desc}</div>
+                    <div style={{ fontSize: "11px", color: "#000000", marginTop: "2px" }}>{opt.desc}</div>
                   </div>
                 </div>
               ))}
@@ -488,7 +488,7 @@ export default function CreateBoxPage() {
                   {scope === "specific_collections" ? "Select collections" : "Select products"}
                 </button>
               )}
-              <span style={{ fontSize: "12px", color: "#6b7280", fontWeight: "500" }}>
+              <span style={{ fontSize: "12px", color: "#000000", fontWeight: "500" }}>
                 {scope === "wholestore" ? "Whole store" : `${scopeItems.length} selected`}
               </span>
             </div>
@@ -567,7 +567,7 @@ export default function CreateBoxPage() {
                 })}
               </div>
               <div style={modalFooterStyle}>
-                <span style={{ fontSize: "12px", color: "#6b7280" }}>
+                <span style={{ fontSize: "12px", color: "#000000" }}>
                   {scopeItems.length > 0 ? `${scopeItems.length} selected` : "None selected"}
                 </span>
                 <div style={{ display: "flex", gap: "8px" }}>

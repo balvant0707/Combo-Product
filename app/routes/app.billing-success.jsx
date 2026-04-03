@@ -26,7 +26,7 @@ export default function BillingSuccessPage() {
         <div style={{ fontSize: "16px", fontWeight: "700", color: "#111827", marginBottom: "8px" }}>
           Finalizing your subscription
         </div>
-        <div style={{ fontSize: "13px", color: "#6b7280", marginBottom: "18px" }}>
+        <div style={{ fontSize: "13px", color: "#000000", marginBottom: "18px" }}>
           Redirecting you to the dashboard.
         </div>
       </div>

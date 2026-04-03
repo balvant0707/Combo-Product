@@ -63,7 +63,7 @@ export function ownerInstallNotifyHtml({ ownerName, shopName, shopDomain, email,
             style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;">
             ${rows.map(([icon, label, value], i) => `
             <tr style="background:${i % 2 === 0 ? "#f9fafb" : "#ffffff"};">
-              <td style="padding:11px 16px;font-size:13px;color:#6b7280;width:120px;white-space:nowrap;">
+              <td style="padding:11px 16px;font-size:13px;color: #000000;width:120px;white-space:nowrap;">
                 ${icon} <strong style="color:#374151;">${label}</strong>
               </td>
               <td style="padding:11px 16px;font-size:13px;color:#111827;border-left:1px solid #e5e7eb;">
@@ -151,7 +151,7 @@ export function ownerUninstallNotifyHtml({ ownerName, shopName, shopDomain, emai
             style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;">
             ${rows.map(([icon, label, value], i) => `
             <tr style="background:${i % 2 === 0 ? "#fef2f2" : "#ffffff"};">
-              <td style="padding:11px 16px;font-size:13px;color:#6b7280;width:120px;white-space:nowrap;">
+              <td style="padding:11px 16px;font-size:13px;color: #000000;width:120px;white-space:nowrap;">
                 ${icon} <strong style="color:#374151;">${label}</strong>
               </td>
               <td style="padding:11px 16px;font-size:13px;color:#111827;border-left:1px solid #e5e7eb;">

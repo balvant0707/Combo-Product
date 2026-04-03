@@ -6,7 +6,9 @@ import { Buffer } from "node:buffer";
 import { AdminIcon } from "../components/admin-icons";
 import { ToggleSwitch } from "../components/toggle-switch";
 import { getBox, upsertComboConfig, saveComboStepImages, getComboStepImages, syncShopifyBundleProduct, syncSpecificComboProductMedia } from "../models/boxes.server";
+import { getShopCurrencyCode } from "../models/shop.server";
 import { withEmbeddedAppParams, withEmbeddedAppToastFromRequest } from "../utils/embedded-app";
+import { formatCurrencyAmount, getCurrencySymbol } from "../utils/currency";
 
 
 /* ─────────────────────────── GraphQL ─────────────────────────── */
@@ -202,6 +204,7 @@ function applyAdminComboDiscount(total, config, quantity = 0, unitPrices = []) {
 export const loader = async ({ request, params }) => {
   const { admin, session, redirect } = await authenticate.admin(request);
   const shop = session.shop;
+  const currencyCode = await getShopCurrencyCode(shop);
 
   /* ── Fast path: fetch products for a specific collection (used by per-step pickers) ── */
   const url = new URL(request.url);
@@ -220,7 +223,7 @@ export const loader = async ({ request, params }) => {
       variantId: node.variants?.edges?.[0]?.node?.id || null,
       price: node.variants?.edges?.[0]?.node?.price || "0",
     }));
-    return { collectionProducts };
+    return { collectionProducts, currencyCode };
   }
 
   const box = await getBox(params.id, shop);
@@ -322,6 +325,7 @@ export const loader = async ({ request, params }) => {
     products,
     collections,
     stepImagesBase64,
+    currencyCode,
   };
 };
 
@@ -424,7 +428,7 @@ const sectionHeadingStyle = {
 
 /* ─────────────────────────── Component ─────────────────────────── */
 export default function SpecificComboBoxPage() {
-  const { box, products, collections, stepImagesBase64 } = useLoaderData();
+  const { box, products, collections, stepImagesBase64, currencyCode } = useLoaderData();
   const comboFetcher = useFetcher();
   const navigation = useNavigation();
   /* One fetcher per step for lazy-loading collection-scoped products */
@@ -438,6 +442,7 @@ export default function SpecificComboBoxPage() {
   const collProdsFetcher7 = useFetcher();
   const collProdsFetchers = [collProdsFetcher0, collProdsFetcher1, collProdsFetcher2, collProdsFetcher3, collProdsFetcher4, collProdsFetcher5, collProdsFetcher6, collProdsFetcher7];
   const location = useLocation();
+  const currencySymbol = getCurrencySymbol(currencyCode);
 
   const comboErrors = comboFetcher.data?.errors || {};
   const comboStepImgErrors = {};
@@ -847,7 +852,7 @@ export default function SpecificComboBoxPage() {
                   </div>
                 </div>
                 <div>
-                  <label style={labelStyle}>Bundle Price (₹) *</label>
+                  <label style={labelStyle}>Bundle Price ({currencySymbol}) *</label>
                   <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "5px", overflow: "hidden", marginBottom: "8px" }}>
                     {["manual", "dynamic"].map((mode) => (
                       <button key={mode} type="button" onClick={() => updateComboField("bundlePriceType", mode)} style={{ flex: 1, padding: "7px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: comboConfig.bundlePriceType === mode ? "#000000" : "#f9fafb", color: comboConfig.bundlePriceType === mode ? "#ffffff" : "#374151", transition: "background 0.15s" }}>
@@ -868,13 +873,13 @@ export default function SpecificComboBoxPage() {
                           style={{ ...fieldStyle, borderColor: "#d1d5db" }}
                         >
                           <option value="percent">% Off Total</option>
-                          <option value="fixed">₹ Fixed Discount</option>
+                          <option value="fixed">{currencySymbol} Fixed Discount</option>
                           <option value="none">None</option>
                         </select>
                       </div>
                       {comboConfig.discountType !== "none" && (
                         <div style={{ marginBottom: "10px" }}>
-                          <label style={labelStyle}>{comboConfig.discountType === "percent" ? "Discount %" : "Amount (₹)"}</label>
+                          <label style={labelStyle}>{comboConfig.discountType === "percent" ? "Discount %" : `Amount (${currencySymbol})`}</label>
                           <input
                             type="number"
                             min="0"
@@ -1163,7 +1168,7 @@ export default function SpecificComboBoxPage() {
                       <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{product.title}</div>
                       <div style={{ fontSize: "11px", color: "#9ca3af", fontFamily: "monospace" }}>{product.handle}</div>
                     </div>
-                    {product.price && parseFloat(product.price) > 0 && <div style={{ fontSize: "13px", fontWeight: "700", color: "#374151", fontFamily: "monospace", flexShrink: 0 }}>₹{parseFloat(product.price).toLocaleString("en-IN")}</div>}
+                    {product.price && parseFloat(product.price) > 0 && <div style={{ fontSize: "13px", fontWeight: "700", color: "#374151", fontFamily: "monospace", flexShrink: 0 }}>{formatCurrencyAmount(parseFloat(product.price), currencyCode)}</div>}
                   </div>
                 );
               })}

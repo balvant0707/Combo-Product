@@ -3,9 +3,11 @@ import { Form, useActionData, useLoaderData, useLocation, useNavigation, useRout
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { createBox } from "../models/boxes.server";
+import { getShopCurrencyCode } from "../models/shop.server";
 import { AdminIcon } from "../components/admin-icons";
 import { ToggleSwitch } from "../components/toggle-switch";
 import { withEmbeddedAppParams, withEmbeddedAppToastFromRequest } from "../utils/embedded-app";
+import { formatCurrencyAmount, getCurrencySymbol } from "../utils/currency";
 
 const COLLECTIONS_QUERY = `#graphql
   query GetCollections($first: Int!) {
@@ -74,10 +76,11 @@ async function parseBannerImage(formData, errors) {
 }
 
 export const loader = async ({ request }) => {
-  const { admin } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
   const url = new URL(request.url);
   const query = url.searchParams.get("q") || "";
   const searchQuery = query ? `${query} NOT vendor:ComboBuilder` : "NOT vendor:ComboBuilder";
+  const currencyCode = await getShopCurrencyCode(session.shop);
 
   const [prodResp, collResp] = await Promise.all([
     admin.graphql(PRODUCTS_QUERY, { variables: { first: 50, query: searchQuery } }),
@@ -102,7 +105,7 @@ export const loader = async ({ request }) => {
     imageUrl: node.image?.url || null,
   }));
 
-  return { products, collections };
+  return { products, collections, currencyCode };
 };
 
 export const action = async ({ request }) => {
@@ -214,11 +217,12 @@ const sectionHeadingStyle = {
 };
 
 export default function CreateBoxPage() {
-  const { products, collections } = useLoaderData();
+  const { products, collections, currencyCode } = useLoaderData();
   const actionData = useActionData();
   const location = useLocation();
   const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
+  const currencySymbol = getCurrencySymbol(currencyCode);
 
   const [scope, setScope] = useState("specific_collections");
   const [scopeItems, setScopeItems] = useState([]);
@@ -386,7 +390,7 @@ export default function CreateBoxPage() {
                 {errors.itemCount && <div style={errorStyle}>{errors.itemCount}</div>}
               </div>
               <div>
-                <label style={labelStyle}>Bundle Price (₹) *</label>
+                <label style={labelStyle}>Bundle Price ({currencySymbol}) *</label>
                 <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "5px", overflow: "hidden", marginBottom: "10px" }}>
                   {["manual", "dynamic"].map((mode) => (
                     <button key={mode} type="button" onClick={() => setPriceMode(mode)} style={{ flex: 1, padding: "7px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: priceMode === mode ? "#000000" : "#f9fafb", color: priceMode === mode ? "#ffffff" : "#374151", transition: "background 0.15s" }}>
@@ -404,7 +408,7 @@ export default function CreateBoxPage() {
                         <label style={{ ...labelStyle, fontSize: "10px" }}>Discount Type</label>
                         <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }}>
                           <option value="percent">% Off Total</option>
-                          <option value="fixed">₹ Fixed Discount</option>
+                          <option value="fixed">{currencySymbol} Fixed Discount</option>
                           <option value="buy_x_get_y">Buy X Get Y Free</option>
                           <option value="none">No Discount</option>
                         </select>
@@ -422,7 +426,7 @@ export default function CreateBoxPage() {
                         </>
                       ) : discountType !== "none" ? (
                         <div>
-                          <label style={{ ...labelStyle, fontSize: "10px" }}>{discountType === "percent" ? "Discount %" : "Amount (₹)"}</label>
+                          <label style={{ ...labelStyle, fontSize: "10px" }}>{discountType === "percent" ? "Discount %" : `Amount (${currencySymbol})`}</label>
                           <input type="number" min="0" step={discountType === "percent" ? "1" : "0.01"} max={discountType === "percent" ? "99" : undefined} value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
                         </div>
                       ) : null}
@@ -431,9 +435,9 @@ export default function CreateBoxPage() {
                       {discountType === "buy_x_get_y"
                         ? <>Buy <strong>{buyQuantity}</strong>, get <strong>{getQuantity}</strong> free — <span style={{ color: "#166534", fontWeight: 600 }}>applied at checkout</span></>
                         : <>
-                            MRP est: ₹{estimatedTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                            MRP est: {formatCurrencyAmount(estimatedTotal, currencyCode)}
                             {discountType !== "none" && dynamicPrice < estimatedTotal && (
-                              <> → <strong style={{ color: "#166534" }}>₹{dynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></>
+                              <> → <strong style={{ color: "#166534" }}>{formatCurrencyAmount(dynamicPrice, currencyCode)}</strong></>
                             )}
                           </>
                       }

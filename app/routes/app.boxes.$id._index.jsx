@@ -5,7 +5,9 @@ import { authenticate } from "../shopify.server";
 import { AdminIcon } from "../components/admin-icons";
 import { ToggleSwitch } from "../components/toggle-switch";
 import { getBox, updateBox, deleteBox, getBannerImageSrc } from "../models/boxes.server";
+import { getShopCurrencyCode } from "../models/shop.server";
 import { withEmbeddedAppParams, withEmbeddedAppToastFromRequest } from "../utils/embedded-app";
+import { getCurrencySymbol } from "../utils/currency";
 
 /* ─────────────────────────── GraphQL ─────────────────────────── */
 const COLLECTIONS_QUERY = `#graphql
@@ -80,6 +82,7 @@ async function parseBannerImage(formData, errors) {
 export const loader = async ({ request, params }) => {
   const { admin, session, redirect } = await authenticate.admin(request);
   const shop = session.shop;
+  const currencyCode = await getShopCurrencyCode(shop);
 
   const box = await getBox(params.id, shop);
   if (!box) throw redirect("/app/boxes");
@@ -168,6 +171,7 @@ export const loader = async ({ request, params }) => {
     box: { ...boxWithoutBinary, bundlePrice: effectiveBundlePrice, bannerImageSrc, discountType: savedDiscountType, discountValue: savedDiscountValue, boxSubtitle: savedBoxSubtitle, buyQuantity: savedBuyQuantity, getQuantity: savedGetQuantity },
     products,
     collections,
+    currencyCode,
   };
 };
 
@@ -290,12 +294,13 @@ const sectionHeadingStyle = {
 
 /* ─────────────────────────── Component ─────────────────────────── */
 export default function BoxSettingsPage() {
-  const { box, products, collections } = useLoaderData();
+  const { box, products, collections, currencyCode } = useLoaderData();
   const actionData = useActionData();
   const location = useLocation();
   const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
   const isPageLoading = navigation.state !== "idle";
+  const currencySymbol = getCurrencySymbol(currencyCode);
 
   const errors = actionData?.errors || {};
 
@@ -466,7 +471,7 @@ export default function BoxSettingsPage() {
               {errors.itemCount && <div style={errorStyle}>{errors.itemCount}</div>}
             </div>
             <div>
-              <label style={labelStyle}>Bundle Price (₹) *</label>
+              <label style={labelStyle}>Bundle Price ({currencySymbol}) *</label>
               <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "5px", overflow: "hidden", marginBottom: "10px" }}>
                 {["manual", "dynamic"].map((mode) => (
                   <button key={mode} type="button" onClick={() => setPriceMode(mode)} style={{ flex: 1, padding: "7px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: priceMode === mode ? "#000000" : "#f9fafb", color: priceMode === mode ? "#ffffff" : "#374151", transition: "background 0.15s" }}>
@@ -484,7 +489,7 @@ export default function BoxSettingsPage() {
                       <label style={{ ...labelStyle, fontSize: "10px" }}>Discount Type</label>
                       <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }}>
                         <option value="percent">% Off Total</option>
-                        <option value="fixed">₹ Fixed Discount</option>
+                        <option value="fixed">{currencySymbol} Fixed Discount</option>
                         <option value="buy_x_get_y">Buy X Get Y Free</option>
                         <option value="none">No Discount</option>
                       </select>
@@ -502,7 +507,7 @@ export default function BoxSettingsPage() {
                       </>
                     ) : discountType !== "none" ? (
                       <div>
-                        <label style={{ ...labelStyle, fontSize: "10px" }}>{discountType === "percent" ? "Discount %" : "Amount (₹)"}</label>
+                        <label style={{ ...labelStyle, fontSize: "10px" }}>{discountType === "percent" ? "Discount %" : `Amount (${currencySymbol})`}</label>
                         <input type="number" min="0" step={discountType === "percent" ? "1" : "0.01"} max={discountType === "percent" ? "99" : undefined} value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
                       </div>
                     ) : null}

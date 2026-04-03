@@ -3,10 +3,12 @@ import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigat
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { createBox, getBox, upsertComboConfig, saveComboStepImages, syncSpecificComboProductMedia } from "../models/boxes.server";
+import { getShopCurrencyCode } from "../models/shop.server";
 import { AdminIcon } from "../components/admin-icons";
 import { ToggleSwitch } from "../components/toggle-switch";
 import { withEmbeddedAppParams, withEmbeddedAppToastFromRequest } from "../utils/embedded-app";
 import { validateComboConfig } from "../utils/combo-config";
+import { formatCurrencyAmount, getCurrencySymbol } from "../utils/currency";
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ GraphQL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const COLLECTIONS_QUERY = `#graphql
@@ -209,7 +211,8 @@ function applyAdminComboDiscount(total, config, quantity = 0, unitPrices = []) {
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Loader â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export const loader = async ({ request }) => {
-  const { admin } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
+  const currencyCode = await getShopCurrencyCode(session.shop);
   const url = new URL(request.url);
 
   // Fast path: products for a specific collection (used by per-step pickers)
@@ -224,6 +227,7 @@ export const loader = async ({ request }) => {
         variantId: node.variants?.edges?.[0]?.node?.id || null,
         price: node.variants?.edges?.[0]?.node?.price || "0",
       })),
+      currencyCode,
     };
   }
 
@@ -243,6 +247,7 @@ export const loader = async ({ request }) => {
     collections: (collJson?.data?.collections?.edges || []).map(({ node }) => ({
       id: node.id, title: node.title, handle: node.handle, imageUrl: node.image?.url || null,
     })),
+    currencyCode,
   };
 };
 
@@ -341,11 +346,12 @@ const sectionHeadingStyle = { fontSize: "11px", fontWeight: "700", color: "#0000
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export default function CreateSpecificComboBoxPage() {
-  const { products, collections } = useLoaderData();
+  const { products, collections, currencyCode } = useLoaderData();
   const actionData = useActionData();
   const location = useLocation();
   const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
+  const currencySymbol = getCurrencySymbol(currencyCode);
   const isPageLoading = navigation.state !== "idle";
 
   const collProdsFetcher0 = useFetcher();
@@ -660,7 +666,7 @@ export default function CreateSpecificComboBoxPage() {
                   </div>
                   {/* Bundle Price */}
                   <div>
-                    <label style={labelStyle}>Bundle Price (â‚¹) *</label>
+                    <label style={labelStyle}>Bundle Price ({currencySymbol}) *</label>
                     <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "5px", overflow: "hidden", marginBottom: "8px" }}>
                       {["manual", "dynamic"].map((mode) => (
                         <button key={mode} type="button" onClick={() => updateComboField("bundlePriceType", mode)} style={{ flex: 1, padding: "6px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: comboConfig.bundlePriceType === mode ? "#000000" : "#f9fafb", color: comboConfig.bundlePriceType === mode ? "#ffffff" : "#374151", transition: "background 0.15s" }}>
@@ -700,7 +706,7 @@ export default function CreateSpecificComboBoxPage() {
                               style={{ ...fieldStyle, borderColor: "#d1d5db", color: "#000000", fontWeight: "600" }}
                             >
                               <option value="percent">% Off Total</option>
-                              <option value="fixed">â‚¹ Fixed Discount</option>
+                              <option value="fixed">{currencySymbol} Fixed Discount</option>
                               <option value="none">None </option>
                             </select>
                           </div>
@@ -733,7 +739,7 @@ export default function CreateSpecificComboBoxPage() {
                                 </div>
                               ) : (
                                 <>
-                                  <label style={labelStyle}>{comboConfig.discountType === "percent" ? "Discount %" : "Amount (â‚¹)"}</label>
+                                  <label style={labelStyle}>{comboConfig.discountType === "percent" ? "Discount %" : `Amount (${currencySymbol})`}</label>
                                   <input
                                     type="number"
                                     min="0"
@@ -752,9 +758,9 @@ export default function CreateSpecificComboBoxPage() {
                                   </div>
                                   {comboDynamicDiscountBreakdown.discountAmount > 0 && (
                                     <div style={{ marginTop: "6px", fontSize: "11px", color: "#166534" }}>
-                                      Product discount: Rs {comboDynamicDiscountBreakdown.discountAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                      Product discount: {formatCurrencyAmount(comboDynamicDiscountBreakdown.discountAmount, currencyCode)}
                                       {" "}({comboDynamicDiscountBreakdown.freeUnits} free)
-                                      {" "} | Order discount: Rs {comboDynamicDiscountBreakdown.discountAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                      {" "} | Order discount: {formatCurrencyAmount(comboDynamicDiscountBreakdown.discountAmount, currencyCode)}
                                     </div>
                                   )}
                                 </>
@@ -770,7 +776,7 @@ export default function CreateSpecificComboBoxPage() {
                             </span>
                           {comboDynamicMrp > 0 && (
                             <span style={{ fontSize: "13px", fontWeight: "700", color: "#166534" }}>
-                              ₹{comboDynamicPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                              {formatCurrencyAmount(comboDynamicPrice, currencyCode)}
                             </span>
                           )}
                         </div>
@@ -907,7 +913,7 @@ export default function CreateSpecificComboBoxPage() {
                           <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "6px" }}>
                             {step.selectedProducts.map((p) => (
                               <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", background: "#f9fafb", border: "1.5px solid #000000", borderRadius: "5px" }}>
-                                <span style={{ fontSize: "12px", color: "#000000", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "6px" }}><AdminIcon type="product" size="small" style={{ color: "#000000" }} /> {p.title} â€” â‚¹{parseFloat(p.price || 0).toLocaleString("en-IN")}</span>
+                                <span style={{ fontSize: "12px", color: "#000000", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "6px" }}><AdminIcon type="product" size="small" style={{ color: "#000000" }} /> {p.title} - {formatCurrencyAmount(parseFloat(p.price || 0), currencyCode)}</span>
                                 <button type="button" aria-label={`Remove ${p.title}`} onClick={() => updateComboStep(ai, "selectedProducts", step.selectedProducts.filter((x) => x.id !== p.id))} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", display: "inline-flex", alignItems: "center", justifyContent: "center" }}><AdminIcon type="x" size="small" style={{ color: "#dc2626" }} /></button>
                               </div>
                             ))}
@@ -1053,7 +1059,7 @@ export default function CreateSpecificComboBoxPage() {
         <div style={modalOverlayStyle} onClick={(e) => { if (e.target === e.currentTarget) setShowStepProdModal(false); }}>
           <div style={modalBoxStyle}>
             <div style={modalHeaderStyle}>
-              <div><div style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>Select product</div><div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>{stepProdModalIdx !== null && stepProducts[stepProdModalIdx] ? `${stepProducts[stepProdModalIdx].length} products Â· scoped to collection` : `All products Â· ${comboConfig.steps[stepProdModalIdx]?.label}`}</div></div>
+              <div><div style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>Select product</div><div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>{stepProdModalIdx !== null && stepProducts[stepProdModalIdx] ? `${stepProducts[stepProdModalIdx].length} products - scoped to collection` : `All products - ${comboConfig.steps[stepProdModalIdx]?.label}`}</div></div>
               <button type="button" aria-label="Close product picker" onClick={() => setShowStepProdModal(false)} style={{ ...modalCloseBtn, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><AdminIcon type="x" size="small" style={{ color: "#9ca3af" }} /></button>
             </div>
             <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
@@ -1071,7 +1077,7 @@ export default function CreateSpecificComboBoxPage() {
                       </div>
                       {product.imageUrl ? <img src={product.imageUrl} alt={product.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} /> : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}><AdminIcon type="product" size="small" /></div>}
                       <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{product.title}</div></div>
-                      {product.price && parseFloat(product.price) > 0 && <div style={{ fontSize: "13px", fontWeight: "700", color: "#374151", fontFamily: "monospace", flexShrink: 0 }}>â‚¹{parseFloat(product.price).toLocaleString("en-IN")}</div>}
+                      {product.price && parseFloat(product.price) > 0 && <div style={{ fontSize: "13px", fontWeight: "700", color: "#374151", fontFamily: "monospace", flexShrink: 0 }}>{formatCurrencyAmount(parseFloat(product.price), currencyCode)}</div>}
                     </div>
                   );
                 })}

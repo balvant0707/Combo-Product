@@ -219,6 +219,14 @@ export async function getShopStatus(shop) {
   return row?.status ?? null;
 }
 
+export async function getShopCurrencyCode(shop) {
+  const row = await db.shop.findUnique({
+    where: { shop },
+    select: { currency: true },
+  });
+  return row?.currency || "INR";
+}
+
 export async function markShopUninstalled(shop) {
   console.info("[DB Sync] markShopUninstalled", { shop });
 

@@ -715,7 +715,6 @@ export default function DashboardPage() {
             <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000" }}>
               <AdminIcon type="order" size="small" /> Recent Orders
             </div>
-            <span style={{ fontSize: "13px", color: "#000000" }}>Latest bundle purchases</span>
           </div>
           <AdminIcon type={isRecentOrdersOpen ? "minus" : "plus"} size="small" />
         </button>

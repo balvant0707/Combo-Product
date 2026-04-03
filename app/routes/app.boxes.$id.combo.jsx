@@ -859,7 +859,7 @@ export default function SpecificComboBoxPage() {
                     <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={comboConfig.bundlePrice || ""} onChange={(e) => updateComboField("bundlePrice", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
                   )}
                   {comboConfig.bundlePriceType === "dynamic" && (
-                    <div style={{ border: "1px solid #e5e7eb", borderRadius: "6px", padding: "12px", background: "#f9fafb" }}>
+                    <div style={{ display:"grid",gridTemplateColumns: "1fr 1fr", border: "1px solid #e5e7eb",marginBottom:"10px", gap: "10px", padding: "12px", background: "#f9fafb" }}>
                       <div style={{ marginBottom: "10px" }}>
                         <label style={labelStyle}>Discount Type</label>
                         <select

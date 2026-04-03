@@ -112,11 +112,34 @@ export default function App() {
   return (
     <AppProvider embedded apiKey={apiKey}>
       <style>{`
+        :root {
+          --cb-admin-radius: 4px;
+          --p-border-radius-100: 4px;
+          --p-border-radius-150: 4px;
+          --p-border-radius-200: 4px;
+          --p-border-radius-300: 4px;
+          --p-border-radius-400: 4px;
+          --p-border-radius-500: 4px;
+        }
+
+        s-card,
+        s-box {
+          border-radius: var(--cb-admin-radius) !important;
+        }
+
+        s-page :is(div, section, article)[style*="border-radius"]:not([style*="50%"]):not([style*="999px"]):not([style*="99px"]) {
+          border-radius: var(--cb-admin-radius) !important;
+        }
+
+        s-page :is([class*="card"], [class*="box"]) {
+          border-radius: var(--cb-admin-radius) !important;
+        }
+
         ui-title-bar button {
           background: #000000;
           color: #ffffff;
           border: 1px solid #000000;
-          border-radius: 6px;
+          border-radius: var(--cb-admin-radius);
           padding: 8px 16px;
           font-size: 13px;
           font-weight: 600;

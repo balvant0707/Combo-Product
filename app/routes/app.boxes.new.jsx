@@ -527,9 +527,11 @@ export default function CreateBoxPage() {
                   {scope === "specific_collections" ? "Select collections" : "Select products"}
                 </button>
               )}
-              <span style={{ fontSize: "12px", color: "#000000", fontWeight: "500" }}>
-                {scope === "wholestore" ? "Whole store" : `${scopeItems.length} selected`}
-              </span>
+              {scope !== "wholestore" && (
+                <span style={{ fontSize: "12px", color: "#000000", fontWeight: "500" }}>
+                  {`${scopeItems.length} selected`}
+                </span>
+              )}
             </div>
             {scope !== "wholestore" && scopeItems.length > 0 && (
               <div style={{ marginTop: "10px", padding: "10px 12px", background: "#f9fafb", borderRadius: "5px", border: "1px solid #e5e7eb" }}>

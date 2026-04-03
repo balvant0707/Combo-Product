@@ -540,13 +540,6 @@ export default function ManageBoxesPage() {
         .cb-noresults p { margin: 8px 0 0; font-size: 13px; }
 
         /* ── Items chip ── */
-        .cb-items-chip {
-          display: inline-flex; align-items: center; justify-content: center;
-          min-width: 28px; height: 24px; padding: 0 8px;
-          background: #f3f4f6; border-radius: 6px;
-          font-size: 12px; font-weight: 700; color: #374151;
-        }
-
         /* ── Box Code chip ── */
         .cb-code-cell { display: flex; align-items: center; gap: 6px; }
         .cb-code-chip {
@@ -648,7 +641,6 @@ export default function ManageBoxesPage() {
                   <th style={{ width: 32, padding: "11px 8px" }}></th>
                   <th>Box Name</th>
                   <th>Code</th>
-                  <th>Items</th>
                   <th>Price</th>
                   <th>Type</th>
                   <th>Orders</th>
@@ -711,11 +703,6 @@ export default function ManageBoxesPage() {
                       {/* Code */}
                       <td>
                         {box.boxCode ? <CopyCodeBtn code={box.boxCode} /> : <span style={{ color: "#d1d5db", fontSize: 12 }}>—</span>}
-                      </td>
-
-                      {/* Items */}
-                      <td>
-                        <span className="cb-items-chip">{box.itemCount}</span>
                       </td>
 
                       {/* Price */}
@@ -929,7 +916,9 @@ export default function ManageBoxesPage() {
                 </div>
                 <div>
                   <div style={{ fontSize: "15px", fontWeight: 700, color: "#111827", lineHeight: 1.2 }}>Create Combo Box</div>
-                  <div style={{ fontSize: "13px", color: "#000000", marginTop: "2px", lineHeight: 1.2 }}>Add a new bundle</div>
+                  <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "2px", lineHeight: 1.35 }}>
+                    Quick setup for fixed bundles and a fast purchase flow.
+                  </div>
                 </div>
               </button>
 
@@ -967,31 +956,11 @@ export default function ManageBoxesPage() {
                 </div>
                 <div>
                   <div style={{ fontSize: "15px", fontWeight: 700, color: "#111827", lineHeight: 1.2 }}>Create Specific Combo Box</div>
-                  <div style={{ fontSize: "13px", color: "#000000", marginTop: "2px", lineHeight: 1.2 }}>Step-by-step combo experience</div>
+                  <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "2px", lineHeight: 1.35 }}>
+                    Guided step-by-step customization for personalized bundles.
+                  </div>
                 </div>
               </button>
-
-              <div
-                style={{
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "8px",
-                  background: "#f9fafb",
-                  padding: "14px 14px 12px",
-                }}
-              >
-                <div style={{ fontSize: "15px", fontWeight: 700, color: "#1f2937", marginBottom: "12px" }}>
-                  How each option works
-                </div>
-                <div style={{ fontSize: "13px", fontWeight: 700, color: "#1f2937", lineHeight: 1.35 }}>Create Combo Box</div>
-                <div style={{ fontSize: "12px", color: "#4b5563", lineHeight: 1.5, marginTop: "6px" }}>
-                  Best for quick bundle offers. You set up one complete box and customers can add it in a few clicks. Use this when you want a fast purchase flow, fixed combinations, and less decision-making for the customer.
-                </div>
-                <div style={{ borderTop: "1px dashed #d1d5db", margin: "12px 0" }} />
-                <div style={{ fontSize: "13px", fontWeight: 700, color: "#1f2937", lineHeight: 1.35 }}>Create Specific Combo Box</div>
-                <div style={{ fontSize: "12px", color: "#4b5563", lineHeight: 1.5, marginTop: "6px" }}>
-                  Best for guided customization. Customers choose items step by step, so they can build their own bundle with more control. Use this when product selection rules matter and you want a personalized shopping experience.
-                </div>
-              </div>
             </div>
           </div>
         </div>

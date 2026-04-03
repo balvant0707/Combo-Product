@@ -780,7 +780,7 @@ export default function DashboardPage() {
           {appsList.map((appItem) => (
             <div key={appItem.key} style={{ border: "1px solid #e5e7eb", borderRadius: "5px", background: "#ffffff", padding: "16px" }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", marginBottom: "10px" }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
                   <img
                     src={appItem.logoSrc}
                     alt={appItem.logoAlt}
@@ -932,7 +932,10 @@ export default function DashboardPage() {
                 rel="noreferrer"
                 style={{ border: "1px solid #e5e7eb", borderRadius: "5px", background: "#ffffff", padding: "14px", textAlign: "center", textDecoration: "none", display: "block" }}
               >
-                <div style={{ fontSize: "14px", fontWeight: "800", color: "#1d4ed8", marginBottom: "6px" }}>Support Ticket</div>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: "800", color: "#1d4ed8", marginBottom: "6px" }}>
+                  <AdminIcon type="clipboard" size="small" style={{ color: "#1d4ed8" }} />
+                  <span>Support Ticket</span>
+                </div>
                 <div style={{ fontSize: "13px", color: "#111827", lineHeight: 1.4 }}>
                   Support, reply, and assist instantly in office hours.
                 </div>
@@ -943,7 +946,10 @@ export default function DashboardPage() {
                 rel="noreferrer"
                 style={{ border: "1px solid #e5e7eb", borderRadius: "5px", background: "#ffffff", padding: "14px", textAlign: "center", textDecoration: "none", display: "block" }}
               >
-                <div style={{ fontSize: "14px", fontWeight: "800", color: "#1d4ed8", marginBottom: "6px" }}>Knowledge base</div>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: "800", color: "#1d4ed8", marginBottom: "6px" }}>
+                  <AdminIcon type="info" size="small" style={{ color: "#1d4ed8" }} />
+                  <span>Knowledge base</span>
+                </div>
                 <div style={{ fontSize: "13px", color: "#111827", lineHeight: 1.4 }}>
                   Find a solution for your problem with our documents.
                 </div>

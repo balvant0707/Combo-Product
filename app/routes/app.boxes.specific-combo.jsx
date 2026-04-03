@@ -624,11 +624,7 @@ export default function CreateSpecificComboBoxPage() {
                     </div>
                     <div style={{ fontSize: "11px", color: "#000000", marginTop: "5px" }}>{comboConfig.type} product selections required (2â€“8)</div>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "10px", gridColumn: "2 / -1" }}>
-                    <div>
-                      <label style={labelStyle}>Title</label>
-                      <input value={comboConfig.title} onChange={(e) => updateComboField("title", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Build Your Perfect Bundle" />
-                    </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px", gridColumn: "2 / -1" }}>
                     <div>
                       <label style={labelStyle}>Descriptions</label>
                       <input value={comboConfig.subtitle} onChange={(e) => updateComboField("subtitle", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Choose a product for each step" />

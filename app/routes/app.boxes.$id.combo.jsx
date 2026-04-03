@@ -821,8 +821,8 @@ export default function SpecificComboBoxPage() {
             <div style={{ padding: "10px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#111827" }}>Combo configuration</div>
             <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "16px" }}>
 
-              {/* Row 1: NUMBER OF STEPS | TITLE | DESCRIPTIONS | COMBO PRODUCT BUTTON TITLE */}
-              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr 1fr 1fr", gap: "14px", alignItems: "start" }}>
+              {/* Row 1: NUMBER OF STEPS | DESCRIPTIONS | COMBO PRODUCT BUTTON TITLE */}
+              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr 1fr", gap: "14px", alignItems: "start" }}>
                 <div>
                   <label style={labelStyle}>Number of steps</label>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px" }}>
@@ -840,10 +840,6 @@ export default function SpecificComboBoxPage() {
                       style={{ width: "30px", height: "30px", fontSize: "16px", fontWeight: "700", border: "1.5px solid #d1d5db", borderRadius: "5px", cursor: comboConfig.type >= MAX_COMBO_STEPS ? "not-allowed" : "pointer", background: comboConfig.type >= MAX_COMBO_STEPS ? "#f3f4f6" : "#fff", color: comboConfig.type >= MAX_COMBO_STEPS ? "#d1d5db" : "#111827", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>+</button>
                   </div>
                   <div style={{ fontSize: "11px", color: "#000000", marginTop: "5px" }}>{comboConfig.type} product selections required (2–8)</div>
-                </div>
-                <div>
-                  <label style={labelStyle}>Title</label>
-                  <input value={comboConfig.title} onChange={(e) => updateComboField("title", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Build Your Perfect Bundle" />
                 </div>
                 <div>
                   <label style={labelStyle}>Descriptions</label>

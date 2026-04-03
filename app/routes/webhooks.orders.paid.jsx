@@ -1,6 +1,67 @@
 import { authenticate } from "../shopify.server";
 import { trackBundleOrder } from "../models/orders.server";
 
+function normalizeProperties(rawProperties) {
+  if (Array.isArray(rawProperties)) {
+    return rawProperties
+      .map((entry) => ({
+        name: typeof entry?.name === "string" ? entry.name : "",
+        value: entry?.value,
+      }))
+      .filter((entry) => entry.name);
+  }
+
+  if (rawProperties && typeof rawProperties === "object") {
+    return Object.entries(rawProperties).map(([name, value]) => ({ name, value }));
+  }
+
+  return [];
+}
+
+function getProperty(properties, key) {
+  const found = properties.find((entry) => entry.name === key);
+  return found?.value;
+}
+
+function extractSelectedProducts(properties) {
+  const indexed = properties
+    .filter((entry) => /^_item_\d+$/i.test(entry.name) || /^Item\s+\d+$/i.test(entry.name))
+    .map((entry) => {
+      const match = entry.name.match(/^_item_(\d+)$/i) || entry.name.match(/^Item\s+(\d+)$/i);
+      return {
+        index: Number.parseInt(match?.[1] ?? "0", 10) || 0,
+        value: entry.value,
+      };
+    })
+    .filter((entry) => entry.value != null && String(entry.value).trim() !== "")
+    .sort((a, b) => a.index - b.index)
+    .map((entry) => String(entry.value).trim());
+
+  return indexed;
+}
+
+function toMoney(value) {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function computeLineRevenue(item, properties) {
+  const propertyBundlePrice = toMoney(getProperty(properties, "_combo_bundle_price"));
+  if (propertyBundlePrice != null) {
+    return Math.max(0, propertyBundlePrice);
+  }
+
+  const quantity = Math.max(1, Number.parseInt(String(item?.quantity ?? 1), 10) || 1);
+  const unitPrice =
+    toMoney(item?.price) ??
+    toMoney(item?.price_set?.shop_money?.amount) ??
+    toMoney(item?.price_set?.presentment_money?.amount) ??
+    0;
+  const totalDiscount = toMoney(item?.total_discount) ?? 0;
+
+  return Math.max(0, unitPrice * quantity - totalDiscount);
+}
+
 export const action = async ({ request }) => {
   const { topic, shop, payload } = await authenticate.webhook(request);
 
@@ -10,31 +71,24 @@ export const action = async ({ request }) => {
 
   try {
     for (const item of payload.line_items || []) {
-      const properties = item.properties || [];
+      const properties = normalizeProperties(item?.properties);
 
       const comboBoxId = properties.find((p) => p.name === "_combo_box_id")?.value;
       if (!comboBoxId) continue;
 
-      // Skip the hidden bundle price line item
-      const isBundlePriceItem = properties.find((p) => p.name === "_bundle_price_item");
-      if (isBundlePriceItem) continue;
+      const parsedBoxId = Number.parseInt(String(comboBoxId), 10);
+      if (!Number.isFinite(parsedBoxId) || parsedBoxId <= 0) continue;
 
-      const selectedProducts = properties
-        .filter((p) => p.name.startsWith("_item_"))
-        .sort((a, b) => {
-          const numA = parseInt(a.name.replace("_item_", "")) || 0;
-          const numB = parseInt(b.name.replace("_item_", "")) || 0;
-          return numA - numB;
-        })
-        .map((p) => p.value);
+      const selectedProducts = extractSelectedProducts(properties);
 
-      const giftMessage = properties.find((p) => p.name === "Gift Message")?.value || null;
+      const giftMessage = getProperty(properties, "Gift Message") || null;
+      const bundlePrice = computeLineRevenue(item, properties);
 
       await trackBundleOrder(shop, {
         orderId: String(payload.id),
-        boxId: parseInt(comboBoxId),
+        boxId: parsedBoxId,
         selectedProducts,
-        bundlePrice: parseFloat(item.price),
+        bundlePrice,
         giftMessage,
         orderDate: new Date(payload.created_at),
         customerId: payload.customer?.id ? String(payload.customer.id) : null,

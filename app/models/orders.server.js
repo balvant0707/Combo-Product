@@ -24,12 +24,69 @@ function buildDailySkeleton(fromDate, toDate) {
   return days;
 }
 
+function serializeSelectedProducts(value) {
+  if (Array.isArray(value)) {
+    return JSON.stringify(
+      value
+        .map((entry) => (entry == null ? "" : String(entry).trim()))
+        .filter(Boolean),
+    );
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return "[]";
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) return JSON.stringify(parsed.map((entry) => String(entry)));
+    } catch {
+      return JSON.stringify([trimmed]);
+    }
+    return JSON.stringify([trimmed]);
+  }
+
+  return "[]";
+}
+
+function parseSelectedProducts(value) {
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => (entry == null ? "" : String(entry).trim()))
+      .filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((entry) => (entry == null ? "" : String(entry).trim()))
+          .filter(Boolean);
+      }
+    } catch {
+      return [trimmed];
+    }
+
+    return [trimmed];
+  }
+
+  return [];
+}
+
 export async function trackBundleOrder(shop, orderData) {
   const { orderId, boxId, selectedProducts, bundlePrice, giftMessage, orderDate, customerId } = orderData;
+  const parsedBoxId = Number.parseInt(String(boxId), 10);
+  if (!Number.isFinite(parsedBoxId) || parsedBoxId <= 0) {
+    console.warn(`[trackBundleOrder] Invalid boxId received: ${boxId}`);
+    return null;
+  }
 
   // Verify box exists for this shop
   const box = await db.comboBox.findFirst({
-    where: { id: parseInt(boxId), shop },
+    where: { id: parsedBoxId, shop },
   });
   if (!box) {
     console.warn(`[trackBundleOrder] Box ${boxId} not found for shop ${shop}`);
@@ -38,17 +95,20 @@ export async function trackBundleOrder(shop, orderData) {
 
   // Avoid duplicate tracking
   const existing = await db.bundleOrder.findFirst({
-    where: { orderId: String(orderId), shop },
+    where: { orderId: String(orderId), shop, boxId: parsedBoxId },
   });
   if (existing) return existing;
+
+  const parsedBundlePrice = Number.parseFloat(String(bundlePrice));
+  const safeBundlePrice = Number.isFinite(parsedBundlePrice) ? parsedBundlePrice : 0;
 
   return db.bundleOrder.create({
     data: {
       shop,
       orderId: String(orderId),
-      boxId: parseInt(boxId),
-      selectedProducts: Array.isArray(selectedProducts) ? selectedProducts : [],
-      bundlePrice: parseFloat(bundlePrice) || 0,
+      boxId: parsedBoxId,
+      selectedProducts: serializeSelectedProducts(selectedProducts),
+      bundlePrice: safeBundlePrice,
       giftMessage: giftMessage || null,
       orderDate: orderDate instanceof Date ? orderDate : new Date(orderDate),
       customerId: customerId ? String(customerId) : null,
@@ -124,7 +184,7 @@ export async function getAnalytics(shop, from, to) {
   // Top products (from selectedProducts JSON arrays)
   const productCounts = {};
   for (const order of orders) {
-    const products = Array.isArray(order.selectedProducts) ? order.selectedProducts : [];
+    const products = parseSelectedProducts(order.selectedProducts);
     for (const pid of products) {
       productCounts[pid] = (productCounts[pid] || 0) + 1;
     }

@@ -297,15 +297,25 @@ const DISCOUNT_AUTOMATIC_DELETE_MUTATION = `#graphql
   }
 `;
 
+function buildProductScopedItems(shopifyProductId) {
+  if (!shopifyProductId) return { all: true };
+  return {
+    products: {
+      productsToAdd: [shopifyProductId],
+    },
+  };
+}
+
 /**
  * Build the DiscountAutomaticBasicInput object for create/update mutations.
- * Uses ORDER-level discount (items.all = true) so it applies at the cart/order level.
+ * Scope the discount to the combo bundle product only.
  */
-function buildDiscountInput({ title, discountType, discountValue }) {
+function buildDiscountInput({ title, discountType, discountValue, shopifyProductId }) {
   const pct = parseFloat(discountValue) || 0;
+  const scopedItems = buildProductScopedItems(shopifyProductId);
   const customerGets = discountType === "fixed"
-    ? { value: { discountAmount: { amount: String(pct), appliesOnEachItem: false } }, items: { all: true } }
-    : { value: { percentage: pct / 100 }, items: { all: true } };
+    ? { value: { discountAmount: { amount: String(pct), appliesOnEachItem: false } }, items: scopedItems }
+    : { value: { percentage: pct / 100 }, items: scopedItems };
   const combinesWith = {
     productDiscounts: true,
     orderDiscounts: true,
@@ -328,6 +338,7 @@ function buildBuyXGetYDiscountInput({
   title,
   discountType,
   discountValue,
+  shopifyProductId,
   buyQuantity = 1,
   getQuantity = 1,
 }) {
@@ -340,6 +351,7 @@ function buildBuyXGetYDiscountInput({
     : discountType === "fixed"
       ? { discountAmount: { amount: String(parsedValue), appliesOnEachItem: true } }
       : { percentage: Math.min(1, Math.max(0, parsedValue / 100)) };
+  const scopedItems = buildProductScopedItems(shopifyProductId);
   const combinesWith = {
     productDiscounts: true,
     orderDiscounts: true,
@@ -351,11 +363,11 @@ function buildBuyXGetYDiscountInput({
     startsAt: new Date().toISOString(),
     customerBuys: {
       value: { quantity: String(safeBuyQty) },
-      items: { all: true },
+      items: scopedItems,
     },
     customerGets: {
       value: customerGetsValue,
-      items: { all: true },
+      items: scopedItems,
       quantity: { quantity: String(safeGetQty) },
     },
     combinesWith,
@@ -521,6 +533,7 @@ export async function syncShopifyBuyXGetYDiscount(
     title,
     discountType,
     discountValue,
+    shopifyProductId,
     buyQuantity,
     getQuantity,
   });

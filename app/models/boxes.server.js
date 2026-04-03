@@ -381,26 +381,42 @@ export async function syncShopifyDiscount(admin, { boxId, existingDiscountId, ti
 
   try {
     if (existingDiscountId) {
-      const resp = await admin.graphql(DISCOUNT_AUTOMATIC_BASIC_UPDATE_MUTATION, {
+      const updateResp = await admin.graphql(DISCOUNT_AUTOMATIC_BASIC_UPDATE_MUTATION, {
         variables: { id: existingDiscountId, automaticBasicDiscount: input },
       });
-      const json = await resp.json();
-      const errors = json?.data?.discountAutomaticBasicUpdate?.userErrors || [];
-      if (errors.length) { console.error("[syncShopifyDiscount] update userErrors:", errors); }
-      return existingDiscountId;
-    } else {
-      const resp = await admin.graphql(DISCOUNT_AUTOMATIC_BASIC_CREATE_MUTATION, {
-        variables: { automaticBasicDiscount: input },
-      });
-      const json = await resp.json();
-      const errors = json?.data?.discountAutomaticBasicCreate?.userErrors || [];
-      if (errors.length) { console.error("[syncShopifyDiscount] create userErrors:", errors); return null; }
-      const discountId = json?.data?.discountAutomaticBasicCreate?.automaticDiscountNode?.id || null;
-      if (discountId && boxId) {
-        await db.comboBox.update({ where: { id: boxId }, data: { shopifyDiscountId: discountId } });
+      const updateJson = await updateResp.json();
+      const updateErrors = updateJson?.data?.discountAutomaticBasicUpdate?.userErrors || [];
+      if (updateErrors.length === 0) {
+        return existingDiscountId;
       }
-      return discountId;
+
+      // Existing discount may be BXGY from older saves; recreate as Basic.
+      console.warn("[syncShopifyDiscount] update userErrors; recreating as basic:", updateErrors);
+      try {
+        await admin.graphql(DISCOUNT_AUTOMATIC_DELETE_MUTATION, {
+          variables: { id: existingDiscountId },
+        });
+      } catch (e) {
+        if (!isScopeError(e)) {
+          console.warn("[syncShopifyDiscount] delete before recreate failed:", e);
+        }
+      }
     }
+
+    const createResp = await admin.graphql(DISCOUNT_AUTOMATIC_BASIC_CREATE_MUTATION, {
+      variables: { automaticBasicDiscount: input },
+    });
+    const createJson = await createResp.json();
+    const createErrors = createJson?.data?.discountAutomaticBasicCreate?.userErrors || [];
+    if (createErrors.length) {
+      console.error("[syncShopifyDiscount] create userErrors:", createErrors);
+      return null;
+    }
+    const discountId = createJson?.data?.discountAutomaticBasicCreate?.automaticDiscountNode?.id || null;
+    if (discountId && boxId) {
+      await db.comboBox.update({ where: { id: boxId }, data: { shopifyDiscountId: discountId } });
+    }
+    return discountId;
   } catch (e) {
     if (isScopeError(e)) {
       // write_discounts not yet granted — merchant must re-authorize the app.
@@ -1355,22 +1371,36 @@ export async function upsertComboConfig(boxId, config, admin = null) {
     update: payload,
   });
 
-  // Sync Shopify automatic Buy X Get Y discount for specific combo boxes
-  // only when bundle price type is dynamic.
+  // Sync Shopify automatic discount for specific combo boxes.
   if (admin) {
     const box = await db.comboBox.findUnique({ where: { id: parseInt(boxId) }, select: { shopifyProductId: true, shopifyDiscountId: true, boxName: true, displayTitle: true } });
     if (box?.shopifyProductId) {
       const dynamicDiscountEnabled = payload.bundlePriceType === "dynamic";
-      await syncShopifyBuyXGetYDiscount(admin, {
-        boxId: parseInt(boxId),
-        existingDiscountId: box.shopifyDiscountId || null,
-        title: `${box.boxName || box.displayTitle} Bundle Discount`,
-        discountType: dynamicDiscountEnabled ? (parsed.discountType || "none") : "none",
-        discountValue: dynamicDiscountEnabled ? (parsed.discountValue || "0") : "0",
-        shopifyProductId: box.shopifyProductId,
-        buyQuantity: dynamicDiscountEnabled ? (parsed.buyQuantity || 1) : 1,
-        getQuantity: dynamicDiscountEnabled ? (parsed.getQuantity || 1) : 1,
-      });
+      const discountType = dynamicDiscountEnabled ? (parsed.discountType || "none") : "none";
+      const discountValue = dynamicDiscountEnabled ? (parsed.discountValue || "0") : "0";
+      const discountTitle = `${box.boxName || box.displayTitle} Bundle Discount`;
+
+      if (discountType === "buy_x_get_y") {
+        await syncShopifyBuyXGetYDiscount(admin, {
+          boxId: parseInt(boxId),
+          existingDiscountId: box.shopifyDiscountId || null,
+          title: discountTitle,
+          discountType: "buy_x_get_y",
+          discountValue: "100",
+          shopifyProductId: box.shopifyProductId,
+          buyQuantity: dynamicDiscountEnabled ? (parsed.buyQuantity || 1) : 1,
+          getQuantity: dynamicDiscountEnabled ? (parsed.getQuantity || 1) : 1,
+        });
+      } else {
+        await syncShopifyDiscount(admin, {
+          boxId: parseInt(boxId),
+          existingDiscountId: box.shopifyDiscountId || null,
+          title: discountTitle,
+          discountType,
+          discountValue,
+          shopifyProductId: box.shopifyProductId,
+        });
+      }
     }
   }
 

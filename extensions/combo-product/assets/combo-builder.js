@@ -3645,8 +3645,8 @@
       return;
     }
 
-    // For dynamic pricing: update the Shopify variant price to match selected products total,
-    // then add to cart so the cart reflects the correct price.
+    // For dynamic pricing: keep variant price at the selected products total (pre-discount),
+    // so Shopify automatic discounts can allocate discount lines visible in Admin/checkout.
     function updateDynamicPriceThenCart() {
       var dynamicTotal = 0;
       slots.forEach(function (p) {
@@ -3657,9 +3657,6 @@
       if (dynamicTotal <= 0) {
         return Promise.reject(new Error('No product prices available for dynamic pricing'));
       }
-      var dynamicBreakdown = getComboDiscountBreakdown(dynamicTotal, box.comboConfig, slots);
-      var discountedTotal = dynamicBreakdown.discountedTotal;
-      if (discountedTotal <= 0) discountedTotal = dynamicTotal;
 
       var updateUrl = resolvedApiBase +
         '/api/storefront/boxes/' + encodeURIComponent(String(box.id)) +
@@ -3668,7 +3665,7 @@
       return fetch(updateUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ price: discountedTotal }),
+        body: JSON.stringify({ price: dynamicTotal }),
       }).then(function (r) {
         if (!r.ok) return r.json().then(function (d) {
           throw new Error(d.error || 'Price update failed');

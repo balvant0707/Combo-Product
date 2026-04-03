@@ -441,11 +441,8 @@ export default function ManageBoxesPage() {
 
         /* ── Drag handle ── */
         .cb-toggle-wrap {
-          display: inline-flex;
           align-items: center;
           justify-content: flex-end;
-          gap: 8px;
-          min-width: 96px;
         }
         .cb-toggle-label {
           font-size: 11px;

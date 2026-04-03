@@ -576,13 +576,13 @@ export default function ManageBoxesPage() {
       <div className="cb-stats">
         {[
           { label: "Total Boxes",  value: baseBoxes.length,  icon: "package",    iconBg: "#eff6ff", iconColor: "#2563eb" },
-          { label: "Active",       value: activeCount,        icon: "checkmark",  iconBg: "#f0fdf4", iconColor: "#16a34a" },
+          { label: "Active",       value: activeCount,        icon: "check",      iconBg: "#f0fdf4", iconColor: "#16a34a" },
           { label: "Inactive",     value: inactiveCount,      icon: "hide",       iconBg: "#fafafa", iconColor: "#9ca3af" },
-          { label: "Total Orders", value: totalOrders,        icon: "orders",     iconBg: "#fdf4ff", iconColor: "#9333ea" },
+          { label: "Total Orders", value: totalOrders,        icon: "order",      iconBg: "#fdf4ff", iconColor: "#9333ea" },
         ].map((s) => (
           <div key={s.label} className="cb-stat-card">
             <div className="cb-stat-icon" style={{ background: s.iconBg }}>
-              <AdminIcon type={s.icon} size="base" />
+              <AdminIcon type={s.icon} size="base" style={{ color: s.iconColor }} />
             </div>
             <div>
               <div className="cb-stat-val">{s.value}</div>

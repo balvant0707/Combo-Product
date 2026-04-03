@@ -25,6 +25,15 @@
     return [3, 4, 5, 6].indexOf(parsed) !== -1 ? parsed : 4;
   }
 
+  function parseBooleanSetting(value, fallback) {
+    if (value == null || value === '') return !!fallback;
+    if (typeof value === 'boolean') return value;
+    var normalized = String(value).trim().toLowerCase();
+    if (normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'on') return true;
+    if (normalized === 'false' || normalized === '0' || normalized === 'no' || normalized === 'off') return false;
+    return !!fallback;
+  }
+
   function getSelectedProductsTotal(slots) {
     var total = 0;
     (slots || []).forEach(function (p) {
@@ -767,6 +776,10 @@
     var currencySymbol = root.dataset.currencySymbol || config.currencySymbol || '\u20B9';
     var layout = root.dataset.layout || config.layout || 'grid';
     var layoutMode = root.dataset.layoutMode || config.layoutMode || 'grid';
+    var enableStickyCart = parseBooleanSetting(
+      root.dataset.enableStickyCart != null ? root.dataset.enableStickyCart : config.enableStickyCart,
+      true
+    );
     var apiBase = root.dataset.apiBase || config.apiBase || DEFAULT_API_BASE;
 
     var boxIdsFilter = null;
@@ -885,7 +898,7 @@
       var step2Heading = root.dataset.step2Heading || config.step2Heading || 'Step 2: Select your products';
       var step3Heading = root.dataset.step3Heading || config.step3Heading || 'Step 3: Complete your order';
       var step3Buttons = root.dataset.step3Buttons || config.step3Buttons || 'both';
-      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, layoutMode: layoutMode, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root, step1Label: step1Label, step2Label: step2Label, step3Label: step3Label, cartBtnLabel: cartBtnLabel, checkoutBtnLabel: checkoutBtnLabel, step1Heading: step1Heading, step2Heading: step2Heading, step3Heading: step3Heading, step3Buttons: step3Buttons });
+      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, layoutMode: layoutMode, enableStickyCart: enableStickyCart, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root, step1Label: step1Label, step2Label: step2Label, step3Label: step3Label, cartBtnLabel: cartBtnLabel, checkoutBtnLabel: checkoutBtnLabel, step1Heading: step1Heading, step2Heading: step2Heading, step3Heading: step3Heading, step3Buttons: step3Buttons });
     });
   }
 
@@ -2241,7 +2254,10 @@
       }
     }
 
-    createStickyFooter(box, ctx, doAddToCart);
+    removeStickyFooter();
+    if (ctx.enableStickyCart !== false) {
+      createStickyFooter(box, ctx, doAddToCart);
+    }
     updateCartButton();
   }
 
@@ -3143,7 +3159,10 @@
         });
       }
     }
-    createStickyFooter(box, ctx, doCart);
+    removeStickyFooter();
+    if (ctx.enableStickyCart !== false) {
+      createStickyFooter(box, ctx, doCart);
+    }
 
     loadAndRenderGrid();
     updateCartButton();

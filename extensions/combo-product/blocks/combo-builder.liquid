@@ -8,6 +8,7 @@
   data-currency-symbol="{{ cart.currency.symbol }}"
   data-api-base="https://combo-product-ten.vercel.app"
   data-layout-mode="{{ block.settings.layout_mode | default: 'grid' }}"
+  data-enable-sticky-cart="{{ block.settings.enable_sticky_cart | default: true }}"
   data-cart-btn-label="{{ block.settings.cart_btn_label | default: 'Add To Cart' | escape }}"
   data-checkout-btn-label="{{ block.settings.checkout_btn_label | default: 'Checkout' | escape }}"
   data-step1-label="{{ block.settings.step1_label | default: 'Select Box' | escape }}"
@@ -55,6 +56,7 @@
     apiBase:        'https://combo-product-ten.vercel.app',
     productHandle:  '{{ product.handle }}',
     layoutMode:        '{{ block.settings.layout_mode | default: "grid" }}',
+    enableStickyCart:  {{ block.settings.enable_sticky_cart | default: true | json }},
     cartBtnLabel:      '{{ block.settings.cart_btn_label | default: "Add To Cart" | escape }}',
     checkoutBtnLabel:  '{{ block.settings.checkout_btn_label | default: "Checkout" | escape }}',
     step1Label:        '{{ block.settings.step1_label | default: "Select Box" | escape }}',
@@ -83,6 +85,13 @@
         { "value": "steps", "label": "Steps (one at a time)" }
       ],
       "default": "grid"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_sticky_cart",
+      "label": "Enable sticky cart on storefront",
+      "info": "Shows the sticky cart bar at the bottom while building the combo.",
+      "default": false
     },
     {
       "type": "select",

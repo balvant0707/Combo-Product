@@ -91,8 +91,8 @@ const DEFAULT_COMBO_CONFIG = {
   subtitle: "Choose a product for each step",
   highlightText: "",
   supportText: "",
-  comboButtonTitle: "BUILD YOUR OWN BOX",
-  productButtonTitle: "Add To Cart",
+  ctaButtonLabel: "BUILD YOUR OWN BOX",
+  addToCartLabel: "Add To Cart",
   bundlePrice: 0,
   bundlePriceType: "manual",
   discountType: "none",
@@ -115,6 +115,13 @@ function normalizeSpecificDiscountType(discountType) {
 
 function sanitizeSpecificComboPricing(config) {
   const safeConfig = config && typeof config === "object" ? config : {};
+  const listingTitle = typeof safeConfig.listingTitle === "string" ? safeConfig.listingTitle.trim() : "";
+  const ctaButtonLabel = typeof safeConfig.ctaButtonLabel === "string" && safeConfig.ctaButtonLabel.trim()
+    ? safeConfig.ctaButtonLabel.trim()
+    : (typeof safeConfig.comboButtonTitle === "string" ? safeConfig.comboButtonTitle.trim() : DEFAULT_COMBO_CONFIG.ctaButtonLabel);
+  const addToCartLabel = typeof safeConfig.addToCartLabel === "string" && safeConfig.addToCartLabel.trim()
+    ? safeConfig.addToCartLabel.trim()
+    : (typeof safeConfig.productButtonTitle === "string" ? safeConfig.productButtonTitle.trim() : DEFAULT_COMBO_CONFIG.addToCartLabel);
   const bundlePriceType = safeConfig.bundlePriceType === "dynamic" ? "dynamic" : "manual";
   const discountType = bundlePriceType === "dynamic"
     ? normalizeSpecificDiscountType(safeConfig.discountType)
@@ -130,6 +137,9 @@ function sanitizeSpecificComboPricing(config) {
     : "0";
   return {
     ...safeConfig,
+    listingTitle,
+    ctaButtonLabel,
+    addToCartLabel,
     bundlePriceType,
     discountType,
     discountValue,
@@ -495,6 +505,9 @@ export default function SpecificComboBoxPage() {
         return {
           ...DEFAULT_COMBO_CONFIG,
           ...normalizedPricing,
+          listingTitle: typeof parsed.listingTitle === "string" && parsed.listingTitle.trim()
+            ? parsed.listingTitle.trim()
+            : (box.boxName || box.displayTitle || ""),
           type,
           steps: mergeSteps(parsed.steps, type),
         };
@@ -507,6 +520,7 @@ export default function SpecificComboBoxPage() {
         const rawSteps = box.config.stepsJson ? JSON.parse(box.config.stepsJson) : null;
         return {
           ...DEFAULT_COMBO_CONFIG,
+          listingTitle: box.boxName || box.displayTitle || "",
           type,
           title:            box.config.title              ?? DEFAULT_COMBO_CONFIG.title,
           subtitle:         box.config.subtitle           ?? DEFAULT_COMBO_CONFIG.subtitle,
@@ -822,7 +836,12 @@ export default function SpecificComboBoxPage() {
                 </div>
                 <div>
                   <label style={labelStyle}>Combo Product Button Title</label>
-                  <input value={comboConfig.comboButtonTitle || ""} onChange={(e) => updateComboField("comboButtonTitle", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. BUILD YOUR OWN BOX" />
+                  <input
+                    value={comboConfig.ctaButtonLabel ?? comboConfig.comboButtonTitle ?? ""}
+                    onChange={(e) => updateComboField("ctaButtonLabel", e.target.value)}
+                    style={{ ...fieldStyle, borderColor: "#d1d5db" }}
+                    placeholder="e.g. BUILD YOUR OWN BOX"
+                  />
                 </div>
               </div>
 

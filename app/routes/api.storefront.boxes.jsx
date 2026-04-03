@@ -59,6 +59,10 @@ export const loader = async ({ request }) => {
     const addToCartLabelFromConfig = typeof rawComboConfig?.addToCartLabel === "string" && rawComboConfig.addToCartLabel.trim()
       ? rawComboConfig.addToCartLabel.trim()
       : null;
+    const giftMessageEnabledFromConfig =
+      rawComboConfig?.giftMessageEnabled !== undefined
+        ? (rawComboConfig.giftMessageEnabled === true || String(rawComboConfig.giftMessageEnabled).toLowerCase() === "true")
+        : null;
     const ctaButtonLabel = ctaButtonLabelFromBox || ctaButtonLabelFromConfig || null;
     const addToCartLabel = addToCartLabelFromBox || addToCartLabelFromConfig || null;
     return {
@@ -76,7 +80,9 @@ export const loader = async ({ request }) => {
       allowDuplicates: box.allowDuplicates,
       bannerImageUrl,
       hasUploadedBanner,
-      giftMessageEnabled: box.giftMessageEnabled,
+      giftMessageEnabled: giftMessageEnabledFromConfig !== null
+        ? giftMessageEnabledFromConfig
+        : box.giftMessageEnabled,
       shopifyProductId: box.shopifyProductId ? box.shopifyProductId.split('/').pop() : null,
       shopifyVariantId: box.shopifyVariantId ? box.shopifyVariantId.split('/').pop() : null,
       bundlePriceType: box.bundlePriceType || "manual",

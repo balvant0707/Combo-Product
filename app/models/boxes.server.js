@@ -1412,6 +1412,16 @@ export async function upsertComboConfig(boxId, config, admin = null) {
     itemCount: payload.comboType,
     bundlePriceType: payload.bundlePriceType,
   };
+  if (parsed?.giftMessageEnabled !== undefined) {
+    comboBoxUpdate.giftMessageEnabled =
+      parsed.giftMessageEnabled === true ||
+      String(parsed.giftMessageEnabled).toLowerCase() === "true";
+  }
+  const listingTitle = typeof parsed?.listingTitle === "string" ? parsed.listingTitle.trim() : "";
+  if (listingTitle) {
+    comboBoxUpdate.boxName = listingTitle;
+    comboBoxUpdate.displayTitle = listingTitle;
+  }
   if (payload.bundlePrice != null) comboBoxUpdate.bundlePrice = payload.bundlePrice;
   await db.comboBox.update({
     where: { id: parseInt(boxId) },

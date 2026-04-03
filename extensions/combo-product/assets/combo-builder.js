@@ -1615,6 +1615,7 @@
       giftInput.className = 'cb-gift-input';
       giftInput.placeholder = 'Write a personal message...';
       giftInput.rows = 2;
+      giftInput.maxLength = 100;
       giftSection.appendChild(giftLabel);
       giftSection.appendChild(giftInput);
       container.appendChild(giftSection);
@@ -2535,6 +2536,7 @@
       giftInput.className = 'cb-gift-input';
       giftInput.placeholder = 'Write a personal message...';
       giftInput.rows = 2;
+      giftInput.maxLength = 100;
       giftSection.appendChild(giftLabel);
       giftSection.appendChild(giftInput);
       container.appendChild(giftSection);
@@ -3336,6 +3338,13 @@
     var resolvedApiBase = String(apiBase || DEFAULT_API_BASE || '').replace(/\/+$/, '');
     var sectionIds = ['cart-drawer', 'cart-icon-bubble', 'cart-notification-button', 'cart-notification'];
     var selectedItemsCount = slots.filter(Boolean).length;
+    var normalizedGiftMessage = '';
+    if (typeof giftMessage === 'string') {
+      normalizedGiftMessage = giftMessage.trim();
+      if (normalizedGiftMessage.length > 100) {
+        normalizedGiftMessage = normalizedGiftMessage.slice(0, 100);
+      }
+    }
 
     function setBtnContent(btn, state, text) {
       if (!btn) return;
@@ -3644,7 +3653,7 @@
         }
       }
 
-      if (giftMessage) bundleProps['Gift Message'] = giftMessage;
+      if (normalizedGiftMessage) bundleProps['Gift Message'] = normalizedGiftMessage;
       items.push({ id: box.shopifyVariantId, quantity: 1, properties: bundleProps });
     } else {
       hidePageLoader(true);

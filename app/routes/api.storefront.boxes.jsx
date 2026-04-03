@@ -47,12 +47,20 @@ export const loader = async ({ request }) => {
     if (box.comboStepsConfig) {
       try { rawComboConfig = JSON.parse(box.comboStepsConfig); } catch {}
     }
-    const ctaButtonLabel = typeof rawComboConfig?.ctaButtonLabel === "string" && rawComboConfig.ctaButtonLabel.trim()
+    const ctaButtonLabelFromBox = typeof box.comboProductButtonTitle === "string" && box.comboProductButtonTitle.trim()
+      ? box.comboProductButtonTitle.trim()
+      : null;
+    const addToCartLabelFromBox = typeof box.productButtonTitle === "string" && box.productButtonTitle.trim()
+      ? box.productButtonTitle.trim()
+      : null;
+    const ctaButtonLabelFromConfig = typeof rawComboConfig?.ctaButtonLabel === "string" && rawComboConfig.ctaButtonLabel.trim()
       ? rawComboConfig.ctaButtonLabel.trim()
       : null;
-    const addToCartLabel = typeof rawComboConfig?.addToCartLabel === "string" && rawComboConfig.addToCartLabel.trim()
+    const addToCartLabelFromConfig = typeof rawComboConfig?.addToCartLabel === "string" && rawComboConfig.addToCartLabel.trim()
       ? rawComboConfig.addToCartLabel.trim()
       : null;
+    const ctaButtonLabel = ctaButtonLabelFromBox || ctaButtonLabelFromConfig || null;
+    const addToCartLabel = addToCartLabelFromBox || addToCartLabelFromConfig || null;
     return {
       id: box.id,
       boxCode: box.boxCode || null,

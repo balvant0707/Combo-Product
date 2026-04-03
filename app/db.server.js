@@ -139,6 +139,8 @@ CREATE TABLE IF NOT EXISTS \`combo_box\` (
   \`shop\` VARCHAR(191) NOT NULL,
   \`boxName\` VARCHAR(255) NOT NULL,
   \`displayTitle\` VARCHAR(255) NOT NULL,
+  \`comboProductButtonTitle\` VARCHAR(100) NULL,
+  \`productButtonTitle\` VARCHAR(100) NULL,
   \`itemCount\` INTEGER NOT NULL DEFAULT 1,
   \`bundlePrice\` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   \`isGiftBox\` BOOLEAN NOT NULL DEFAULT false,
@@ -234,6 +236,8 @@ const ENSURE_SHOP_COLUMNS_SQL = [
 
 const ENSURE_COMBO_BOX_COLUMNS_SQL = [
   "ALTER TABLE `combo_box` ADD COLUMN IF NOT EXISTS `boxCode` VARCHAR(10) NULL;",
+  "ALTER TABLE `combo_box` ADD COLUMN IF NOT EXISTS `comboProductButtonTitle` VARCHAR(100) NULL;",
+  "ALTER TABLE `combo_box` ADD COLUMN IF NOT EXISTS `productButtonTitle` VARCHAR(100) NULL;",
   "ALTER TABLE `combo_box` ADD UNIQUE INDEX IF NOT EXISTS `combo_box_boxCode_key` (`boxCode`);",
 ];
 

@@ -1082,6 +1082,14 @@ export async function createBox(shop, data, admin) {
     getQuantity: data.getQuantity,
   });
   const bundleProductTitle = data.boxName || data.displayTitle;
+  const comboProductButtonTitle =
+    typeof data.comboProductButtonTitle === "string" && data.comboProductButtonTitle.trim()
+      ? data.comboProductButtonTitle.trim()
+      : null;
+  const productButtonTitle =
+    typeof data.productButtonTitle === "string" && data.productButtonTitle.trim()
+      ? data.productButtonTitle.trim()
+      : null;
 
   // Create hidden Shopify product for bundle pricing
   let shopifyProductId = null;
@@ -1124,6 +1132,8 @@ export async function createBox(shop, data, admin) {
       boxCode,
       boxName: data.boxName,
       displayTitle: data.displayTitle,
+      comboProductButtonTitle,
+      productButtonTitle,
       itemCount,
       bundlePrice,
       isGiftBox: data.isGiftBox === "true" || data.isGiftBox === true,
@@ -1150,6 +1160,8 @@ export async function createBox(shop, data, admin) {
         getQuantity: discountConfig.getQuantity,
         bundlePrice: bundlePrice,
         boxSubtitle: typeof data.boxSubtitle === "string" ? data.boxSubtitle.trim() : "",
+        ...(comboProductButtonTitle ? { ctaButtonLabel: comboProductButtonTitle } : {}),
+        ...(productButtonTitle ? { addToCartLabel: productButtonTitle } : {}),
       }),
     },
   });
@@ -1437,6 +1449,16 @@ export async function updateBox(id, shop, data, admin) {
     : (existing.boxCode || await getUniqueBoxCode());
 
   const bundlePrice = parseFloat(data.bundlePrice) || existing.bundlePrice;
+  const nextComboProductButtonTitle = data.comboProductButtonTitle !== undefined
+    ? (typeof data.comboProductButtonTitle === "string" && data.comboProductButtonTitle.trim()
+      ? data.comboProductButtonTitle.trim()
+      : null)
+    : existing.comboProductButtonTitle;
+  const nextProductButtonTitle = data.productButtonTitle !== undefined
+    ? (typeof data.productButtonTitle === "string" && data.productButtonTitle.trim()
+      ? data.productButtonTitle.trim()
+      : null)
+    : existing.productButtonTitle;
   const priceChanged =
     parseFloat(bundlePrice) !== parseFloat(existing.bundlePrice);
 
@@ -1507,6 +1529,8 @@ export async function updateBox(id, shop, data, admin) {
       boxCode: nextBoxCode,
       boxName: data.boxName ?? existing.boxName,
       displayTitle: data.displayTitle ?? existing.displayTitle,
+      comboProductButtonTitle: nextComboProductButtonTitle,
+      productButtonTitle: nextProductButtonTitle,
       itemCount: data.itemCount ? parseInt(data.itemCount) : existing.itemCount,
       bundlePrice,
       isGiftBox:
@@ -1600,7 +1624,9 @@ export async function updateBox(id, shop, data, admin) {
     data.discountValue !== undefined ||
     data.buyQuantity !== undefined ||
     data.getQuantity !== undefined ||
-    data.boxSubtitle !== undefined
+    data.boxSubtitle !== undefined ||
+    data.comboProductButtonTitle !== undefined ||
+    data.productButtonTitle !== undefined
   ) {
     let rawConfig = {};
     if (existing.comboStepsConfig) {
@@ -1614,6 +1640,20 @@ export async function updateBox(id, shop, data, admin) {
     rawConfig.bundlePrice = bundlePrice;
     if (data.boxSubtitle !== undefined) {
       rawConfig.boxSubtitle = typeof data.boxSubtitle === "string" ? data.boxSubtitle.trim() : "";
+    }
+    if (data.comboProductButtonTitle !== undefined) {
+      if (nextComboProductButtonTitle) {
+        rawConfig.ctaButtonLabel = nextComboProductButtonTitle;
+      } else {
+        delete rawConfig.ctaButtonLabel;
+      }
+    }
+    if (data.productButtonTitle !== undefined) {
+      if (nextProductButtonTitle) {
+        rawConfig.addToCartLabel = nextProductButtonTitle;
+      } else {
+        delete rawConfig.addToCartLabel;
+      }
     }
     await db.comboBox.update({
       where: { id: parseInt(id) },

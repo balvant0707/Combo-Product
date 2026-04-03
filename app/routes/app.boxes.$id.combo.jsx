@@ -807,15 +807,11 @@ export default function SpecificComboBoxPage() {
                 </div>
               </div>
 
-              {/* Row 2: COMBO PRODUCT BUTTON TITLE | PRODUCT BUTTON TITLE */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+              {/* Row 2: COMBO PRODUCT BUTTON TITLE */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "14px" }}>
                 <div>
                   <label style={labelStyle}>Combo Product Button Title</label>
                   <input value={comboConfig.comboButtonTitle || ""} onChange={(e) => updateComboField("comboButtonTitle", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. BUILD YOUR OWN BOX" />
-                </div>
-                <div>
-                  <label style={labelStyle}>Product Button Title</label>
-                  <input value={comboConfig.productButtonTitle || ""} onChange={(e) => updateComboField("productButtonTitle", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Add To Cart" />
                 </div>
               </div>
 

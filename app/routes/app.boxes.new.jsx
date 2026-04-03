@@ -129,6 +129,8 @@ export const action = async ({ request }) => {
     boxName: formData.get("boxName"),
     displayTitle: formData.get("displayTitle"),
     boxSubtitle: formData.get("boxSubtitle") || "",
+    comboProductButtonTitle: formData.get("comboProductButtonTitle") || "",
+    productButtonTitle: formData.get("productButtonTitle") || "",
     itemCount: formData.get("itemCount"),
     bundlePrice: formData.get("bundlePrice"),
     bundlePriceType,
@@ -343,6 +345,26 @@ export default function CreateBoxPage() {
               <div>
                 <label style={labelStyle}>Descriptions</label>
                 <input type="text" name="boxSubtitle" placeholder="Shown below the main title on storefront" style={{ ...fieldStyle, borderColor: "#d1d5db" }} />
+              </div>
+              <div>
+                <label style={labelStyle}>Combo Product Button Title</label>
+                <input
+                  type="text"
+                  name="comboProductButtonTitle"
+                  defaultValue="BUILD YOUR OWN BOX"
+                  placeholder="BUILD YOUR OWN BOX"
+                  style={{ ...fieldStyle, borderColor: "#d1d5db" }}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Product Button Title</label>
+                <input
+                  type="text"
+                  name="productButtonTitle"
+                  defaultValue="Add To Cart"
+                  placeholder="Add To Cart"
+                  style={{ ...fieldStyle, borderColor: "#d1d5db" }}
+                />
               </div>
               <div>
                 <label style={labelStyle}>Number of Items *</label>

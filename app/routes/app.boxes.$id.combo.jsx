@@ -897,7 +897,11 @@ export default function SpecificComboBoxPage() {
                           />
                         </div>
                       )}
-                      <div style={{ fontSize: "11px", color: "#000000" }}>Price calculated from selected step products</div>
+                      <div style={{ fontSize: "11px", color: "#000000" }}>
+                        {comboConfig.discountType === "percent" || comboConfig.discountType === "fixed"
+                          ? "Discount applied on total amount"
+                          : "Price calculated from selected step products"}
+                      </div>
                     </div>
                   )}
                 </div>

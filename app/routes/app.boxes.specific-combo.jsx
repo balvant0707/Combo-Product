@@ -776,9 +776,11 @@ export default function CreateSpecificComboBoxPage() {
                         </div>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "8px", borderTop: "1px solid #e5e7eb" }}>
                             <span style={{ fontSize: "11px", color: "#000000" }}>
-                              {comboDynamicMrp > 0
-                              ? (comboConfig.discountType === "none" ? "Sum of step products:" : "After discount:")
-                              : "Price calculated from selected step products"}
+                              {comboConfig.discountType === "percent" || comboConfig.discountType === "fixed"
+                                ? "Discount applied on total amount"
+                                : comboDynamicMrp > 0
+                                  ? (comboConfig.discountType === "none" ? "Sum of step products:" : "After discount:")
+                                  : "Price calculated from selected step products"}
                             </span>
                           {comboDynamicMrp > 0 && (
                             <span style={{ fontSize: "13px", fontWeight: "700", color: "#166534" }}>

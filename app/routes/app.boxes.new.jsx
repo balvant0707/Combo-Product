@@ -7,7 +7,7 @@ import { getShopCurrencyCode } from "../models/shop.server";
 import { AdminIcon } from "../components/admin-icons";
 import { ToggleSwitch } from "../components/toggle-switch";
 import { withEmbeddedAppParams, withEmbeddedAppToastFromRequest } from "../utils/embedded-app";
-import { formatCurrencyAmount, getCurrencySymbol } from "../utils/currency";
+import { getCurrencySymbol } from "../utils/currency";
 
 const COLLECTIONS_QUERY = `#graphql
   query GetCollections($first: Int!) {
@@ -433,13 +433,10 @@ export default function CreateBoxPage() {
                     </div>
                     <div style={{ fontSize: "11px", color: "#000000" }}>
                       {discountType === "buy_x_get_y"
-                        ? <>Buy <strong>{buyQuantity}</strong>, get <strong>{getQuantity}</strong> free — <span style={{ color: "#166534", fontWeight: 600 }}>applied at checkout</span></>
-                        : <>
-                            MRP est: {formatCurrencyAmount(estimatedTotal, currencyCode)}
-                            {discountType !== "none" && dynamicPrice < estimatedTotal && (
-                              <> → <strong style={{ color: "#166534" }}>{formatCurrencyAmount(dynamicPrice, currencyCode)}</strong></>
-                            )}
-                          </>
+                        ? <>Buy <strong>{buyQuantity}</strong>, get <strong>{getQuantity}</strong> free - <span style={{ color: "#166534", fontWeight: 600 }}>applied at checkout</span></>
+                        : discountType === "percent" || discountType === "fixed"
+                          ? <>Discount applied on total amount</>
+                          : <>No discount applied</>
                       }
                     </div>
                   </div>
@@ -633,3 +630,4 @@ export const headers = (headersArgs) => {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
+

@@ -1546,8 +1546,9 @@
 
     slotWrapper.appendChild(slotSteps);
 
-    // In steps mode hide the inline cart button — Step 3 section owns the cart action
-    if (ctx.layoutMode === 'steps') {
+    // In steps mode hide inline cart only when sticky cart is enabled.
+    // If sticky cart is disabled, keep inline cart visible as the fallback cart action.
+    if (ctx.layoutMode === 'steps' && ctx.enableStickyCart !== false) {
       inlineCartBtn.style.display = 'none';
     }
     slotWrapper.appendChild(inlineCartBtn);
@@ -2466,8 +2467,9 @@
     renderSlots();
     slotWrapper.appendChild(slotSteps);
 
-    // In steps mode hide the inline cart button — Step 3 section owns the cart action
-    if (ctx.layoutMode === 'steps') {
+    // In steps mode hide inline cart only when sticky cart is enabled.
+    // If sticky cart is disabled, keep inline cart visible as the fallback cart action.
+    if (ctx.layoutMode === 'steps' && ctx.enableStickyCart !== false) {
       inlineCartBtn.style.display = 'none';
     }
     slotWrapper.appendChild(inlineCartBtn);

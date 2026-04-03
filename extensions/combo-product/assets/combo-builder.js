@@ -780,6 +780,12 @@
       root.dataset.enableStickyCart != null ? root.dataset.enableStickyCart : config.enableStickyCart,
       true
     );
+    // Theme editor can re-render the block with updated settings while an older
+    // sticky footer instance is still mounted. Clear it immediately when sticky
+    // cart is disabled so stale CTA bars do not persist.
+    if (enableStickyCart === false) {
+      removeStickyFooter();
+    }
     var apiBase = root.dataset.apiBase || config.apiBase || DEFAULT_API_BASE;
 
     var boxIdsFilter = null;

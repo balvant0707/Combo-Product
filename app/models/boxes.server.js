@@ -306,11 +306,17 @@ function buildDiscountInput({ title, discountType, discountValue }) {
   const customerGets = discountType === "fixed"
     ? { value: { discountAmount: { amount: String(pct), appliesOnEachItem: false } }, items: { all: true } }
     : { value: { percentage: pct / 100 }, items: { all: true } };
+  const combinesWith = {
+    productDiscounts: true,
+    orderDiscounts: true,
+    shippingDiscounts: false,
+  };
 
   return {
     title,
     startsAt: new Date().toISOString(),
     customerGets,
+    combinesWith,
   };
 }
 
@@ -334,6 +340,11 @@ function buildBuyXGetYDiscountInput({
     : discountType === "fixed"
       ? { discountAmount: { amount: String(parsedValue), appliesOnEachItem: true } }
       : { percentage: Math.min(1, Math.max(0, parsedValue / 100)) };
+  const combinesWith = {
+    productDiscounts: true,
+    orderDiscounts: true,
+    shippingDiscounts: false,
+  };
 
   return {
     title,
@@ -347,6 +358,7 @@ function buildBuyXGetYDiscountInput({
       items: { all: true },
       quantity: { quantity: String(safeGetQty) },
     },
+    combinesWith,
   };
 }
 
@@ -354,6 +366,32 @@ function buildBuyXGetYDiscountInput({
 function isScopeError(e) {
   const msg = e?.message || "";
   return msg.includes("write_discounts") || msg.includes("Access denied") || msg.includes("access scope");
+}
+
+async function deleteShopifyAutomaticDiscount(admin, discountId, context = "discount") {
+  if (!admin || !discountId) return true;
+  try {
+    const resp = await admin.graphql(DISCOUNT_AUTOMATIC_DELETE_MUTATION, {
+      variables: { id: discountId },
+    });
+    const json = await resp.json();
+    const errors = json?.data?.discountAutomaticDelete?.userErrors || [];
+    if (errors.length > 0) {
+      const msg = errors.map((e) => e?.message || "").join(" ").toLowerCase();
+      // Treat "already deleted / not found" as success for cleanup flows.
+      if (msg.includes("not found") || msg.includes("doesn't exist") || msg.includes("invalid id")) {
+        return true;
+      }
+      console.error(`[deleteShopifyAutomaticDiscount] ${context} userErrors:`, errors);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    if (!isScopeError(e)) {
+      console.error(`[deleteShopifyAutomaticDiscount] ${context} error:`, e);
+    }
+    return false;
+  }
 }
 
 /**
@@ -368,8 +406,14 @@ export async function syncShopifyDiscount(admin, { boxId, existingDiscountId, ti
     // Remove existing discount if switching away from dynamic
     if (existingDiscountId) {
       try {
-        await admin.graphql(DISCOUNT_AUTOMATIC_DELETE_MUTATION, { variables: { id: existingDiscountId } });
-        await db.comboBox.update({ where: { id: boxId }, data: { shopifyDiscountId: null } });
+        const deleted = await deleteShopifyAutomaticDiscount(
+          admin,
+          existingDiscountId,
+          "syncShopifyDiscount:disable",
+        );
+        if (deleted) {
+          await db.comboBox.update({ where: { id: boxId }, data: { shopifyDiscountId: null } });
+        }
       } catch (e) {
         if (!isScopeError(e)) console.error("[syncShopifyDiscount] delete error:", e);
       }
@@ -392,15 +436,11 @@ export async function syncShopifyDiscount(admin, { boxId, existingDiscountId, ti
 
       // Existing discount may be BXGY from older saves; recreate as Basic.
       console.warn("[syncShopifyDiscount] update userErrors; recreating as basic:", updateErrors);
-      try {
-        await admin.graphql(DISCOUNT_AUTOMATIC_DELETE_MUTATION, {
-          variables: { id: existingDiscountId },
-        });
-      } catch (e) {
-        if (!isScopeError(e)) {
-          console.warn("[syncShopifyDiscount] delete before recreate failed:", e);
-        }
-      }
+      await deleteShopifyAutomaticDiscount(
+        admin,
+        existingDiscountId,
+        "syncShopifyDiscount:recreate",
+      );
     }
 
     const createResp = await admin.graphql(DISCOUNT_AUTOMATIC_BASIC_CREATE_MUTATION, {
@@ -457,13 +497,17 @@ export async function syncShopifyBuyXGetYDiscount(
   if (!hasValidDiscount) {
     if (existingDiscountId) {
       try {
-        await admin.graphql(DISCOUNT_AUTOMATIC_DELETE_MUTATION, {
-          variables: { id: existingDiscountId },
-        });
-        await db.comboBox.update({
-          where: { id: parseInt(boxId) },
-          data: { shopifyDiscountId: null },
-        });
+        const deleted = await deleteShopifyAutomaticDiscount(
+          admin,
+          existingDiscountId,
+          "syncShopifyBuyXGetYDiscount:disable",
+        );
+        if (deleted) {
+          await db.comboBox.update({
+            where: { id: parseInt(boxId) },
+            data: { shopifyDiscountId: null },
+          });
+        }
       } catch (e) {
         if (!isScopeError(e)) {
           console.error("[syncShopifyBuyXGetYDiscount] delete error:", e);
@@ -484,15 +528,11 @@ export async function syncShopifyBuyXGetYDiscount(
   try {
     // Recreate as BXGY every time to guarantee correct discount type.
     if (existingDiscountId) {
-      try {
-        await admin.graphql(DISCOUNT_AUTOMATIC_DELETE_MUTATION, {
-          variables: { id: existingDiscountId },
-        });
-      } catch (e) {
-        if (!isScopeError(e)) {
-          console.warn("[syncShopifyBuyXGetYDiscount] delete before recreate failed:", e);
-        }
-      }
+      await deleteShopifyAutomaticDiscount(
+        admin,
+        existingDiscountId,
+        "syncShopifyBuyXGetYDiscount:recreate",
+      );
     }
 
     const resp = await admin.graphql(DISCOUNT_AUTOMATIC_BXGY_CREATE_MUTATION, {
@@ -1741,10 +1781,13 @@ export async function deleteBox(id, shop, admin = null) {
 
   // Delete associated Shopify automatic discount
   if (admin && existing.shopifyDiscountId) {
-    try {
-      await admin.graphql(DISCOUNT_AUTOMATIC_DELETE_MUTATION, { variables: { id: existing.shopifyDiscountId } });
-    } catch (e) {
-      console.error("[deleteBox] Failed to delete Shopify discount", e);
+    const deleted = await deleteShopifyAutomaticDiscount(
+      admin,
+      existing.shopifyDiscountId,
+      "deleteBox",
+    );
+    if (!deleted) {
+      console.error("[deleteBox] Failed to delete Shopify discount", existing.shopifyDiscountId);
     }
   }
 

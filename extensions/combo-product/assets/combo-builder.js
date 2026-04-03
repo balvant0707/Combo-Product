@@ -1537,6 +1537,8 @@
     }
 
     // ── Gift Message ──
+
+    // ─── Gift Message ─────────────────────────────────────────────────────────
     var giftInput = null;
     var giftSection = null;
     if (box.giftMessageEnabled) {
@@ -1548,7 +1550,7 @@
       giftLabel.textContent = 'Gift Message (optional)';
       giftInput = document.createElement('textarea');
       giftInput.className = 'cb-gift-input';
-      giftInput.placeholder = 'Write a personal message…';
+      giftInput.placeholder = 'Write a personal message...';
       giftInput.rows = 2;
       giftSection.appendChild(giftLabel);
       giftSection.appendChild(giftInput);
@@ -2453,6 +2455,24 @@
     }
 
     // ── Product Section ──
+    var giftInput = null;
+    var giftSection = null;
+    if (box.giftMessageEnabled) {
+      giftSection = document.createElement('div');
+      giftSection.className = 'cb-gift-section';
+      giftSection.style.display = 'none';
+      var giftLabel = document.createElement('label');
+      giftLabel.className = 'cb-gift-label';
+      giftLabel.textContent = 'Gift Message (optional)';
+      giftInput = document.createElement('textarea');
+      giftInput.className = 'cb-gift-input';
+      giftInput.placeholder = 'Write a personal message...';
+      giftInput.rows = 2;
+      giftSection.appendChild(giftLabel);
+      giftSection.appendChild(giftInput);
+      container.appendChild(giftSection);
+    }
+
     var productSection = document.createElement('div');
     productSection.className = 'cb-product-section';
 
@@ -2506,6 +2526,8 @@
         else _stickyBtn.classList.remove('cb-sticky-btn--ready');
         _stickyBtn.textContent = addLabel;
       }
+
+      if (giftSection) giftSection.style.display = cartReady ? 'block' : 'none';
 
       var totalMrp = getSelectedProductsTotal(slots);
       var isDynamic = isDynamicBundlePrice(box);
@@ -2996,6 +3018,7 @@
       setTimeout(function () {
         for (var i = 0; i < slots.length; i++) slots[i] = null;
         activeSlotIndex = 0;
+        if (giftInput) giftInput.value = '';
         setBoxCardPrice(box, isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0), ctx.currencySymbol);
         renderSlots();
         loadAndRenderGrid();
@@ -3028,7 +3051,7 @@
         btn.innerHTML = '<span class="cb-btn-spinner" aria-hidden="true"></span><span class="cb-btn-label">Adding\u2026</span>';
       });
       showPageLoader('Adding products to cart\u2026');
-      addToCart(box, slots, sessionId, null, inlineCartBtn, _stickyBtn, resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel), ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo);
+      addToCart(box, slots, sessionId, giftInput ? giftInput.value : null, inlineCartBtn, _stickyBtn, resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel), ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo);
     }
 
     inlineCartBtn.addEventListener('click', doCart);
@@ -3041,7 +3064,7 @@
           step3CartBtn.innerHTML = '<span class="cb-btn-spinner" aria-hidden="true"></span><span>Adding\u2026</span>';
           if (step3CheckoutBtn) step3CheckoutBtn.disabled = true;
           showPageLoader('Adding products to cart\u2026');
-          addToCart(box, slots, sessionId, null, inlineCartBtn, _stickyBtn, resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel), ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo);
+          addToCart(box, slots, sessionId, giftInput ? giftInput.value : null, inlineCartBtn, _stickyBtn, resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel), ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo);
         });
       }
       if (step3CheckoutBtn) {
@@ -3052,7 +3075,7 @@
           step3CheckoutBtn.innerHTML = '<span class="cb-btn-spinner" aria-hidden="true"></span><span>Checkout\u2026</span>';
           if (step3CartBtn) step3CartBtn.disabled = true;
           showPageLoader('Processing your order\u2026');
-          addToCart(box, slots, sessionId, null, null, null, 'Checkout \u2192', ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo, '/checkout');
+          addToCart(box, slots, sessionId, giftInput ? giftInput.value : null, null, null, 'Checkout \u2192', ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo, '/checkout');
         });
       }
     }

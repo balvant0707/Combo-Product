@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Outlet, useFetcher, useLoaderData, useLocation, useRouteError } from "react-router";
+import { Outlet, useFetcher, useFetchers, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
 import { authenticate } from "../shopify.server";
@@ -87,15 +87,19 @@ export const action = async ({ request }) => {
 export default function App() {
   const { apiKey, reviewPrompt } = useLoaderData();
   const location = useLocation();
+  const navigation = useNavigation();
+  const fetchers = useFetchers();
   const reviewFetcher = useFetcher();
   const reviewActionUrl = withEmbeddedAppParams("/app", location.search);
 
-  const [showReviewPopup, setShowReviewPopup] = useState(Boolean(reviewPrompt?.shouldShow));
+  const [showReviewPopup, setShowReviewPopup] = useState(() => Boolean(reviewPrompt?.shouldShow));
   const [rating, setRating] = useState(5);
+  const [clickLoading, setClickLoading] = useState(false);
 
-  useEffect(() => {
-    setShowReviewPopup(Boolean(reviewPrompt?.shouldShow));
-  }, [reviewPrompt?.shouldShow]);
+  const isRouterBusy =
+    navigation.state !== "idle" ||
+    fetchers.some((f) => f.state !== "idle");
+  const showGlobalSpinner = clickLoading || isRouterBusy;
 
   useEffect(() => {
     if (reviewFetcher.state !== "idle" || !reviewFetcher.data?.ok) return;
@@ -104,8 +108,39 @@ export default function App() {
     }
   }, [reviewFetcher.state, reviewFetcher.data]);
 
+  useEffect(() => {
+    let timer;
+
+    function startClickLoading() {
+      setClickLoading(true);
+      clearTimeout(timer);
+      timer = setTimeout(() => setClickLoading(false), 800);
+    }
+
+    function onPointerDown(event) {
+      if (!(event.target instanceof Element)) return;
+      const clickable = event.target.closest("button, a, [role='button'], s-button, ui-title-bar button");
+      if (!clickable) return;
+      if (clickable.matches(":disabled") || clickable.getAttribute("aria-disabled") === "true") return;
+      startClickLoading();
+    }
+
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("pointerdown", onPointerDown, true);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isRouterBusy) return;
+    const timer = setTimeout(() => setClickLoading(false), 120);
+    return () => clearTimeout(timer);
+  }, [isRouterBusy]);
+
   function dismissPopup() {
     if (reviewFetcher.state !== "idle") return;
+    setShowReviewPopup(false);
     reviewFetcher.submit(
       { _action: "dismiss_review_popup" },
       { method: "post", action: reviewActionUrl },
@@ -115,6 +150,39 @@ export default function App() {
   return (
     <AppProvider embedded apiKey={apiKey}>
       <style>{`
+        .app-global-spinner-chip {
+          position: fixed;
+          top: 14px;
+          right: 14px;
+          z-index: 10010;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          border-radius: 999px;
+          border: 1px solid #d1d5db;
+          background: #ffffff;
+          color: #111827;
+          font-size: 12px;
+          font-weight: 600;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+          pointer-events: none;
+        }
+
+        .app-global-spinner-dot {
+          width: 14px;
+          height: 14px;
+          border: 2px solid #d1d5db;
+          border-top-color: #111827;
+          border-radius: 50%;
+          animation: appGlobalSpin 0.8s linear infinite;
+          flex-shrink: 0;
+        }
+
+        @keyframes appGlobalSpin {
+          to { transform: rotate(360deg); }
+        }
+
         ui-title-bar button {
           background: #000000;
           color: #ffffff;
@@ -140,6 +208,12 @@ export default function App() {
         <s-link href={withEmbeddedAppParams("/app/pricing", location.search)}>Plan</s-link>
       </s-app-nav>
       <Outlet />
+      {showGlobalSpinner && (
+        <div className="app-global-spinner-chip" aria-live="polite" aria-busy="true">
+          <span className="app-global-spinner-dot" aria-hidden="true" />
+          <span>Loading...</span>
+        </div>
+      )}
 
       {showReviewPopup && (
         <div
@@ -168,11 +242,12 @@ export default function App() {
               borderRadius: "12px",
               boxShadow: "0 30px 70px rgba(15, 23, 42, 0.25)",
               padding: "20px",
+              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
               <div style={{ fontSize: "18px", fontWeight: "700", color: "#111827" }}>
-                Enjoying MixBox?
+                Enjoying MixBox - Box & Bundle Builder?
               </div>
               <button
                 type="button"
@@ -211,18 +286,20 @@ export default function App() {
                       type="button"
                       onClick={() => setRating(value)}
                       disabled={reviewFetcher.state !== "idle"}
+                      aria-label={`Rate ${value} star${value > 1 ? "s" : ""}`}
                       style={{
                         width: "40px",
                         height: "36px",
                         borderRadius: "8px",
-                        border: rating === value ? "1px solid #000000" : "1px solid #d1d5db",
-                        background: rating === value ? "#000000" : "#ffffff",
-                        color: rating === value ? "#ffffff" : "#111827",
+                        border: value <= rating ? "1px solid #f59e0b" : "1px solid #d1d5db",
+                        background: value <= rating ? "#fffbeb" : "#ffffff",
+                        color: value <= rating ? "#f59e0b" : "#9ca3af",
                         fontWeight: "700",
+                        fontSize: "18px",
                         cursor: "pointer",
                       }}
                     >
-                      {value}
+                      ★
                     </button>
                   ))}
                 </div>
@@ -242,6 +319,7 @@ export default function App() {
                     border: "1px solid #d1d5db",
                     padding: "10px",
                     fontSize: "13px",
+                    fontFamily: "inherit",
                     color: "#111827",
                     resize: "vertical",
                   }}

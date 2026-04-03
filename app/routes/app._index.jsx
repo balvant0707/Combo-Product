@@ -499,7 +499,7 @@ export default function DashboardPage() {
       key: "create-box",
       iconType: "package",
       label: "Create Combo Box",
-      sub: "Add a new bundle",
+      sub: "Best for quick bundle offers. You set up one complete box and customers can add it in a few clicks. Use this when you want a fast purchase flow, fixed combinations, and less decision-making for the customer.",
       accent: "#3b82f6",
       bg: "linear-gradient(135deg,#eff6ff,#dbeafe)",
       border: "#bfdbfe",
@@ -509,7 +509,7 @@ export default function DashboardPage() {
       key: "create-specific-combo",
       iconType: "target",
       label: "Create Specific Combo Box",
-      sub: "Step-by-step combo experience",
+      sub: "Best for guided customization. Customers choose items step by step, so they can build their own bundle with more control. Use this when product selection rules matter and you want a personalized shopping experience.",
       accent: "#2A7A4F",
       bg: "linear-gradient(135deg,#f0fdf4,#dcfce7)",
       border: "#86efac",
@@ -1091,44 +1091,13 @@ export default function DashboardPage() {
                       <div style={{ fontSize: "14px", fontWeight: "700", color: "#111827", lineHeight: 1.3 }}>
                         {action.label}
                       </div>
-                      <div style={{ fontSize: "12px", color: "#000000", marginTop: "2px" }}>
+                      <div style={{ fontSize: "12px", color: "#4b5563", marginTop: "4px", lineHeight: 1.45 }}>
                         {action.sub}
                       </div>
                     </div>
                   </div>
                 </button>
               ))}
-              <div
-                style={{
-                  marginTop: "2px",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "5px",
-                  background: "#f9fafb",
-                  padding: "10px 12px",
-                }}
-              >
-                <div style={{ fontSize: "12px", fontWeight: "700", color: "#111827", marginBottom: "4px" }}>
-                  How each option works
-                </div>
-                <div style={{ fontSize: "12px", color: "#111827", fontWeight: "700", marginTop: "6px" }}>
-                  Create Combo Box
-                </div>
-                <div style={{ fontSize: "12px", color: "#4b5563", lineHeight: 1.55, marginTop: "2px" }}>
-                  Best for quick bundle offers. You set up one complete box and customers can add it in a few clicks.
-                  Use this when you want a fast purchase flow, fixed combinations, and less decision-making for the
-                  customer.
-                </div>
-                <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px dashed #d1d5db" }}>
-                  <div style={{ fontSize: "12px", color: "#111827", fontWeight: "700" }}>
-                    Create Specific Combo Box
-                  </div>
-                  <div style={{ fontSize: "12px", color: "#4b5563", lineHeight: 1.55, marginTop: "2px" }}>
-                    Best for guided customization. Customers choose items step by step, so they can build their own
-                    bundle with more control. Use this when product selection rules matter and you want a personalized
-                    shopping experience.
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>

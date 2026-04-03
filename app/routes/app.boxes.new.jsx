@@ -385,7 +385,7 @@ export default function CreateBoxPage() {
                 />
               </div>
               <div>
-                <label style={labelStyle}>Number of Items *</label>
+                <label style={labelStyle}>Number Of Products *</label>
                 <input type="number" placeholder="e.g. 4" min="1" max="20" value={itemCount} onChange={(e) => setItemCount(e.target.value)} style={{ ...fieldStyle, borderColor: errors.itemCount ? "#e11d48" : "#d1d5db" }} />
                 {errors.itemCount && <div style={errorStyle}>{errors.itemCount}</div>}
               </div>

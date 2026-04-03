@@ -724,6 +724,12 @@ export default function SpecificComboBoxPage() {
       >
         {isSaving ? "Saving..." : "Save & Publish"}
       </s-button>
+      <s-button
+        slot="secondary-action"
+        onClick={() => { window.location.href = withEmbeddedAppParams(`/app/boxes/${box.id}`, location.search); }}
+      >
+        <AdminIcon type="arrow-left" size="small" /> Back
+      </s-button>
 
       {/* Hero banner */}
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>

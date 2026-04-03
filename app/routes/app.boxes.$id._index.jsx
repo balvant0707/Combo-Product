@@ -370,6 +370,12 @@ export default function BoxSettingsPage() {
       >
         {isSaving ? "Saving..." : "Save Changes"}
       </s-button>
+      <s-button
+        slot="secondary-action"
+        onClick={() => { window.location.href = withEmbeddedAppParams("/app/boxes", location.search); }}
+      >
+        <AdminIcon type="arrow-left" size="small" /> Back
+      </s-button>
 
       {/* Hero banner */}
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
@@ -629,16 +635,6 @@ export default function BoxSettingsPage() {
 
         </s-section>
       </Form>
-
-      {/* Delete form */}
-      <div style={{ paddingTop: "18px", borderTop: "1.5px solid #f3f4f6" }}>
-        <Form method="POST" id="delete-box-form" action={`/app/boxes/${box.id}${location.search ? location.search + '&index' : '?index'}`}>
-          <input type="hidden" name="_action" value="delete" />
-          <button type="submit" onClick={(e) => { if (!window.confirm(`Delete "${box.boxName}"? This cannot be undone.`)) e.preventDefault(); }} style={{ background: "#dc2626", border: "1.5px solid #dc2626", borderRadius: "5px", padding: "9px 18px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#ffffff" }} onMouseEnter={(e) => (e.currentTarget.style.background = "#b91c1c")} onMouseLeave={(e) => (e.currentTarget.style.background = "#dc2626")}>
-            Delete Box
-          </button>
-        </Form>
-      </div>
 
       {isPageLoading && (
         <div

@@ -215,9 +215,7 @@ export default function SettingsPage() {
                             flexShrink: 0,
                           }}
                         >
-                          <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-                            <path d="M1 3.5L3.5 6L8 1" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
+                          <AdminIcon type="checkmark" size="small" style={{ color: "#fff" }} />
                         </div>
                       )}
                     </button>
@@ -342,9 +340,7 @@ export default function SettingsPage() {
                       </div>
                       {isActive && (
                         <div style={{ width: "16px", height: "16px", borderRadius: "50%", background: "#000000", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-                            <path d="M1 3.5L3.5 6L8 1" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
+                          <AdminIcon type="checkmark" size="small" style={{ color: "#fff" }} />
                         </div>
                       )}
                     </button>

@@ -157,9 +157,7 @@ function CheckRow({ children }) {
         width: "20px", height: "20px", borderRadius: "50%", flexShrink: 0, marginTop: "1px",
         background: "#111827", display: "flex", alignItems: "center", justifyContent: "center",
       }}>
-        <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-          <path d="M1 4l2.5 2.5L9 1" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <AdminIcon type="checkmark" size="small" style={{ color: "#fff" }} />
       </span>
       <span style={{ fontSize: "13px", color: "#374151", lineHeight: 1.5 }}>{children}</span>
     </div>
@@ -173,9 +171,7 @@ function MutedRow({ children }) {
         width: "20px", height: "20px", borderRadius: "50%", flexShrink: 0, marginTop: "1px",
         background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center",
       }}>
-        <svg width="8" height="2" viewBox="0 0 8 2" fill="none">
-          <path d="M1 1h6" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" />
-        </svg>
+        <AdminIcon type="minus" size="small" style={{ color: "#9ca3af" }} />
       </span>
       <span style={{ fontSize: "13px", color: "#9ca3af", lineHeight: 1.5 }}>{children}</span>
     </div>
@@ -235,7 +231,7 @@ export default function PlanPage() {
       {/* ── Dev mode notice (SKIP_BILLING=true) ── */}
       {isDevMode && (
         <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "8px", padding: "12px 16px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontSize: "16px", flexShrink: 0 }}>🛠️</span>
+          <AdminIcon type="settings" size="base" style={{ flexShrink: 0, color: "#2563eb" }} />
           <div style={{ fontSize: "12px", color: "#1e40af", lineHeight: 1.6 }}>
             <strong>Billing bypass active</strong> — <code style={{ background: "#dbeafe", borderRadius: "3px", padding: "1px 5px", fontSize: "11px" }}>SKIP_BILLING=true</code> is set in <code style={{ background: "#dbeafe", borderRadius: "3px", padding: "1px 5px", fontSize: "11px" }}>.env</code>.
             All shops are granted the <strong>{planConfig ? "Pro" : "configured"} plan</strong> without charge.
@@ -248,7 +244,7 @@ export default function PlanPage() {
       {isBillingUnavailable && (
         <div style={{ background: "#fffbeb", border: "1px solid #fcd34d", borderRadius: "8px", padding: "16px 18px", marginBottom: "20px" }}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-            <span style={{ fontSize: "20px", flexShrink: 0 }}>⚠️</span>
+            <AdminIcon type="alert-triangle" size="large" style={{ flexShrink: 0, color: "#d97706" }} />
             <div>
               <div style={{ fontSize: "13px", fontWeight: "700", color: "#92400e", marginBottom: "6px" }}>
                 Billing API not available — Public Distribution required

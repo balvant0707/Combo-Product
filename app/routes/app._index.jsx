@@ -64,7 +64,7 @@ const STAT_CARDS = (activeBoxCount, bundlesSold, bundleRevenue) => [
   {
     label: "Active Boxes",
     value: activeBoxCount,
-    icon: "BX",
+    icon: "package",
     accent: "#2A7A4F",
     bg: "rgba(42,122,79,0.07)",
     sub: "Live combo box types",
@@ -72,7 +72,7 @@ const STAT_CARDS = (activeBoxCount, bundlesSold, bundleRevenue) => [
   {
     label: "Bundles Sold",
     value: bundlesSold,
-    icon: "SO",
+    icon: "orders",
     accent: "#3b82f6",
     bg: "rgba(59,130,246,0.07)",
     sub: "Last 30 days",
@@ -80,7 +80,7 @@ const STAT_CARDS = (activeBoxCount, bundlesSold, bundleRevenue) => [
   {
     label: "Bundle Revenue",
     value: `\u20B9${Number(bundleRevenue).toLocaleString("en-IN")}`,
-    icon: "RV",
+    icon: "chart-line",
     accent: "#8b5cf6",
     bg: "rgba(139,92,246,0.07)",
     sub: "Last 30 days",
@@ -88,14 +88,14 @@ const STAT_CARDS = (activeBoxCount, bundlesSold, bundleRevenue) => [
   {
     label: "Conversion Rate",
     value: "-",
-    icon: "CV",
+    icon: "target",
     accent: "#f59e0b",
     bg: "rgba(245,158,11,0.07)",
     sub: "Coming soon",
   },
 ];
 
-function StatCard({ label, value, accent, sub }) {
+function StatCard({ label, value, accent, bg, icon, sub }) {
   return (
     <div
       style={{
@@ -119,17 +119,21 @@ function StatCard({ label, value, accent, sub }) {
           borderRadius: "5px 5px 0 0",
         }}
       />
-      <div
-        style={{
-          fontSize: "11px",
-          color: "#000000",
-          textTransform: "uppercase",
-          letterSpacing: "0.8px",
-          fontWeight: "600",
-          marginBottom: "6px",
-        }}
-      >
-        {label}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+        <div
+          style={{
+            fontSize: "11px",
+            color: "#000000",
+            textTransform: "uppercase",
+            letterSpacing: "0.8px",
+            fontWeight: "600",
+          }}
+        >
+          {label}
+        </div>
+        <div style={{ width: "30px", height: "30px", borderRadius: "7px", background: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <AdminIcon type={icon} size="small" />
+        </div>
       </div>
       <div
         style={{
@@ -428,7 +432,7 @@ function ThemeCustomizationCard({ themeEditorUrl, onStartLoading }) {
             }}
             aria-label={isExpanded ? "Collapse guided setup steps" : "Expand guided setup steps"}
           >
-            {isExpanded ? "-" : "+"}
+            <AdminIcon type={isExpanded ? "minus" : "plus"} size="small" />
           </button>
         </div>
       </div>
@@ -543,7 +547,9 @@ export default function DashboardPage() {
       {/* Quick Actions */}
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>
         <div style={{ padding: "20px 20px 14px", borderBottom: "1px solid #e5e7eb" }}>
-          <div style={{ fontSize: "15px", fontWeight: "800", color: "#000000", letterSpacing: "-0.2px" }}>Quick Actions</div>
+          <div style={{ fontSize: "15px", fontWeight: "800", color: "#000000", letterSpacing: "-0.2px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <AdminIcon type="lightning" size="base" /> Quick Actions
+          </div>
         </div>
         <div style={{ padding: "12px 12px 16px" }}>
           <div style={{ fontSize: "12px", color: "#000000", padding: "2px 4px 10px" }}>
@@ -749,10 +755,10 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => setShowCreateBoxModal(false)}
-                style={{ border: "none", background: "transparent", color: "#000000", fontSize: "18px", cursor: "pointer", lineHeight: 1 }}
+                style={{ border: "none", background: "transparent", color: "#000000", cursor: "pointer", lineHeight: 1, display: "inline-flex", alignItems: "center" }}
                 aria-label="Close"
               >
-                x
+                <AdminIcon type="x" size="base" />
               </button>
             </div>
             <div style={{ padding: "14px", display: "flex", flexDirection: "column", gap: "10px" }}>

@@ -312,9 +312,7 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
         }}
       >
         {activeLabel}
-        <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
-          <path d="M1 1l4 4 4-4" stroke="#6b7280" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <AdminIcon type="chevron-down" size="small" style={{ color: "#6b7280" }} />
       </button>
 
       {/* Popover — fixed so it escapes any overflow:hidden parent */}
@@ -364,7 +362,7 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
               onChange={(e) => { setFromDate(e.target.value); setSelectedPreset("custom"); }}
               style={{ flex: 1, padding: "8px 10px", borderRadius: "5px", border: "1.5px solid #e5e7eb", fontSize: "13px", color: "#374151" }}
             />
-            <span style={{ color: "#9ca3af", fontSize: "16px" }}>→</span>
+            <AdminIcon type="arrow-right" size="small" style={{ color: "#9ca3af", flexShrink: 0 }} />
             <input
               type="date"
               value={toDate}
@@ -378,7 +376,7 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
             {/* Left calendar with left nav arrow */}
             <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
               <div style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}>
-                <button onClick={prevMonth} style={navBtnStyle}>←</button>
+                <button onClick={prevMonth} style={navBtnStyle}><AdminIcon type="chevron-left" size="small" /></button>
                 <div style={{ flex: 1 }} />
               </div>
               <CalendarMonth
@@ -400,7 +398,7 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
             <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
               <div style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}>
                 <div style={{ flex: 1 }} />
-                <button onClick={nextMonth} style={navBtnStyle}>→</button>
+                <button onClick={nextMonth} style={navBtnStyle}><AdminIcon type="chevron-right" size="small" /></button>
               </div>
               <CalendarMonth
                 year={rightYear}
@@ -495,7 +493,7 @@ function KpiCard({ label, value, subLabel, change, accentColor, iconType, subtit
               borderRadius: "5px",
             }}
           >
-            {isUp ? "↑" : "↓"} {Math.abs(change).toFixed(1)}%
+            <AdminIcon type={isUp ? "arrow-up" : "arrow-down"} size="small" /> {Math.abs(change).toFixed(1)}%
           </span>
         ) : null}
         {subLabel && (
@@ -634,7 +632,7 @@ function LineChart({
               borderRadius: "5px",
             }}
           >
-            {isUp ? "↑" : "↓"} {Math.abs(change).toFixed(1)}% vs prev period
+            <AdminIcon type={isUp ? "arrow-up" : "arrow-down"} size="small" /> {Math.abs(change).toFixed(1)}% vs prev period
           </div>
         ) : null}
       </div>

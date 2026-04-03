@@ -133,6 +133,27 @@ function getAvatarColor(id) {
   return AVATAR_COLORS[id % AVATAR_COLORS.length];
 }
 
+function CopyCodeIcon({ size = 16 }) {
+  return (
+    <svg
+      width={`${size}px`}
+      height={`${size}px`}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M7.5 3H14.6C16.8402 3 17.9603 3 18.816 3.43597C19.5686 3.81947 20.1805 4.43139 20.564 5.18404C21 6.03969 21 7.15979 21 9.4V16.5M6.2 21H14.3C15.4201 21 15.9802 21 16.408 20.782C16.7843 20.5903 17.0903 20.2843 17.282 19.908C17.5 19.4802 17.5 18.9201 17.5 17.8V9.7C17.5 8.57989 17.5 8.01984 17.282 7.59202C17.0903 7.21569 16.7843 6.90973 16.408 6.71799C15.9802 6.5 15.4201 6.5 14.3 6.5H6.2C5.0799 6.5 4.51984 6.5 4.09202 6.71799C3.71569 6.90973 3.40973 7.21569 3.21799 7.59202C3 8.01984 3 8.57989 3 9.7V17.8C3 18.9201 3 19.4802 3.21799 19.908C3.40973 20.2843 3.71569 20.5903 4.09202 20.782C4.51984 21 5.0799 21 6.2 21Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function CopyCodeBtn({ code }) {
   const [copied, setCopied] = useState(false);
   function handleCopy() {
@@ -150,7 +171,7 @@ function CopyCodeBtn({ code }) {
         title={copied ? "Copied!" : "Copy code"}
         onClick={handleCopy}
       >
-        {copied ? "✓" : "⎘"}
+        <CopyCodeIcon size={16} />
       </button>
     </div>
   );
@@ -324,7 +345,6 @@ export default function ManageBoxesPage() {
           gap: 10px;
           padding: 12px 16px;
           border-bottom: 1px solid #f0f0f0;
-          background: #fafafa;
           flex-wrap: wrap;
         }
         .cb-search-wrap {
@@ -374,10 +394,9 @@ export default function ManageBoxesPage() {
 
         /* ── Table ── */
         .cb-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .cb-table thead tr { background: #f9fafb; }
         .cb-table thead th {
           text-align: left; padding: 11px 16px;
-          font-size: 10px; font-weight: 700; color: #9ca3af;
+          font-size: 12px; font-weight: 700; color: #000000;
           text-transform: uppercase; letter-spacing: 0.08em;
           border-bottom: 1px solid #e5e7eb; white-space: nowrap;
         }
@@ -415,11 +434,11 @@ export default function ManageBoxesPage() {
           font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
           text-transform: uppercase;
         }
-        .b-live   { color: #166534; background: #dcfce7; }
+        .b-live   { color: #000000; background: #dcfce7; }
         .b-draft  { color: #000000; background: #f3f4f6; }
-        .b-combo  { color: #1d4ed8; background: #dbeafe; }
+        .b-combo  { color: #000000; background: #dbeafe; }
         .b-single { color: #000000; background: #f3f4f6; }
-        .b-gift   { color: #7c3aed; background: #ede9fe; }
+        .b-gift   { color: #000000; background: #ede9fe; }
 
         /* ── Status dot ── */
         .cb-dot {
@@ -532,7 +551,7 @@ export default function ManageBoxesPage() {
         .cb-code-cell { display: flex; align-items: center; gap: 6px; }
         .cb-code-chip {
           font-family: monospace; font-size: 12px; font-weight: 700;
-          letter-spacing: 0.1em; color: #1d4ed8;
+          letter-spacing: 0.1em; color: #000000;
           background: #eff6ff; border: 1px solid #bfdbfe;
           border-radius: 5px; padding: 3px 8px;
           user-select: all;
@@ -577,10 +596,7 @@ export default function ManageBoxesPage() {
         {/* Toolbar */}
         <div className="cb-toolbar">
           <div className="cb-search-wrap">
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0, color: "#9ca3af" }}>
-              <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.8"/>
-              <path d="M14.5 14.5L18 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
+            <AdminIcon type="search" size="small" style={{ flexShrink: 0, color: "#9ca3af" }} />
             <input
               type="text"
               placeholder="Search by box name…"
@@ -621,11 +637,7 @@ export default function ManageBoxesPage() {
         ) : displayBoxes.length === 0 ? (
           /* No search/filter results */
           <div className="cb-noresults">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style={{ color: "#d1d5db" }}>
-              <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="M17 17L21 21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              <path d="M8 11h6M11 8v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
+            <AdminIcon type="search" size="large" style={{ color: "#d1d5db" }} />
             <p>No boxes match <strong>&ldquo;{search}&rdquo;</strong></p>
           </div>
         ) : (
@@ -661,7 +673,9 @@ export default function ManageBoxesPage() {
                     >
                       {/* Drag */}
                       <td style={{ padding: "13px 8px", width: 32 }}>
-                        <span className="cb-drag" title="Drag to reorder">⠿</span>
+                        <span className="cb-drag" title="Drag to reorder">
+                          <AdminIcon type="drag-handle" size="small" />
+                        </span>
                       </td>
 
                       {/* Box Name */}
@@ -682,7 +696,9 @@ export default function ManageBoxesPage() {
                                 {box.isActive ? "Live" : "Draft"}
                               </span>
                               {box.isGiftBox && (
-                                <span className="cb-badge b-gift">🎁 Gift</span>
+                                <span className="cb-badge b-gift" style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
+                                  <AdminIcon type="gift-card" size="small" /> Gift
+                                </span>
                               )}
                             </div>
                             {box.displayTitle && box.displayTitle !== box.boxName && (
@@ -741,7 +757,7 @@ export default function ManageBoxesPage() {
                       <td>
                         {box.orderCount > 0 ? (
                           <span className="cb-orders-val">
-                            <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#2A7A4F", display: "inline-block" }} />
+                            <AdminIcon type="orders" size="small" style={{ color: "#2A7A4F" }} />
                             {box.orderCount}
                           </span>
                         ) : (
@@ -867,14 +883,14 @@ export default function ManageBoxesPage() {
                   border: "none",
                   background: "transparent",
                   color: "#000000",
-                  fontSize: "26px",
-                  fontWeight: 700,
                   lineHeight: 1,
                   cursor: "pointer",
                   padding: "4px 8px",
+                  display: "inline-flex",
+                  alignItems: "center",
                 }}
               >
-                X
+                <AdminIcon type="x" size="base" />
               </button>
             </div>
 

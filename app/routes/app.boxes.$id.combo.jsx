@@ -1025,7 +1025,7 @@ export default function SpecificComboBoxPage() {
                       </div>
                       <div>
                         <label style={labelStyle}>Description</label>
-                        <textarea value={step.popup.desc} onChange={(e) => updateComboStepPopup(ai, "desc", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db", resize: "vertical", minHeight: "64px" }} placeholder="Select a product for this step." />
+                        <input value={step.popup.desc} onChange={(e) => updateComboStepPopup(ai, "desc", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db", resize: "vertical"}} placeholder="Select a product for this step." />
                       </div>
                       <div>
                         <label style={labelStyle}>Product Button Title</label>

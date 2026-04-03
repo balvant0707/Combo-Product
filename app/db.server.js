@@ -123,6 +123,11 @@ CREATE TABLE IF NOT EXISTS \`shop\` (
   \`onboardedAt\` DATETIME(3) NULL,
   \`uninstalledAt\` DATETIME(3) NULL,
   \`announcementEmailSentAt\` DATETIME(3) NULL,
+  \`reviewPromptDelayDays\` INTEGER NOT NULL DEFAULT 7,
+  \`reviewPopupDismissedAt\` DATETIME(3) NULL,
+  \`reviewSubmittedAt\` DATETIME(3) NULL,
+  \`reviewRating\` INTEGER NULL,
+  \`reviewComment\` TEXT NULL,
   UNIQUE INDEX \`Shop_shop_key\`(\`shop\`),
   PRIMARY KEY (\`id\`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -219,6 +224,14 @@ const ENSURE_APP_SETTINGS_COLUMNS_SQL = [
   "ALTER TABLE `app_settings` ADD COLUMN IF NOT EXISTS `productCardsPerRow` INTEGER NULL DEFAULT 4;",
 ];
 
+const ENSURE_SHOP_COLUMNS_SQL = [
+  "ALTER TABLE `shop` ADD COLUMN IF NOT EXISTS `reviewPromptDelayDays` INTEGER NOT NULL DEFAULT 7;",
+  "ALTER TABLE `shop` ADD COLUMN IF NOT EXISTS `reviewPopupDismissedAt` DATETIME(3) NULL;",
+  "ALTER TABLE `shop` ADD COLUMN IF NOT EXISTS `reviewSubmittedAt` DATETIME(3) NULL;",
+  "ALTER TABLE `shop` ADD COLUMN IF NOT EXISTS `reviewRating` INTEGER NULL;",
+  "ALTER TABLE `shop` ADD COLUMN IF NOT EXISTS `reviewComment` TEXT NULL;",
+];
+
 const ENSURE_COMBO_BOX_COLUMNS_SQL = [
   "ALTER TABLE `combo_box` ADD COLUMN IF NOT EXISTS `boxCode` VARCHAR(10) NULL;",
   "ALTER TABLE `combo_box` ADD UNIQUE INDEX IF NOT EXISTS `combo_box_boxCode_key` (`boxCode`);",
@@ -266,6 +279,9 @@ export function ensureAppTables() {
       await prisma.$executeRawUnsafe(ENSURE_COMBO_BOX_PRODUCT_TABLE_SQL);
       await prisma.$executeRawUnsafe(ENSURE_BUNDLE_ORDER_TABLE_SQL);
       await prisma.$executeRawUnsafe(ENSURE_APP_SETTINGS_TABLE_SQL);
+      for (const sql of ENSURE_SHOP_COLUMNS_SQL) {
+        await prisma.$executeRawUnsafe(sql);
+      }
       for (const sql of ENSURE_APP_SETTINGS_COLUMNS_SQL) {
         await prisma.$executeRawUnsafe(sql);
       }

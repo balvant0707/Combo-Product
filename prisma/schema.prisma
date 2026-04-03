@@ -51,6 +51,11 @@ model shop {
   onboardedAt             DateTime?
   uninstalledAt           DateTime?
   announcementEmailSentAt DateTime?
+  reviewPromptDelayDays   Int       @default(7)
+  reviewPopupDismissedAt  DateTime?
+  reviewSubmittedAt       DateTime?
+  reviewRating            Int?
+  reviewComment           String?   @db.Text
 }
 
 model ComboBox {

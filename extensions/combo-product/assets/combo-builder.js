@@ -210,6 +210,7 @@
       '--cb-primary-hover:' + t.primary + ';' +
       '--cb-primary-light:' + t.accentLt + ';' +
       '--cb-primary-glow:' + t.primary + '33;' +
+      '--cb-active-slot:' + t.primary + ';' +
       '--cb-bg:' + t.bg + ';' +
       '--cb-text:' + t.text + ';' +
       '--cb-text-muted:' + t.muted + ';' +
@@ -219,6 +220,28 @@
     '}';
     // Append to body so this rule comes after the liquid block's <style> in
     // document order, winning the CSS cascade at equal specificity.
+    document.body.appendChild(style);
+  }
+
+  function applyCustomColors(rootEl, settings) {
+    if (!settings) return;
+    var primaryColor = settings.buttonColor || '#2A7A4F';
+    var activeSlotColor = settings.activeSlotColor || primaryColor;
+    var instance = rootEl.getAttribute('data-cb-instance') || rootEl.getAttribute('data-block-id');
+    if (!instance) return;
+
+    var styleId = 'cb-custom-colors-' + instance;
+    var existing = document.getElementById(styleId);
+    if (existing) existing.parentNode.removeChild(existing);
+
+    var style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = '[data-cb-instance="' + instance + '"] {' +
+      '--cb-primary:' + primaryColor + ';' +
+      '--cb-primary-hover:' + primaryColor + ';' +
+      '--cb-primary-glow:' + primaryColor + '33;' +
+      '--cb-active-slot:' + activeSlotColor + ';' +
+    '}';
     document.body.appendChild(style);
   }
 
@@ -820,6 +843,7 @@
 
       var resolvedHeading = root.dataset.heading || config.heading || (settings && settings.widgetHeadingText) || 'Build Your Own Box!';
       if (settings && settings.presetTheme) applyPresetTheme(root, settings.presetTheme);
+      if (settings && (!settings.presetTheme || settings.presetTheme === 'custom')) applyCustomColors(root, settings);
       root.style.setProperty(
         '--cb-products-per-row',
         String(normalizeProductCardsPerRow(settings && settings.productCardsPerRow))

@@ -36,6 +36,15 @@ function normalizeScope(scope) {
   return String(scope);
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const REVIEW_PROMPT_DEFAULT_DELAY_DAYS = 7;
+const REVIEW_PROMPT_SNOOZE_DAYS = 1;
+
+function normalizePositiveInt(value, fallback) {
+  const parsed = Number.parseInt(String(value), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
 export async function upsertSessionFromAuth(session) {
   console.info("[DB Sync] upsertSessionFromAuth", {
     shop: session.shop,
@@ -241,4 +250,71 @@ export async function updateShopScope(shop, scope) {
     where: { shop },
     data: { scope: normalizeScope(scope) },
   });
+}
+
+export async function getShopReviewPromptState(shopDomain) {
+  const rows = await db.$queryRaw`
+    SELECT
+      createdAt,
+      reviewPromptDelayDays,
+      reviewPopupDismissedAt,
+      reviewSubmittedAt
+    FROM shop
+    WHERE shop = ${shopDomain}
+    LIMIT 1
+  `;
+
+  const row = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+  const now = new Date();
+
+  const createdAt = row?.createdAt ? new Date(row.createdAt) : null;
+  const delayDays = normalizePositiveInt(row?.reviewPromptDelayDays, REVIEW_PROMPT_DEFAULT_DELAY_DAYS);
+  const daysSinceInstall = createdAt ? Math.floor((now.getTime() - createdAt.getTime()) / DAY_MS) : 0;
+  const isDelayOver = createdAt ? now.getTime() >= createdAt.getTime() + delayDays * DAY_MS : false;
+
+  const dismissedAt = row?.reviewPopupDismissedAt ? new Date(row.reviewPopupDismissedAt) : null;
+  const snoozeUntil = dismissedAt ? new Date(dismissedAt.getTime() + REVIEW_PROMPT_SNOOZE_DAYS * DAY_MS) : null;
+  const isSnoozed = snoozeUntil ? now.getTime() < snoozeUntil.getTime() : false;
+
+  const hasSubmittedReview = Boolean(row?.reviewSubmittedAt);
+  const shouldShow = Boolean(createdAt && isDelayOver && !isSnoozed && !hasSubmittedReview);
+
+  return {
+    shouldShow,
+    daysSinceInstall: Math.max(0, daysSinceInstall),
+    delayDays,
+    snoozeDays: REVIEW_PROMPT_SNOOZE_DAYS,
+  };
+}
+
+export async function dismissShopReviewPrompt(shopDomain) {
+  await db.$executeRaw`
+    UPDATE shop
+    SET reviewPopupDismissedAt = NOW(3),
+        updatedAt = NOW(3)
+    WHERE shop = ${shopDomain}
+  `;
+}
+
+export async function submitShopReview(shopDomain, { rating, feedback }) {
+  const parsedRating = Number.parseInt(String(rating), 10);
+  const safeRating =
+    Number.isFinite(parsedRating) && parsedRating >= 1 && parsedRating <= 5
+      ? parsedRating
+      : null;
+
+  const safeFeedback =
+    typeof feedback === "string" && feedback.trim().length > 0
+      ? feedback.trim().slice(0, 2000)
+      : null;
+
+  await db.$executeRaw`
+    UPDATE shop
+    SET reviewSubmittedAt = NOW(3),
+        reviewPopupDismissedAt = NULL,
+        reviewRating = ${safeRating},
+        reviewComment = ${safeFeedback},
+        updatedAt = NOW(3)
+    WHERE shop = ${shopDomain}
+  `;
 }

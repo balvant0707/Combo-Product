@@ -774,23 +774,23 @@ function LineChart({
                       stroke="#374151"
                       strokeWidth="1"
                     />
-                    <text x={tx + 10} y={ty + 18} fontSize="10" fill="#9ca3af" fontFamily="monospace" fontWeight="600">
+                    <text x={tx + 10} y={ty + 18} fontSize="10" fill="#ffffff" fontFamily="monospace" fontWeight="600">
                       {fmtShortDate(data[hoverIdx].date)}
                     </text>
                     <circle cx={tx + 10} cy={ty + 32} r="3.5" fill={color} />
                     <text x={tx + 18} y={ty + 36} fontSize="11" fill="#f9fafb" fontFamily="monospace">
                       {formatY(data[hoverIdx].value)}
                     </text>
-                    <text x={tx + TW - 10} y={ty + 36} textAnchor="end" fontSize="9" fill="#000000" fontFamily="monospace">
+                    <text x={tx + TW - 10} y={ty + 36} textAnchor="end" fontSize="9" fill="#ffffff" fontFamily="monospace">
                       {periodLabel.slice(0, 16)}
                     </text>
                     {prevArr[hoverIdx] && (
                       <>
                         <line x1={tx + 8} y1={ty + 44} x2={tx + 18} y2={ty + 44} stroke="#6b7280" strokeWidth="1.5" strokeDasharray="3,2" />
-                        <text x={tx + 22} y={ty + 49} fontSize="11" fill="#9ca3af" fontFamily="monospace">
+                        <text x={tx + 22} y={ty + 49} fontSize="11" fill="#ffffff" fontFamily="monospace">
                           {formatY(prevArr[hoverIdx].value)}
                         </text>
-                        <text x={tx + TW - 10} y={ty + 49} textAnchor="end" fontSize="9" fill="#4b5563" fontFamily="monospace">
+                        <text x={tx + TW - 10} y={ty + 49} textAnchor="end" fontSize="9" fill="#ffffff" fontFamily="monospace">
                           prev period
                         </text>
                       </>

@@ -737,6 +737,22 @@
   min-width: 0;
 }
 
+.cb-product-label-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cb-product-label-desc {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cb-text-muted);
+  letter-spacing: 0;
+  line-height: 1.45;
+}
+
 .cb-step-skip-btn {
   display: none;
   align-items: center;
@@ -1495,6 +1511,9 @@
     font-size: 15px;
     margin-bottom: 14px;
   }
+  .cb-product-label-desc {
+    font-size: 12px;
+  }
 
   /* Slot steps: narrower boxes */
   .cb-slot-steps::before { top: 44px; left: 40px; right: 40px; }
@@ -1564,6 +1583,7 @@
 
   /* Product label */
   .cb-product-label { font-size: 14px; margin-bottom: 12px; }
+  .cb-product-label-desc { font-size: 11px; }
 
   /* Slot steps: even smaller */
   .cb-slot-steps::before { top: 38px; left: 36px; right: 36px; }

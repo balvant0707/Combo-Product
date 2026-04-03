@@ -1065,7 +1065,6 @@ export default function SpecificComboBoxPage() {
 
                 {/* General settings card */}
                 <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", marginBottom: "16px" }}>
-                  <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#111827" }}>General settings</div>
                   <div style={{ padding: "16px" }}>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "14px" }}>
                       <div>

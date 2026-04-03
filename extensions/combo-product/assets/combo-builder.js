@@ -2547,9 +2547,16 @@
 
     var productLabel = document.createElement('div');
     productLabel.className = 'cb-product-label';
+    var productLabelContent = document.createElement('div');
+    productLabelContent.className = 'cb-product-label-content';
     var productLabelText = document.createElement('span');
     productLabelText.className = 'cb-product-label-text';
-    productLabel.appendChild(productLabelText);
+    var productLabelDesc = document.createElement('div');
+    productLabelDesc.className = 'cb-product-label-desc';
+    productLabelDesc.style.display = 'none';
+    productLabelContent.appendChild(productLabelText);
+    productLabelContent.appendChild(productLabelDesc);
+    productLabel.appendChild(productLabelContent);
 
     var skipStepBtn = document.createElement('button');
     skipStepBtn.type = 'button';
@@ -2755,7 +2762,19 @@
       var stepCfg = steps[activeSlotIndex] || {};
       var stepLabelText = stepCfg.label || ('Item ' + (activeSlotIndex + 1));
       if (isOptionalStep(stepCfg)) stepLabelText += ' (Optional)';
-      productLabelText.textContent = 'Choose your ' + stepLabelText;
+      var popupCfg = stepCfg.popup || {};
+      var stepHeading = typeof popupCfg.title === 'string' && popupCfg.title.trim()
+        ? popupCfg.title.trim()
+        : ('Choose your ' + stepLabelText);
+      var stepDescription = typeof popupCfg.desc === 'string' ? popupCfg.desc.trim() : '';
+      productLabelText.textContent = stepHeading;
+      if (stepDescription) {
+        productLabelDesc.textContent = stepDescription;
+        productLabelDesc.style.display = 'block';
+      } else {
+        productLabelDesc.textContent = '';
+        productLabelDesc.style.display = 'none';
+      }
       skipStepBtn.style.display = isOptionalStep(stepCfg) && !slots[activeSlotIndex] ? 'inline-flex' : 'none';
       productGrid.innerHTML = '';
 

@@ -25,26 +25,61 @@ if (shouldEnsureAppTables) {
 
 const sessionDbRetries = Number.parseInt(process.env.SESSION_DB_RETRIES || "2", 10) || 2;
 const sessionDbRetryDelayMs = Number.parseInt(process.env.SESSION_DB_RETRY_DELAY_MS || "800", 10) || 800;
+const sessionReadyProbeCooldownMs =
+  Number.parseInt(process.env.SESSION_READY_PROBE_COOLDOWN_MS || "15000", 10) || 15000;
 
 class RetryPrismaSessionStorage extends PrismaSessionStorage {
+  _lastReadyProbeAt = 0;
+
+  async ensureSessionStorageReady() {
+    const now = Date.now();
+    if (this._lastReadyProbeAt && now - this._lastReadyProbeAt < sessionReadyProbeCooldownMs) {
+      return;
+    }
+
+    await withDbRetry(async () => {
+      const ready = await super.isReady();
+      if (!ready) {
+        throw new Error("Prisma session storage is not ready");
+      }
+    }, { retries: sessionDbRetries, delayMs: sessionDbRetryDelayMs });
+
+    this._lastReadyProbeAt = Date.now();
+  }
+
   async loadSession(id) {
-    return withDbRetry(() => super.loadSession(id), { retries: sessionDbRetries, delayMs: sessionDbRetryDelayMs });
+    return withDbRetry(async () => {
+      await this.ensureSessionStorageReady();
+      return super.loadSession(id);
+    }, { retries: sessionDbRetries, delayMs: sessionDbRetryDelayMs });
   }
 
   async storeSession(session) {
-    return withDbRetry(() => super.storeSession(session), { retries: sessionDbRetries, delayMs: sessionDbRetryDelayMs });
+    return withDbRetry(async () => {
+      await this.ensureSessionStorageReady();
+      return super.storeSession(session);
+    }, { retries: sessionDbRetries, delayMs: sessionDbRetryDelayMs });
   }
 
   async deleteSession(id) {
-    return withDbRetry(() => super.deleteSession(id), { retries: sessionDbRetries, delayMs: sessionDbRetryDelayMs });
+    return withDbRetry(async () => {
+      await this.ensureSessionStorageReady();
+      return super.deleteSession(id);
+    }, { retries: sessionDbRetries, delayMs: sessionDbRetryDelayMs });
   }
 
   async deleteSessions(ids) {
-    return withDbRetry(() => super.deleteSessions(ids), { retries: sessionDbRetries, delayMs: sessionDbRetryDelayMs });
+    return withDbRetry(async () => {
+      await this.ensureSessionStorageReady();
+      return super.deleteSessions(ids);
+    }, { retries: sessionDbRetries, delayMs: sessionDbRetryDelayMs });
   }
 
   async findSessionsByShop(shop) {
-    return withDbRetry(() => super.findSessionsByShop(shop), { retries: sessionDbRetries, delayMs: sessionDbRetryDelayMs });
+    return withDbRetry(async () => {
+      await this.ensureSessionStorageReady();
+      return super.findSessionsByShop(shop);
+    }, { retries: sessionDbRetries, delayMs: sessionDbRetryDelayMs });
   }
 }
 

@@ -251,12 +251,16 @@ export async function withDbRetry(fn, { retries = 3, delayMs = 500 } = {}) {
       return await fn();
     } catch (err) {
       lastErr = err;
+      const errMessage = err?.message || "";
       const isTransient =
-        err?.message?.includes("Can't reach database") ||
-        err?.message?.includes("Connection refused") ||
-        err?.message?.includes("ECONNREFUSED") ||
-        err?.message?.includes("ETIMEDOUT") ||
-        err?.message?.includes("Timed out fetching a new connection") ||
+        errMessage.includes("Can't reach database") ||
+        errMessage.includes("Connection refused") ||
+        errMessage.includes("ECONNREFUSED") ||
+        errMessage.includes("ETIMEDOUT") ||
+        errMessage.includes("Timed out fetching a new connection") ||
+        errMessage.includes("Prisma session storage is not ready") ||
+        errMessage.includes("Error obtaining session table") ||
+        errMessage.includes("does not exist in the current database") ||
         err?.code === "P1001" ||       // Prisma: unreachable
         err?.code === "P1002" ||       // Prisma: timed out
         err?.code === "P2024" ||       // Prisma: connection pool timeout

@@ -568,7 +568,8 @@ function LineChart({
   const [hoverIdx, setHoverIdx] = useState(null);
   const svgRef = useRef(null);
 
-  const W = 760, H = 200, ML = 52, MR = 20, MB = 36, MT = 18;
+  const showYAxisLabels = false;
+  const W = 760, H = 200, ML = showYAxisLabels ? 52 : 16, MR = 20, MB = 36, MT = 18;
   const chartW = W - ML - MR;
   const chartH = H - MB - MT;
   const n = data.length;
@@ -726,9 +727,11 @@ function LineChart({
                   strokeWidth={i === 0 ? 1.5 : 1}
                   strokeDasharray={i === 0 ? "none" : "4,4"}
                 />
-                <text x={ML - 8} y={y + 4} textAnchor="end" fontSize="9.5" fill="#9ca3af" fontFamily="monospace">
-                  {formatY(tick)}
-                </text>
+                {showYAxisLabels ? (
+                  <text x={ML - 8} y={y + 4} textAnchor="end" fontSize="9.5" fill="#9ca3af" fontFamily="monospace">
+                    {formatY(tick)}
+                  </text>
+                ) : null}
               </g>
             );
           })}

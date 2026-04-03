@@ -161,11 +161,18 @@
     return label;
   }
 
-  function resolveProductGridButtonLabel(box) {
+  function resolveProductGridButtonLabel(box, settings) {
     var label = '';
+    if (box && box.productButtonTitle != null) label = String(box.productButtonTitle).trim();
     if (box && box.addToCartLabel != null) label = String(box.addToCartLabel).trim();
+    if (!label && box && box.comboConfig && box.comboConfig.productButtonTitle != null) {
+      label = String(box.comboConfig.productButtonTitle).trim();
+    }
     if (!label && box && box.comboConfig && box.comboConfig.addToCartLabel != null) {
       label = String(box.comboConfig.addToCartLabel).trim();
+    }
+    if (!label && settings && settings.addToCartLabel != null) {
+      label = String(settings.addToCartLabel).trim();
     }
     return label || 'ADD TO BOX';
   }
@@ -911,6 +918,57 @@
       .catch(function (e) { cb(e, null, {}); });
   }
 
+  function normalizeShopifyProductId(value) {
+    if (value == null) return null;
+    var id = String(value).trim();
+    if (!id) return null;
+    if (id.indexOf('/') !== -1) return id.split('/').pop();
+    return id;
+  }
+
+  function getInternalBundleProductIds(ctx) {
+    var map = {};
+    if (!ctx || !Array.isArray(ctx.boxes)) return map;
+    ctx.boxes.forEach(function (box) {
+      var pid = normalizeShopifyProductId(box && box.shopifyProductId);
+      if (pid) map[pid] = true;
+    });
+    return map;
+  }
+
+  function hasInternalComboTag(tagsValue) {
+    var tags = [];
+    if (Array.isArray(tagsValue)) {
+      tags = tagsValue;
+    } else if (typeof tagsValue === 'string' && tagsValue.trim()) {
+      tags = tagsValue.split(',');
+    }
+    for (var i = 0; i < tags.length; i++) {
+      if (String(tags[i]).trim().toLowerCase() === 'combo-builder-internal') return true;
+    }
+    return false;
+  }
+
+  function shouldExcludeInternalComboProduct(product, internalBundleProductIds) {
+    if (!product) return false;
+    var pid = normalizeShopifyProductId(product.productId != null ? product.productId : product.id);
+    if (pid && internalBundleProductIds && internalBundleProductIds[pid]) return true;
+
+    var vendor = product.vendor != null ? String(product.vendor).trim().toLowerCase() : '';
+    if (vendor === 'combobuilder') return true;
+
+    if (hasInternalComboTag(product.tags)) return true;
+    return false;
+  }
+
+  function filterInternalComboProducts(products, ctx) {
+    if (!Array.isArray(products) || products.length === 0) return [];
+    var internalBundleProductIds = getInternalBundleProductIds(ctx);
+    return products.filter(function (product) {
+      return !shouldExcludeInternalComboProduct(product, internalBundleProductIds);
+    });
+  }
+
   var _wholeStoreProductsCache = null;
   function fetchWholeStoreProducts(cb) {
     if (Array.isArray(_wholeStoreProductsCache)) { cb(null, _wholeStoreProductsCache); return; }
@@ -935,6 +993,8 @@
               productPrice: v0 ? parseFloat(v0.price) : 0,
               variantIds: (p.variants || []).map(function (v) { return String(v.id); }),
               isCollection: false,
+              vendor: p.vendor || '',
+              tags: p.tags || '',
             });
           });
           if (batch.length === 250) {
@@ -957,14 +1017,20 @@
     fetchPage(1);
   }
 
-  function fetchProducts(boxId, shop, apiBase, scopeType, cb) {
+  function fetchProducts(boxId, shop, apiBase, scopeType, ctx, cb) {
     if (scopeType === 'wholestore') {
-      fetchWholeStoreProducts(cb);
+      fetchWholeStoreProducts(function (err, products) {
+        if (err) {
+          cb(err, null);
+          return;
+        }
+        cb(null, filterInternalComboProducts(products, ctx));
+      });
       return;
     }
     fetch(apiBase + '/api/storefront/boxes/' + boxId + '/products?shop=' + encodeURIComponent(shop), { cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-      .then(function (data) { cb(null, data); })
+      .then(function (data) { cb(null, filterInternalComboProducts(data, ctx)); })
       .catch(function (e) { cb(e, null); });
   }
 
@@ -1307,7 +1373,7 @@
       }, 0);
     } else {
       showPageLoader('Loading products…');
-      fetchProducts(box.id, ctx.shop, ctx.apiBase, box.scopeType, function (err, products) {
+      fetchProducts(box.id, ctx.shop, ctx.apiBase, box.scopeType, ctx, function (err, products) {
         hidePageLoader(true);
         if (ctx._openBoxId !== box.id) return;
         if (err || !products || products.length === 0) {
@@ -1910,14 +1976,14 @@
 
         // ADD TO BOX / REMOVE FROM BOX button
         var addBtn = document.createElement('button');
-        var productGridBtnLabel = resolveProductGridButtonLabel(box);
+        var productGridBtnLabel = resolveProductGridButtonLabel(box, ctx.settings);
         addBtn.type = 'button';
         if (isCurrentSlot || isUsed) {
           addBtn.className = 'cb-add-btn cb-add-btn--remove';
           addBtn.innerHTML = '&times; REMOVE FROM BOX';
         } else {
           addBtn.className = 'cb-add-btn';
-          addBtn.textContent = '+ ' + productGridBtnLabel;
+          addBtn.textContent = productGridBtnLabel;
         }
 
         card.appendChild(addBtn);
@@ -2608,7 +2674,10 @@
 
       // Primary source: admin-expanded resolvedProducts (Admin API → no storefront dependency)
       if (Array.isArray(stepCfg.resolvedProducts) && stepCfg.resolvedProducts.length > 0) {
-        var resolved = stepCfg.resolvedProducts.map(normalizeProduct);
+        var resolved = filterInternalComboProducts(
+          stepCfg.resolvedProducts.map(normalizeProduct),
+          ctx
+        );
         stepProductsCache[stepIdx] = resolved;
         cb(null, resolved);
         return;
@@ -2617,7 +2686,10 @@
       var scope = stepCfg.scope || 'collection';
 
       if (scope === 'product' || scope === 'wholestore') {
-        var prods = (stepCfg.selectedProducts || []).map(normalizeProduct);
+        var prods = filterInternalComboProducts(
+          (stepCfg.selectedProducts || []).map(normalizeProduct),
+          ctx
+        );
         stepProductsCache[stepIdx] = prods;
         cb(null, prods);
       } else {
@@ -2634,7 +2706,8 @@
           fetchCollectionProducts(coll.handle, function (err, prods) {
             if (err) firstErr = err;
             if (prods) {
-              prods.forEach(function (p) {
+              var filteredProds = filterInternalComboProducts(prods, ctx);
+              filteredProds.forEach(function (p) {
                 if (!seenIds[p.productId]) {
                   seenIds[p.productId] = true;
                   allProds.push(p);
@@ -2840,14 +2913,14 @@
 
         // ADD TO BOX / REMOVE FROM BOX button
         var addBtn = document.createElement('button');
-        var productGridBtnLabel = resolveProductGridButtonLabel(box);
+        var productGridBtnLabel = resolveProductGridButtonLabel(box, ctx.settings);
         addBtn.type = 'button';
         if (isCurrentSlot || isUsed) {
           addBtn.className = 'cb-add-btn cb-add-btn--remove';
           addBtn.innerHTML = '&times; REMOVE FROM BOX';
         } else {
           addBtn.className = 'cb-add-btn';
-          addBtn.textContent = '+ ' + productGridBtnLabel;
+          addBtn.textContent = productGridBtnLabel;
         }
         card.appendChild(addBtn);
 

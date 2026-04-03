@@ -69,6 +69,7 @@ export const loader = async ({ request }) => {
       boxSubtitle: typeof rawComboConfig?.boxSubtitle === "string" ? rawComboConfig.boxSubtitle : null,
       ctaButtonLabel,
       addToCartLabel,
+      productButtonTitle: addToCartLabel,
       itemCount: box.itemCount,
       bundlePrice: parseFloat(box.bundlePrice),
       isGiftBox: box.isGiftBox,
@@ -122,6 +123,7 @@ export const loader = async ({ request }) => {
             getQuantity,
             ctaButtonLabel,
             addToCartLabel,
+            productButtonTitle: addToCartLabel,
             showProgressBar: box.config.showProgressBar !== false,
             showProductImages: box.config.showProductImages !== false,
             allowReselection: box.config.allowReselection !== false,
@@ -151,6 +153,11 @@ export const loader = async ({ request }) => {
               addToCartLabel: typeof parsed.addToCartLabel === "string" && parsed.addToCartLabel.trim()
                 ? parsed.addToCartLabel.trim()
                 : addToCartLabel,
+              productButtonTitle: typeof parsed.productButtonTitle === "string" && parsed.productButtonTitle.trim()
+                ? parsed.productButtonTitle.trim()
+                : (typeof parsed.addToCartLabel === "string" && parsed.addToCartLabel.trim()
+                  ? parsed.addToCartLabel.trim()
+                  : addToCartLabel),
               showProgressBar: parsed.showProgressBar !== false,
               showProductImages: parsed.showProductImages !== false,
               allowReselection: parsed.allowReselection !== false,

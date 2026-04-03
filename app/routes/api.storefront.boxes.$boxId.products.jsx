@@ -9,6 +9,14 @@ const CORS_HEADERS = {
   Expires: "0",
 };
 
+function normalizeShopifyProductId(value) {
+  if (value == null) return null;
+  const raw = String(value).trim();
+  if (!raw) return null;
+  if (raw.includes("/")) return raw.split("/").pop();
+  return raw;
+}
+
 export const loader = async ({ request, params }) => {
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
@@ -40,24 +48,44 @@ export const loader = async ({ request, params }) => {
     orderBy: { id: "asc" },
   });
 
-  const publicProducts = products.map((p) => {
-    let variantIds = [];
-    if (p.variantIds) {
-      try { variantIds = JSON.parse(p.variantIds); } catch {}
-    }
-    // Strip GID prefix so Shopify /cart/add.js gets numeric IDs
-    variantIds = variantIds.map((id) => (typeof id === 'string' && id.includes('/') ? id.split('/').pop() : String(id)));
-    return {
-      id: p.id,
-      productId: p.productId,
-      productTitle: p.productTitle,
-      productImageUrl: p.productImageUrl,
-      productHandle: p.productHandle,
-      productPrice: p.productPrice != null ? parseFloat(p.productPrice) : null,
-      isCollection: p.isCollection,
-      variantIds,
-    };
+  const internalBundleProductRows = await db.comboBox.findMany({
+    where: {
+      shop,
+      deletedAt: null,
+      shopifyProductId: { not: null },
+    },
+    select: { shopifyProductId: true },
   });
+
+  const internalBundleProductIds = new Set(
+    internalBundleProductRows
+      .map((row) => normalizeShopifyProductId(row.shopifyProductId))
+      .filter(Boolean)
+  );
+
+  const publicProducts = products
+    .filter((p) => {
+      const pid = normalizeShopifyProductId(p.productId);
+      return !pid || !internalBundleProductIds.has(pid);
+    })
+    .map((p) => {
+      let variantIds = [];
+      if (p.variantIds) {
+        try { variantIds = JSON.parse(p.variantIds); } catch {}
+      }
+      // Strip GID prefix so Shopify /cart/add.js gets numeric IDs
+      variantIds = variantIds.map((id) => (typeof id === "string" && id.includes("/") ? id.split("/").pop() : String(id)));
+      return {
+        id: p.id,
+        productId: p.productId,
+        productTitle: p.productTitle,
+        productImageUrl: p.productImageUrl,
+        productHandle: p.productHandle,
+        productPrice: p.productPrice != null ? parseFloat(p.productPrice) : null,
+        isCollection: p.isCollection,
+        variantIds,
+      };
+    });
 
   return Response.json(publicProducts, { headers: CORS_HEADERS });
 };

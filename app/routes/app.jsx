@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Outlet, useFetcher, useFetchers, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
+import { Outlet, useFetcher, useLoaderData, useLocation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
 import { authenticate } from "../shopify.server";
@@ -87,19 +87,11 @@ export const action = async ({ request }) => {
 export default function App() {
   const { apiKey, reviewPrompt } = useLoaderData();
   const location = useLocation();
-  const navigation = useNavigation();
-  const fetchers = useFetchers();
   const reviewFetcher = useFetcher();
   const reviewActionUrl = withEmbeddedAppParams("/app", location.search);
 
   const [showReviewPopup, setShowReviewPopup] = useState(() => Boolean(reviewPrompt?.shouldShow));
   const [rating, setRating] = useState(5);
-  const [clickLoading, setClickLoading] = useState(false);
-
-  const isRouterBusy =
-    navigation.state !== "idle" ||
-    fetchers.some((f) => f.state !== "idle");
-  const showGlobalSpinner = clickLoading || isRouterBusy;
 
   useEffect(() => {
     if (reviewFetcher.state !== "idle" || !reviewFetcher.data?.ok) return;
@@ -107,36 +99,6 @@ export default function App() {
       setShowReviewPopup(false);
     }
   }, [reviewFetcher.state, reviewFetcher.data]);
-
-  useEffect(() => {
-    let timer;
-
-    function startClickLoading() {
-      setClickLoading(true);
-      clearTimeout(timer);
-      timer = setTimeout(() => setClickLoading(false), 800);
-    }
-
-    function onPointerDown(event) {
-      if (!(event.target instanceof Element)) return;
-      const clickable = event.target.closest("button, a, [role='button'], s-button, ui-title-bar button");
-      if (!clickable) return;
-      if (clickable.matches(":disabled") || clickable.getAttribute("aria-disabled") === "true") return;
-      startClickLoading();
-    }
-
-    document.addEventListener("pointerdown", onPointerDown, true);
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener("pointerdown", onPointerDown, true);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isRouterBusy) return;
-    const timer = setTimeout(() => setClickLoading(false), 120);
-    return () => clearTimeout(timer);
-  }, [isRouterBusy]);
 
   function dismissPopup() {
     if (reviewFetcher.state !== "idle") return;
@@ -150,39 +112,6 @@ export default function App() {
   return (
     <AppProvider embedded apiKey={apiKey}>
       <style>{`
-        .app-global-spinner-chip {
-          position: fixed;
-          top: 14px;
-          right: 14px;
-          z-index: 10010;
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 12px;
-          border-radius: 999px;
-          border: 1px solid #d1d5db;
-          background: #ffffff;
-          color: #111827;
-          font-size: 12px;
-          font-weight: 600;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
-          pointer-events: none;
-        }
-
-        .app-global-spinner-dot {
-          width: 14px;
-          height: 14px;
-          border: 2px solid #d1d5db;
-          border-top-color: #111827;
-          border-radius: 50%;
-          animation: appGlobalSpin 0.8s linear infinite;
-          flex-shrink: 0;
-        }
-
-        @keyframes appGlobalSpin {
-          to { transform: rotate(360deg); }
-        }
-
         ui-title-bar button {
           background: #000000;
           color: #ffffff;
@@ -208,12 +137,6 @@ export default function App() {
         <s-link href={withEmbeddedAppParams("/app/pricing", location.search)}>Plan</s-link>
       </s-app-nav>
       <Outlet />
-      {showGlobalSpinner && (
-        <div className="app-global-spinner-chip" aria-live="polite" aria-busy="true">
-          <span className="app-global-spinner-dot" aria-hidden="true" />
-          <span>Loading...</span>
-        </div>
-      )}
 
       {showReviewPopup && (
         <div

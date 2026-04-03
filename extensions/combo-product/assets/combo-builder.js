@@ -2996,9 +2996,15 @@
       });
     }
 
+    var gridLoadToken = 0;
+
     // Load products for active slot then render grid
     function loadAndRenderGrid() {
       renderProductGrid(null);
+      var previousOverlays = productSection.querySelectorAll('.cb-grid-overlay');
+      previousOverlays.forEach(function (node) {
+        if (node && node.parentNode) node.parentNode.removeChild(node);
+      });
       // Show inline spinner overlay on the product section
       var gridOverlay = document.createElement('div');
       gridOverlay.className = 'cb-grid-overlay';
@@ -3006,10 +3012,18 @@
         '<span class="combo-builder-spinner" aria-hidden="true"></span>' +
         '<span class="cb-grid-overlay-text">Loading products\u2026</span>';
       productSection.appendChild(gridOverlay);
+      var token = ++gridLoadToken;
+      var startedAt = Date.now();
+      var minVisibleMs = 220;
 
       getStepProducts(activeSlotIndex, function (err, products) {
-        if (gridOverlay.parentNode) gridOverlay.parentNode.removeChild(gridOverlay);
-        renderProductGrid(err ? [] : products);
+        var elapsed = Date.now() - startedAt;
+        var waitMs = Math.max(0, minVisibleMs - elapsed);
+        setTimeout(function () {
+          if (token !== gridLoadToken) return;
+          if (gridOverlay.parentNode) gridOverlay.parentNode.removeChild(gridOverlay);
+          renderProductGrid(err ? [] : products);
+        }, waitMs);
       });
     }
 

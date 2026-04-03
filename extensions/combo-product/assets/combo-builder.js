@@ -2314,12 +2314,11 @@
       return true;
     }
 
+    // Specific combo should follow forward step flow only.
+    // Do not wrap to previous empty steps (prevents jumping backwards after Skip).
     function findNextEmptySlot(currentIdx) {
       for (var i = currentIdx + 1; i < slots.length; i++) {
         if (!slots[i]) return i;
-      }
-      for (var j = 0; j < currentIdx; j++) {
-        if (!slots[j]) return j;
       }
       return -1;
     }

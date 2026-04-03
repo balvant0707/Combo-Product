@@ -817,7 +817,7 @@
 }
 
 .cb-product-card:hover:not(.cb-product-card--used):not(.cb-product-card--current) {
-  background: #f8fafc;
+  background: var(--cb-bg);
   box-shadow: none;
   transform: none;
 }

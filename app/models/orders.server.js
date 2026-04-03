@@ -4,6 +4,43 @@ function toDateKey(date) {
   return date.toISOString().slice(0, 10);
 }
 
+function normalizeAnalyticsComboTypeFilter(value) {
+  const normalized = String(value || "all").trim().toLowerCase();
+  if (normalized === "simple" || normalized === "specific") return normalized;
+  return "all";
+}
+
+function isSpecificComboBoxRecord(box) {
+  if (!box) return false;
+
+  const configType = Number.parseInt(box?.config?.comboType, 10);
+  if (Number.isFinite(configType) && configType > 0) return true;
+
+  const raw = typeof box.comboStepsConfig === "string" ? box.comboStepsConfig.trim() : "";
+  if (!raw) return false;
+
+  try {
+    const parsed = JSON.parse(raw);
+    const parsedType = Number.parseInt(parsed?.comboType ?? parsed?.type, 10);
+    if (Number.isFinite(parsedType) && parsedType > 0) return true;
+    if (Array.isArray(parsed?.steps) && parsed.steps.length > 0) return true;
+  } catch {
+    return false;
+  }
+
+  return false;
+}
+
+function matchesComboTypeFilter(box, comboTypeFilter) {
+  if (comboTypeFilter === "all") return true;
+  const isSpecific = isSpecificComboBoxRecord(box);
+  return comboTypeFilter === "specific" ? isSpecific : !isSpecific;
+}
+
+function getComboTypeLabel(box) {
+  return isSpecificComboBoxRecord(box) ? "Specific Combo Product" : "Simple Combo Product";
+}
+
 function buildDailySkeleton(fromDate, toDate) {
   const days = [];
   const cursor = new Date(fromDate);
@@ -137,7 +174,8 @@ export async function getOrders(shop, { page = 1, limit = 20, boxId = null } = {
   return { orders, total, page, limit };
 }
 
-export async function getAnalytics(shop, from, to) {
+export async function getAnalytics(shop, from, to, options = {}) {
+  const comboTypeFilter = normalizeAnalyticsComboTypeFilter(options.comboTypeFilter);
   const fromDate = from ? new Date(from) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const toDate = to ? new Date(to) : new Date();
 
@@ -146,22 +184,48 @@ export async function getAnalytics(shop, from, to) {
   const prevFromDate = new Date(fromDate.getTime() - periodMs);
   const prevToDate = new Date(fromDate.getTime());
 
-  const [orders, prevOrders, activeBoxes] = await Promise.all([
+  const [rawOrders, rawPrevOrders, rawActiveBoxes] = await Promise.all([
     db.bundleOrder.findMany({
       where: { shop, orderDate: { gte: fromDate, lte: toDate } },
-      include: { box: { select: { displayTitle: true, itemCount: true } } },
+      include: {
+        box: {
+          select: {
+            displayTitle: true,
+            itemCount: true,
+            comboStepsConfig: true,
+            config: { select: { comboType: true } },
+          },
+        },
+      },
       orderBy: { orderDate: "asc" },
     }),
     db.bundleOrder.findMany({
       where: { shop, orderDate: { gte: prevFromDate, lte: prevToDate } },
+      include: {
+        box: {
+          select: {
+            comboStepsConfig: true,
+            config: { select: { comboType: true } },
+          },
+        },
+      },
       orderBy: { orderDate: "asc" },
     }),
     db.comboBox.findMany({
       where: { shop, isActive: true, deletedAt: null },
-      select: { id: true, displayTitle: true },
+      select: {
+        id: true,
+        displayTitle: true,
+        comboStepsConfig: true,
+        config: { select: { comboType: true } },
+      },
       orderBy: { sortOrder: "asc" },
     }),
   ]);
+
+  const orders = rawOrders.filter((order) => matchesComboTypeFilter(order.box, comboTypeFilter));
+  const prevOrders = rawPrevOrders.filter((order) => matchesComboTypeFilter(order.box, comboTypeFilter));
+  const activeBoxes = rawActiveBoxes.filter((box) => matchesComboTypeFilter(box, comboTypeFilter));
 
   const totalOrders = orders.length;
   const totalRevenue = orders.reduce((sum, o) => sum + parseFloat(o.bundlePrice), 0);
@@ -233,6 +297,26 @@ export async function getAnalytics(shop, from, to) {
   }
   const boxPerformance = Object.values(boxPerf).sort((a, b) => b.revenue - a.revenue);
 
+  const recentOrders = [...orders]
+    .sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime())
+    .slice(0, 10)
+    .map((order) => {
+      const selected = parseSelectedProducts(order.selectedProducts);
+      return {
+        id: order.id,
+        orderId: order.orderId,
+        boxId: order.boxId,
+        boxTitle: order.box?.displayTitle || "Unknown Box",
+        comboType: isSpecificComboBoxRecord(order.box) ? "specific" : "simple",
+        comboTypeLabel: getComboTypeLabel(order.box),
+        selectedProducts: selected,
+        selectedCount: selected.length,
+        itemCount: order.box?.itemCount || 0,
+        bundlePrice: parseFloat(order.bundlePrice),
+        orderDate: order.orderDate.toISOString(),
+      };
+    });
+
   return {
     totalOrders,
     totalRevenue: parseFloat(totalRevenue.toFixed(2)),
@@ -246,6 +330,8 @@ export async function getAnalytics(shop, from, to) {
     dailyTrend,
     prevDailyTrend,
     boxPerformance,
+    recentOrders,
+    comboTypeFilter,
     period: { from: fromDate.toISOString(), to: toDate.toISOString() },
     prevPeriod: { from: prevFromDate.toISOString(), to: prevToDate.toISOString() },
   };
@@ -254,7 +340,16 @@ export async function getAnalytics(shop, from, to) {
 export async function getRecentOrders(shop, limit = 10) {
   return db.bundleOrder.findMany({
     where: { shop },
-    include: { box: { select: { displayTitle: true, itemCount: true } } },
+    include: {
+      box: {
+        select: {
+          displayTitle: true,
+          itemCount: true,
+          comboStepsConfig: true,
+          config: { select: { comboType: true } },
+        },
+      },
+    },
     orderBy: { orderDate: "desc" },
     take: limit,
   });

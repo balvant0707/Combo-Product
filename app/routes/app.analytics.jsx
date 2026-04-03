@@ -12,6 +12,8 @@ export const loader = async ({ request }) => {
   const period = url.searchParams.get("period") || "30";
   const customFrom = url.searchParams.get("from") || null;
   const customTo = url.searchParams.get("to") || null;
+  const comboTypeParam = String(url.searchParams.get("comboType") || "all").toLowerCase();
+  const comboType = comboTypeParam === "simple" || comboTypeParam === "specific" ? comboTypeParam : "all";
 
   let fromDate, toDate;
   if (customFrom && customTo) {
@@ -25,12 +27,13 @@ export const loader = async ({ request }) => {
     toDate = toD.toISOString().slice(0, 10);
   }
 
-  const analytics = await getAnalytics(session.shop, fromDate, toDate);
+  const analytics = await getAnalytics(session.shop, fromDate, toDate, { comboTypeFilter: comboType });
   return {
     analytics,
     period: customFrom ? "custom" : period,
     fromDate,
     toDate,
+    comboType,
   };
 };
 
@@ -231,20 +234,19 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
   function handleApply() {
     setOpen(false);
     setPickingEnd(false);
+    const currentParams = new URLSearchParams(location.search);
+    const comboType = currentParams.get("comboType");
+    const nextParams = new URLSearchParams();
+    if (comboType && comboType !== "all") nextParams.set("comboType", comboType);
     if (selectedPreset !== "custom") {
-      navigate(
-        withEmbeddedAppParams(
-          `${location.pathname}?period=${selectedPreset}`,
-          location.search,
-        ),
-      );
+      nextParams.set("period", selectedPreset);
+      const nextQuery = nextParams.toString();
+      navigate(withEmbeddedAppParams(`${location.pathname}${nextQuery ? `?${nextQuery}` : ""}`, location.search));
     } else if (fromDate && toDate) {
-      navigate(
-        withEmbeddedAppParams(
-          `${location.pathname}?from=${fromDate}&to=${toDate}`,
-          location.search,
-        ),
-      );
+      nextParams.set("from", fromDate);
+      nextParams.set("to", toDate);
+      const nextQuery = nextParams.toString();
+      navigate(withEmbeddedAppParams(`${location.pathname}${nextQuery ? `?${nextQuery}` : ""}`, location.search));
     }
   }
 
@@ -431,6 +433,47 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function ComboTypeFilter({ value = "all" }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  function handleChange(nextValue) {
+    const normalized = nextValue === "simple" || nextValue === "specific" ? nextValue : "all";
+    const params = new URLSearchParams(location.search);
+    if (normalized === "all") params.delete("comboType");
+    else params.set("comboType", normalized);
+    const nextQuery = params.toString();
+    navigate(withEmbeddedAppParams(`${location.pathname}${nextQuery ? `?${nextQuery}` : ""}`, location.search));
+  }
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <label style={{ fontSize: "12px", color: "#4b5563", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+        Box Type
+      </label>
+      <select
+        value={value}
+        onChange={(e) => handleChange(e.target.value)}
+        style={{
+          minWidth: "190px",
+          padding: "7px 12px",
+          borderRadius: "5px",
+          border: "1.5px solid #e5e7eb",
+          background: "#ffffff",
+          fontSize: "13px",
+          fontWeight: "600",
+          color: "#374151",
+          cursor: "pointer",
+        }}
+      >
+        <option value="all">All Combo Products</option>
+        <option value="simple">Simple Combo Product</option>
+        <option value="specific">Specific Combo Product</option>
+      </select>
     </div>
   );
 }
@@ -958,6 +1001,108 @@ function BoxPerformanceChart({ data }) {
   );
 }
 
+function RecentOrdersTable({ data }) {
+  if (!data || data.length === 0) {
+    return (
+      <div style={{ textAlign: "center", padding: "40px 0", color: "#9ca3af", fontSize: "13px" }}>
+        <AdminIcon type="order" size="large" style={{ marginBottom: "8px", color: "#9ca3af" }} />
+        No bundle orders in this period.
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+        <thead>
+          <tr>
+            {["Order #", "Combo Product", "Type", "Details", "Amount", "Date"].map((h) => (
+              <th
+                key={h}
+                style={{
+                  textAlign: "left",
+                  padding: "12px 14px",
+                  borderBottom: "1px solid #e5e7eb",
+                  color: "#6b7280",
+                  fontSize: "10px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  fontWeight: "700",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((order, index) => {
+            const selected = Array.isArray(order.selectedProducts) ? order.selectedProducts : [];
+            const detailsText = selected.length > 0
+              ? `${selected.slice(0, 2).join(", ")}${selected.length > 2 ? ` +${selected.length - 2} more` : ""}`
+              : `${order.itemCount || 0} step${Number(order.itemCount || 0) === 1 ? "" : "s"}`;
+            return (
+              <tr
+                key={order.id || `${order.orderId}-${index}`}
+                style={{ background: index % 2 === 0 ? "#fff" : "#fafafa" }}
+              >
+                <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6" }}>
+                  <span style={{ fontFamily: "monospace", fontWeight: "700", color: "#111827", background: "#f3f4f6", padding: "2px 8px", borderRadius: "5px" }}>
+                    #{order.orderId}
+                  </span>
+                </td>
+                <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6", color: "#374151", fontWeight: "600" }}>
+                  {order.boxTitle}
+                </td>
+                <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6" }}>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      background: order.comboType === "specific" ? "#eef2ff" : "#ecfdf5",
+                      border: `1px solid ${order.comboType === "specific" ? "#c7d2fe" : "#bbf7d0"}`,
+                      borderRadius: "5px",
+                      padding: "2px 8px",
+                      fontSize: "11px",
+                      fontWeight: "700",
+                      color: order.comboType === "specific" ? "#4338ca" : "#166534",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {order.comboTypeLabel}
+                  </span>
+                </td>
+                <td
+                  style={{
+                    padding: "12px 14px",
+                    borderBottom: "1px solid #f3f4f6",
+                    color: "#374151",
+                    maxWidth: "320px",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                  title={selected.join(", ")}
+                >
+                  {detailsText}
+                </td>
+                <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6" }}>
+                  <span style={{ fontFamily: "monospace", fontWeight: "800", color: "#2A7A4F", background: "#f0fdf4", padding: "2px 8px", borderRadius: "5px" }}>
+                    {`₹${Number(order.bundlePrice || 0).toLocaleString("en-IN")}`}
+                  </span>
+                </td>
+                <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6", color: "#9ca3af", fontSize: "12px", fontFamily: "monospace" }}>
+                  {new Date(order.orderDate).toLocaleDateString("en-IN")}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 // ─── Comparison Period Banner ─────────────────────────────────────────────────
 function ComparisonBanner({ period, prevPeriod }) {
   if (!period || !prevPeriod) return null;
@@ -990,7 +1135,7 @@ function ComparisonBanner({ period, prevPeriod }) {
 
 // ─── Main Analytics Page ──────────────────────────────────────────────────────
 export default function AnalyticsPage() {
-  const { analytics, period, fromDate, toDate } = useLoaderData();
+  const { analytics, period, fromDate, toDate, comboType } = useLoaderData();
   const {
     totalOrders,
     totalRevenue,
@@ -1004,6 +1149,7 @@ export default function AnalyticsPage() {
     dailyTrend,
     prevDailyTrend,
     boxPerformance,
+    recentOrders,
     period: periodRange,
     prevPeriod,
   } = analytics;
@@ -1050,7 +1196,10 @@ export default function AnalyticsPage() {
               Bundle analytics · period-over-period comparison
             </div>
           </div>
-          <DateRangePicker period={period} fromDate={fromDate} toDate={toDate} />
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            <ComboTypeFilter value={comboType} />
+            <DateRangePicker period={period} fromDate={fromDate} toDate={toDate} />
+          </div>
         </div>
 
         <ComparisonBanner period={periodRange} prevPeriod={prevPeriod} />
@@ -1134,6 +1283,10 @@ export default function AnalyticsPage() {
           <BoxPerformanceChart data={boxPerformance} />
         </s-section>
       </div>
+
+      <s-section heading="Recent Bundle Orders">
+        <RecentOrdersTable data={recentOrders} />
+      </s-section>
     </s-page>
   );
 }

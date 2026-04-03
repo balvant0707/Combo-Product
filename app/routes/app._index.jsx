@@ -13,6 +13,43 @@ import { AdminIcon } from "../components/admin-icons";
 import { buildThemeEditorUrl, buildEmbedBlockUrl, getEmbedBlockStatus } from "../utils/theme-editor.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 
+function parseOrderSelectedProducts(value) {
+  if (Array.isArray(value)) {
+    return value.map((entry) => String(entry || "").trim()).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed.map((entry) => String(entry || "").trim()).filter(Boolean);
+      }
+    } catch {
+      return [trimmed];
+    }
+    return [trimmed];
+  }
+  return [];
+}
+
+function isSpecificComboFromBox(box) {
+  if (!box) return false;
+  const cfgType = Number.parseInt(box?.config?.comboType, 10);
+  if (Number.isFinite(cfgType) && cfgType > 0) return true;
+  const raw = typeof box?.comboStepsConfig === "string" ? box.comboStepsConfig.trim() : "";
+  if (!raw) return false;
+  try {
+    const parsed = JSON.parse(raw);
+    const parsedType = Number.parseInt(parsed?.comboType ?? parsed?.type, 10);
+    if (Number.isFinite(parsedType) && parsedType > 0) return true;
+    if (Array.isArray(parsed?.steps) && parsed.steps.length > 0) return true;
+  } catch {
+    return false;
+  }
+  return false;
+}
+
 export const loader = async ({ request }) => {
   const { session, admin, billing } = await authenticate.admin(request);
   const shop = session.shop;
@@ -71,6 +108,9 @@ export const loader = async ({ request }) => {
       orderId: order.orderId,
       boxTitle: order.box?.displayTitle || "Unknown Box",
       itemCount: order.box?.itemCount || 0,
+      comboType: isSpecificComboFromBox(order.box) ? "specific" : "simple",
+      comboTypeLabel: isSpecificComboFromBox(order.box) ? "Specific Combo Product" : "Simple Combo Product",
+      selectedProducts: parseOrderSelectedProducts(order.selectedProducts),
       bundlePrice: parseFloat(order.bundlePrice),
       orderDate: order.orderDate.toISOString(),
     })),
@@ -732,34 +772,57 @@ export default function DashboardPage() {
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                     <thead>
                       <tr>
-                        {["Order #", "Box Type", "Items", "Amount", "Date"].map((h) => (
+                        {["Order #", "Combo Product", "Type", "Details", "Amount", "Date"].map((h) => (
                           <th key={h} style={{ textAlign: "left", padding: "14px 16px", borderBottom: "2px solid #f3f4f6", color: "#000000", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.9px", fontWeight: "700", whiteSpace: "nowrap" }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {recentOrders.map((order, index) => (
-                        <tr
-                          key={order.id}
-                          style={{ background: index % 2 === 0 ? "#fff" : "#fafafa", transition: "background 0.12s" }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = "#f0fdf4"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = index % 2 === 0 ? "#fff" : "#fafafa"; }}
-                        >
-                          <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                            <span style={{ fontFamily: "monospace", fontWeight: "700", color: "#111827", background: "#f3f4f6", padding: "3px 8px", borderRadius: "6px" }}>#{order.orderId}</span>
-                          </td>
-                          <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6", color: "#374151", fontWeight: "600" }}>{order.boxTitle}</td>
-                          <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                            <span style={{ display: "inline-block", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "5px", padding: "2px 10px", fontSize: "12px", fontWeight: "700", color: "#2563eb", fontFamily: "monospace" }}>{order.itemCount}</span>
-                          </td>
-                          <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                            <span style={{ fontFamily: "monospace", fontWeight: "800", color: "#2A7A4F", background: "#f0fdf4", padding: "3px 8px", borderRadius: "5px" }}>{`\u20B9${Number(order.bundlePrice).toLocaleString("en-IN")}`}</span>
-                          </td>
-                          <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6", color: "#9ca3af", fontSize: "12px", fontFamily: "monospace" }}>
-                            {new Date(order.orderDate).toLocaleDateString("en-IN")}
-                          </td>
-                        </tr>
-                      ))}
+                      {recentOrders.map((order, index) => {
+                        const selected = Array.isArray(order.selectedProducts) ? order.selectedProducts : [];
+                        const detailsText = selected.length > 0
+                          ? `${selected.slice(0, 2).join(", ")}${selected.length > 2 ? ` +${selected.length - 2} more` : ""}`
+                          : `${order.itemCount || 0} step${Number(order.itemCount || 0) === 1 ? "" : "s"}`;
+                        return (
+                          <tr
+                            key={order.id}
+                            style={{ background: index % 2 === 0 ? "#fff" : "#fafafa", transition: "background 0.12s" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "#f0fdf4"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = index % 2 === 0 ? "#fff" : "#fafafa"; }}
+                          >
+                            <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                              <span style={{ fontFamily: "monospace", fontWeight: "700", color: "#111827", background: "#f3f4f6", padding: "3px 8px", borderRadius: "6px" }}>#{order.orderId}</span>
+                            </td>
+                            <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6", color: "#374151", fontWeight: "600" }}>{order.boxTitle}</td>
+                            <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                              <span
+                                style={{
+                                  display: "inline-block",
+                                  background: order.comboType === "specific" ? "#eef2ff" : "#ecfdf5",
+                                  border: `1px solid ${order.comboType === "specific" ? "#c7d2fe" : "#bbf7d0"}`,
+                                  borderRadius: "5px",
+                                  padding: "2px 10px",
+                                  fontSize: "11px",
+                                  fontWeight: "700",
+                                  color: order.comboType === "specific" ? "#4338ca" : "#166534",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {order.comboTypeLabel}
+                              </span>
+                            </td>
+                            <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6", color: "#374151", maxWidth: "280px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={selected.join(", ")}>
+                              {detailsText}
+                            </td>
+                            <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                              <span style={{ fontFamily: "monospace", fontWeight: "800", color: "#2A7A4F", background: "#f0fdf4", padding: "3px 8px", borderRadius: "5px" }}>{`\u20B9${Number(order.bundlePrice).toLocaleString("en-IN")}`}</span>
+                            </td>
+                            <td style={{ padding: "13px 16px", borderBottom: "1px solid #f3f4f6", color: "#9ca3af", fontSize: "12px", fontFamily: "monospace" }}>
+                              {new Date(order.orderDate).toLocaleDateString("en-IN")}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

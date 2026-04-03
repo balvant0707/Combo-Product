@@ -608,7 +608,7 @@ export default function CreateSpecificComboBoxPage() {
                     </div>
                     <div style={{ fontSize: "11px", color: "#000000", marginTop: "5px" }}>{comboConfig.type} product selections required (2â€“8)</div>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px", gridColumn: "2 / -1" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "10px", gridColumn: "2 / -1" }}>
                     <div>
                       <label style={labelStyle}>Title</label>
                       <input value={comboConfig.title} onChange={(e) => updateComboField("title", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Build Your Perfect Bundle" />
@@ -617,13 +617,11 @@ export default function CreateSpecificComboBoxPage() {
                       <label style={labelStyle}>Descriptions</label>
                       <input value={comboConfig.subtitle} onChange={(e) => updateComboField("subtitle", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Choose a product for each step" />
                     </div>
-                  </div>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "10px" }}>
                     <div>
                       <label style={labelStyle}>Combo Product Button Title</label>
                       <input value={comboConfig.ctaButtonLabel || ""} onChange={(e) => updateComboField("ctaButtonLabel", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="BUILD YOUR OWN BOX" />
                     </div>
+                  </div>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px", alignItems: "start" }}>
                   {/* Combo image */}
@@ -928,7 +926,7 @@ export default function CreateSpecificComboBoxPage() {
                             <input value={step.popup.desc} onChange={(e) => updateComboStepPopup(ai, "desc", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Select the primary product." />
                           </div>
                           <div>
-                            <label style={labelStyle}>Product Button Label</label>
+                            <label style={labelStyle}>Product Button Title</label>
                             <input value={step.popup.btn} onChange={(e) => updateComboStepPopup(ai, "btn", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Confirm selection" />
                             <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>CTA label inside the popup drawer</div>
                           </div>

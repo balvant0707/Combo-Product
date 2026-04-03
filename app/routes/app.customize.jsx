@@ -86,7 +86,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <s-page heading="Settings" inlineSize="large">
+    <s-page heading="MixBox – Box & Bundle Builder" inlineSize="large">
       <s-button
         slot="primary-action"
         onClick={() => document.getElementById("settings-form").requestSubmit()}

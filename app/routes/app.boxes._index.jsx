@@ -566,7 +566,7 @@ export default function ManageBoxesPage() {
         .cb-copy-btn.copied { background: #dcfce7; border-color: #86efac; color: #16a34a; }
       `}</style>
 
-      <ui-title-bar title="Combo Boxes">
+      <ui-title-bar title="MixBox – Box & Bundle Builder">
         <button variant="primary" onClick={openCreateBoxModal}>
           + Create Box
         </button>

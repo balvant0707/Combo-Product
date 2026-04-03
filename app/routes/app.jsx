@@ -133,7 +133,7 @@ export default function App() {
         {/* <s-link href="/app">Dashboard</s-link> */}
         <s-link href={withEmbeddedAppParams("/app/boxes", location.search)}>Box Settings</s-link>
         <s-link href={withEmbeddedAppParams("/app/analytics", location.search)}>Analytics</s-link>
-        <s-link href={withEmbeddedAppParams("/app/settings", location.search)}>Settings</s-link>
+        <s-link href={withEmbeddedAppParams("/app/customize", location.search)}>Customize</s-link>
         <s-link href={withEmbeddedAppParams("/app/pricing", location.search)}>Plan</s-link>
       </s-app-nav>
       <Outlet />

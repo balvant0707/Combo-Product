@@ -777,8 +777,8 @@ export default function SpecificComboBoxPage() {
             <div style={{ padding: "10px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#111827" }}>Combo configuration</div>
             <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "16px" }}>
 
-              {/* Row 1: NUMBER OF STEPS | TITLE | DESCRIPTIONS */}
-              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr 1fr", gap: "14px", alignItems: "start" }}>
+              {/* Row 1: NUMBER OF STEPS | TITLE | DESCRIPTIONS | COMBO PRODUCT BUTTON TITLE */}
+              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr 1fr 1fr", gap: "14px", alignItems: "start" }}>
                 <div>
                   <label style={labelStyle}>Number of steps</label>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px" }}>
@@ -805,10 +805,6 @@ export default function SpecificComboBoxPage() {
                   <label style={labelStyle}>Descriptions</label>
                   <input value={comboConfig.subtitle} onChange={(e) => updateComboField("subtitle", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="Choose a product for each step" />
                 </div>
-              </div>
-
-              {/* Row 2: COMBO PRODUCT BUTTON TITLE */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "14px" }}>
                 <div>
                   <label style={labelStyle}>Combo Product Button Title</label>
                   <input value={comboConfig.comboButtonTitle || ""} onChange={(e) => updateComboField("comboButtonTitle", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. BUILD YOUR OWN BOX" />
@@ -1028,7 +1024,7 @@ export default function SpecificComboBoxPage() {
                         <textarea value={step.popup.desc} onChange={(e) => updateComboStepPopup(ai, "desc", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db", resize: "vertical", minHeight: "64px" }} placeholder="Select a product for this step." />
                       </div>
                       <div>
-                        <label style={labelStyle}>Product Button Label</label>
+                        <label style={labelStyle}>Product Button Title</label>
                         <input value={step.popup.btn} onChange={(e) => updateComboStepPopup(ai, "btn", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Confirm selection" />
                         <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>CTA label inside the popup drawer</div>
                       </div>

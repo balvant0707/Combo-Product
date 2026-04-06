@@ -282,7 +282,7 @@
     );
     var fontColor = normalizeHexColor(
       settings.productCardFontColor || settings.fontColor || settings.textColor,
-      '#0f172a'
+      pickReadableTextColor(cardBgColor, '#111827', '#ffffff')
     );
     var buttonTextColor = normalizeHexColor(
       settings.buttonTextColor || settings.buttonFontColor,

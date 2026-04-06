@@ -361,8 +361,8 @@
   padding: 11px 0;
   margin-top: 12px;
   border: none;
-  background: var(--cb-text);
-  color: #fff;
+  background: var(--cb-product-btn-bg, var(--cb-primary));
+  color: var(--cb-product-btn-text, #fff);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 1.2px;
@@ -371,10 +371,21 @@
   transition: background var(--cb-transition);
 }
 
-.cb-box-cta-btn:hover { background: var(--cb-primary); }
+.cb-box-cta-btn:hover {
+  background: var(--cb-product-btn-bg, var(--cb-primary));
+  color: var(--cb-product-btn-text, #fff);
+}
 
 .cb-box-card--active .cb-box-cta-btn {
-  background: var(--cb-primary);
+  background: var(--cb-product-btn-bg, var(--cb-primary));
+  color: var(--cb-product-btn-text, #fff);
+}
+
+.cb-box-cta-btn:disabled {
+  background: var(--cb-product-btn-bg, var(--cb-primary));
+  color: var(--cb-product-btn-text, #fff);
+  opacity: 1;
+  cursor: not-allowed;
 }
 
 /* Box ID badge — shown at foot of box card for merchant reference */
@@ -561,7 +572,7 @@
 
 .cb-slot-step-item {
   display: block;
-  color: var(--cb-text, #111827);
+  color: var(--cb-heading-color, #1f2937);
   text-decoration: none;
   cursor: default;
   font-size: 12px;
@@ -570,11 +581,11 @@
 }
 
 .cb-slot-step--active .cb-slot-step-item {
-  color: var(--cb-active-slot, var(--cb-primary, #2A7A4F));
+  color: var(--cb-heading-color, #1f2937);
 }
 
 .cb-slot-step-item--filled {
-  color: var(--cb-active-slot, var(--cb-primary, #2A7A4F));
+  color: var(--cb-heading-color, #1f2937);
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -1841,7 +1852,7 @@
 /* Active / done step: label turns primary color */
 .cb-wizard-step-wrapper:has(.cb-wizard-step--active) .cb-wizard-step-label,
 .cb-wizard-step-wrapper:has(.cb-wizard-step--done) .cb-wizard-step-label {
-  color: var(--cb-primary) !important;
+  color: var(--cb-heading-color, #1f2937) !important;
 }
 
 /* Hidden — kept for JS reference compatibility */

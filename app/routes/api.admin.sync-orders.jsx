@@ -12,9 +12,6 @@ const SYNC_ORDERS_QUERY = `#graphql
         id
         name
         createdAt
-        customer {
-          id
-        }
         lineItems(first: 50) {
           nodes {
             quantity
@@ -104,7 +101,6 @@ export const action = async ({ request }) => {
 
     for (const order of ordersData.nodes || []) {
       const orderId = extractIdFromGid(order.id);
-      const customerId = order.customer ? extractIdFromGid(order.customer.id) : null;
       const orderDate = new Date(order.createdAt);
 
       for (const item of order.lineItems?.nodes || []) {
@@ -134,7 +130,7 @@ export const action = async ({ request }) => {
           bundlePrice: Number.isFinite(bundlePrice) ? bundlePrice : 0,
           giftMessage,
           orderDate,
-          customerId,
+          customerId: null,
         });
 
         // trackBundleOrder returns null for duplicates or invalid boxes

@@ -34,6 +34,34 @@
     return !!fallback;
   }
 
+  function normalizeHexColor(value, fallback) {
+    if (value == null) return fallback;
+    var raw = String(value).trim();
+    if (!raw) return fallback;
+    if (/^#[0-9a-f]{6}$/i.test(raw)) return raw;
+    if (/^#[0-9a-f]{3}$/i.test(raw)) {
+      return '#' +
+        raw.charAt(1) + raw.charAt(1) +
+        raw.charAt(2) + raw.charAt(2) +
+        raw.charAt(3) + raw.charAt(3);
+    }
+    return fallback;
+  }
+
+  function pickReadableTextColor(backgroundColor, darkText, lightText) {
+    var fallbackDark = darkText || '#111827';
+    var fallbackLight = lightText || '#ffffff';
+    var hex = normalizeHexColor(backgroundColor, '');
+    if (!hex) return fallbackLight;
+
+    var r = parseInt(hex.slice(1, 3), 16);
+    var g = parseInt(hex.slice(3, 5), 16);
+    var b = parseInt(hex.slice(5, 7), 16);
+    var perceivedBrightness = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+
+    return perceivedBrightness >= 160 ? fallbackDark : fallbackLight;
+  }
+
   function getSelectedProductsTotal(slots) {
     var total = 0;
     (slots || []).forEach(function (p) {
@@ -212,6 +240,7 @@
   function applyPresetTheme(rootEl, themeName) {
     if (!themeName || themeName === 'custom' || !PRESET_THEMES[themeName]) return;
     var t = PRESET_THEMES[themeName];
+    var buttonTextColor = pickReadableTextColor(t.primary, '#111827', '#ffffff');
     var instance = rootEl.getAttribute('data-cb-instance') || rootEl.getAttribute('data-block-id');
     if (!instance) return;
 
@@ -233,6 +262,10 @@
       '--cb-border:' + t.border + ';' +
       '--cb-border-dashed:' + t.border + ';' +
       '--cb-idle-num:' + t.idleNum + ';' +
+      '--cb-product-card-bg:' + t.bg + ';' +
+      '--cb-product-font-color:' + t.text + ';' +
+      '--cb-product-btn-bg:' + t.primary + ';' +
+      '--cb-product-btn-text:' + buttonTextColor + ';' +
     '}';
     // Append to body so this rule comes after the liquid block's <style> in
     // document order, winning the CSS cascade at equal specificity.
@@ -241,8 +274,20 @@
 
   function applyCustomColors(rootEl, settings) {
     if (!settings) return;
-    var primaryColor = settings.buttonColor || '#2A7A4F';
-    var activeSlotColor = settings.activeSlotColor || primaryColor;
+    var primaryColor = normalizeHexColor(settings.buttonColor, '#2A7A4F');
+    var activeSlotColor = normalizeHexColor(settings.activeSlotColor, primaryColor);
+    var cardBgColor = normalizeHexColor(
+      settings.productCardBackgroundColor || settings.cardBackgroundColor || settings.cardBgColor || settings.backgroundColor,
+      '#ffffff'
+    );
+    var fontColor = normalizeHexColor(
+      settings.productCardFontColor || settings.fontColor || settings.textColor,
+      '#0f172a'
+    );
+    var buttonTextColor = normalizeHexColor(
+      settings.buttonTextColor || settings.buttonFontColor,
+      pickReadableTextColor(primaryColor, '#111827', '#ffffff')
+    );
     var instance = rootEl.getAttribute('data-cb-instance') || rootEl.getAttribute('data-block-id');
     if (!instance) return;
 
@@ -257,6 +302,10 @@
       '--cb-primary-hover:' + primaryColor + ';' +
       '--cb-primary-glow:' + primaryColor + '33;' +
       '--cb-active-slot:' + activeSlotColor + ';' +
+      '--cb-product-card-bg:' + cardBgColor + ';' +
+      '--cb-product-font-color:' + fontColor + ';' +
+      '--cb-product-btn-bg:' + primaryColor + ';' +
+      '--cb-product-btn-text:' + buttonTextColor + ';' +
     '}';
     document.body.appendChild(style);
   }

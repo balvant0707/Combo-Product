@@ -20,6 +20,13 @@
   --cb-error:         #dc2626;
   --cb-success:       #059669;
 
+  --cb-product-card-bg:  var(--cb-bg);
+  --cb-product-font-color: var(--cb-text);
+  --cb-product-btn-bg:  var(--cb-primary);
+  --cb-product-btn-text: #ffffff;
+  --cb-heading-color: #1f2937;
+  --cb-heading-muted-color: #4b5563;
+
   --cb-font:          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
   --cb-step-heading-size:   24px;
@@ -167,7 +174,7 @@
   font-size: var(--cb-step-heading-size);
   font-weight: var(--cb-step-heading-weight);
   font-style: var(--cb-step-heading-style);
-  color: var(--cb-text);
+  color: var(--cb-heading-color, #1f2937);
   text-align: center;
   margin: 0 0 28px;
   letter-spacing: -0.5px;
@@ -544,12 +551,12 @@
   display: block;
   font-size: 11px;
   font-weight: 400;
-  color: var(--cb-text-muted, #000000);
+  color: var(--cb-heading-muted-color, #4b5563);
 }
 
 /* Active slot label gets primary colour on the item name */
 .cb-slot-step--active .cb-slot-step-small {
-  color: var(--cb-text-muted, #000000);
+  color: var(--cb-heading-muted-color, #4b5563);
 }
 
 .cb-slot-step-item {
@@ -725,7 +732,7 @@
   font-size: 18px;
   font-weight: 800;
   font-style: normal;
-  color: var(--cb-text);
+  color: var(--cb-heading-color, #1f2937);
   letter-spacing: -0.3px;
   margin-bottom: 18px;
   border-left: 3px solid var(--cb-primary);
@@ -748,7 +755,7 @@
 .cb-product-label-desc {
   font-size: 13px;
   font-weight: 500;
-  color: var(--cb-text-muted);
+  color: var(--cb-heading-muted-color, #4b5563);
   letter-spacing: 0;
   line-height: 1.45;
 }
@@ -783,7 +790,7 @@
 .cb-combo-subtitle {
       text-align: center;
     font-size: 12px;
-     color: var(--cb-text);
+     color: var(--cb-heading-muted-color, #4b5563);
     margin: 0;
 }
 
@@ -803,7 +810,7 @@
 
 /* ── Product Card ─────────────────────────────────────── */
 .cb-product-card {
-  background: var(--cb-bg);
+  background: var(--cb-product-card-bg, var(--cb-bg));
   border: none;
   overflow: hidden;
   cursor: pointer;
@@ -817,7 +824,7 @@
 }
 
 .cb-product-card:hover:not(.cb-product-card--used):not(.cb-product-card--current) {
-  background: var(--cb-bg);
+  background: var(--cb-product-card-bg, var(--cb-bg));
   box-shadow: none;
   transform: none;
 }
@@ -888,7 +895,7 @@
   transition: transform 0.3s ease;
 }
 
-.cb-product-card:hover .cb-product-img { transform: scale(1.05); }
+.cb-product-card:hover .cb-product-img { transform: none; }
 
 .cb-product-img-placeholder {
   width: 100%;
@@ -933,7 +940,7 @@
 .cb-product-title {
   font-size: var(--cb-product-title-size);
   font-weight: 600;
-  color: var(--cb-text);
+  color: var(--cb-product-font-color, var(--cb-text));
   line-height: 1.4;
   flex: 1;
   min-width: 0;
@@ -961,7 +968,7 @@
 .cb-product-price {
   font-size: 13px;
   font-weight: 700;
-  color: var(--cb-text);
+  color: var(--cb-product-font-color, var(--cb-text));
   letter-spacing: -0.2px;
 }
 
@@ -976,7 +983,8 @@
 .cb-product-compare-price {
   font-size: 11px;
   font-weight: 500;
-  color: var(--cb-text-light);
+  color: var(--cb-product-font-color, var(--cb-text));
+  opacity: 0.65;
   text-decoration: line-through;
 }
 
@@ -985,7 +993,7 @@
   border: none;
   background: transparent;
   font-size: 10px;
-  color: var(--cb-text-muted);
+  color: var(--cb-product-font-color, var(--cb-text));
   text-decoration: none;
   display: inline-flex;
   align-items: center;
@@ -996,8 +1004,8 @@
   white-space: nowrap;
 }
 
-.cb-product-learn-link:hover { color: var(--cb-primary); text-decoration: underline; }
-.cb-product-learn-link:focus-visible { outline: none; color: var(--cb-primary); }
+.cb-product-learn-link:hover { color: var(--cb-product-font-color, var(--cb-text)); text-decoration: none; }
+.cb-product-learn-link:focus-visible { outline: none; color: var(--cb-product-font-color, var(--cb-text)); }
 
 /* ADD TO BOX button */
 .cb-add-btn {
@@ -1006,8 +1014,8 @@
   padding: 11px 0;
   margin-top: 10px;
   border: none;
-  background: var(--cb-text);
-  color: #fff;
+  background: var(--cb-product-btn-bg, var(--cb-primary));
+  color: var(--cb-product-btn-text, #fff);
   font-size: var(--cb-btn-font-size);
   font-weight: 700;
   letter-spacing: 1px;
@@ -1016,18 +1024,25 @@
   transition: background var(--cb-transition);
 }
 
-.cb-add-btn:hover { background: var(--cb-primary); }
+.cb-add-btn:hover {
+  background: var(--cb-product-btn-bg, var(--cb-primary));
+  color: var(--cb-product-btn-text, #fff);
+}
 
 .cb-add-btn--added {
-  background: var(--cb-success);
+  background: var(--cb-product-btn-bg, var(--cb-primary));
+  color: var(--cb-product-btn-text, #fff);
   cursor: default;
 }
 
-.cb-add-btn--added:hover { background: var(--cb-success); }
+.cb-add-btn--added:hover {
+  background: var(--cb-product-btn-bg, var(--cb-primary));
+  color: var(--cb-product-btn-text, #fff);
+}
 
 .cb-add-btn--remove {
-  background: var(--cb-primary, #2A7A4F);
-  color: #fff;
+  background: var(--cb-product-btn-bg, var(--cb-primary, #2A7A4F));
+  color: var(--cb-product-btn-text, #fff);
   cursor: pointer;
   letter-spacing: 1.2px;
   font-size: 12px;
@@ -1040,8 +1055,9 @@
 }
 
 .cb-add-btn--remove:hover {
-  background: var(--cb-primary-hover, #1e5c3a);
-  opacity: 0.92;
+  background: var(--cb-product-btn-bg, var(--cb-primary, #2A7A4F));
+  color: var(--cb-product-btn-text, #fff);
+  opacity: 1;
 }
 
 /* List layout overrides */
@@ -1717,7 +1733,7 @@
   font-size: clamp(18px, 2vw, 24px);
   font-weight: 700;
   font-style: normal;
-  color: var(--cb-text);
+  color: var(--cb-heading-color, #1f2937);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   margin: 0;
@@ -1811,7 +1827,7 @@
   font-weight: 500 !important;
   letter-spacing: 0;
   text-transform: none;
-  color: var(--cb-text-muted) !important;
+  color: var(--cb-heading-muted-color, #4b5563) !important;
   line-height: 1.2;
   min-width: 72px;
   max-width: 100px;

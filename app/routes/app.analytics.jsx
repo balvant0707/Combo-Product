@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useLoaderData, useLocation, useNavigate } from "react-router";
+import { useLoaderData, useLocation, useNavigate, useRevalidator } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { AdminIcon } from "../components/admin-icons";
@@ -1136,6 +1136,79 @@ function ComparisonBanner({ period, prevPeriod }) {
   );
 }
 
+// ─── Sync Orders Button ───────────────────────────────────────────────────────
+function SyncOrdersButton() {
+  const { revalidate } = useRevalidator();
+  const [state, setState] = useState("idle"); // idle | loading | success | error
+  const [result, setResult] = useState(null);
+
+  async function handleSync() {
+    setState("loading");
+    setResult(null);
+    try {
+      const resp = await fetch("/api/admin/sync-orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ days: 90 }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data?.error || "Sync failed");
+      setResult(data);
+      setState("success");
+      revalidate();
+    } catch (err) {
+      setResult({ error: err.message });
+      setState("error");
+    }
+  }
+
+  const isLoading = state === "loading";
+  const btnStyle = {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+    padding: "7px 14px",
+    borderRadius: "5px",
+    border: "1.5px solid #e5e7eb",
+    background: isLoading ? "#f3f4f6" : "#ffffff",
+    fontSize: "13px",
+    fontWeight: "600",
+    color: isLoading ? "#9ca3af" : "#374151",
+    cursor: isLoading ? "not-allowed" : "pointer",
+    whiteSpace: "nowrap",
+    transition: "background 0.15s",
+  };
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <button style={btnStyle} onClick={handleSync} disabled={isLoading}>
+        {isLoading ? (
+          <>
+            <span style={{ width: "12px", height: "12px", border: "2px solid #d1d5db", borderTopColor: "#2A7A4F", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />
+            Syncing…
+          </>
+        ) : (
+          <>
+            <AdminIcon type="refresh" size="small" />
+            Sync Orders
+          </>
+        )}
+      </button>
+      {state === "success" && result && (
+        <span style={{ fontSize: "12px", color: "#059669", fontWeight: "600" }}>
+          +{result.synced} new order{result.synced !== 1 ? "s" : ""} synced
+        </span>
+      )}
+      {state === "error" && (
+        <span style={{ fontSize: "12px", color: "#dc2626", fontWeight: "600" }}>
+          {result?.error || "Sync failed"}
+        </span>
+      )}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
 // ─── Main Analytics Page ──────────────────────────────────────────────────────
 export default function AnalyticsPage() {
   const { analytics, period, fromDate, toDate, comboType } = useLoaderData();
@@ -1202,6 +1275,7 @@ export default function AnalyticsPage() {
           <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
             <ComboTypeFilter value={comboType} />
             <DateRangePicker period={period} fromDate={fromDate} toDate={toDate} />
+            <SyncOrdersButton />
           </div>
         </div>
 

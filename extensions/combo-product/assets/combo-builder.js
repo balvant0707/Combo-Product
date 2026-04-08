@@ -1616,6 +1616,7 @@
     if (ctx.layoutMode === 'steps') {
       step3CartSection = document.createElement('div');
       step3CartSection.className = 'cb-step3-cart';
+      step3CartSection.style.display = 'none';
 
       var step3Head = document.createElement('h2');
       step3Head.className = 'cb-step-heading cb-step3-heading';
@@ -1777,6 +1778,7 @@
       if (ctx.layoutMode === 'steps') {
         var savedScrollY = window.scrollY;
         productSection.style.display = allFilled ? 'none' : '';
+        if (step3CartSection) step3CartSection.style.display = allFilled ? '' : 'none';
         if (allFilled) {
           requestAnimationFrame(function () {
             requestAnimationFrame(function () { window.scrollTo(0, savedScrollY); });
@@ -2538,6 +2540,7 @@
     if (ctx.layoutMode === 'steps') {
       step3CartSection = document.createElement('div');
       step3CartSection.className = 'cb-step3-cart';
+      step3CartSection.style.display = 'none';
 
       var step3Head = document.createElement('h2');
       step3Head.className = 'cb-step-heading cb-step3-heading';
@@ -2692,6 +2695,7 @@
       if (ctx.layoutMode === 'steps') {
         var savedScrollY = window.scrollY;
         productSection.style.display = allFilled ? 'none' : '';
+        if (step3CartSection) step3CartSection.style.display = cartReady ? '' : 'none';
         if (allFilled) {
           requestAnimationFrame(function () {
             requestAnimationFrame(function () { window.scrollTo(0, savedScrollY); });

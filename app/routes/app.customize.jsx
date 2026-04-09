@@ -2,10 +2,23 @@ import { useEffect, useState } from "react";
 import { useLoaderData, useActionData, Form, useNavigation } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
-import { AdminIcon } from "../components/admin-icons";
-import { ToggleSwitch } from "../components/toggle-switch";
 import { getSettings, upsertSettings } from "../models/settings.server";
 import { showPolarisToast } from "../utils/polaris-toast";
+import {
+  Badge,
+  Banner,
+  BlockStack,
+  Box,
+  Button,
+  Card,
+  Checkbox,
+  FormLayout,
+  InlineGrid,
+  InlineStack,
+  Page,
+  Spinner,
+  Text,
+} from "@shopify/polaris";
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
@@ -56,174 +69,121 @@ export default function SettingsPage() {
     }
   }, [actionData?.success]);
 
-  const inputStyle = {
-    width: "100%",
-    padding: "8px 12px",
-    border: "1px solid #c9c6be",
-    borderRadius: "5px",
-    fontSize: "13px",
-    color: "#1a1814",
-    background: "#fff",
-    boxSizing: "border-box",
-  };
-
   return (
-    <s-page heading="MixBox – Box & Bundle Builder" inlineSize="medium">
-      <s-button
-        slot="primary-action"
-        onClick={() => document.getElementById("settings-form").requestSubmit()}
-        disabled={isSaving || undefined}
-      >
-        {isSaving ? "Saving..." : "Save Settings"}
-      </s-button>
-
-      {/* Hero banner */}
-      <div style={{ marginBottom: "20px", borderRadius: "20px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}>
-          <AdminIcon type="settings" size="small" /> Settings
-        </div>
-        <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>Widget & Theme Configuration</div>
-        <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Customize the appearance and behaviour of the combo builder on your storefront.</div>
-      </div>
-
+    <Page
+      title="Widget Settings"
+      subtitle="Customize the appearance and behaviour of the combo builder on your storefront"
+      primaryAction={{
+        content: isSaving ? "Saving..." : "Save Settings",
+        loading: isSaving,
+        onAction: () => document.getElementById("settings-form")?.requestSubmit(),
+      }}
+    >
       <Form id="settings-form" method="post">
+        <BlockStack gap="500">
 
-        {/* ── All sections wrapper with gap ────────────────────────────────── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          {/* Success banner */}
+          {actionData?.success && (
+            <Banner tone="success" title="Settings saved">
+              <p>Your widget configuration has been updated.</p>
+            </Banner>
+          )}
 
-        {/* ── Theme Customizer + Widget Width side-by-side ─────────────────── */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", alignItems: "start" }}>
+          {/* Theme Customizer + Widget Width side by side */}
+          <InlineGrid columns={{ xs: 1, md: 2 }} gap="400" alignItems="start">
 
-          {/* ── Theme Customizer ─────────────────────────────────────────────── */}
-          <s-section heading="Theme Customizer">
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <p style={{ fontSize: "13px", color: "#000000", margin: 0 }}>
-                Customize the primary and secondary widget colors for your storefront.
-              </p>
-
-              <input type="hidden" name="presetTheme" value="custom" />
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", paddingTop: "4px" }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: "13px", fontWeight: "500", color: "#1a1814", marginBottom: "6px" }}>
-                      Primary Color
-                    </label>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            {/* Theme Customizer Card */}
+            <Card>
+              <BlockStack gap="400">
+                <Text as="h2" variant="headingMd">Theme Customizer</Text>
+                <Text as="p" tone="subdued">
+                  Customize the primary and secondary widget colors for your storefront.
+                </Text>
+                <input type="hidden" name="presetTheme" value="custom" />
+                <InlineGrid columns={2} gap="400">
+                  <BlockStack gap="200">
+                    <Text as="label" variant="bodySm" fontWeight="semibold">Primary Color</Text>
+                    <InlineStack gap="200" blockAlign="center">
                       <input
                         type="color"
                         name="buttonColor"
                         value={buttonColor}
                         onChange={(e) => setButtonColor(e.target.value)}
-                        style={{ width: "40px", height: "36px", border: "1px solid #c9c6be", borderRadius: "5px", cursor: "pointer", padding: "2px" }}
+                        style={{ width: 40, height: 36, border: "1px solid #c9c6be", borderRadius: 5, cursor: "pointer", padding: 2 }}
                       />
                       <input
                         type="text"
                         value={buttonColor}
                         onChange={(e) => setButtonColor(e.target.value)}
-                        style={{ ...inputStyle, flex: 1 }}
+                        style={{ flex: 1, padding: "8px 12px", border: "1px solid #c9c6be", borderRadius: 5, fontSize: 13 }}
                       />
-                    </div>
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: "13px", fontWeight: "500", color: "#1a1814", marginBottom: "6px" }}>
-                      Secondory Color
-                    </label>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    </InlineStack>
+                  </BlockStack>
+                  <BlockStack gap="200">
+                    <Text as="label" variant="bodySm" fontWeight="semibold">Secondary Color</Text>
+                    <InlineStack gap="200" blockAlign="center">
                       <input
                         type="color"
                         name="activeSlotColor"
                         value={activeSlotColor}
                         onChange={(e) => setActiveSlotColor(e.target.value)}
-                        style={{ width: "40px", height: "36px", border: "1px solid #c9c6be", borderRadius: "5px", cursor: "pointer", padding: "2px" }}
+                        style={{ width: 40, height: 36, border: "1px solid #c9c6be", borderRadius: 5, cursor: "pointer", padding: 2 }}
                       />
                       <input
                         type="text"
                         value={activeSlotColor}
                         onChange={(e) => setActiveSlotColor(e.target.value)}
-                        style={{ ...inputStyle, flex: 1}}
+                        style={{ flex: 1, padding: "8px 12px", border: "1px solid #c9c6be", borderRadius: 5, fontSize: 13 }}
                       />
-                    </div>
-                  </div>
-                </div>
-            </div>
-          </s-section>
+                    </InlineStack>
+                  </BlockStack>
+                </InlineGrid>
+              </BlockStack>
+            </Card>
 
-          {/* ── Widget Width ─────────────────────────────────────────────────── */}
-          <s-section heading="Widget Width">
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <p style={{ fontSize: "13px", color: "#000000", margin: 0 }}>
-                Controls the maximum width of the combo builder widget on the storefront. Choose a preset or enter a custom pixel value.
-              </p>
+            {/* Widget Width Card */}
+            <Card>
+              <BlockStack gap="400">
+                <Text as="h2" variant="headingMd">Widget Width</Text>
+                <Text as="p" tone="subdued">
+                  Controls the maximum width of the combo builder widget on the storefront.
+                </Text>
+                <input type="hidden" name="widgetMaxWidth" value={widgetMaxWidth} />
 
-              <input type="hidden" name="widgetMaxWidth" value={widgetMaxWidth} />
+                {/* Preset buttons */}
+                <InlineGrid columns={{ xs: 2, md: 3 }} gap="300">
+                  {[
+                    { value: 0,    label: "Full Width", desc: "100%" },
+                    { value: 860,  label: "Narrow",     desc: "860px" },
+                    { value: 1140, label: "Default",    desc: "1140px" },
+                    { value: 1400, label: "Wide",       desc: "1400px" },
+                    { value: 1920, label: "Full HD",    desc: "1920px" },
+                  ].map((preset) => {
+                    const isActive = widgetMaxWidth === preset.value;
+                    return (
+                      <button
+                        key={preset.value}
+                        type="button"
+                        onClick={() => setWidgetMaxWidth(preset.value)}
+                        style={{
+                          padding: "12px 8px",
+                          border: isActive ? "2px solid #000" : "2px solid #e5e7eb",
+                          borderRadius: 8,
+                          background: isActive ? "#f9fafb" : "#fff",
+                          cursor: "pointer",
+                          textAlign: "center",
+                        }}
+                      >
+                        <Text variant="bodySm" fontWeight={isActive ? "semibold" : "regular"}>{preset.label}</Text>
+                        <Text variant="bodySm" tone="subdued">{preset.desc}</Text>
+                      </button>
+                    );
+                  })}
+                </InlineGrid>
 
-
-              {/* Preset cards */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: "10px" }}>
-                {[
-                  { value: 0,    label: "Full Width", desc: "100%" },
-                  { value: 860,  label: "Narrow",     desc: "860px" },
-                  { value: 1140, label: "Default",    desc: "1140px" },
-                  { value: 1400, label: "Wide",       desc: "1400px" },
-                  { value: 1920, label: "Full HD",    desc: "1920px" },
-                ].map((preset) => {
-                  const isActive = widgetMaxWidth === preset.value;
-                  return (
-                    <button
-                      key={preset.value}
-                      type="button"
-                      onClick={() => setWidgetMaxWidth(preset.value)}
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: "10px",
-                        padding: "12px 8px",
-                        border: isActive ? "2px solid #000000" : "2px solid #e5e7eb",
-                        borderRadius: "5px",
-                        background: isActive ? "" : "#fff",
-                        cursor: "pointer",
-                        transition: "border-color 0.15s, background 0.15s",
-                      }}
-                    >
-                      <div style={{ width: "100%", height: "24px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <div
-                          style={{
-                            height: "8px",
-                            borderRadius: "5px",
-                            background: isActive ? "#ffffff" : "#d1d5db",
-                            width: preset.value === 0 ? "100%" :
-                                   preset.value <= 860 ? "45%" :
-                                   preset.value <= 1140 ? "62%" :
-                                   preset.value <= 1400 ? "80%" : "100%",
-                            transition: "background 0.15s",
-                          }}
-                        />
-                      </div>
-                      <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: "12px", fontWeight: isActive ? "700" : "600", color: isActive ? "#000000" : "#111827" }}>
-                          {preset.label}
-                        </div>
-                        <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>
-                          {preset.desc}
-                        </div>
-                      </div>
-                      {isActive && (
-                        <div style={{ width: "16px", height: "16px", borderRadius: "50%", background: "#000000", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <AdminIcon type="checkmark" size="small" style={{ color: "#fff" }} />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Custom value input */}
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <div style={{ fontSize: "13px", color: "#374151", fontWeight: "500", flexShrink: 0 }}>
-                  Custom value:
-                </div>
-                <div style={{ display: "flex", alignItems: "center", border: "1.5px solid #e5e7eb", borderRadius: "8px", overflow: "hidden", background: "#fff" }}>
+                {/* Custom value */}
+                <InlineStack gap="200" blockAlign="center">
+                  <Text tone="subdued">Custom:</Text>
                   <input
                     type="number"
                     min="0"
@@ -236,131 +196,156 @@ export default function SettingsPage() {
                       if (!isNaN(v) && v >= 0) setWidgetMaxWidth(v);
                       else if (e.target.value === "") setWidgetMaxWidth(0);
                     }}
-                    style={{
-                      padding: "8px 12px",
-                      border: "none",
-                      outline: "none",
-                      fontSize: "13px",
-                      color: "#111827",
-                      width: "100px",
-                      background: "transparent",
-                    }}
+                    style={{ width: 100, padding: "8px 12px", border: "1.5px solid #e5e7eb", borderRadius: 6, fontSize: 13 }}
                   />
-                  <span style={{ padding: "8px 12px 8px 0", fontSize: "13px", color: "#9ca3af" }}>
-                    {widgetMaxWidth === 0 ? "= 100%" : "px"}
-                  </span>
-                </div>
-                {widgetMaxWidth === 0 && (
-                  <span style={{ fontSize: "12px", color: "#000000" }}>Full section width</span>
-                )}
-              </div>
-            </div>
-          </s-section>
+                  <Text tone="subdued">{widgetMaxWidth === 0 ? "= 100%" : "px"}</Text>
+                </InlineStack>
+              </BlockStack>
+            </Card>
 
-        </div>
+          </InlineGrid>
 
-        {/* ── Widget Text Labels ───────────────────────────────────────────── */}
-        <s-section heading="Product Grid">
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            <p style={{ fontSize: "13px", color: "#000000", margin: 0 }}>
-              Controls how many product cards appear in each row on desktop storefront layouts.
-            </p>
-
-            <input type="hidden" name="productCardsPerRow" value={productCardsPerRow} />
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "12px" }}>
-              {PRODUCT_CARD_ROW_OPTIONS.map((count) => {
-                const isActive = productCardsPerRow === count;
-                return (
-                  <button
-                    key={count}
-                    type="button"
-                    onClick={() => setProductCardsPerRow(count)}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "10px",
-                      padding: "14px 10px",
-                      border: isActive ? "2px solid #000000" : "2px solid #e5e7eb",
-                      borderRadius: "5px",
-                      background: isActive ? "#000000" : "#fff",
-                      cursor: "pointer",
-                      boxShadow: isActive ? "0 0 0 3px rgba(0,0,0,0.12)" : "none",
-                      transition: "border-color 0.15s, background 0.15s",
-                    }}
-                  >
-                    <div style={{ display: "grid", gridTemplateColumns: `repeat(${count}, 1fr)`, gap: "3px", width: "100%", maxWidth: "86px" }}>
-                      {Array.from({ length: count }).map((_, idx) => (
-                        <span
-                          key={idx}
-                          style={{
-                            display: "block",
-                            height: "16px",
-                            borderRadius: "5px",
-                            background: isActive ? "#ffffff" : "#d1d5db",
-                            opacity: isActive ? 1 : 0.85,
-                          }}
-                        />
-                      ))}
-                    </div>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: "12px", fontWeight: isActive ? "700" : "600", color: isActive ? "#ffffff" : "#111827" }}>
+          {/* Product Grid Card */}
+          <Card>
+            <BlockStack gap="400">
+              <Text as="h2" variant="headingMd">Product Grid</Text>
+              <Text as="p" tone="subdued">
+                Controls how many product cards appear in each row on desktop storefront layouts.
+              </Text>
+              <input type="hidden" name="productCardsPerRow" value={productCardsPerRow} />
+              <InlineStack gap="300">
+                {PRODUCT_CARD_ROW_OPTIONS.map((count) => {
+                  const isActive = productCardsPerRow === count;
+                  return (
+                    <button
+                      key={count}
+                      type="button"
+                      onClick={() => setProductCardsPerRow(count)}
+                      style={{
+                        padding: "14px 20px",
+                        border: isActive ? "2px solid #000" : "2px solid #e5e7eb",
+                        borderRadius: 8,
+                        background: isActive ? "#000" : "#fff",
+                        cursor: "pointer",
+                        textAlign: "center",
+                      }}
+                    >
+                      <span style={{ color: isActive ? "#fff" : "#111", fontSize: 13, fontWeight: 600 }}>
                         {count} per row
-                      </div>
-                      <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>
-                        Desktop layout
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </s-section>
-        {/* -- Display Options ------------------------------------------------ */}
-        <s-section heading="Display Options">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-            {[
-              { name: "showSavingsBadge", label: "Show Savings Badge", desc: "Display a badge showing how much customers save vs buying individually", defaultChecked: settings.showSavingsBadge },
-              { name: "showProductPrices", label: "Show Product Prices", desc: "Show individual product prices in the selection grid", defaultChecked: settings.showProductPrices },
-              { name: "allowDuplicates", label: "Allow Duplicate Products", desc: "Let customers pick the same product more than once", defaultChecked: settings.allowDuplicates },
-              { name: "forceShowOos", label: "Show Out-of-Stock Products", desc: "Show out-of-stock products (greyed out) in the selection grid", defaultChecked: settings.forceShowOos },
-            ].map((toggle) => (
-              <div
-                key={toggle.name}
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "12px",
-                  padding: "12px",
-                  border: "1px solid #e5e1d8",
-                  borderRadius: "5px",
-                }}
-              >
-                <ToggleSwitch
-                  name={toggle.name}
-                  value="true"
-                  defaultChecked={toggle.defaultChecked}
-                  showStateText={false}
-                />
-                <div>
-                  <div style={{ fontSize: "13px", fontWeight: "500", color: "#1a1814" }}>{toggle.label}</div>
-                  <div style={{ fontSize: "12px", color: "#7a7670", marginTop: "2px" }}>{toggle.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </s-section>
+                      </span>
+                    </button>
+                  );
+                })}
+              </InlineStack>
+            </BlockStack>
+          </Card>
 
-        </div>{/* ── end sections wrapper ── */}
+          {/* Widget Text Labels Card */}
+          <Card>
+            <BlockStack gap="400">
+              <Text as="h2" variant="headingMd">Widget Text Labels</Text>
+              <Text as="p" tone="subdued">
+                Customize the text shown to customers inside the combo builder widget.
+              </Text>
+              <FormLayout>
+                <FormLayout.Group>
+                  <BlockStack gap="200">
+                    <Text as="label" variant="bodySm" fontWeight="semibold" htmlFor="widgetHeadingText">
+                      Widget Heading
+                    </Text>
+                    <input
+                      id="widgetHeadingText"
+                      type="text"
+                      name="widgetHeadingText"
+                      defaultValue={settings.widgetHeadingText || ""}
+                      placeholder="e.g. Build Your Box"
+                      style={{ width: "100%", padding: "8px 12px", border: "1px solid #c9c6be", borderRadius: 5, fontSize: 13, boxSizing: "border-box" }}
+                    />
+                  </BlockStack>
+                  <BlockStack gap="200">
+                    <Text as="label" variant="bodySm" fontWeight="semibold" htmlFor="ctaButtonLabel">
+                      CTA Button Label
+                    </Text>
+                    <input
+                      id="ctaButtonLabel"
+                      type="text"
+                      name="ctaButtonLabel"
+                      defaultValue={settings.ctaButtonLabel || ""}
+                      placeholder="e.g. Complete Your Box"
+                      style={{ width: "100%", padding: "8px 12px", border: "1px solid #c9c6be", borderRadius: 5, fontSize: 13, boxSizing: "border-box" }}
+                    />
+                  </BlockStack>
+                </FormLayout.Group>
+                <FormLayout.Group>
+                  <BlockStack gap="200">
+                    <Text as="label" variant="bodySm" fontWeight="semibold" htmlFor="addToCartLabel">
+                      Add to Cart Label
+                    </Text>
+                    <input
+                      id="addToCartLabel"
+                      type="text"
+                      name="addToCartLabel"
+                      defaultValue={settings.addToCartLabel || ""}
+                      placeholder="e.g. Add Box to Cart"
+                      style={{ width: "100%", padding: "8px 12px", border: "1px solid #c9c6be", borderRadius: 5, fontSize: 13, boxSizing: "border-box" }}
+                    />
+                  </BlockStack>
+                  <BlockStack gap="200">
+                    <Text as="label" variant="bodySm" fontWeight="semibold" htmlFor="giftMessageField">
+                      Gift Message Placeholder
+                    </Text>
+                    <input
+                      id="giftMessageField"
+                      type="text"
+                      name="giftMessageField"
+                      defaultValue={settings.giftMessageField || ""}
+                      placeholder="e.g. Add a gift message..."
+                      style={{ width: "100%", padding: "8px 12px", border: "1px solid #c9c6be", borderRadius: 5, fontSize: 13, boxSizing: "border-box" }}
+                    />
+                  </BlockStack>
+                </FormLayout.Group>
+              </FormLayout>
+            </BlockStack>
+          </Card>
+
+          {/* Display Options Card */}
+          <Card>
+            <BlockStack gap="400">
+              <Text as="h2" variant="headingMd">Display Options</Text>
+              <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
+                {[
+                  { name: "showSavingsBadge",  label: "Show Savings Badge",         desc: "Display a badge showing how much customers save vs buying individually", defaultChecked: settings.showSavingsBadge },
+                  { name: "showProductPrices", label: "Show Product Prices",         desc: "Show individual product prices in the selection grid",                  defaultChecked: settings.showProductPrices },
+                  { name: "allowDuplicates",   label: "Allow Duplicate Products",    desc: "Let customers pick the same product more than once",                    defaultChecked: settings.allowDuplicates },
+                  { name: "forceShowOos",      label: "Show Out-of-Stock Products",  desc: "Show out-of-stock products (greyed out) in the selection grid",         defaultChecked: settings.forceShowOos },
+                ].map((opt) => (
+                  <Card key={opt.name}>
+                    <InlineStack gap="300" blockAlign="start">
+                      <input
+                        type="checkbox"
+                        name={opt.name}
+                        value="true"
+                        defaultChecked={opt.defaultChecked}
+                        style={{ marginTop: 3 }}
+                      />
+                      <BlockStack gap="100">
+                        <Text as="p" variant="bodySm" fontWeight="semibold">{opt.label}</Text>
+                        <Text as="p" variant="bodySm" tone="subdued">{opt.desc}</Text>
+                      </BlockStack>
+                    </InlineStack>
+                  </Card>
+                ))}
+              </InlineGrid>
+            </BlockStack>
+          </Card>
+
+        </BlockStack>
       </Form>
 
+      {/* Loading overlay */}
       {isPageLoading && (
-        <div
-          aria-live="polite"
-          aria-busy="true"
+        <Box
+          as="div"
           style={{
             position: "fixed",
             inset: 0,
@@ -371,10 +356,10 @@ export default function SettingsPage() {
             justifyContent: "center",
           }}
         >
-          <s-spinner accessibilityLabel="Loading page" size="large" />
-        </div>
+          <Spinner accessibilityLabel="Saving" size="large" />
+        </Box>
       )}
-    </s-page>
+    </Page>
   );
 }
 

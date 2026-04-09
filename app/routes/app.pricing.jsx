@@ -2,7 +2,7 @@
 /**
  * app.pricing.jsx
  * Billing page — Free / Monthly / Yearly plan selection.
- * Design: green-header cards with Monthly|Yearly toggle.
+ * Design: Polaris React components.
  */
 
 import { useState, useEffect } from "react";
@@ -19,6 +19,20 @@ import {
   buildShopifyAdminAppUrl,
   withEmbeddedAppParamsFromRequest,
 } from "../utils/embedded-app";
+import {
+  Badge,
+  Banner,
+  BlockStack,
+  Box,
+  Button,
+  Card,
+  Divider,
+  InlineGrid,
+  InlineStack,
+  Layout,
+  Page,
+  Text,
+} from "@shopify/polaris";
 
 /* ── Loader ─────────────────────────────────────────────────────── */
 
@@ -147,107 +161,6 @@ function isCurrentPaidPlan(sub) {
   return !!sub && sub.plan === "PRO" && sub.status === "ACTIVE";
 }
 
-/* ── Sub-components ─────────────────────────────────────────────── */
-
-function Banner({ tone, children }) {
-  const colors = {
-    error:   { bg: "#fef2f2", border: "#fecaca", color: "#b91c1c" },
-    warning: { bg: "#fffbeb", border: "#fcd34d", color: "#92400e" },
-    success: { bg: "#f0fdf4", border: "#bbf7d0", color: "#15803d" },
-    info:    { bg: "#eff6ff", border: "#bfdbfe", color: "#1e40af" },
-  };
-  const s = colors[tone] || colors.info;
-  return (
-    <div style={{
-      background: s.bg,
-      border: `1px solid ${s.border}`,
-      borderRadius: "10px",
-      padding: "12px 16px",
-      marginBottom: "20px",
-      fontSize: "13px",
-      color: s.color,
-    }}>
-      {children}
-    </div>
-  );
-}
-
-function PlanCard({ title, subtitle, priceDisplay, priceLabel, features, savingPct, button }) {
-  return (
-    <div style={{
-      background: "#fff",
-      borderRadius: "18px",
-      boxShadow: "0 6px 24px rgba(0,0,0,0.11)",
-      overflow: "hidden",
-      display: "flex",
-      flexDirection: "column",
-      position: "relative",
-    }}>
-      {savingPct && (
-        <div style={{
-          position: "absolute",
-          top: "16px",
-          right: "16px",
-          background: "#fff",
-          color: "#111827",
-          borderRadius: "999px",
-          padding: "5px 14px",
-          fontSize: "11px",
-          fontWeight: "700",
-          zIndex: 2,
-          boxShadow: "0 1px 6px rgba(0,0,0,0.18)",
-          letterSpacing: "0.02em",
-        }}>
-          {savingPct}% Saving
-        </div>
-      )}
-
-      {/* Green header */}
-      <div style={{
-        background: "linear-gradient(145deg, #2A7A4F 0%, #1c5c38 100%)",
-        padding: "28px 28px 32px",
-      }}>
-        <div style={{ fontSize: "15px", fontWeight: "600", color: "rgba(255,255,255,0.88)", marginBottom: "3px" }}>
-          {title}
-        </div>
-        <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.62)", marginBottom: "18px" }}>
-          {subtitle}
-        </div>
-        <div style={{ fontSize: "56px", fontWeight: "800", color: "#fff", lineHeight: 1, letterSpacing: "-2px" }}>
-          {priceDisplay}
-          {priceLabel && (
-            <span style={{ fontSize: "15px", fontWeight: "500", marginLeft: "4px", opacity: 0.72, letterSpacing: 0 }}>
-              {priceLabel}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Feature list */}
-      <div style={{ padding: "24px 28px", flex: 1 }}>
-        {features.map((f) => (
-          <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "14px" }}>
-            <span style={{
-              width: "11px",
-              height: "11px",
-              borderRadius: "50%",
-              background: "#2A7A4F",
-              flexShrink: 0,
-              marginTop: "4px",
-            }} />
-            <span style={{ fontSize: "14px", color: "#374151", lineHeight: 1.5 }}>{f}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* CTA button */}
-      <div style={{ padding: "0 28px 28px" }}>
-        {button}
-      </div>
-    </div>
-  );
-}
-
 /* ── Page ────────────────────────────────────────────────────────── */
 
 export default function PricingPage() {
@@ -296,25 +209,58 @@ export default function PricingPage() {
     }
   }, [subscribed, cancelled]);
 
-
   /* ── Button for Free card ── */
   let freeBtn;
   if (isFree) {
     freeBtn = (
-      <button disabled style={btnStyle({ variant: "muted" })}>Current plan</button>
+      <button
+        disabled
+        style={{
+          width: "100%",
+          padding: "14px",
+          borderRadius: "10px",
+          border: "none",
+          fontSize: "14px",
+          fontWeight: "700",
+          textAlign: "center",
+          cursor: "default",
+          background: "#6b7280",
+          color: "#fff",
+          opacity: 0.75,
+        }}
+      >
+        Current plan
+      </button>
     );
   } else if (isPro) {
     freeBtn = (
-      <div style={{ fontSize: "13px", color: "#9ca3af", textAlign: "center", padding: "14px 0" }}>
+      <Text as="p" tone="subdued" alignment="center">
         Cancel Pro to switch to Free
-      </div>
+      </Text>
     );
   } else {
     const busy = isSubmitting && submittingIntent === "free";
     freeBtn = (
       <form method="post">
         <input type="hidden" name="intent" value="free" />
-        <button type="submit" disabled={busy} style={btnStyle({ busy })}>
+        <button
+          type="submit"
+          disabled={busy}
+          style={{
+            width: "100%",
+            padding: "14px",
+            borderRadius: "10px",
+            border: "none",
+            fontSize: "14px",
+            fontWeight: "700",
+            textAlign: "center",
+            cursor: busy ? "wait" : "pointer",
+            background: "#111827",
+            color: "#fff",
+            opacity: busy ? 0.8 : 1,
+            transition: "opacity 0.2s",
+          }}
+        >
           {busy ? "Starting…" : "Start now"}
         </button>
       </form>
@@ -325,11 +271,46 @@ export default function PricingPage() {
   let proBtn;
   if (isPro) {
     proBtn = (
-      <button disabled style={btnStyle({ variant: "muted" })}>Current plan</button>
+      <button
+        disabled
+        style={{
+          width: "100%",
+          padding: "14px",
+          borderRadius: "10px",
+          border: "none",
+          fontSize: "14px",
+          fontWeight: "700",
+          textAlign: "center",
+          cursor: "default",
+          background: "#6b7280",
+          color: "#fff",
+          opacity: 0.75,
+        }}
+      >
+        Current plan
+      </button>
     );
   } else if (actionData?.confirmationUrl) {
     proBtn = (
-      <button disabled style={btnStyle({ busy: true })}>Opening Shopify billing…</button>
+      <button
+        disabled
+        style={{
+          width: "100%",
+          padding: "14px",
+          borderRadius: "10px",
+          border: "none",
+          fontSize: "14px",
+          fontWeight: "700",
+          textAlign: "center",
+          cursor: "wait",
+          background: "#111827",
+          color: "#fff",
+          opacity: 0.8,
+          transition: "opacity 0.2s",
+        }}
+      >
+        Opening Shopify billing…
+      </button>
     );
   } else {
     const busy = isSubmitting && submittingIntent === "subscribe";
@@ -337,7 +318,24 @@ export default function PricingPage() {
       <form method="post">
         <input type="hidden" name="intent" value="subscribe" />
         <input type="hidden" name="billingCycle" value={billingCycle} />
-        <button type="submit" disabled={busy} style={btnStyle({ busy })}>
+        <button
+          type="submit"
+          disabled={busy}
+          style={{
+            width: "100%",
+            padding: "14px",
+            borderRadius: "10px",
+            border: "none",
+            fontSize: "14px",
+            fontWeight: "700",
+            textAlign: "center",
+            cursor: busy ? "wait" : "pointer",
+            background: "#111827",
+            color: "#fff",
+            opacity: busy ? 0.8 : 1,
+            transition: "opacity 0.2s",
+          }}
+        >
           {busy ? "Preparing billing…" : "Start now"}
         </button>
       </form>
@@ -345,82 +343,85 @@ export default function PricingPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f0f0f0", padding: "36px 24px 60px" }}>
+    <Page
+      title="Plans & Pricing"
+      subtitle="Choose the plan that's right for your store"
+    >
+      <BlockStack gap="500">
 
-      {/* ── Dev mode notice ── */}
-      {isDevMode && (
-        <Banner tone="info">
-          <strong>Billing bypass active</strong> — <code>SKIP_BILLING=true</code> is set.
-          Pro activates instantly without Shopify billing.
-        </Banner>
-      )}
+        {/* ── Banners ── */}
+        {isDevMode && (
+          <Banner tone="info" title="Billing bypass active">
+            <p>
+              <code>SKIP_BILLING=true</code> is set. Pro activates instantly without Shopify billing.
+            </p>
+          </Banner>
+        )}
+        {actionData?.error && (
+          <Banner tone="critical" title="Billing error">
+            <p>{actionData.error}</p>
+          </Banner>
+        )}
+        {subscribed && (
+          <Banner tone="success" title="Pro plan activated!">
+            <p>All premium features are now unlocked.</p>
+          </Banner>
+        )}
+        {cancelled && (
+          <Banner tone="warning" title="Subscription cancelled">
+            <p>Any remaining Shopify billing period will still be honored automatically.</p>
+          </Banner>
+        )}
+        {billingUnavailable && (
+          <Banner tone="warning" title="Billing API unavailable">
+            <p>
+              Set the app to <strong>Public Distribution</strong> in the Shopify Partner Dashboard
+              to enable paid plans. During development, add{" "}
+              <code>SKIP_BILLING=true</code> to your <code>.env</code>.
+            </p>
+          </Banner>
+        )}
+        {subscription && (
+          <Banner
+            tone={isPro ? "success" : "info"}
+            title={isPro ? "Active: Pro Plan" : "Active: Free Plan"}
+          >
+            <p>
+              {isPro
+                ? `Renews ${new Date(subscription.currentPeriodEnd).toLocaleDateString()}`
+                : "Upgrade to Pro to unlock all features."}
+            </p>
+          </Banner>
+        )}
 
-      {/* ── Error / success banners ── */}
-      {actionData?.error && (
-        <Banner tone="error">Billing error: {actionData.error}</Banner>
-      )}
-      {subscribed && (
-        <Banner tone="success">
-          <strong>Pro plan activated!</strong> All premium features are now unlocked.
-        </Banner>
-      )}
-      {cancelled && (
-        <Banner tone="warning">
-          Subscription cancelled. Any remaining Shopify billing period will still be honored automatically.
-        </Banner>
-      )}
-      {billingUnavailable && (
-        <Banner tone="warning">
-          <strong>Billing API unavailable.</strong> Set the app to{" "}
-          <strong>Public Distribution</strong> in the Shopify Partner Dashboard to enable paid plans.
-          During development, add <code>SKIP_BILLING=true</code> to your <code>.env</code>.
-        </Banner>
-      )}
+        {/* ── Billing cycle toggle + cancel button ── */}
+        <InlineStack align="center" blockAlign="center" gap="400">
+          <InlineStack gap="0">
+            {["monthly", "yearly"].map((val) => {
+              const active = billingCycle === val;
+              return (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setBillingCycle(val)}
+                  style={{
+                    padding: "9px 32px",
+                    borderRadius: val === "monthly" ? "999px 0 0 999px" : "0 999px 999px 0",
+                    border: "none",
+                    background: active ? "#111827" : "#e5e7eb",
+                    color: active ? "#fff" : "#374151",
+                    fontWeight: "600",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    transition: "background 0.18s, color 0.18s",
+                  }}
+                >
+                  {val === "monthly" ? "Monthly" : `Yearly (save ${YEARLY_SAVING_PCT}%)`}
+                </button>
+              );
+            })}
+          </InlineStack>
 
-      {/* ── Toggle + Cancel button row ── */}
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        position: "relative",
-        marginBottom: "36px",
-      }}>
-        {/* Monthly / Yearly pill */}
-        <div style={{
-          display: "flex",
-          background: "#e5e7eb",
-          borderRadius: "999px",
-          padding: "4px",
-          gap: "2px",
-        }}>
-          {["Monthly", "Yearly"].map((label) => {
-            const val = label.toLowerCase();
-            const active = billingCycle === val;
-            return (
-              <button
-                key={val}
-                type="button"
-                onClick={() => setBillingCycle(val)}
-                style={{
-                  padding: "9px 32px",
-                  borderRadius: "999px",
-                  border: "none",
-                  background: active ? "#111827" : "transparent",
-                  color: active ? "#fff" : "#374151",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  transition: "background 0.18s, color 0.18s",
-                }}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Cancel current plan */}
-        <div style={{ position: "absolute", right: 0 }}>
           {isPro ? (
             <form method="post">
               <input type="hidden" name="intent" value="cancel" />
@@ -444,67 +445,85 @@ export default function PricingPage() {
               </button>
             </form>
           ) : (
-            <button disabled style={{
-              padding: "9px 18px",
-              borderRadius: "8px",
-              border: "1px solid #e5e7eb",
-              background: "#f9fafb",
-              color: "#9ca3af",
-              fontSize: "13px",
-              fontWeight: "500",
-              cursor: "not-allowed",
-            }}>
+            <button
+              disabled
+              style={{
+                padding: "9px 18px",
+                borderRadius: "8px",
+                border: "1px solid #e5e7eb",
+                background: "#f9fafb",
+                color: "#9ca3af",
+                fontSize: "13px",
+                fontWeight: "500",
+                cursor: "not-allowed",
+              }}
+            >
               Cancel current plan
             </button>
           )}
-        </div>
-      </div>
+        </InlineStack>
 
-      {/* ── Plan cards ── */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "24px",
-      }}>
-        <PlanCard
-          title="Free Plan"
-          subtitle="Basic access to features"
-          priceDisplay="Free"
-          features={FREE_FEATURES}
-          button={freeBtn}
-        />
-        <PlanCard
-          title={planTitle}
-          subtitle={`${trialDays} day free trial`}
-          priceDisplay={`$${displayPrice}`}
-          priceLabel={priceLabel}
-          features={PRO_FEATURES}
-          savingPct={isYearly ? YEARLY_SAVING_PCT : null}
-          button={proBtn}
-        />
-      </div>
+        {/* ── Plan cards ── */}
+        <InlineGrid columns={{ xs: 1, md: 2 }} gap="600">
 
-    </div>
+          {/* Free Plan Card */}
+          <Card>
+            <BlockStack gap="400">
+              <BlockStack gap="200">
+                <Text as="h2" variant="headingLg">Free Plan</Text>
+                <Text as="p" tone="subdued">Up to 1 combo box, no credit card needed</Text>
+                <Text as="p" variant="heading2xl">₹0</Text>
+                <Text as="p" tone="subdued">Forever free</Text>
+              </BlockStack>
+              <Divider />
+              <BlockStack gap="200">
+                {FREE_FEATURES.map((f) => (
+                  <InlineStack key={f} gap="200" blockAlign="center">
+                    <Text as="span" tone="success">✓</Text>
+                    <Text as="p">{f}</Text>
+                  </InlineStack>
+                ))}
+              </BlockStack>
+              <Box paddingBlockStart="200">
+                {freeBtn}
+              </Box>
+            </BlockStack>
+          </Card>
+
+          {/* Pro Plan Card */}
+          <Card background="bg-surface-active">
+            <BlockStack gap="400">
+              <BlockStack gap="200">
+                <InlineStack align="space-between" blockAlign="center">
+                  <Text as="h2" variant="headingLg">Pro Plan</Text>
+                  {isYearly && <Badge tone="success">Save {YEARLY_SAVING_PCT}%</Badge>}
+                </InlineStack>
+                <Text as="p" tone="subdued">{planTitle} — Unlimited everything</Text>
+                <Text as="p" variant="heading2xl">₹{displayPrice}</Text>
+                <Text as="p" tone="subdued">{priceLabel}</Text>
+                {trialDays > 0 && !isPro && (
+                  <Badge tone="info">{trialDays}-day free trial</Badge>
+                )}
+              </BlockStack>
+              <Divider />
+              <BlockStack gap="200">
+                {PRO_FEATURES.map((f) => (
+                  <InlineStack key={f} gap="200" blockAlign="center">
+                    <Text as="span" tone="success">✓</Text>
+                    <Text as="p">{f}</Text>
+                  </InlineStack>
+                ))}
+              </BlockStack>
+              <Box paddingBlockStart="200">
+                {proBtn}
+              </Box>
+            </BlockStack>
+          </Card>
+
+        </InlineGrid>
+      </BlockStack>
+    </Page>
   );
-}
-
-/* ── Button style helper ─────────────────────────────────────────── */
-function btnStyle({ busy = false, variant = "primary" } = {}) {
-  const base = {
-    width: "100%",
-    padding: "14px",
-    borderRadius: "10px",
-    border: "none",
-    fontSize: "14px",
-    fontWeight: "700",
-    textAlign: "center",
-    cursor: busy ? "wait" : "pointer",
-    transition: "opacity 0.2s",
-  };
-  if (variant === "muted") {
-    return { ...base, background: "#6b7280", color: "#fff", cursor: "default", opacity: 0.75 };
-  }
-  return { ...base, background: "#111827", color: "#fff", opacity: busy ? 0.8 : 1 };
 }
 
 export function ErrorBoundary() {

@@ -2,6 +2,7 @@ import { useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { withEmbeddedAppParamsFromRequest } from "../utils/embedded-app";
+import { BlockStack, Box, Page, Spinner, Text } from "@shopify/polaris";
 
 export const loader = async ({ request }) => {
   const { billing, session, redirect } = await authenticate.admin(request);
@@ -21,16 +22,19 @@ export const loader = async ({ request }) => {
 
 export default function BillingSuccessPage() {
   return (
-    <s-page heading="Finalizing billing" inlineSize="medium">
-      <div style={{ maxWidth: "520px", margin: "40px auto", padding: "24px", textAlign: "center", background: "#ffffff", border: "1px solid #e5e7eb", borderRadius: "8px" }}>
-        <div style={{ fontSize: "16px", fontWeight: "700", color: "#111827", marginBottom: "8px" }}>
-          Finalizing your subscription
-        </div>
-        <div style={{ fontSize: "13px", color: "#000000", marginBottom: "18px" }}>
-          Redirecting you to the dashboard.
-        </div>
-      </div>
-    </s-page>
+    <Page title="Finalizing billing">
+      <Box paddingBlockStart="1600">
+        <BlockStack gap="400" align="center" inlineAlign="center">
+          <Spinner accessibilityLabel="Finalizing subscription" size="large" />
+          <Text as="p" variant="headingMd" alignment="center">
+            Finalizing your subscription
+          </Text>
+          <Text as="p" tone="subdued" alignment="center">
+            Redirecting you to the dashboard…
+          </Text>
+        </BlockStack>
+      </Box>
+    </Page>
   );
 }
 

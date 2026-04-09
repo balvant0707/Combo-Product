@@ -390,12 +390,14 @@ export default function CreateSpecificComboBoxPage() {
   const [showCollModal, setShowCollModal] = useState(false);
   const [collModalStepIdx, setCollModalStepIdx] = useState(null);
   const [collSearch, setCollSearch] = useState("");
+  const [collStatusFilter, setCollStatusFilter] = useState("all");
   const [tempColls, setTempColls] = useState([]);
 
   /* â”€â”€ Step product modal â”€â”€ */
   const [showStepProdModal, setShowStepProdModal] = useState(false);
   const [stepProdModalIdx, setStepProdModalIdx] = useState(null);
   const [stepProdSearch, setStepProdSearch] = useState("");
+  const [stepProdStatusFilter, setStepProdStatusFilter] = useState("all");
   const [tempStepProds, setTempStepProds] = useState([]);
 
   /* â”€â”€ Step count stepper â”€â”€ */
@@ -478,10 +480,18 @@ export default function CreateSpecificComboBoxPage() {
       : parseFloat(comboConfig.bundlePrice) || 0,
   }));
 
-  const filteredColls = collections.filter((c) => !collSearch || c.title.toLowerCase().includes(collSearch.toLowerCase()));
+  const filteredColls = collections.filter((c) => {
+    const matchesSearch = !collSearch || c.title.toLowerCase().includes(collSearch.toLowerCase());
+    const matchesStatus = collStatusFilter === "all" || collStatusFilter === "active";
+    return matchesSearch && matchesStatus;
+  });
   const activeScopedProducts = stepProdModalIdx !== null ? (stepProducts[stepProdModalIdx] ?? products) : products;
   const isLoadingStepProds = stepProdModalIdx !== null && collProdsFetchers[stepProdModalIdx]?.state === "loading";
-  const filteredStepProds = activeScopedProducts.filter((p) => !stepProdSearch || p.title.toLowerCase().includes(stepProdSearch.toLowerCase()));
+  const filteredStepProds = activeScopedProducts.filter((p) => {
+    const matchesSearch = !stepProdSearch || p.title.toLowerCase().includes(stepProdSearch.toLowerCase());
+    const matchesStatus = stepProdStatusFilter === "all" || stepProdStatusFilter === "active";
+    return matchesSearch && matchesStatus;
+  });
 
   const modalOverlayStyle = { position: "fixed", inset: 0, background: "rgba(17,24,39,0.55)", backdropFilter: "blur(3px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" };
   const modalBoxStyle = { background: "#fff", borderRadius: "8px", width: "100%", maxWidth: "560px", maxHeight: "85vh", display: "flex", flexDirection: "column", boxShadow: "0 20px 60px rgba(0,0,0,0.18)", overflow: "hidden" };
@@ -918,9 +928,9 @@ export default function CreateSpecificComboBoxPage() {
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "10px" }}>
                               {stepScope === "collection" ? (
-                                <button type="button" onClick={() => { setCollModalStepIdx(ai); setTempColls([...step.collections]); setCollSearch(""); setShowCollModal(true); }} style={{ padding: "7px 16px", border: "1px solid #000000", borderRadius: "5px", background: "#000000", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}>Select collections</button>
+                                <button type="button" onClick={() => { setCollModalStepIdx(ai); setTempColls([...step.collections]); setCollSearch(""); setCollStatusFilter("all"); setShowCollModal(true); }} style={{ padding: "7px 16px", border: "1px solid #000000", borderRadius: "5px", background: "#000000", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}>Select collections</button>
                               ) : (
-                                <button type="button" onClick={() => { setStepProdModalIdx(ai); setTempStepProds([...(step.selectedProducts || [])]); setStepProdSearch(""); setShowStepProdModal(true); }} style={{ padding: "7px 16px", border: "1px solid #000000", borderRadius: "5px", background: "#000000", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}>Select products</button>
+                                <button type="button" onClick={() => { setStepProdModalIdx(ai); setTempStepProds([...(step.selectedProducts || [])]); setStepProdSearch(""); setStepProdStatusFilter("all"); setShowStepProdModal(true); }} style={{ padding: "7px 16px", border: "1px solid #000000", borderRadius: "5px", background: "#000000", fontSize: "13px", color: "#ffffff", cursor: "pointer", fontWeight: "500" }}>Select products</button>
                               )}
                               <span style={{ fontSize: "13px", color: "#000000" }}>
                                 {stepScope === "collection"
@@ -932,7 +942,7 @@ export default function CreateSpecificComboBoxPage() {
                         </div>
                         {comboStepErrors[ai] && <div style={{ color: "#e11d48", fontSize: "12px", marginTop: "10px", padding: "8px 12px", background: "#fff5f5", borderRadius: "5px", border: "1px solid #fecaca" }}>{comboStepErrors[ai]}</div>}
                         {step.collections.length > 0 && stepScope === "collection" && (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "8px" }}>
+                          <div style={{ display: "flex", flexDirection: "row", gap: "4px", marginTop: "8px" }}>
                             {step.collections.map((c) => (
                               <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", background: "#f9fafb", border: "1.5px solid #000000", borderRadius: "5px" }}>
                                 <span style={{ fontSize: "12px", color: "#000000", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "6px" }}><AdminIcon type="folder" size="small" style={{ color: "#000000" }} /> {c.title}</span>
@@ -1050,73 +1060,104 @@ export default function CreateSpecificComboBoxPage() {
       )}
       {showCollModal && (
         <div style={modalOverlayStyle} onClick={(e) => { if (e.target === e.currentTarget) setShowCollModal(false); }}>
-          <div style={{ ...modalBoxStyle, maxWidth: "520px" }}>
-            <div style={modalHeaderStyle}>
-              <div><div style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>Select collection</div><div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>{comboConfig.steps[collModalStepIdx]?.label}</div></div>
+          <div style={{ ...modalBoxStyle, maxWidth: "780px", borderRadius: "18px" }}>
+            <div style={{ ...modalHeaderStyle, background: "#ffffff", borderBottom: "1px solid #e5e7eb", padding: "18px 22px" }}>
+              <div>
+                <div style={{ fontSize: "15px", fontWeight: "800", color: "#111827", letterSpacing: "-0.4px" }}>Select collections</div>
+              </div>
               <button type="button" aria-label="Close collection picker" onClick={() => setShowCollModal(false)} style={{ ...modalCloseBtn, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><AdminIcon type="x" size="small" style={{ color: "#9ca3af" }} /></button>
             </div>
-            <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
-              <input type="text" placeholder="Search collectionsâ€¦" value={collSearch} onChange={(e) => setCollSearch(e.target.value)} autoFocus style={searchInputStyle} />
+            <div style={{ padding: "12px 18px", borderBottom: "1px solid #e5e7eb", background: "#ffffff", display: "grid", gridTemplateColumns: "1fr 220px", gap: "10px" }}>
+              <input type="text" placeholder="Search collections" value={collSearch} onChange={(e) => setCollSearch(e.target.value)} autoFocus style={{ ...searchInputStyle, borderRadius: "12px", height: "42px" }} />
+              <select value={collStatusFilter} onChange={(e) => setCollStatusFilter(e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db", borderRadius: "12px", height: "42px", fontWeight: "600" }}>
+                <option value="all">All</option>
+                <option value="active">Active</option>
+              </select>
             </div>
-            <div style={modalBodyStyle}>
+            <div style={{ padding: "0 18px 10px", background: "#ffffff" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "86px minmax(0, 1fr) 120px", gap: "0", padding: "12px 12px", fontSize: "12px", color: "#6b7280", fontWeight: "700", borderBottom: "1px solid #e5e7eb" }}>
+                <div>Select</div>
+                <div>Collection</div>
+                <div style={{ textAlign: "left" }}>Products</div>
+              </div>
+            </div>
+            <div style={{ ...modalBodyStyle, background: "#ffffff", padding: "0 18px" }}>
               {filteredColls.length === 0 ? <div style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>No collections found</div>
                 : filteredColls.map((coll, idx) => {
                   const isSel = tempColls.some((c) => c.id === coll.id);
+                  const productCount = Number.isFinite(coll?.productsCount) ? coll.productsCount : (coll?.productCount ?? 1);
                   return (
-                    <div key={coll.id} onClick={() => setTempColls(isSel ? tempColls.filter((c) => c.id !== coll.id) : [...tempColls, coll])} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filteredColls.length - 1 ? "1px solid #f3f4f6" : "none", borderLeft: isSel ? "3px solid #000000" : "3px solid transparent", cursor: "pointer", background: isSel ? "#f9fafb" : "#fff", userSelect: "none" }}>
-                      {coll.imageUrl ? <img src={coll.imageUrl} alt={coll.title} style={{ width: "38px", height: "38px", objectFit: "cover", borderRadius: "5px", border: "1px solid #e5e7eb", flexShrink: 0 }} /> : <div style={{ width: "38px", height: "38px", borderRadius: "5px", background: "#f3f4f6", border: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><AdminIcon type="folder" size="small" /></div>}
-                      <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{coll.title}</div><div style={{ fontSize: "11px", color: "#9ca3af" }}>{coll.handle}</div></div>
-                      <div style={{ width: "18px", height: "18px", borderRadius: "50%", border: `2px solid ${isSel ? "#000000" : "#d1d5db"}`, background: isSel ? "#000000" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        {isSel && <AdminIcon type="check" size="small" style={{ color: "#ffffff" }} />}
+                    <div key={coll.id} onClick={() => setTempColls(isSel ? tempColls.filter((c) => c.id !== coll.id) : [...tempColls, coll])} style={{ display: "grid", gridTemplateColumns: "86px minmax(0, 1fr) 120px", alignItems: "center", gap: "0", padding: "12px 12px", borderBottom: idx < filteredColls.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", background: isSel ? "#f8fafc" : "#fff", userSelect: "none" }}>
+                      <div style={{ display: "flex", alignItems: "center", paddingLeft: "2px" }}>
+                        <input type="checkbox" checked={isSel} readOnly style={{ width: "26px", height: "26px", accentColor: "#1f2937", cursor: "pointer" }} />
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+                        {coll.imageUrl ? <img src={coll.imageUrl} alt={coll.title} style={{ width: "50px", height: "50px", objectFit: "cover", borderRadius: "10px", border: "1px solid #e5e7eb", flexShrink: 0 }} /> : <div style={{ width: "50px", height: "50px", borderRadius: "10px", background: "#f3f4f6", border: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><AdminIcon type="folder" size="small" /></div>}
+                        <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{coll.title}</div></div>
+                      </div>
+                      <div>
+                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", background: "#dbeafe", color: "#1e40af", borderRadius: "999px", padding: "4px 10px", fontSize: "13px", fontWeight: "700", whiteSpace: "nowrap" }}>{`${productCount} items`}</span>
                       </div>
                     </div>
                   );
                 })}
             </div>
-            <div style={modalFooterStyle}>
-              <span style={{ fontSize: "12px", color: "#000000" }}>{tempColls.length > 0 ? `${tempColls.length} selected` : "No collection selected"}</span>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button type="button" onClick={() => setShowCollModal(false)} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#111827" }}>Cancel</button>
-                <button type="button" disabled={tempColls.length === 0} onClick={confirmColl} style={{ background: tempColls.length > 0 ? "#000000" : "#d1d5db", border: tempColls.length > 0 ? "1px solid #000000" : "1px solid #d1d5db", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: tempColls.length > 0 ? "pointer" : "not-allowed", color: tempColls.length > 0 ? "#ffffff" : "#000000" }}>Confirm ({tempColls.length})</button>
+            <div style={{ ...modalFooterStyle, background: "#ffffff", borderTop: "1px solid #e5e7eb", padding: "14px 18px", justifyContent: "flex-end" }}>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button type="button" onClick={() => setShowCollModal(false)} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "12px", padding: "9px 18px", fontSize: "12px", fontWeight: "600", cursor: "pointer", color: "#111827" }}>Cancel</button>
+                <button type="button" disabled={tempColls.length === 0} onClick={confirmColl} style={{ background: tempColls.length > 0 ? "#111827" : "#d1d5db", border: tempColls.length > 0 ? "1px solid #111827" : "1px solid #d1d5db", borderRadius: "12px", padding: "9px 20px", fontSize: "12px", fontWeight: "700", cursor: tempColls.length > 0 ? "pointer" : "not-allowed", color: tempColls.length > 0 ? "#ffffff" : "#6b7280" }}>Select</button>
               </div>
             </div>
           </div>
         </div>
       )}
-
-      {/* â”€â”€ MODAL: Step Product Picker â”€â”€ */}
+{/* â”€â”€ MODAL: Step Product Picker â”€â”€ */}
       {showStepProdModal && (
         <div style={modalOverlayStyle} onClick={(e) => { if (e.target === e.currentTarget) setShowStepProdModal(false); }}>
-          <div style={modalBoxStyle}>
-            <div style={modalHeaderStyle}>
-              <div><div style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>Select product</div><div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>{stepProdModalIdx !== null && stepProducts[stepProdModalIdx] ? `${stepProducts[stepProdModalIdx].length} products - scoped to collection` : `All products - ${comboConfig.steps[stepProdModalIdx]?.label}`}</div></div>
+          <div style={{ ...modalBoxStyle, maxWidth: "780px", borderRadius: "18px" }}>
+            <div style={{ ...modalHeaderStyle, background: "#ffffff", borderBottom: "1px solid #e5e7eb", padding: "18px 22px" }}>
+              <div><div style={{ fontSize: "15px", fontWeight: "800", color: "#111827", letterSpacing: "-0.4px" }}>Select products for visibility</div></div>
               <button type="button" aria-label="Close product picker" onClick={() => setShowStepProdModal(false)} style={{ ...modalCloseBtn, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><AdminIcon type="x" size="small" style={{ color: "#9ca3af" }} /></button>
             </div>
-            <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
-              <input type="text" placeholder="Search productsâ€¦" value={stepProdSearch} onChange={(e) => setStepProdSearch(e.target.value)} autoFocus style={searchInputStyle} />
+            <div style={{ padding: "12px 18px", borderBottom: "1px solid #e5e7eb", background: "#ffffff", display: "grid", gridTemplateColumns: "1fr 220px", gap: "10px" }}>
+              <input type="text" placeholder="Search products" value={stepProdSearch} onChange={(e) => setStepProdSearch(e.target.value)} autoFocus style={{ ...searchInputStyle, borderRadius: "12px", height: "42px" }} />
+              <select value={stepProdStatusFilter} onChange={(e) => setStepProdStatusFilter(e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db", borderRadius: "12px", height: "42px", fontWeight: "600" }}>
+                <option value="all">All</option>
+                <option value="active">Active</option>
+              </select>
             </div>
-            <div style={modalBodyStyle}>
-              {isLoadingStepProds ? <div style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>Loading productsâ€¦</div>
+            <div style={{ padding: "0 18px 10px", background: "#ffffff" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "100px minmax(0, 1fr) 140px", gap: "0", padding: "12px 12px", fontSize: "12px", color: "#6b7280", fontWeight: "700", borderBottom: "1px solid #e5e7eb" }}>
+                <div>Select</div>
+                <div>Product</div>
+                <div style={{ textAlign: "left" }}>Status</div>
+              </div>
+            </div>
+            <div style={{ ...modalBodyStyle, background: "#ffffff", padding: "0 18px" }}>
+              {isLoadingStepProds ? <div style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>Loading products...</div>
                 : filteredStepProds.length === 0 ? <div style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>No products found</div>
                 : filteredStepProds.map((product, idx) => {
                   const isSel = tempStepProds.some((p) => p.id === product.id);
                   return (
-                    <div key={product.id} onClick={() => setTempStepProds(isSel ? tempStepProds.filter((p) => p.id !== product.id) : [...tempStepProds, { id: product.id, title: product.title, handle: product.handle, imageUrl: product.imageUrl, price: product.price }])} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filteredStepProds.length - 1 ? "1px solid #f3f4f6" : "none", borderLeft: isSel ? "3px solid #000000" : "3px solid transparent", cursor: "pointer", background: isSel ? "#f9fafb" : "#fff", userSelect: "none" }}>
-                      <div style={{ width: "18px", height: "18px", borderRadius: "4px", border: `2px solid ${isSel ? "#000000" : "#d1d5db"}`, background: isSel ? "#000000" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        {isSel && <AdminIcon type="check" size="small" style={{ color: "#ffffff" }} />}
+                    <div key={product.id} onClick={() => setTempStepProds(isSel ? tempStepProds.filter((p) => p.id !== product.id) : [...tempStepProds, { id: product.id, title: product.title, handle: product.handle, imageUrl: product.imageUrl, price: product.price }])} style={{ display: "grid", gridTemplateColumns: "100px minmax(0, 1fr) 140px", alignItems: "center", gap: "0", padding: "12px 12px", borderBottom: idx < filteredStepProds.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", background: isSel ? "#f8fafc" : "#fff", userSelect: "none" }}>
+                      <div style={{ display: "flex", alignItems: "center", paddingLeft: "2px" }}>
+                        <input type="checkbox" checked={isSel} readOnly style={{ width: "26px", height: "26px", accentColor: "#1f2937", cursor: "pointer" }} />
                       </div>
-                      {product.imageUrl ? <img src={product.imageUrl} alt={product.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} /> : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}><AdminIcon type="product" size="small" /></div>}
-                      <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{product.title}</div></div>
-                      {product.price && parseFloat(product.price) > 0 && <div style={{ fontSize: "13px", fontWeight: "700", color: "#374151", fontFamily: "monospace", flexShrink: 0 }}>{formatCurrencyAmount(parseFloat(product.price), currencyCode)}</div>}
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+                        {product.imageUrl ? <img src={product.imageUrl} alt={product.title} style={{ width: "50px", height: "50px", objectFit: "cover", borderRadius: "10px", flexShrink: 0, border: "1px solid #e5e7eb" }} /> : <div style={{ width: "50px", height: "50px", borderRadius: "10px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}><AdminIcon type="product" size="small" /></div>}
+                        <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{product.title}</div></div>
+                      </div>
+                      <div>
+                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", background: "#dcfce7", color: "#166534", borderRadius: "999px", padding: "4px 10px", fontSize: "13px", fontWeight: "700", whiteSpace: "nowrap" }}>active</span>
+                      </div>
                     </div>
                   );
                 })}
             </div>
-            <div style={modalFooterStyle}>
-              <span style={{ fontSize: "12px", color: "#000000" }}>{tempStepProds.length > 0 ? `${tempStepProds.length} selected` : "No product selected"}</span>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button type="button" onClick={() => setShowStepProdModal(false)} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#111827" }}>Cancel</button>
-                <button type="button" disabled={tempStepProds.length === 0} onClick={confirmStepProd} style={{ background: tempStepProds.length > 0 ? "#000000" : "#d1d5db", border: tempStepProds.length > 0 ? "1px solid #000000" : "1px solid #d1d5db", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: tempStepProds.length > 0 ? "pointer" : "not-allowed", color: tempStepProds.length > 0 ? "#ffffff" : "#000000" }}>Confirm ({tempStepProds.length})</button>
+            <div style={{ ...modalFooterStyle, background: "#ffffff", borderTop: "1px solid #e5e7eb", padding: "14px 18px", justifyContent: "flex-end" }}>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button type="button" onClick={() => setShowStepProdModal(false)} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "12px", padding: "9px 18px", fontSize: "12px", fontWeight: "600", cursor: "pointer", color: "#111827" }}>Cancel</button>
+                <button type="button" disabled={tempStepProds.length === 0} onClick={confirmStepProd} style={{ background: tempStepProds.length > 0 ? "#111827" : "#d1d5db", border: tempStepProds.length > 0 ? "1px solid #111827" : "1px solid #d1d5db", borderRadius: "12px", padding: "9px 20px", fontSize: "12px", fontWeight: "700", cursor: tempStepProds.length > 0 ? "pointer" : "not-allowed", color: tempStepProds.length > 0 ? "#ffffff" : "#6b7280" }}>Select</button>
               </div>
             </div>
           </div>
@@ -1130,4 +1171,6 @@ export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
 export const headers = (headersArgs) => boundary.headers(headersArgs);
+
+
 

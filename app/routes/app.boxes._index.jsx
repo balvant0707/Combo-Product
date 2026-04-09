@@ -190,13 +190,6 @@ export default function ManageBoxesPage() {
   const [showCreateBoxModal, setShowCreateBoxModal] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("manual");
-  const [savedViews, setSavedViews] = useState([
-    { id: "view-all", name: "All", search: "", statusFilter: "all", sortBy: "manual" },
-    { id: "view-active", name: "Active", search: "", statusFilter: "active", sortBy: "manual" },
-    { id: "view-inactive", name: "Inactive", search: "", statusFilter: "inactive", sortBy: "manual" },
-  ]);
-  const [selectedViewId, setSelectedViewId] = useState("view-all");
   const [currentPage, setCurrentPage] = useState(1);
   const [manualPageLoading, setManualPageLoading] = useState(false);
   const isDeleteSubmitting =
@@ -265,26 +258,6 @@ export default function ManageBoxesPage() {
     );
   }
 
-  let dragSrcId = null;
-
-  function onDragStart(e, id) { dragSrcId = id; e.currentTarget.style.opacity = "0.4"; }
-  function onDragEnd(e) { e.currentTarget.style.opacity = "1"; }
-  function onDragOver(e) { e.preventDefault(); e.currentTarget.style.background = "#f0fdf4"; }
-  function onDragLeave(e) { e.currentTarget.style.background = ""; }
-
-  function onDrop(e, targetId) {
-    e.preventDefault();
-    e.currentTarget.style.background = "";
-    if (dragSrcId === targetId) return;
-    const rows = Array.from(document.querySelectorAll("tr[data-box-id]")).map((r) => parseInt(r.getAttribute("data-box-id")));
-    const srcIdx = rows.indexOf(dragSrcId);
-    const tgtIdx = rows.indexOf(targetId);
-    if (srcIdx === -1 || tgtIdx === -1) return;
-    rows.splice(srcIdx, 1);
-    rows.splice(tgtIdx, 0, dragSrcId);
-    fetcher.submit({ _action: "reorder", orderedIds: JSON.stringify(rows) }, { method: "POST" });
-  }
-
   const baseBoxes =
     fetcher.formData?.get("_action") === "delete"
       ? boxes.filter((b) => b.id !== parseInt(fetcher.formData.get("id")))
@@ -309,73 +282,15 @@ export default function ManageBoxesPage() {
         (b) => b.boxName.toLowerCase().includes(q) || (b.displayTitle && b.displayTitle.toLowerCase().includes(q))
       );
     }
-    const sorted = [...result];
-    switch (sortBy) {
-      case "name-asc":
-        sorted.sort((a, b) => a.boxName.localeCompare(b.boxName));
-        break;
-      case "name-desc":
-        sorted.sort((a, b) => b.boxName.localeCompare(a.boxName));
-        break;
-      case "orders-desc":
-        sorted.sort((a, b) => b.orderCount - a.orderCount);
-        break;
-      case "orders-asc":
-        sorted.sort((a, b) => a.orderCount - b.orderCount);
-        break;
-      case "price-desc":
-        sorted.sort((a, b) => Number(b.bundlePrice || 0) - Number(a.bundlePrice || 0));
-        break;
-      case "price-asc":
-        sorted.sort((a, b) => Number(a.bundlePrice || 0) - Number(b.bundlePrice || 0));
-        break;
-      case "manual":
-      default:
-        sorted.sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0));
-        break;
-    }
-    return sorted;
-  }, [boxesWithPendingToggle, statusFilter, search, sortBy]);
+    return result.sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0));
+  }, [boxesWithPendingToggle, statusFilter, search]);
 
   const totalPages = Math.max(1, Math.ceil(filteredBoxes.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
   const displayBoxes = filteredBoxes.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   // Reset to page 1 when filter/search changes
-  useEffect(() => { setCurrentPage(1); }, [statusFilter, search, sortBy]);
-
-  useEffect(() => {
-    const matched = savedViews.find((view) => (
-      view.search === search &&
-      view.statusFilter === statusFilter &&
-      view.sortBy === sortBy
-    ));
-    setSelectedViewId(matched ? matched.id : "view-unsaved");
-  }, [savedViews, search, statusFilter, sortBy]);
-
-  function applySavedView(viewId) {
-    const view = savedViews.find((entry) => entry.id === viewId);
-    if (!view) return;
-    setSelectedViewId(view.id);
-    setSearch(view.search);
-    setStatusFilter(view.statusFilter);
-    setSortBy(view.sortBy);
-  }
-
-  function saveCurrentView() {
-    const name = window.prompt("Save view as");
-    if (!name || !name.trim()) return;
-    const normalized = name.trim();
-    const view = {
-      id: `view-${Date.now()}`,
-      name: normalized,
-      search,
-      statusFilter,
-      sortBy,
-    };
-    setSavedViews((prev) => [...prev, view]);
-    setSelectedViewId(view.id);
-  }
+  useEffect(() => { setCurrentPage(1); }, [statusFilter, search]);
 
   const totalOrders = baseBoxes.reduce((s, b) => s + b.orderCount, 0);
   const activeCount = boxesWithPendingToggle.filter((b) => b.isActive).length;
@@ -445,39 +360,6 @@ export default function ManageBoxesPage() {
           display: flex; align-items: center;
         }
         .cb-filter-tabs { display: flex; gap: 4px; }
-        .cb-view-controls {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          margin-left: auto;
-          flex-wrap: wrap;
-        }
-        .cb-select {
-          min-height: 34px;
-          border: 1.5px solid #e5e7eb;
-          border-radius: 8px;
-          background: #fff;
-          color: #111827;
-          font-size: 12px;
-          font-weight: 600;
-          padding: 6px 10px;
-        }
-        .cb-view-btn {
-          min-height: 34px;
-          border: 1.5px solid #e5e7eb;
-          border-radius: 8px;
-          background: #fff;
-          color: #111827;
-          font-size: 12px;
-          font-weight: 700;
-          padding: 6px 12px;
-          cursor: pointer;
-          transition: all 0.12s;
-        }
-        .cb-view-btn:hover {
-          background: #f3f4f6;
-          border-color: #d1d5db;
-        }
         .cb-ftab {
           padding: 7px 14px;
           border: 1.5px solid #e5e7eb;
@@ -565,7 +447,7 @@ export default function ManageBoxesPage() {
         .cb-btn:hover { background: #f0fdf4; border-color: #2A7A4F; color: #2A7A4F; transform: scale(1.05); }
         .cb-btn.del:hover { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
 
-        /* ── Drag handle ── */
+        /* ── Toggle ── */
         .cb-toggle-wrap {
           align-items: center;
           justify-content: flex-end;
@@ -605,13 +487,6 @@ export default function ManageBoxesPage() {
           transition: left 0.16s;
         }
         .cb-toggle-btn.is-on .cb-toggle-knob { left: 21px; }
-
-        .cb-drag {
-          color: #d1d5db; cursor: grab; font-size: 15px;
-          line-height: 1; user-select: none; padding: 0 2px;
-          transition: color 0.12s;
-        }
-        .cb-drag:hover { color: #9ca3af; }
 
         /* ── Price ── */
         .cb-price { font-family: monospace; font-weight: 700; color: #111827; font-size: 13px; }
@@ -676,14 +551,10 @@ export default function ManageBoxesPage() {
           .cb-toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
           .cb-search-wrap { min-width: 0; }
           .cb-filter-tabs { flex-wrap: wrap; gap: 4px; }
-          .cb-view-controls { margin-left: 0; width: 100%; }
-          .cb-select { width: 100%; }
           .cb-ftab { padding: 6px 10px; font-size: 11px; }
           /* Hide less-critical table columns on mobile */
-          .cb-table thead th:nth-child(1),
-          .cb-table tbody td:nth-child(1) { display: none; } /* drag handle */
-          .cb-table thead th:nth-child(6),
-          .cb-table tbody td:nth-child(6) { display: none; } /* orders */
+          .cb-table thead th:nth-child(5),
+          .cb-table tbody td:nth-child(5) { display: none; } /* orders */
           .cb-table td { padding: 10px 10px; }
           .cb-table thead th { padding: 10px 10px; }
           .cb-actions { gap: 4px; }
@@ -693,8 +564,8 @@ export default function ManageBoxesPage() {
         @media (max-width: 480px) {
           .cb-stats { grid-template-columns: 1fr 1fr; }
           /* Also hide Code column on very small screens */
-          .cb-table thead th:nth-child(3),
-          .cb-table tbody td:nth-child(3) { display: none; }
+          .cb-table thead th:nth-child(2),
+          .cb-table tbody td:nth-child(2) { display: none; }
         }
 
         /* ── Pagination ── */
@@ -794,42 +665,6 @@ export default function ManageBoxesPage() {
             </button>
           </div>
 
-          <div className="cb-view-controls">
-            <select
-              className="cb-select"
-              value={selectedViewId}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === "view-unsaved") return;
-                applySavedView(value);
-              }}
-              aria-label="Saved views"
-            >
-              {savedViews.map((view) => (
-                <option key={view.id} value={view.id}>{view.name}</option>
-              ))}
-              <option value="view-unsaved">Unsaved view</option>
-            </select>
-
-            <select
-              className="cb-select"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              aria-label="Sort boxes"
-            >
-              <option value="manual">Sort: Manual order</option>
-              <option value="name-asc">Sort: Name A-Z</option>
-              <option value="name-desc">Sort: Name Z-A</option>
-              <option value="orders-desc">Sort: Orders high-low</option>
-              <option value="orders-asc">Sort: Orders low-high</option>
-              <option value="price-desc">Sort: Price high-low</option>
-              <option value="price-asc">Sort: Price low-high</option>
-            </select>
-
-            <button type="button" className="cb-view-btn" onClick={saveCurrentView}>
-              Save view
-            </button>
-          </div>
         </div>
 
         {baseBoxes.length === 0 ? (
@@ -857,7 +692,6 @@ export default function ManageBoxesPage() {
             <table className="cb-table">
               <thead>
                 <tr>
-                  <th style={{ width: 32, padding: "11px 8px" }}></th>
                   <th>Box Name</th>
                   <th>Code</th>
                   <th>Price</th>
@@ -875,20 +709,7 @@ export default function ManageBoxesPage() {
                     <tr
                       key={box.id}
                       data-box-id={box.id}
-                      draggable
-                      onDragStart={(e) => onDragStart(e, box.id)}
-                      onDragEnd={onDragEnd}
-                      onDragOver={onDragOver}
-                      onDragLeave={onDragLeave}
-                      onDrop={(e) => onDrop(e, box.id)}
                     >
-                      {/* Drag */}
-                      <td style={{ padding: "13px 8px", width: 32 }}>
-                        <span className="cb-drag" title="Drag to reorder">
-                          <AdminIcon type="drag-handle" size="small" />
-                        </span>
-                      </td>
-
                       {/* Box Name */}
                       <td style={{ minWidth: 220 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

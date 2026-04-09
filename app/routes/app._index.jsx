@@ -8,6 +8,9 @@ import {
   Box,
   Button,
   Card,
+  DataTable,
+  Divider,
+  InlineGrid,
   InlineStack,
   Layout,
   Modal,
@@ -78,11 +81,11 @@ export const loader = async ({ request }) => {
     process.env.APP_WHATSAPP_NUMBER ||
     "";
   const whatsappDigits = String(rawWhatsappNumber).replace(/\D/g, "");
-  const whatsappLink = whatsappDigits ? `https://wa.me/${whatsappDigits}` : "#";
-  const supportTicketLink = process.env.SUPPORT_TICKET_URL || "#";
-  const knowledgeBaseLink = process.env.KNOWLEDGE_BASE_URL || "#";
-  const reviewLink = process.env.REVIEW_LINK || process.env.APP_REVIEW_URL || "#";
-  const reportIssueLink = process.env.REPORT_ISSUE_URL || "#";
+  const whatsappLink = whatsappDigits ? `https://wa.me/${whatsappDigits}` : null;
+  const supportTicketLink = process.env.SUPPORT_TICKET_URL || null;
+  const knowledgeBaseLink = process.env.KNOWLEDGE_BASE_URL || null;
+  const reviewLink = process.env.REVIEW_LINK || process.env.APP_REVIEW_URL || null;
+  const reportIssueLink = process.env.REPORT_ISSUE_URL || null;
 
   if (url.searchParams.get("subscribed") === "1") {
     const { syncSubscription } = await import("../models/billing.server.js");
@@ -126,9 +129,6 @@ export const loader = async ({ request }) => {
       boxTitle: order.box?.displayTitle || "Unknown Box",
       itemCount: order.box?.itemCount || 0,
       comboType: isSpecificComboFromBox(order.box) ? "specific" : "simple",
-      comboTypeLabel: isSpecificComboFromBox(order.box)
-        ? "Specific Combo Product"
-        : "Simple Combo Product",
       selectedProducts: parseOrderSelectedProducts(order.selectedProducts),
       bundlePrice: parseFloat(order.bundlePrice),
       orderDate: order.orderDate.toISOString(),
@@ -152,24 +152,9 @@ const createBoxActions = [
 ];
 
 const quickActions = [
-  {
-    key: "manage-boxes",
-    label: "Manage Boxes",
-    sub: "Edit existing combos",
-    href: "/app/boxes",
-  },
-  {
-    key: "analytics",
-    label: "View Analytics",
-    sub: "Sales and revenue",
-    href: "/app/analytics",
-  },
-  {
-    key: "settings",
-    label: "Widget Settings",
-    sub: "Theme and appearance",
-    href: "/app/settings",
-  },
+  { key: "manage-boxes", label: "Manage Boxes", sub: "Edit existing combos", href: "/app/boxes" },
+  { key: "analytics", label: "View Analytics", sub: "Sales and revenue", href: "/app/analytics" },
+  { key: "settings", label: "Widget Settings", sub: "Theme and appearance", href: "/app/settings" },
 ];
 
 const promotedApps = [
@@ -178,30 +163,28 @@ const promotedApps = [
     title: "CartLift: Cart Drawer and Upsell",
     tag: "Upsell",
     url: "https://apps.shopify.com/cartlift-cart-drawer-upsell",
-    description:
-      "Grow average order value with cart drawer upsells and smart cart offers.",
+    description: "Grow average order value with cart drawer upsells and smart cart offers.",
   },
   {
     key: "fomoify",
     title: "Fomoify Sales Popup and Proof",
     tag: "Social Proof",
     url: "https://apps.shopify.com/fomoify-sales-popup-proof",
-    description:
-      "Increase trust using real-time sales popups and conversion proof nudges.",
+    description: "Increase trust using real-time sales popups and conversion proof nudges.",
   },
 ];
 
-function DashboardStat({ label, value, sub }) {
+function StatCard({ label, value, sub }) {
   return (
     <Card>
-      <BlockStack gap="200">
-        <Text as="h3" variant="headingSm">
+      <BlockStack gap="100">
+        <Text as="p" variant="bodySm" tone="subdued">
           {label}
         </Text>
         <Text as="p" variant="heading2xl">
           {value}
         </Text>
-        <Text as="p" tone="subdued" variant="bodySm">
+        <Text as="p" variant="bodySm" tone="subdued">
           {sub}
         </Text>
       </BlockStack>
@@ -217,193 +200,272 @@ export default function DashboardPage() {
     themeEditorUrl,
     embedBlockUrl,
     embedBlockEnabled,
+    whatsappLink,
+    supportTicketLink,
+    knowledgeBaseLink,
+    reviewLink,
+    recentOrders,
   } = useLoaderData();
+
   const location = useLocation();
   const navigate = useNavigate();
   const navigation = useNavigation();
   const [showCreateBoxModal, setShowCreateBoxModal] = useState(false);
-  const [showSetupDetails, setShowSetupDetails] = useState(false);
+  const [showSetupSteps, setShowSetupSteps] = useState(false);
 
   const justSubscribed = new URLSearchParams(location.search).get("subscribed") === "1";
   const isPageLoading = navigation.state !== "idle";
-
-  const stats = [
-    {
-      label: "Active Boxes",
-      value: activeBoxCount,
-      sub: "Live combo box types",
-    },
-    {
-      label: "Bundles Sold",
-      value: bundlesSold,
-      sub: "Last 30 days",
-    },
-    {
-      label: "Bundle Revenue",
-      value: `\u20B9${Number(bundleRevenue).toLocaleString("en-IN")}`,
-      sub: "Last 30 days",
-    },
-    {
-      label: "Conversion Rate",
-      value: "-",
-      sub: "Coming soon",
-    },
-  ];
 
   function navigateTo(path) {
     navigate(withEmbeddedAppParams(path, location.search));
   }
 
+  const stats = [
+    { label: "Active Boxes", value: activeBoxCount, sub: "Live combo box types" },
+    { label: "Bundles Sold", value: bundlesSold, sub: "Last 30 days" },
+    {
+      label: "Bundle Revenue",
+      value: `\u20B9${Number(bundleRevenue).toLocaleString("en-IN")}`,
+      sub: "Last 30 days",
+    },
+    { label: "Conversion Rate", value: "—", sub: "Coming soon" },
+  ];
+
+  const orderTableRows = recentOrders.map((order) => [
+    `#${order.orderId}`,
+    order.boxTitle,
+    <Badge
+      tone={order.comboType === "specific" ? "info" : "success"}
+    >
+      {order.comboType === "specific" ? "Specific" : "Simple"}
+    </Badge>,
+    order.itemCount,
+    `\u20B9${order.bundlePrice.toLocaleString("en-IN")}`,
+    new Date(order.orderDate).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }),
+  ]);
+
+  const supportLinks = [
+    whatsappLink && { label: "WhatsApp", url: whatsappLink },
+    supportTicketLink && { label: "Support Ticket", url: supportTicketLink },
+    knowledgeBaseLink && { label: "Knowledge Base", url: knowledgeBaseLink },
+    reviewLink && { label: "Leave a Review", url: reviewLink },
+  ].filter(Boolean);
+
   return (
     <Page
-      title="MixBox - Box and Bundle Builder"
+      title="MixBox — Box &amp; Bundle Builder"
       primaryAction={{
         content: "Create Box",
         onAction: () => setShowCreateBoxModal(true),
       }}
+      secondaryActions={[
+        {
+          content: "View Analytics",
+          onAction: () => navigateTo("/app/analytics"),
+        },
+      ]}
     >
-      <BlockStack gap="400">
+      <BlockStack gap="500">
+        {/* ── Banners ── */}
         {justSubscribed && (
           <Banner tone="success" title="Pro plan activated">
             <p>All premium features are now unlocked.</p>
           </Banner>
         )}
 
+        {!embedBlockEnabled && (
+          <Banner
+            tone="warning"
+            title="Embed block not active"
+            action={{ content: "Activate now", url: embedBlockUrl, target: "_blank" }}
+          >
+            <p>
+              Enable the Combo Builder embed block so it can load scripts on your storefront.
+            </p>
+          </Banner>
+        )}
+
+        {/* ── Stats row ── */}
+        <InlineGrid columns={{ xs: 2, md: 4 }} gap="400">
+          {stats.map((stat) => (
+            <StatCard key={stat.label} {...stat} />
+          ))}
+        </InlineGrid>
+
+        {/* ── Main two-column layout ── */}
         <Layout>
+          {/* Left — Recent Orders */}
           <Layout.Section>
             <Card>
-              <BlockStack gap="300">
+              <BlockStack gap="400">
                 <InlineStack align="space-between" blockAlign="center">
-                  <BlockStack gap="100">
-                    <InlineStack gap="200" blockAlign="center">
-                      <Text as="h2" variant="headingMd">
-                        Theme App Embed Block
-                      </Text>
-                      <Badge tone={embedBlockEnabled ? "success" : "attention"}>
-                        {embedBlockEnabled ? "Enabled" : "Not enabled"}
-                      </Badge>
-                    </InlineStack>
-                    <Text as="p" tone="subdued">
-                      The embed block loads Combo Builder scripts globally on your storefront.
-                    </Text>
-                  </BlockStack>
-                  {!embedBlockEnabled && (
-                    <Button url={embedBlockUrl} target="_blank" variant="primary">
-                      Activate
-                    </Button>
-                  )}
+                  <Text as="h2" variant="headingMd">
+                    Recent Orders
+                  </Text>
+                  <Button variant="plain" onClick={() => navigateTo("/app/analytics")}>
+                    View all
+                  </Button>
                 </InlineStack>
+
+                {recentOrders.length === 0 ? (
+                  <Box paddingBlock="800">
+                    <BlockStack gap="200" align="center" inlineAlign="center">
+                      <Text as="p" variant="bodyMd" tone="subdued" alignment="center">
+                        No combo box orders yet.
+                      </Text>
+                      <Text as="p" variant="bodySm" tone="subdued" alignment="center">
+                        Once customers purchase a combo box, orders will appear here.
+                      </Text>
+                    </BlockStack>
+                  </Box>
+                ) : (
+                  <DataTable
+                    columnContentTypes={["text", "text", "text", "numeric", "numeric", "text"]}
+                    headings={["Order", "Box", "Type", "Items", "Revenue", "Date"]}
+                    rows={orderTableRows}
+                    hoverable
+                  />
+                )}
               </BlockStack>
             </Card>
           </Layout.Section>
 
-          <Layout.Section>
-            <Card>
-              <BlockStack gap="300">
-                <InlineStack align="space-between" blockAlign="center">
-                  <Text as="h2" variant="headingMd">
-                    Add Combo Builder to Your Theme
+          {/* Right — Setup + Quick Actions + Support */}
+          <Layout.Section variant="oneThird">
+            <BlockStack gap="400">
+              {/* Theme Setup */}
+              <Card>
+                <BlockStack gap="300">
+                  <InlineStack align="space-between" blockAlign="center">
+                    <InlineStack gap="200" blockAlign="center">
+                      <Text as="h2" variant="headingMd">
+                        Theme Setup
+                      </Text>
+                      <Badge tone={embedBlockEnabled ? "success" : "attention"}>
+                        {embedBlockEnabled ? "Active" : "Pending"}
+                      </Badge>
+                    </InlineStack>
+                    <Button
+                      variant="plain"
+                      onClick={() => setShowSetupSteps((v) => !v)}
+                    >
+                      {showSetupSteps ? "Hide guide" : "Show guide"}
+                    </Button>
+                  </InlineStack>
+
+                  <Text as="p" tone="subdued" variant="bodySm">
+                    One click opens the theme editor with the Combo Builder block pre-loaded.
                   </Text>
-                  <Button
-                    variant="plain"
-                    onClick={() => setShowSetupDetails((prev) => !prev)}
-                  >
-                    {showSetupDetails ? "Hide setup" : "Show setup"}
-                  </Button>
-                </InlineStack>
-                <Text as="p" tone="subdued">
-                  One click opens the theme editor with the block pre-loaded. Drag, drop, and save.
-                </Text>
 
-                {showSetupDetails && (
-                  <BlockStack gap="200">
-                    <Text as="p">1. Opens Theme Customization on your live product template.</Text>
-                    <Text as="p">2. Combo Builder block is auto-added to the Apps section.</Text>
-                    <Text as="p">3. Drag the block to the right position.</Text>
-                    <Text as="p">4. Click Save and your storefront is live.</Text>
-                  </BlockStack>
-                )}
+                  {showSetupSteps && (
+                    <BlockStack gap="150">
+                      {[
+                        "Opens Theme Customization on your live product template.",
+                        "Combo Builder block is auto-added to the Apps section.",
+                        "Drag the block to the right position.",
+                        "Click Save — your storefront is live.",
+                      ].map((step, i) => (
+                        <Text key={i} as="p" variant="bodySm">
+                          {i + 1}. {step}
+                        </Text>
+                      ))}
+                    </BlockStack>
+                  )}
 
-                <InlineStack>
                   <Button url={themeEditorUrl} target="_blank" variant="primary">
                     Open Theme Editor
                   </Button>
-                </InlineStack>
-              </BlockStack>
-            </Card>
-          </Layout.Section>
+                </BlockStack>
+              </Card>
 
-          <Layout.Section>
-            <Card>
-              <BlockStack gap="300">
-                <Text as="h2" variant="headingMd">
-                  Quick Actions
-                </Text>
-                <InlineStack gap="200" wrap>
-                  <Button onClick={() => setShowCreateBoxModal(true)} variant="primary">
-                    Create Box
-                  </Button>
-                  {quickActions.map((action) => (
-                    <Button key={action.key} onClick={() => navigateTo(action.href)}>
-                      {action.label}
+              {/* Quick Actions */}
+              <Card>
+                <BlockStack gap="300">
+                  <Text as="h2" variant="headingMd">
+                    Quick Actions
+                  </Text>
+                  <BlockStack gap="200">
+                    <Button
+                      onClick={() => setShowCreateBoxModal(true)}
+                      variant="primary"
+                      fullWidth
+                    >
+                      Create Box
                     </Button>
-                  ))}
-                </InlineStack>
-              </BlockStack>
-            </Card>
-          </Layout.Section>
+                    {quickActions.map((action) => (
+                      <Button
+                        key={action.key}
+                        onClick={() => navigateTo(action.href)}
+                        fullWidth
+                      >
+                        {action.label}
+                      </Button>
+                    ))}
+                  </BlockStack>
+                </BlockStack>
+              </Card>
 
-          <Layout.Section>
-            <BlockStack gap="300">
-              {stats.map((stat) => (
-                <DashboardStat
-                  key={stat.label}
-                  label={stat.label}
-                  value={stat.value}
-                  sub={stat.sub}
-                />
-              ))}
+              {/* Support */}
+              {supportLinks.length > 0 && (
+                <Card>
+                  <BlockStack gap="300">
+                    <Text as="h2" variant="headingMd">
+                      Support
+                    </Text>
+                    <InlineStack gap="200" wrap>
+                      {supportLinks.map((link) => (
+                        <Button key={link.label} url={link.url} target="_blank" variant="plain">
+                          {link.label}
+                        </Button>
+                      ))}
+                    </InlineStack>
+                  </BlockStack>
+                </Card>
+              )}
             </BlockStack>
           </Layout.Section>
-
-          <Layout.Section>
-            <Card>
-              <BlockStack gap="300">
-                <Text as="h2" variant="headingMd">
-                  Boost your store performance with our apps
-                </Text>
-                <BlockStack gap="300">
-                  {promotedApps.map((appItem) => (
-                    <Card key={appItem.key}>
-                      <BlockStack gap="200">
-                        <InlineStack align="space-between" blockAlign="start">
-                          <Text as="h3" variant="headingSm">
-                            {appItem.title}
-                          </Text>
-                          <Badge>{appItem.tag}</Badge>
-                        </InlineStack>
-                        <Text as="p" tone="subdued">
-                          {appItem.description}
-                        </Text>
-                        <InlineStack>
-                          <Button url={appItem.url} target="_blank" variant="primary">
-                            Add app
-                          </Button>
-                        </InlineStack>
-                      </BlockStack>
-                    </Card>
-                  ))}
-                </BlockStack>
-              </BlockStack>
-            </Card>
-          </Layout.Section>
         </Layout>
+
+        {/* ── Promoted Apps ── */}
+        <Card>
+          <BlockStack gap="400">
+            <Text as="h2" variant="headingMd">
+              Boost your store with our apps
+            </Text>
+            <Divider />
+            <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
+              {promotedApps.map((appItem) => (
+                <Card key={appItem.key}>
+                  <BlockStack gap="200">
+                    <InlineStack align="space-between" blockAlign="start">
+                      <Text as="h3" variant="headingSm">
+                        {appItem.title}
+                      </Text>
+                      <Badge>{appItem.tag}</Badge>
+                    </InlineStack>
+                    <Text as="p" tone="subdued" variant="bodySm">
+                      {appItem.description}
+                    </Text>
+                    <Button url={appItem.url} target="_blank" variant="primary">
+                      Add app
+                    </Button>
+                  </BlockStack>
+                </Card>
+              ))}
+            </InlineGrid>
+          </BlockStack>
+        </Card>
       </BlockStack>
 
+      {/* ── Create Box Modal ── */}
       <Modal
         open={showCreateBoxModal}
         onClose={() => setShowCreateBoxModal(false)}
-        title="Create Box"
+        title="Choose Box Type"
       >
         <Modal.Section>
           <BlockStack gap="300">
@@ -416,17 +478,15 @@ export default function DashboardPage() {
                   <Text as="p" tone="subdued" variant="bodySm">
                     {action.sub}
                   </Text>
-                  <InlineStack>
-                    <Button
-                      variant="primary"
-                      onClick={() => {
-                        setShowCreateBoxModal(false);
-                        navigateTo(action.href);
-                      }}
-                    >
-                      Continue
-                    </Button>
-                  </InlineStack>
+                  <Button
+                    variant="primary"
+                    onClick={() => {
+                      setShowCreateBoxModal(false);
+                      navigateTo(action.href);
+                    }}
+                  >
+                    Continue
+                  </Button>
                 </BlockStack>
               </Card>
             ))}
@@ -434,6 +494,7 @@ export default function DashboardPage() {
         </Modal.Section>
       </Modal>
 
+      {/* ── Full-page loading overlay ── */}
       {isPageLoading && (
         <Box
           as="div"

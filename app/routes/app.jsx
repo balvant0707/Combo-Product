@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Outlet, useFetcher, useLoaderData, useLocation, useNavigate, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
-import { AppProvider } from "@shopify/shopify-app-react-router/react";
+import { AppProvider as ShopifyAppProvider } from "@shopify/shopify-app-react-router/react";
+import { AppProvider as PolarisAppProvider } from "@shopify/polaris";
+import enTranslations from "@shopify/polaris/locales/en.json";
 import "@shopify/polaris/build/esm/styles.css";
 import { authenticate } from "../shopify.server";
 import {
@@ -130,7 +132,8 @@ export default function App() {
   }
 
   return (
-    <AppProvider embedded apiKey={apiKey}>
+    <ShopifyAppProvider embedded apiKey={apiKey}>
+      <PolarisAppProvider i18n={enTranslations}>
       <style>{`
         :root {
           --cb-admin-radius: 4px;
@@ -331,7 +334,8 @@ export default function App() {
           </div>
         </div>
       )}
-    </AppProvider>
+      </PolarisAppProvider>
+    </ShopifyAppProvider>
   );
 }
 

@@ -657,9 +657,7 @@ export default function DashboardPage() {
           box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
         }
         .db-quick-link-primary {
-          background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
           border-color: #111827;
-          color: #ffffff;
         }
         .db-quick-link-primary:hover {
           background: linear-gradient(180deg, #111827 0%, #0b1220 100%);
@@ -684,12 +682,12 @@ export default function DashboardPage() {
         .db-quick-title {
           font-size: 14px;
           font-weight: 800;
-          color: #111827;
+          color: #111827 !important;
           line-height: 1.25;
         }
         .db-quick-sub {
           font-size: 12px;
-          color: #374151;
+          color: #374151 !important;
           font-weight: 600;
           margin-top: 3px;
           line-height: 1.25;

@@ -361,7 +361,7 @@ export default function BoxSettingsPage() {
   return (
     <s-page
       inlineSize="large"
-      heading={`Edit Box: ${box.boxName}`}
+      heading="MixBox – Box & Bundle Builder"
       back-url={withEmbeddedAppParams("/app/boxes", location.search)}
     >
       <style>{`

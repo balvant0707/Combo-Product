@@ -727,7 +727,7 @@ export default function SpecificComboBoxPage() {
   return (
     <s-page
       inlineSize="large"
-      heading={`Specific Combo Box: ${box.boxName}`}
+      heading="MixBox – Box & Bundle Builder"
       back-url={withEmbeddedAppParams(`/app/boxes/${box.id}`, location.search)}
     >
       <s-button

@@ -785,7 +785,7 @@ export default function ManageBoxesPage() {
                             {box.orderCount}
                           </span>
                         ) : (
-                          <span className="cb-orders-zero">—</span>
+                          <span className="cb-orders-zero">No</span>
                         )}
                       </td>
 

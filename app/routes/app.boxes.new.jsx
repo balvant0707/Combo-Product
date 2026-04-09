@@ -272,7 +272,7 @@ export default function CreateBoxPage() {
   return (
     <s-page
       inlineSize="large"
-      heading="Create New Box"
+      heading="MixBox – Box & Bundle Builder"
       back-url={withEmbeddedAppParams("/app/boxes", location.search)}
     >
       <style>{`

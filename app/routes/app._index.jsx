@@ -382,9 +382,9 @@ function ThemeCustomizationCard({ themeEditorUrl, onStartLoading }) {
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(49%, 4fr))",
                   gap: "12px",
-                  marginBottom: "32px",
+                  marginBottom: "10px",
                 }}
               >
                 {steps.map((step, i) => (
@@ -626,14 +626,16 @@ export default function DashboardPage() {
           gap: 8px;
         }
         .db-quick-flex {
-          display: flex;
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 8px;
-          flex-wrap: wrap;
           padding-bottom: 2px;
+          align-items: stretch;
         }
         .db-quick-flex > s-button {
-          flex: 1 1 140px;
+          width: 100%;
           min-width: 0;
+          height: 58px;
         }
         .db-quick-link {
           display: flex;
@@ -646,13 +648,16 @@ export default function DashboardPage() {
           text-decoration: none;
           cursor: pointer;
           transition: transform 0.13s, background 0.13s;
-          flex: 1 1 160px;
+          width: 100%;
           min-width: 0;
         }
         /* Tablet — 2-column KPIs */
         @media (max-width: 900px) {
           .db-kpi-grid {
             grid-template-columns: repeat(2, 1fr);
+          }
+          .db-quick-flex {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
           }
         }
         /* Mobile */
@@ -671,8 +676,8 @@ export default function DashboardPage() {
             padding: 12px 8px;
             gap: 8px;
           }
-          .db-quick-link {
-            flex: 1 1 100%;
+          .db-quick-flex {
+            grid-template-columns: 1fr;
           }
         }
         @media (max-width: 400px) {
@@ -698,7 +703,7 @@ export default function DashboardPage() {
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>
         <div style={{ padding: "20px 20px 14px", borderBottom: "1px solid #e5e7eb" }}>
           <div style={{ fontSize: "15px", fontWeight: "800", color: "#000000", letterSpacing: "-0.2px", display: "flex", alignItems: "center", gap: "8px" }}>
-            <AdminIcon type="lightning" size="base" /> Quick Actions
+            <AdminIcon type="bolt" size="base" /> Quick Actions
           </div>
         </div>
         <div style={{ padding: "12px 12px 16px" }}>
@@ -711,12 +716,13 @@ export default function DashboardPage() {
               variant="primary"
               onClick={() => setShowCreateBoxModal(true)}
               style={{
-                minWidth: 0,
-                flex: "1 1 140px",
                 height: "58px",
               }}
             >
-              Create Box
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                <AdminIcon type="package" size="small" />
+                Create Box
+              </span>
             </s-button>
             {quickActions.map((action) => (
               <a

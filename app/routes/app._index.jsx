@@ -593,7 +593,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <s-page heading="MixBox – Box & Bundle Builder" inlineSize="large">
+    <s-page heading="MixBox – Box & Bundle Builder" inlineSize="medium">
       <style>{`
         /* ── Dashboard Responsive ── */
         .db-embed-hdr {
@@ -1143,4 +1143,5 @@ export default function DashboardPage() {
 export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
+
 

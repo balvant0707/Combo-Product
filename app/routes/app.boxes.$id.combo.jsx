@@ -726,7 +726,7 @@ export default function SpecificComboBoxPage() {
   /* ─────────────── Render ─────────────── */
   return (
     <s-page
-      inlineSize="large"
+      inlineSize="medium"
       heading="MixBox – Box & Bundle Builder"
       back-url={withEmbeddedAppParams(`/app/boxes/${box.id}`, location.search)}
     >
@@ -1226,4 +1226,5 @@ export default function SpecificComboBoxPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
+
 

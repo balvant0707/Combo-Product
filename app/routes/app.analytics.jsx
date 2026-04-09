@@ -1266,7 +1266,7 @@ export default function AnalyticsPage() {
       : null;
 
   return (
-    <s-page heading="MixBox – Box & Bundle Builder" inlineSize="large">
+    <s-page heading="MixBox – Box & Bundle Builder" inlineSize="medium">
       <style>{`
         /* ── Analytics Responsive ── */
         .an-kpi-grid {
@@ -1445,3 +1445,4 @@ export default function AnalyticsPage() {
 export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
+

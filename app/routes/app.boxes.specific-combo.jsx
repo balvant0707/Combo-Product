@@ -492,7 +492,7 @@ export default function CreateSpecificComboBoxPage() {
   const searchInputStyle = { ...fieldStyle, borderColor: "#d1d5db", fontSize: "13px" };
 
   return (
-    <s-page heading="MixBox – Box & Bundle Builder" back-url={withEmbeddedAppParams("/app/boxes", location.search)} inlineSize="large">
+    <s-page heading="MixBox – Box & Bundle Builder" back-url={withEmbeddedAppParams("/app/boxes", location.search)} inlineSize="medium">
       <style>{`
         /* ── Specific Combo Responsive ── */
         .sc-config-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; align-items: start; }
@@ -1130,3 +1130,4 @@ export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
 export const headers = (headersArgs) => boundary.headers(headersArgs);
+

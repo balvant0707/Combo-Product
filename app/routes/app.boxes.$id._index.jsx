@@ -360,7 +360,7 @@ export default function BoxSettingsPage() {
   /* ─────────────── Render ─────────────── */
   return (
     <s-page
-      inlineSize="large"
+      inlineSize="medium"
       heading="MixBox – Box & Bundle Builder"
       back-url={withEmbeddedAppParams("/app/boxes", location.search)}
     >
@@ -750,3 +750,4 @@ export default function BoxSettingsPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
+

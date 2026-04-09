@@ -297,7 +297,7 @@ export default function ManageBoxesPage() {
   const inactiveCount = boxesWithPendingToggle.length - activeCount;
 
   return (
-    <s-page heading="Combo Boxes" inlineSize="large">
+    <s-page heading="Combo Boxes" inlineSize="medium">
       <style>{`
         /* ── Stats bar ── */
         .cb-stats {
@@ -1091,3 +1091,4 @@ export default function ManageBoxesPage() {
 export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
+

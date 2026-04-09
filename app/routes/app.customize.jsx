@@ -91,7 +91,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <s-page heading="MixBox – Box & Bundle Builder" inlineSize="large">
+    <s-page heading="MixBox – Box & Bundle Builder" inlineSize="medium">
       <s-button
         slot="primary-action"
         onClick={() => document.getElementById("settings-form").requestSubmit()}
@@ -500,3 +500,4 @@ export default function SettingsPage() {
 export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
+

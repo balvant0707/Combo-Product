@@ -26,7 +26,7 @@ export default function Auth() {
 
   return (
     <AppProvider embedded={false}>
-      <s-page inlineSize="large">
+      <s-page inlineSize="medium">
         <Form method="post">
           <s-section heading="Log in">
             <s-text-field
@@ -45,3 +45,4 @@ export default function Auth() {
     </AppProvider>
   );
 }
+

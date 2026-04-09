@@ -277,23 +277,25 @@ function EmbedBlockCard({ embedBlockUrl, enabled, onStartLoading }) {
             </div>
           </div>
 
-          <a
-            href={embedBlockUrl}
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => onStartLoading?.()}
-            className="db-embed-hdr-btn"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#000000";
-              e.currentTarget.style.boxShadow = "0 4px 14px rgba(0,0,0,0.30)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "#111827";
-              e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.18)";
-            }}
-          >
-            {enabled ? "Active" : "Enable Embed Block"}
-          </a>
+          {!enabled && (
+            <a
+              href={embedBlockUrl}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => onStartLoading?.()}
+              className="db-embed-hdr-btn"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#000000";
+                e.currentTarget.style.boxShadow = "0 4px 14px rgba(0,0,0,0.30)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#111827";
+                e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.18)";
+              }}
+            >
+              Active
+            </a>
+          )}
         </div>
       </div>
     </div>

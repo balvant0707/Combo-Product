@@ -617,11 +617,9 @@ export default function DashboardPage() {
 
   return (
     <s-page heading="MixBox – Box & Bundle Builder" inlineSize="large">
-      <ui-title-bar>
-        <button variant="primary" onClick={() => setShowCreateBoxModal(true)}>
-          Create Box
-        </button>
-      </ui-title-bar>
+      <s-button slot="primary-action" variant="primary" onClick={() => setShowCreateBoxModal(true)}>
+        Create Box
+      </s-button>
 
       {justSubscribed && (
         <div style={{ marginBottom: "20px", padding: "14px 16px", borderRadius: "5px", border: "1px solid #bbf7d0", background: "#f0fdf4", color: "#15803d", fontSize: "13px", fontWeight: "700" }}>
@@ -651,25 +649,18 @@ export default function DashboardPage() {
               paddingBottom: "2px",
             }}
           >
-            <button
+            <s-button
               type="button"
+              variant="primary"
               onClick={() => setShowCreateBoxModal(true)}
               style={{
                 minWidth: 0,
                 flex: "1 1 0",
-                border: "1px solid #111827",
-                borderRadius: "5px",
-                background: "#111827",
-                color: "#ffffff",
-                fontSize: "14px",
-                fontWeight: "700",
-                padding: "10px 12px",
                 height: "58px",
-                cursor: "pointer",
               }}
             >
               Create Box
-            </button>
+            </s-button>
             {quickActions.map((action) => (
               <a
                 key={action.key}
@@ -1124,14 +1115,14 @@ export default function DashboardPage() {
           >
             <div style={{ padding: "16px 18px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ fontSize: "16px", fontWeight: "800", color: "#111827" }}>Create Box</div>
-              <button
+              <s-button
                 type="button"
+                variant="tertiary"
                 onClick={() => setShowCreateBoxModal(false)}
-                style={{ border: "none", background: "transparent", color: "#000000", cursor: "pointer", lineHeight: 1, display: "inline-flex", alignItems: "center" }}
                 aria-label="Close"
               >
                 <AdminIcon type="x" size="base" />
-              </button>
+              </s-button>
             </div>
             <div style={{ padding: "14px", display: "flex", flexDirection: "column", gap: "10px" }}>
               {createBoxActions.map((action) => (

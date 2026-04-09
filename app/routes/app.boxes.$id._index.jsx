@@ -231,6 +231,7 @@ export const action = async ({ request, params }) => {
   };
   if (!data.displayTitle?.trim()) errors.displayTitle = "Display title is required";
   if (!data.itemCount || parseInt(data.itemCount) < 1) errors.itemCount = "Invalid item count";
+  if (data.giftMessageEnabled && !data.isGiftBox) errors.giftMessageEnabled = "Enable Gift Box Mode to use Gift Message Field.";
 
   if (Object.keys(errors).length > 0) return { errors };
 
@@ -309,8 +310,9 @@ export default function BoxSettingsPage() {
 
   const [options, setOptions] = useState({
     isGiftBox: box.isGiftBox, allowDuplicates: box.allowDuplicates,
-    giftMessageEnabled: box.giftMessageEnabled, isActive: box.isActive,
+    giftMessageEnabled: box.isGiftBox ? box.giftMessageEnabled : false, isActive: box.isActive,
   });
+  const [optionValidationMessage, setOptionValidationMessage] = useState("");
   const [itemCount, setItemCount] = useState(String(box.itemCount));
   const [priceMode, setPriceMode] = useState(box.bundlePriceType || "manual");
   const [manualPrice, setManualPrice] = useState(String(box.bundlePrice));
@@ -342,7 +344,20 @@ export default function BoxSettingsPage() {
   const bundlePrice = priceMode === "manual" ? parseFloat(manualPrice) || 0 : dynamicPrice;
 
   /* ── Box Settings helpers ── */
-  function toggleOption(name) { setOptions((prev) => ({ ...prev, [name]: !prev[name] })); }
+  function toggleOption(name) {
+    let validationMessage = "";
+    setOptions((prev) => {
+      if (name === "giftMessageEnabled" && !prev.isGiftBox) {
+        validationMessage = "Enable Gift Box Mode to use Gift Message Field.";
+        return prev;
+      }
+      if (name === "isGiftBox" && prev.isGiftBox) {
+        return { ...prev, isGiftBox: false, giftMessageEnabled: false };
+      }
+      return { ...prev, [name]: !prev[name] };
+    });
+    setOptionValidationMessage(validationMessage);
+  }
   function selectScope(nextScope) {
     if (!nextScope || nextScope === scope) return;
     setScope(nextScope);
@@ -552,11 +567,11 @@ export default function BoxSettingsPage() {
           <div className="form-grid-3-opts">
             {[
               { key: "isGiftBox", label: "Gift Box Mode", desc: "Enables gift packaging option", iconType: "gift-card" },
+               { key: "giftMessageEnabled", label: "Gift Message Field", desc: "Show text area for gift message", iconType: "email" },
               { key: "allowDuplicates", label: "Allow Duplicates", desc: "Same product in multiple slots", iconType: "duplicate" },
-              { key: "giftMessageEnabled", label: "Gift Message Field", desc: "Show text area for gift message", iconType: "email" },
             ].map((opt) => (
-              <div key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px 14px", border: options[opt.key] ? "1.5px solid #000000" : "1.5px solid #e5e7eb", borderRadius: "5px", background: options[opt.key] ? "#f9fafb" : "#fafafa", transition: "border-color 0.15s, background 0.15s" }}>
-                <ToggleSwitch checked={options[opt.key]} onChange={() => toggleOption(opt.key)} showStateText={false} />
+              <div key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: opt.key === "giftMessageEnabled" && !options.isGiftBox ? "not-allowed" : "pointer", padding: "12px 14px", border: options[opt.key] ? "1.5px solid #000000" : "1.5px solid #e5e7eb", borderRadius: "5px", background: options[opt.key] ? "#f9fafb" : "#fafafa", transition: "border-color 0.15s, background 0.15s", opacity: opt.key === "giftMessageEnabled" && !options.isGiftBox ? 0.65 : 1 }}>
+                <ToggleSwitch checked={options[opt.key]} onChange={() => toggleOption(opt.key)} showStateText={false} disabled={opt.key === "giftMessageEnabled" && !options.isGiftBox} />
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: "600", color: "#000000", display: "flex", alignItems: "center", gap: "5px" }}><AdminIcon type={opt.iconType} size="small" />{opt.label}</div>
                   <div style={{ fontSize: "11px", color: "#000000", marginTop: "2px" }}>{opt.desc}</div>
@@ -564,6 +579,11 @@ export default function BoxSettingsPage() {
               </div>
             ))}
           </div>
+          {(optionValidationMessage || errors.giftMessageEnabled) && (
+            <div style={{ marginTop: "8px", fontSize: "12px", color: "#dc2626", fontWeight: "600" }}>
+              {errors.giftMessageEnabled || optionValidationMessage}
+            </div>
+          )}
         </div>
 
         {/* Scope */}
@@ -736,6 +756,5 @@ export default function BoxSettingsPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
-
 
 

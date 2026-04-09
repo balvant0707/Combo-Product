@@ -4,10 +4,13 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { createBox } from "../models/boxes.server";
 import { getShopCurrencyCode } from "../models/shop.server";
-import { AdminIcon } from "../components/admin-icons";
-import { ToggleSwitch } from "../components/toggle-switch";
 import { withEmbeddedAppParams, withEmbeddedAppToastFromRequest } from "../utils/embedded-app";
 import { getCurrencySymbol } from "../utils/currency";
+import {
+  Badge, Banner, BlockStack, Box, Button, Card, Checkbox,
+  FormLayout, InlineGrid, InlineStack, Layout, Modal, Page,
+  Select, Spinner, Text, TextField
+} from "@shopify/polaris";
 
 const COLLECTIONS_QUERY = `#graphql
   query GetCollections($first: Int!) {
@@ -205,22 +208,23 @@ export const action = async ({ request }) => {
   );
 };
 
-/* ── Styles ── */
-const fieldStyle = {
-  width: "100%", padding: "9px 12px", border: "1.5px solid #e5e7eb",
-  borderRadius: "5px", fontSize: "13px", color: "#111827", background: "#fff",
-  boxSizing: "border-box", outline: "none", transition: "border-color 0.15s, box-shadow 0.15s",
+const nativeInputStyle = {
+  width: "100%",
+  padding: "8px 12px",
+  border: "1.5px solid #e5e7eb",
+  borderRadius: "6px",
+  fontSize: "14px",
+  boxSizing: "border-box",
+  outline: "none",
+  background: "#fff",
+  color: "#111827",
 };
-const labelStyle = {
-  display: "block", fontSize: "11px", fontWeight: "700", color: "#4b5563",
-  marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.6px",
-};
-const errorStyle = { color: "#dc2626", fontSize: "11px", marginTop: "5px", display: "flex", alignItems: "center", gap: "4px" };
-const sectionHeadingStyle = {
-  fontSize: "11px", fontWeight: "700", color: "#000000", textTransform: "uppercase",
-  letterSpacing: "0.8px", marginBottom: "16px", paddingBottom: "10px",
-  borderBottom: "1.5px solid #f3f4f6", display: "flex", alignItems: "center", gap: "8px",
-};
+
+const scopeOptions = [
+  { value: "specific_collections", label: "Specific collections" },
+  { value: "specific_products", label: "Specific products" },
+  { value: "wholestore", label: "Whole store" },
+];
 
 export default function CreateBoxPage() {
   const { products, collections, currencyCode } = useLoaderData();
@@ -273,377 +277,376 @@ export default function CreateBoxPage() {
     });
     setOptionValidationMessage(validationMessage);
   }
+
   function selectScope(nextScope) {
     if (!nextScope || nextScope === scope) return;
     setScope(nextScope);
     setScopeItems([]);
   }
 
-  const modalOverlayStyle = { position: "fixed", inset: 0, background: "rgba(17,24,39,0.55)", backdropFilter: "blur(3px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" };
-  const modalBoxStyle = { background: "#fff", borderRadius: "8px", width: "100%", maxWidth: "560px", maxHeight: "85vh", display: "flex", flexDirection: "column", boxShadow: "0 20px 60px rgba(0,0,0,0.18)", overflow: "hidden" };
-  const modalHeaderStyle = { padding: "16px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fafafa" };
-  const modalBodyStyle = { flex: 1, overflowY: "auto" };
-  const modalFooterStyle = { padding: "14px 16px", borderTop: "1px solid #f3f4f6", background: "#fafafa", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" };
-  const searchInputStyle = { ...fieldStyle, borderColor: "#d1d5db", paddingLeft: "14px", fontSize: "13px" };
-
+  // Scope picker computed values (must be outside JSX conditional)
+  const isCollections = scope === "specific_collections";
+  const allScopeItems = isCollections ? collections : products;
+  const filtered = scopeSearch.trim()
+    ? allScopeItems.filter((i) => i.title.toLowerCase().includes(scopeSearch.toLowerCase()))
+    : allScopeItems;
+  const isScopeSelected = (id) => scopeItems.some((i) => i.id === id);
+  function toggleScopeItem(item) {
+    setScopeItems((prev) => prev.some((i) => i.id === item.id)
+      ? prev.filter((i) => i.id !== item.id)
+      : [...prev, item]
+    );
+  }
 
   return (
-    <s-page
-      inlineSize="medium"
-      heading="MixBox – Box & Bundle Builder"
-      back-url={withEmbeddedAppParams("/app/boxes", location.search)}
+    <Page
+      title="Create New Box"
+      backAction={{ content: "Boxes", url: withEmbeddedAppParams("/app/boxes", location.search) }}
+      primaryAction={{
+        content: isSaving ? "Saving..." : "Save & Publish",
+        loading: isSaving,
+        onAction: () => document.getElementById("create-box-form")?.requestSubmit(),
+      }}
     >
-      <style>{`
-        /* ── Create Box Responsive ── */
-        .form-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-        .form-grid-3-opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-        .form-grid-3-scope { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-        .form-hero { padding: 24px 32px; }
-        @media (max-width: 900px) {
-          .form-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-          .form-grid-3-opts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-          .form-grid-3-scope { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        }
-        @media (max-width: 640px) {
-          .form-grid-3 { grid-template-columns: 1fr; }
-          .form-grid-3-opts { grid-template-columns: 1fr; }
-          .form-grid-3-scope { grid-template-columns: 1fr; }
-          .form-hero { padding: 16px; }
-        }
-      `}</style>
-      <s-button
-        slot="primary-action"
-        variant="primary"
-        disabled={isSaving || undefined}
-        onClick={() => { const form = document.getElementById("create-box-form"); if (form) form.requestSubmit(); }}
-      >
-        {isSaving ? "Saving..." : "Save & Publish"}
-      </s-button>
-
-      <s-button
-        slot="secondary-action"
-        onClick={() => { window.location.href = withEmbeddedAppParams("/app/boxes", location.search); }}
-      >
-        <AdminIcon type="arrow-left" size="small" /> Back
-      </s-button>
-
-      {/* Hero banner */}
-      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }} className="form-hero">
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
-          <div style={{ flex: "1 1 420px", minWidth: "320px" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}>
-              <AdminIcon type="package" size="small" /> New Box
-            </div>
-            <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>Create a New Box</div>
-            <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Set heading, price, item count, and options.</div>
-          </div>
-          <div style={{ flex: "0 1 420px", minWidth: "320px" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "10px 12px", background: options.isActive ? "#f9fafb" : "#fff", border: `1.5px solid ${options.isActive ? "#000000" : "#e5e7eb"}`, borderRadius: "7px", transition: "border-color 0.15s, background 0.15s" }}>
-              <ToggleSwitch checked={options.isActive} onChange={() => toggleOption("isActive")} showStateText={false} />
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", lineHeight: 1.3, display: "flex", alignItems: "center", gap: "6px" }}>
-                  <AdminIcon type="check-circle" size="small" /> Active on Storefront
-                </div>
-                <div style={{ fontSize: "12px", color: "#000000", marginTop: "3px" }}>Uncheck to hide from customers</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {errors._global && (
-        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "5px", padding: "12px 16px", marginBottom: "16px", color: "#991b1b", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
-          <AdminIcon type="alert-triangle" size="small" />
-          {errors._global}
-        </div>
-      )}
-
-      <Form id="create-box-form" method="POST" encType="multipart/form-data">
-        <input type="hidden" name="bundlePrice" value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
-        <input type="hidden" name="bundlePriceType" value={priceMode} />
-        <input type="hidden" name="discountType" value={priceMode === "dynamic" ? discountType : "none"} />
-        <input type="hidden" name="discountValue" value={priceMode === "dynamic" ? (discountType === "none" ? "0" : discountValue) : "0"} />
-        <input type="hidden" name="buyQuantity" value={priceMode === "dynamic" ? buyQuantity : "1"} />
-        <input type="hidden" name="getQuantity" value={priceMode === "dynamic" ? getQuantity : "1"} />
-        <input type="hidden" name="itemCount" value={itemCount} />
-        <input type="hidden" name="scope" value={scope} />
-        <input type="hidden" name="scopeItems" value={JSON.stringify(scopeItems.map(i => ({ id: i.id, title: i.title })))} />
-        {scope === "specific_products" && (
-          <input type="hidden" name="eligibleProducts" value={JSON.stringify(
-            scopeItems.map(item => ({
-              productId: item.id,
-              productTitle: item.title,
-              productHandle: item.handle || null,
-              productImageUrl: item.imageUrl || null,
-              variantIds: item.variantIds || [],
-              price: item.price || "0",
-            }))
-          )} />
+      <BlockStack gap="500">
+        {/* Error Banner */}
+        {errors._global && (
+          <Banner tone="critical" title="Error">
+            <p>{errors._global}</p>
+          </Banner>
         )}
-        <input type="hidden" name="isGiftBox" value={String(options.isGiftBox)} />
-        <input type="hidden" name="allowDuplicates" value={String(options.allowDuplicates)} />
-        <input type="hidden" name="giftMessageEnabled" value={String(options.giftMessageEnabled)} />
-        <input type="hidden" name="isActive" value={String(options.isActive)} />
 
-        <s-section>
-          {/* Basic Information */}
-          <div style={{ marginBottom: "28px" }}>
-            <div style={sectionHeadingStyle}>
-              <AdminIcon type="clipboard" size="small" /> Basic Information
-            </div>
-            <div className="form-grid-3">
-              <div>
-                <label style={labelStyle}>Heading *</label>
-                <input type="text" name="displayTitle" placeholder="Shown to customers" style={{ ...fieldStyle, borderColor: errors.displayTitle ? "#e11d48" : "#d1d5db" }} />
-                {errors.displayTitle && <div style={errorStyle}>{errors.displayTitle}</div>}
-              </div>
-              <div>
-                <label style={labelStyle}>Combo Product Button Title</label>
-                <input
-                  type="text"
-                  name="comboProductButtonTitle"
-                  defaultValue="BUILD YOUR OWN BOX"
-                  placeholder="BUILD YOUR OWN BOX"
-                  style={{ ...fieldStyle, borderColor: "#d1d5db" }}
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>Product Button Title</label>
-                <input
-                  type="text"
-                  name="productButtonTitle"
-                  defaultValue="Add To Cart"
-                  placeholder="Add To Cart"
-                  style={{ ...fieldStyle, borderColor: "#d1d5db" }}
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>Number Of Products *</label>
-                <input type="number" placeholder="e.g. 4" min="1" max="20" value={itemCount} onChange={(e) => setItemCount(e.target.value)} style={{ ...fieldStyle, borderColor: errors.itemCount ? "#e11d48" : "#d1d5db" }} />
-                {errors.itemCount && <div style={errorStyle}>{errors.itemCount}</div>}
-              </div>
-              <div>
-                <label style={labelStyle}>Bundle Price ({currencySymbol}) *</label>
-                <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "5px", overflow: "hidden", marginBottom: "10px" }}>
-                  {["manual", "dynamic"].map((mode) => (
-                    <button key={mode} type="button" onClick={() => setPriceMode(mode)} style={{ flex: 1, padding: "7px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: priceMode === mode ? "#000000" : "#f9fafb", color: priceMode === mode ? "#ffffff" : "#374151", transition: "background 0.15s" }}>
-                      {mode === "manual" ? "Manual" : "Dynamic"}
-                    </button>
-                  ))}
-                </div>
-                {priceMode === "manual" && (
-                  <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} style={{ ...fieldStyle }} />
+        <Form id="create-box-form" method="POST" encType="multipart/form-data">
+          {/* Hidden inputs for state-driven values */}
+          <input type="hidden" name="bundlePrice" value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
+          <input type="hidden" name="bundlePriceType" value={priceMode} />
+          <input type="hidden" name="discountType" value={priceMode === "dynamic" ? discountType : "none"} />
+          <input type="hidden" name="discountValue" value={priceMode === "dynamic" ? (discountType === "none" ? "0" : discountValue) : "0"} />
+          <input type="hidden" name="buyQuantity" value={priceMode === "dynamic" ? buyQuantity : "1"} />
+          <input type="hidden" name="getQuantity" value={priceMode === "dynamic" ? getQuantity : "1"} />
+          <input type="hidden" name="itemCount" value={itemCount} />
+          <input type="hidden" name="scope" value={scope} />
+          <input type="hidden" name="scopeItems" value={JSON.stringify(scopeItems.map(i => ({ id: i.id, title: i.title })))} />
+          {scope === "specific_products" && (
+            <input type="hidden" name="eligibleProducts" value={JSON.stringify(
+              scopeItems.map(item => ({
+                productId: item.id,
+                productTitle: item.title,
+                productHandle: item.handle || null,
+                productImageUrl: item.imageUrl || null,
+                variantIds: item.variantIds || [],
+                price: item.price || "0",
+              }))
+            )} />
+          )}
+          <input type="hidden" name="isGiftBox" value={String(options.isGiftBox)} />
+          <input type="hidden" name="allowDuplicates" value={String(options.allowDuplicates)} />
+          <input type="hidden" name="giftMessageEnabled" value={String(options.giftMessageEnabled)} />
+          <input type="hidden" name="isActive" value={String(options.isActive)} />
+
+          <BlockStack gap="400">
+            {/* Card 1 — Status */}
+            <Card>
+              <Checkbox
+                label="Active on Storefront"
+                helpText="Uncheck to hide this box from customers"
+                checked={options.isActive}
+                onChange={() => toggleOption("isActive")}
+              />
+            </Card>
+
+            {/* Card 2 — Basic Information */}
+            <Card>
+              <BlockStack gap="400">
+                <Text as="h2" variant="headingMd">Basic Information</Text>
+                <FormLayout>
+                  <FormLayout.Group>
+                    {/* Display Title */}
+                    <BlockStack gap="100">
+                      <Text as="label" variant="bodySm" fontWeight="semibold">Heading *</Text>
+                      <input
+                        type="text"
+                        name="displayTitle"
+                        placeholder="Shown to customers"
+                        style={{
+                          ...nativeInputStyle,
+                          borderColor: errors.displayTitle ? "#e11d48" : "#e5e7eb",
+                        }}
+                      />
+                      {errors.displayTitle && (
+                        <Text tone="critical" variant="bodySm">{errors.displayTitle}</Text>
+                      )}
+                    </BlockStack>
+
+                    {/* Combo Product Button Title */}
+                    <BlockStack gap="100">
+                      <Text as="label" variant="bodySm" fontWeight="semibold">Combo Product Button Title</Text>
+                      <input
+                        type="text"
+                        name="comboProductButtonTitle"
+                        defaultValue="BUILD YOUR OWN BOX"
+                        placeholder="BUILD YOUR OWN BOX"
+                        style={nativeInputStyle}
+                      />
+                    </BlockStack>
+
+                    {/* Product Button Title */}
+                    <BlockStack gap="100">
+                      <Text as="label" variant="bodySm" fontWeight="semibold">Product Button Title</Text>
+                      <input
+                        type="text"
+                        name="productButtonTitle"
+                        defaultValue="Add To Cart"
+                        placeholder="Add To Cart"
+                        style={nativeInputStyle}
+                      />
+                    </BlockStack>
+                  </FormLayout.Group>
+
+                  <FormLayout.Group>
+                    {/* Item Count */}
+                    <BlockStack gap="100">
+                      <Text as="label" variant="bodySm" fontWeight="semibold">Number Of Products *</Text>
+                      <input
+                        type="number"
+                        placeholder="e.g. 4"
+                        min="1"
+                        max="20"
+                        value={itemCount}
+                        onChange={(e) => setItemCount(e.target.value)}
+                        style={{
+                          ...nativeInputStyle,
+                          borderColor: errors.itemCount ? "#e11d48" : "#e5e7eb",
+                        }}
+                      />
+                      {errors.itemCount && (
+                        <Text tone="critical" variant="bodySm">{errors.itemCount}</Text>
+                      )}
+                    </BlockStack>
+
+                    {/* Bundle Price */}
+                    <BlockStack gap="100">
+                      <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Price ({currencySymbol}) *</Text>
+                      <InlineStack gap="0">
+                        {["manual", "dynamic"].map((mode) => (
+                          <Button
+                            key={mode}
+                            variant={priceMode === mode ? "primary" : "secondary"}
+                            onClick={() => setPriceMode(mode)}
+                            size="slim"
+                          >
+                            {mode === "manual" ? "Manual" : "Dynamic"}
+                          </Button>
+                        ))}
+                      </InlineStack>
+                      {priceMode === "manual" && (
+                        <input
+                          type="number"
+                          placeholder="e.g. 1200"
+                          min="0"
+                          step="0.01"
+                          value={manualPrice}
+                          onChange={(e) => setManualPrice(e.target.value)}
+                          style={nativeInputStyle}
+                        />
+                      )}
+                      {priceMode === "dynamic" && (
+                        <BlockStack gap="200">
+                          <InlineGrid columns={2} gap="200">
+                            <BlockStack gap="100">
+                              <Text as="label" variant="bodySm" fontWeight="semibold">Discount Type</Text>
+                              <select
+                                value={discountType}
+                                onChange={(e) => setDiscountType(e.target.value)}
+                                style={nativeInputStyle}
+                              >
+                                <option value="percent">% Off Total</option>
+                                <option value="fixed">{currencySymbol} Fixed Discount</option>
+                                <option value="none">No Discount</option>
+                              </select>
+                            </BlockStack>
+                            {discountType !== "none" && (
+                              <BlockStack gap="100">
+                                <Text as="label" variant="bodySm" fontWeight="semibold">
+                                  {discountType === "percent" ? "Discount %" : `Amount (${currencySymbol})`}
+                                </Text>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step={discountType === "percent" ? "1" : "0.01"}
+                                  max={discountType === "percent" ? "99" : undefined}
+                                  value={discountValue}
+                                  onChange={(e) => setDiscountValue(e.target.value)}
+                                  style={nativeInputStyle}
+                                />
+                              </BlockStack>
+                            )}
+                          </InlineGrid>
+                          <Text variant="bodySm" tone="subdued">
+                            {discountType === "percent" || discountType === "fixed"
+                              ? "Discount applied on total amount"
+                              : "No discount applied"
+                            }
+                          </Text>
+                        </BlockStack>
+                      )}
+                    </BlockStack>
+
+                    {/* Banner Image */}
+                    <BlockStack gap="100">
+                      <Text as="label" variant="bodySm" fontWeight="semibold">Banner Image (optional)</Text>
+                      <input
+                        type="file"
+                        name="bannerImage"
+                        accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                        style={{ ...nativeInputStyle, padding: "7px 12px" }}
+                      />
+                      <Text variant="bodySm" tone="subdued">JPG, PNG, WEBP, GIF, or AVIF — max 5MB</Text>
+                      {errors.bannerImage && (
+                        <Text tone="critical" variant="bodySm">{errors.bannerImage}</Text>
+                      )}
+                    </BlockStack>
+                  </FormLayout.Group>
+                </FormLayout>
+              </BlockStack>
+            </Card>
+
+            {/* Card 3 — Options */}
+            <Card>
+              <BlockStack gap="400">
+                <Text as="h2" variant="headingMd">Options</Text>
+                <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
+                  <Checkbox
+                    label="Gift Box Mode"
+                    helpText="Shows gift wrapping option to customers"
+                    checked={options.isGiftBox}
+                    onChange={() => toggleOption("isGiftBox")}
+                  />
+                  <Checkbox
+                    label="Gift Message Field"
+                    helpText="Show text area for gift message"
+                    checked={options.giftMessageEnabled}
+                    onChange={() => toggleOption("giftMessageEnabled")}
+                    disabled={!options.isGiftBox}
+                  />
+                  <Checkbox
+                    label="Allow Duplicates"
+                    helpText="Same product can fill multiple slots"
+                    checked={options.allowDuplicates}
+                    onChange={() => toggleOption("allowDuplicates")}
+                  />
+                </InlineGrid>
+                {(optionValidationMessage || errors.giftMessageEnabled) && (
+                  <Text tone="critical" variant="bodySm">
+                    {errors.giftMessageEnabled || optionValidationMessage}
+                  </Text>
                 )}
-                {priceMode === "dynamic" && (
-                  <div style={{ border: "1px solid #d1d5db", borderRadius: "5px", padding: "10px", background: "#f9fafb" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "8px" }}>
-                      <div>
-                        <label style={{ ...labelStyle, fontSize: "10px" }}>Discount Type</label>
-                        <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }}>
-                          <option value="percent">% Off Total</option>
-                          <option value="fixed">{currencySymbol} Fixed Discount</option>
-                          <option value="none">No Discount</option>
-                        </select>
-                      </div>
-                      {discountType !== "none" ? (
-                        <div>
-                          <label style={{ ...labelStyle, fontSize: "10px" }}>{discountType === "percent" ? "Discount %" : `Amount (${currencySymbol})`}</label>
-                          <input type="number" min="0" step={discountType === "percent" ? "1" : "0.01"} max={discountType === "percent" ? "99" : undefined} value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
-                        </div>
-                      ) : null}
-                    </div>
-                    <div style={{ fontSize: "11px", color: "#000000" }}>
-                      {discountType === "percent" || discountType === "fixed"
-                          ? <>Discount applied on total amount</>
-                          : <>No discount applied</>
-                      }
-                    </div>
-                  </div>
+              </BlockStack>
+            </Card>
+
+            {/* Card 4 — Scope */}
+            <Card>
+              <BlockStack gap="400">
+                <Text as="h2" variant="headingMd">Scope</Text>
+
+                <BlockStack gap="200">
+                  <Text as="label" variant="bodySm" fontWeight="semibold">Select Scope</Text>
+                  <InlineStack gap="200">
+                    {scopeOptions.map((opt) => (
+                      <Button
+                        key={opt.value}
+                        variant={scope === opt.value ? "primary" : "secondary"}
+                        onClick={() => selectScope(opt.value)}
+                        size="slim"
+                      >
+                        {opt.label}
+                      </Button>
+                    ))}
+                  </InlineStack>
+                </BlockStack>
+
+                <InlineStack gap="300" blockAlign="center">
+                  {scope === "wholestore" ? (
+                    <Text variant="bodySm">All store products will be available in this combo.</Text>
+                  ) : (
+                    <Button
+                      onClick={() => { setScopeSearch(""); setShowScopePicker(true); }}
+                    >
+                      {scope === "specific_collections" ? "Select collections" : "Select products"}
+                    </Button>
+                  )}
+                  {scope !== "wholestore" && (
+                    <Text variant="bodySm" tone="subdued">{scopeItems.length} selected</Text>
+                  )}
+                </InlineStack>
+
+                {scope !== "wholestore" && scopeItems.length > 0 && (
+                  <Box padding="300" background="bg-surface-secondary" borderRadius="200">
+                    <InlineStack gap="200" wrap>
+                      {scopeItems.map((item) => (
+                        <Button
+                          key={item.id}
+                          size="slim"
+                          variant="secondary"
+                          onClick={() => setScopeItems((prev) => prev.filter((i) => i.id !== item.id))}
+                        >
+                          {item.title} ✕
+                        </Button>
+                      ))}
+                    </InlineStack>
+                  </Box>
                 )}
+              </BlockStack>
+            </Card>
+          </BlockStack>
+        </Form>
 
-              </div>
-              <div>
-                <label style={labelStyle}>Banner Image (optional)</label>
-                <input type="file" name="bannerImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ ...fieldStyle, padding: "7px 12px" }} />
-                <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>JPG, PNG, WEBP, GIF, or AVIF — max 5MB</div>
-                {errors.bannerImage && <div style={errorStyle}>{errors.bannerImage}</div>}
-              </div>
-            </div>
-          </div>
-
-          {/* Options */}
-          <div style={{ marginBottom: "28px" }}>
-            <div style={sectionHeadingStyle}><AdminIcon type="settings" size="small" /> Options</div>
-            <div className="form-grid-3-opts">
-              {[
-                { key: "isGiftBox", label: "Gift Box Mode", desc: "Shows gift wrapping option to customers", iconType: "gift-card" },
-                { key: "giftMessageEnabled", label: "Gift Message Field", desc: "Show text area for gift message", iconType: "email" },
-                { key: "allowDuplicates", label: "Allow Duplicates", desc: "Same product can fill multiple slots", iconType: "duplicate" },
-              ].map((opt) => (
-                <div key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: opt.key === "giftMessageEnabled" && !options.isGiftBox ? "not-allowed" : "pointer", padding: "12px 14px", border: options[opt.key] ? "1.5px solid #000000" : "1.5px solid #e5e7eb", borderRadius: "5px", background: options[opt.key] ? "#f9fafb" : "#fafafa", transition: "border-color 0.15s, background 0.15s", opacity: opt.key === "giftMessageEnabled" && !options.isGiftBox ? 0.65 : 1 }}>
-                  <ToggleSwitch checked={options[opt.key]} onChange={() => toggleOption(opt.key)} showStateText={false} disabled={opt.key === "giftMessageEnabled" && !options.isGiftBox} />
-                  <div>
-                    <div style={{ fontSize: "13px", fontWeight: "600", color: "#000000", display: "flex", alignItems: "center", gap: "5px" }}><AdminIcon type={opt.iconType} size="small" /> {opt.label}</div>
-                    <div style={{ fontSize: "11px", color: "#000000", marginTop: "2px" }}>{opt.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {(optionValidationMessage || errors.giftMessageEnabled) && (
-              <div style={{ marginTop: "8px", fontSize: "12px", color: "#dc2626", fontWeight: "600" }}>
-                {errors.giftMessageEnabled || optionValidationMessage}
-              </div>
-            )}
-          </div>
-
-          {/* Scope */}
-          <div style={{ marginBottom: "28px" }}>
-            <div style={sectionHeadingStyle}><AdminIcon type="target" size="small" /> Scope</div>
-            <div style={{ marginBottom: "12px" }}>
-              <label style={labelStyle}>Select Scope</label>
-              <div className="form-grid-3-scope">
-                {[
-                  { value: "specific_collections", label: "Specific collections" },
-                  { value: "specific_products", label: "Specific products" },
-                  { value: "wholestore", label: "Whole store" },
-                ].map((opt) => (
-                  <label
-                    key={opt.value}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      padding: "0 10px",
-                      minHeight: "40px",
-                      border: `1.5px solid ${scope === opt.value ? "#000000" : "#d1d5db"}`,
-                      borderRadius: "6px",
-                      background: scope === opt.value ? "#f9fafb" : "#fff",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name="scope-radio"
-                      value={opt.value}
-                      checked={scope === opt.value}
-                      onChange={() => selectScope(opt.value)}
-                      style={{ width: "16px", height: "16px", accentColor: "#6b7280", cursor: "pointer", margin: 0, flexShrink: 0 }}
-                    />
-                    <span style={{ fontSize: "12px", color: "#4b5563", fontWeight: scope === opt.value ? "700" : "600" }}>{opt.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              {scope === "wholestore" ? (
-                <span style={{ fontSize: "12px", color: "#374151", fontWeight: "600" }}>All store products will be available in this combo.</span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => { setScopeSearch(""); setShowScopePicker(true); }}
-                  style={{ padding: "8px 16px", background: "#000000", border: "1.5px solid #000000", borderRadius: "5px", fontSize: "13px", fontWeight: "600", color: "#ffffff", cursor: "pointer", transition: "background 0.12s, border-color 0.12s" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "#374151"; e.currentTarget.style.borderColor = "#374151"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "#000000"; e.currentTarget.style.borderColor = "#000000"; }}
-                >
-                  {scope === "specific_collections" ? "Select collections" : "Select products"}
-                </button>
-              )}
-              {scope !== "wholestore" && (
-                <span style={{ fontSize: "12px", color: "#000000", fontWeight: "500" }}>
-                  {`${scopeItems.length} selected`}
-                </span>
-              )}
-            </div>
-            {scope !== "wholestore" && scopeItems.length > 0 && (
-              <div style={{ marginTop: "10px", padding: "10px 12px", background: "#f9fafb", borderRadius: "5px", border: "1px solid #e5e7eb" }}>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                  {scopeItems.map((item) => (
-                    <span key={item.id} onClick={() => setScopeItems((prev) => prev.filter((i) => i.id !== item.id))} style={{ background: "#f3f4f6", color: "#000000", border: "1px solid #d1d5db", borderRadius: "5px", padding: "3px 10px", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", fontWeight: "500" }}>
-                      {item.title}<AdminIcon type="x" size="small" style={{ opacity: 0.75, color: "#000000" }} />
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-        </s-section>
-      </Form>
-
-      {/* Scope Picker Modal */}
-      {showScopePicker && scope !== "wholestore" && (() => {
-        const isCollections = scope === "specific_collections";
-        const allItems = isCollections ? collections : products;
-        const filtered = scopeSearch.trim()
-          ? allItems.filter((i) => i.title.toLowerCase().includes(scopeSearch.toLowerCase()))
-          : allItems;
-        const isScopeSelected = (id) => scopeItems.some((i) => i.id === id);
-        function toggleScopeItem(item) {
-          setScopeItems((prev) => prev.some((i) => i.id === item.id)
-            ? prev.filter((i) => i.id !== item.id)
-            : [...prev, item]
-          );
-        }
-        return (
-          <div style={modalOverlayStyle} onClick={(e) => { if (e.target === e.currentTarget) setShowScopePicker(false); }}>
-            <div style={modalBoxStyle}>
-              <div style={modalHeaderStyle}>
-                <div>
-                  <div style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>
-                    {isCollections ? "Select Collections" : "Select Products"}
-                  </div>
-                  <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>
-                    {scopeItems.length} {isCollections ? "collection" : "product"}{scopeItems.length !== 1 ? "s" : ""} selected
-                  </div>
-                </div>
-                <button type="button" aria-label="Close scope picker" onClick={() => setShowScopePicker(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", padding: "4px 8px", borderRadius: "5px", lineHeight: 1, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><AdminIcon type="x" size="small" style={{ color: "#9ca3af" }} /></button>
-              </div>
-              <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
-                <input
-                  type="text"
-                  placeholder={`Search ${isCollections ? "collections" : "products"}...`}
-                  value={scopeSearch}
-                  onChange={(e) => setScopeSearch(e.target.value)}
-                  autoFocus
-                  style={searchInputStyle}
-                />
-              </div>
-              <div style={modalBodyStyle}>
+        {/* Scope Picker Modal */}
+        <Modal
+          open={showScopePicker && scope !== "wholestore"}
+          onClose={() => setShowScopePicker(false)}
+          title={scope === "specific_collections" ? "Select Collections" : "Select Products"}
+          primaryAction={{
+            content: `Done${scopeItems.length > 0 ? ` (${scopeItems.length})` : ""}`,
+            onAction: () => setShowScopePicker(false),
+          }}
+          secondaryActions={[{ content: "Cancel", onAction: () => setShowScopePicker(false) }]}
+        >
+          <Modal.Section>
+            <BlockStack gap="300">
+              <TextField
+                label=""
+                placeholder={`Search ${isCollections ? "collections" : "products"}...`}
+                value={scopeSearch}
+                onChange={(v) => setScopeSearch(v)}
+                autoComplete="off"
+                autoFocus
+              />
+              <BlockStack gap="200">
                 {filtered.length === 0 ? (
-                  <div style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>No items found</div>
-                ) : filtered.map((item, idx) => {
-                  const selected = isScopeSelected(item.id);
-                  return (
-                    <label key={item.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filtered.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", background: selected ? "#f9fafb" : "#fff", transition: "background 0.1s" }}>
-                      <ToggleSwitch checked={selected} onChange={() => toggleScopeItem(item)} showStateText={false} />
-                      {item.imageUrl
-                        ? <img src={item.imageUrl} alt={item.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} />
-                        : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}><AdminIcon type={isCollections ? "folder" : "product"} size="small" /></div>
-                      }
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.title}</div>
-                      </div>
-                      {selected && <span style={{ width: "18px", height: "18px", background: "#000000", border: "1px solid #000000", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><AdminIcon type="check" size="small" style={{ color: "#ffffff" }} /></span>}
-                    </label>
-                  );
-                })}
-              </div>
-              <div style={modalFooterStyle}>
-                <span style={{ fontSize: "12px", color: "#000000" }}>
-                  {scopeItems.length > 0 ? `${scopeItems.length} selected` : "None selected"}
-                </span>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button type="button" onClick={() => setShowScopePicker(false)} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#111827" }}>Cancel</button>
-                  <button type="button" onClick={() => setShowScopePicker(false)} style={{ background: "#000000", border: "none", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: "pointer", color: "#ffffff", boxShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>
-                    Done{scopeItems.length > 0 ? ` (${scopeItems.length})` : ""}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
-    </s-page>
+                  <Text tone="subdued" variant="bodySm">No items found</Text>
+                ) : filtered.map((item) => (
+                  <InlineStack key={item.id} gap="300" blockAlign="center">
+                    <Checkbox
+                      label={item.title}
+                      checked={isScopeSelected(item.id)}
+                      onChange={() => toggleScopeItem(item)}
+                    />
+                    {item.imageUrl && (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.title}
+                        style={{ width: 32, height: 32, objectFit: "cover", borderRadius: 4, border: "1px solid #e5e7eb", flexShrink: 0 }}
+                      />
+                    )}
+                  </InlineStack>
+                ))}
+              </BlockStack>
+            </BlockStack>
+          </Modal.Section>
+        </Modal>
+      </BlockStack>
+    </Page>
   );
 }
 
@@ -654,5 +657,3 @@ export const headers = (headersArgs) => {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
-
-

@@ -5,6 +5,14 @@ import { authenticate } from "../shopify.server";
 import { AdminIcon } from "../components/admin-icons";
 import { getAnalytics } from "../models/orders.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
+import {
+  BlockStack,
+  Card,
+  InlineGrid,
+  InlineStack,
+  Page,
+  Text,
+} from "@shopify/polaris";
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
@@ -1266,97 +1274,31 @@ export default function AnalyticsPage() {
       : null;
 
   return (
-    <s-page heading="MixBox – Box & Bundle Builder" inlineSize="medium">
-      <style>{`
-        /* ── Analytics Responsive ── */
-        .an-kpi-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 14px;
-        }
-        .an-two-col {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
-        }
-        .an-period-hdr {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          flex-wrap: wrap;
-          gap: 12px;
-          margin-bottom: 20px;
-        }
-        .an-period-controls {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          flex-wrap: wrap;
-        }
-        .an-hero {
-          padding: 24px 32px;
-        }
-        /* Tablet */
-        @media (max-width: 900px) {
-          .an-kpi-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-          .an-two-col {
-            grid-template-columns: 1fr;
-          }
-        }
-        /* Mobile */
-        @media (max-width: 640px) {
-          .an-kpi-grid {
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-          }
-          .an-hero {
-            padding: 16px;
-          }
-          .an-period-hdr {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-          .an-period-controls {
-            width: 100%;
-          }
-        }
-        @media (max-width: 420px) {
-          .an-kpi-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
-      {/* Hero banner */}
-      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }} className="an-hero">
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}>
-          <AdminIcon type="chart-line" size="small" /> Analytics
-        </div>
-        <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>Bundle Performance Overview</div>
-        <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Period-over-period comparison of revenue, orders, and top products.</div>
-      </div>
-
-      {/* ── Period Selector + Banner ── */}
-      <s-section>
-        <div className="an-period-hdr">
-          <div>
-            <div style={{ fontSize: "14px", color: "#111827", fontWeight: "700" }}>Performance Overview</div>
-            <div style={{ fontSize: "12px", color: "#9ca3af", marginTop: "2px" }}>
-              Bundle analytics · period-over-period comparison
-            </div>
-          </div>
-          <div className="an-period-controls">
-            <ComboTypeFilter value={comboType} />
-            <DateRangePicker period={period} fromDate={fromDate} toDate={toDate} />
-            <SyncOrdersButton />
-          </div>
-        </div>
-
-        <ComparisonBanner period={periodRange} prevPeriod={prevPeriod} />
+    <Page
+      title="Analytics"
+      subtitle="Bundle performance overview"
+    >
+      <BlockStack gap="500">
+        {/* ── Period Selector + Comparison Banner ── */}
+        <Card>
+          <BlockStack gap="300">
+            <InlineStack align="space-between" blockAlign="center" wrap>
+              <BlockStack gap="100">
+                <Text as="h2" variant="headingMd">Performance Overview</Text>
+                <Text as="p" tone="subdued" variant="bodySm">Bundle analytics · period-over-period comparison</Text>
+              </BlockStack>
+              <InlineStack gap="300" wrap>
+                <ComboTypeFilter value={comboType} />
+                <DateRangePicker period={period} fromDate={fromDate} toDate={toDate} />
+                <SyncOrdersButton />
+              </InlineStack>
+            </InlineStack>
+            <ComparisonBanner period={periodRange} prevPeriod={prevPeriod} />
+          </BlockStack>
+        </Card>
 
         {/* ── KPI Cards ── */}
-        <div className="an-kpi-grid">
+        <InlineGrid columns={{ xs: 2, md: 4 }} gap="400">
           <KpiCard
             label="Bundle Revenue"
             value={`₹${totalRevenue.toLocaleString("en-IN")}`}
@@ -1390,55 +1332,71 @@ export default function AnalyticsPage() {
             iconType="collection-list"
             subtitle="Total live combo boxes"
           />
-        </div>
-      </s-section>
+        </InlineGrid>
 
-      {/* ── Revenue Chart ── */}
-      <s-section heading="Revenue Over Time">
-        <LineChart
-          title="Total Bundle Revenue"
-          totalValue={`₹${totalRevenue.toLocaleString("en-IN")}`}
-          change={revenueChange}
-          data={revData}
-          prevData={prevRevData}
-          periodLabel={periodLabel}
-          prevPeriodLabel={prevPeriodLabel}
-          formatY={fmtCurrency}
-          color="#60a5fa"
-          color2="#818cf8"
-        />
-      </s-section>
+        {/* ── Revenue & Orders Charts ── */}
+        <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
+          <Card>
+            <BlockStack gap="300">
+              <Text as="h2" variant="headingMd">Revenue Over Time</Text>
+              <LineChart
+                title="Total Bundle Revenue"
+                totalValue={`₹${totalRevenue.toLocaleString("en-IN")}`}
+                change={revenueChange}
+                data={revData}
+                prevData={prevRevData}
+                periodLabel={periodLabel}
+                prevPeriodLabel={prevPeriodLabel}
+                formatY={fmtCurrency}
+                color="#60a5fa"
+                color2="#818cf8"
+              />
+            </BlockStack>
+          </Card>
+          <Card>
+            <BlockStack gap="300">
+              <Text as="h2" variant="headingMd">Bundles Sold</Text>
+              <LineChart
+                title="Bundles Sold"
+                totalValue={String(totalOrders)}
+                change={ordersChange}
+                data={ordData}
+                prevData={prevOrdData}
+                periodLabel={periodLabel}
+                prevPeriodLabel={prevPeriodLabel}
+                formatY={(v) => String(Math.round(v))}
+                color="#34d399"
+                color2="#059669"
+              />
+            </BlockStack>
+          </Card>
+        </InlineGrid>
 
-      {/* ── Orders Chart ── */}
-      <s-section heading="Bundles Sold">
-        <LineChart
-          title="Bundles Sold"
-          totalValue={String(totalOrders)}
-          change={ordersChange}
-          data={ordData}
-          prevData={prevOrdData}
-          periodLabel={periodLabel}
-          prevPeriodLabel={prevPeriodLabel}
-          formatY={(v) => String(Math.round(v))}
-          color="#34d399"
-          color2="#059669"
-        />
-      </s-section>
+        {/* ── Top Products + Box Performance ── */}
+        <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
+          <Card>
+            <BlockStack gap="300">
+              <Text as="h2" variant="headingMd">Top Picked Products</Text>
+              <TopProductsChart data={topProducts} />
+            </BlockStack>
+          </Card>
+          <Card>
+            <BlockStack gap="300">
+              <Text as="h2" variant="headingMd">Box Performance</Text>
+              <BoxPerformanceChart data={boxPerformance} />
+            </BlockStack>
+          </Card>
+        </InlineGrid>
 
-      {/* ── Two Column: Products + Box Performance ── */}
-      <div className="an-two-col">
-        <s-section heading="Top Products Picked">
-          <TopProductsChart data={topProducts} />
-        </s-section>
-        <s-section heading="Box Type Performance">
-          <BoxPerformanceChart data={boxPerformance} />
-        </s-section>
-      </div>
-
-      <s-section heading="Recent Bundle Orders">
-        <RecentOrdersTable data={recentOrders} />
-      </s-section>
-    </s-page>
+        {/* ── Recent Orders ── */}
+        <Card>
+          <BlockStack gap="300">
+            <Text as="h2" variant="headingMd">Recent Orders</Text>
+            <RecentOrdersTable data={recentOrders} />
+          </BlockStack>
+        </Card>
+      </BlockStack>
+    </Page>
   );
 }
 

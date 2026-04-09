@@ -2,12 +2,15 @@ import { useState } from "react";
 import { Form, useActionData, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
-import { AdminIcon } from "../components/admin-icons";
-import { ToggleSwitch } from "../components/toggle-switch";
 import { getBox, updateBox, deleteBox, getBannerImageSrc } from "../models/boxes.server";
 import { getShopCurrencyCode } from "../models/shop.server";
 import { withEmbeddedAppParams, withEmbeddedAppToastFromRequest } from "../utils/embedded-app";
 import { getCurrencySymbol } from "../utils/currency";
+import {
+  Badge, Banner, BlockStack, Box, Button, Card, Checkbox,
+  FormLayout, InlineGrid, InlineStack, Layout, Modal, Page,
+  Spinner, Text
+} from "@shopify/polaris";
 
 /* ─────────────────────────── GraphQL ─────────────────────────── */
 const COLLECTIONS_QUERY = `#graphql
@@ -279,21 +282,9 @@ export const action = async ({ request, params }) => {
 };
 
 /* ─────────────────────────── Styles ─────────────────────────── */
-const fieldStyle = {
-  width: "100%", padding: "9px 12px", border: "1.5px solid #e5e7eb",
-  borderRadius: "5px", fontSize: "13px", color: "#111827", background: "#fff",
-  boxSizing: "border-box", outline: "none", transition: "border-color 0.15s, box-shadow 0.15s",
-};
-const labelStyle = {
-  display: "block", fontSize: "11px", fontWeight: "700", color: "#4b5563",
-  marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.6px",
-};
-const errorStyle = { color: "#dc2626", fontSize: "11px", marginTop: "5px", display: "flex", alignItems: "center", gap: "4px" };
-
-const sectionHeadingStyle = {
-  fontSize: "11px", fontWeight: "700", color: "#000000", textTransform: "uppercase",
-  letterSpacing: "0.8px", marginBottom: "16px", paddingBottom: "10px",
-  borderBottom: "1.5px solid #f3f4f6", display: "flex", alignItems: "center", gap: "8px",
+const inputStyle = {
+  width: "100%", padding: "8px 12px", border: "1.5px solid #e5e7eb",
+  borderRadius: "6px", fontSize: "14px", boxSizing: "border-box",
 };
 
 /* ─────────────────────────── Component ─────────────────────────── */
@@ -338,6 +329,8 @@ export default function BoxSettingsPage() {
   });
   const [showScopePicker, setShowScopePicker] = useState(false);
   const [scopeSearch, setScopeSearch] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [removeBannerImage, setRemoveBannerImage] = useState(false);
 
   const numItemCount = Math.max(1, parseInt(itemCount) || 1);
   const dynamicPrice = 0;
@@ -364,300 +357,25 @@ export default function BoxSettingsPage() {
     setScopeItems([]);
   }
 
-  /* ── Shared modal styles ── */
-  const modalOverlayStyle = { position: "fixed", inset: 0, background: "rgba(17,24,39,0.55)", backdropFilter: "blur(3px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" };
-  const modalBoxStyle = { background: "#fff", borderRadius: "8px", width: "100%", maxWidth: "560px", maxHeight: "85vh", display: "flex", flexDirection: "column", boxShadow: "0 20px 60px rgba(0,0,0,0.18)", overflow: "hidden" };
-  const modalHeaderStyle = { padding: "16px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#ffffff" };
-  const modalBodyStyle = { flex: 1, overflowY: "auto" };
-  const modalFooterStyle = { padding: "14px 16px", borderTop: "1px solid #f3f4f6", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" };
-  const modalCloseBtn = { background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: "#9ca3af", padding: "4px 8px", borderRadius: "5px", lineHeight: 1 };
-  const searchInputStyle = { ...fieldStyle, borderColor: "#d1d5db", paddingLeft: "14px", fontSize: "13px" };
-
   /* ─────────────── Render ─────────────── */
   return (
-    <s-page
-      inlineSize="medium"
-      heading="MixBox – Box & Bundle Builder"
-      back-url={withEmbeddedAppParams("/app/boxes", location.search)}
+    <Page
+      title="Edit Box"
+      backAction={{ content: "Boxes", url: withEmbeddedAppParams("/app/boxes", location.search) }}
+      primaryAction={{
+        content: isSaving ? "Saving..." : "Save Changes",
+        loading: isSaving,
+        onAction: () => document.getElementById("edit-box-form")?.requestSubmit(),
+      }}
+      secondaryActions={[
+        {
+          content: "Delete Box",
+          destructive: true,
+          onAction: () => setShowDeleteConfirm(true),
+        },
+      ]}
     >
-      <style>{`
-        /* ── Edit Box Responsive ── */
-        .form-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-        .form-grid-3-opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-        .form-grid-3-scope { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-        .form-hero { padding: 24px 32px; }
-        @media (max-width: 900px) {
-          .form-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-          .form-grid-3-opts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        }
-        @media (max-width: 640px) {
-          .form-grid-3 { grid-template-columns: 1fr; }
-          .form-grid-3-opts { grid-template-columns: 1fr; }
-          .form-grid-3-scope { grid-template-columns: 1fr; }
-          .form-hero { padding: 16px; }
-        }
-      `}</style>
-      <s-button
-        slot="primary-action"
-        variant="primary"
-        disabled={isSaving || undefined}
-        onClick={() => { const form = document.getElementById("edit-box-form"); if (form) form.requestSubmit(); }}
-      >
-        {isSaving ? "Saving..." : "Save Changes"}
-      </s-button>
-      <s-button
-        slot="secondary-action"
-        onClick={() => { window.location.href = withEmbeddedAppParams("/app/boxes", location.search); }}
-      >
-        <AdminIcon type="arrow-left" size="small" /> Back
-      </s-button>
-
-      {/* Hero banner */}
-      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }} className="form-hero">
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
-          <div style={{ flex: "1 1 420px", minWidth: "320px" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}>
-              <AdminIcon type="package" size="small" /> Edit Box
-            </div>
-            <div style={{ fontSize: "18px", fontWeight: "800", color: "#000000", letterSpacing: "-0.5px" }}>{box.boxName}</div>
-            <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>Update settings, pricing, and eligible products for this bundle.</div>
-          </div>
-          <div style={{ flex: "0 1 420px", minWidth: "320px" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "10px 12px", background: options.isActive ? "#f9fafb" : "#fff", border: `1.5px solid ${options.isActive ? "#000000" : "#e5e7eb"}`, borderRadius: "7px", transition: "border-color 0.15s, background 0.15s" }}>
-              <ToggleSwitch checked={options.isActive} onChange={() => toggleOption("isActive")} showStateText={false} />
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", lineHeight: 1.3, display: "flex", alignItems: "center", gap: "6px" }}>
-                  <AdminIcon type="check-circle" size="small" /> Active on Storefront
-                </div>
-                <div style={{ fontSize: "12px", color: "#000000", marginTop: "3px" }}>Uncheck to hide from customers</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {errors._global && (
-        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "5px", padding: "12px 16px", marginBottom: "16px", color: "#991b1b", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
-          <AdminIcon type="alert-triangle" size="small" />
-          {errors._global}
-        </div>
-      )}
-
-      <Form id="edit-box-form" method="POST" action={`/app/boxes/${box.id}${location.search ? location.search + '&index' : '?index'}`} encType="multipart/form-data">
-        <input type="hidden" name="_action" value="save" />
-        <input type="hidden" name="bundlePrice" value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
-        <input type="hidden" name="bundlePriceType" value={priceMode} />
-        <input type="hidden" name="discountType" value={priceMode === "dynamic" ? discountType : "none"} />
-        <input type="hidden" name="discountValue" value={priceMode === "dynamic" ? (discountType === "none" ? "0" : discountValue) : "0"} />
-        <input type="hidden" name="buyQuantity" value={priceMode === "dynamic" ? buyQuantity : "1"} />
-        <input type="hidden" name="getQuantity" value={priceMode === "dynamic" ? getQuantity : "1"} />
-        <input type="hidden" name="itemCount" value={itemCount} />
-        <input type="hidden" name="isGiftBox" value={String(options.isGiftBox)} />
-        <input type="hidden" name="allowDuplicates" value={String(options.allowDuplicates)} />
-        <input type="hidden" name="giftMessageEnabled" value={String(options.giftMessageEnabled)} />
-        <input type="hidden" name="isActive" value={String(options.isActive)} />
-        <input type="hidden" name="scope" value={scope} />
-        <input type="hidden" name="scopeItems" value={JSON.stringify(scopeItems.map(i => ({ id: i.id, title: i.title })))} />
-        {scope === "specific_products" && (
-          <input type="hidden" name="eligibleProducts" value={JSON.stringify(
-            scopeItems.map(item => ({
-              productId: item.id,
-              productTitle: item.title,
-              productHandle: item.handle || null,
-              productImageUrl: item.imageUrl || null,
-              variantIds: item.variantIds || [],
-              price: item.price || "0",
-            }))
-          )} />
-        )}
-
-        <s-section>
-        {/* Basic Information */}
-        <div style={{ marginBottom: "28px" }}>
-          <div style={sectionHeadingStyle}><AdminIcon type="clipboard" size="small" /> Basic Information</div>
-          <div className="form-grid-3">
-            <div>
-              <label style={labelStyle}>Heading *</label>
-              <input type="text" name="displayTitle" defaultValue={box.displayTitle} style={{ ...fieldStyle, borderColor: errors.displayTitle ? "#e11d48" : "#d1d5db" }} />
-              {errors.displayTitle && <div style={errorStyle}>{errors.displayTitle}</div>}
-            </div>
-            <div>
-              <label style={labelStyle}>Combo Product Button Title</label>
-              <input
-                type="text"
-                name="comboProductButtonTitle"
-                defaultValue={box.comboProductButtonTitle || "BUILD YOUR OWN BOX"}
-                placeholder="BUILD YOUR OWN BOX"
-                style={{ ...fieldStyle, borderColor: "#d1d5db" }}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>Product Button Title</label>
-              <input
-                type="text"
-                name="productButtonTitle"
-                defaultValue={box.productButtonTitle || "Add To Cart"}
-                placeholder="Add To Cart"
-                style={{ ...fieldStyle, borderColor: "#d1d5db" }}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>Number Of Products *</label>
-              <input type="number" placeholder="e.g. 4" min="1" max="20" value={itemCount} onChange={(e) => setItemCount(e.target.value)} style={{ ...fieldStyle, borderColor: errors.itemCount ? "#e11d48" : "#d1d5db" }} />
-              {errors.itemCount && <div style={errorStyle}>{errors.itemCount}</div>}
-            </div>
-            <div>
-              <label style={labelStyle}>Bundle Price ({currencySymbol}) *</label>
-              <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "5px", overflow: "hidden", marginBottom: "10px" }}>
-                {["manual", "dynamic"].map((mode) => (
-                  <button key={mode} type="button" onClick={() => setPriceMode(mode)} style={{ flex: 1, padding: "7px 0", fontSize: "12px", fontWeight: "600", border: "none", cursor: "pointer", background: priceMode === mode ? "#000000" : "#f9fafb", color: priceMode === mode ? "#ffffff" : "#374151", transition: "background 0.15s" }}>
-                    {mode === "manual" ? "Manual" : "Dynamic"}
-                  </button>
-                ))}
-              </div>
-              {priceMode === "manual" && (
-                <input type="number" placeholder="e.g. 1200" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} style={{ ...fieldStyle }} />
-              )}
-              {priceMode === "dynamic" && (
-                <div style={{ border: "1px solid #d1d5db", borderRadius: "5px", padding: "12px", background: "#ffffff" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
-                    <div>
-                      <label style={{ ...labelStyle, fontSize: "10px" }}>Discount Type</label>
-                      <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }}>
-                        <option value="percent">% Off Total</option>
-                        <option value="fixed">{currencySymbol} Fixed Discount</option>`r`n                        <option value="none">No Discount</option>
-                      </select>
-                    </div>
-                    {discountType !== "none" ? (
-                      <div>
-                        <label style={{ ...labelStyle, fontSize: "10px" }}>{discountType === "percent" ? "Discount %" : `Amount (${currencySymbol})`}</label>
-                        <input type="number" min="0" step={discountType === "percent" ? "1" : "0.01"} max={discountType === "percent" ? "99" : undefined} value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
-                      </div>
-                    ) : null}
-                  </div>
-                  <div style={{ fontSize: "11px", color: "#000000", marginTop: "8px" }}>
-                    {discountType !== "none"
-                        ? <>Discount applied on total amount</>
-                        : <>No discount applied</>
-                    }
-                  </div>
-                </div>
-              )}
-            </div>
-            <div>
-              <label style={labelStyle}>Image</label>
-              <input type="file" name="bannerImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ ...fieldStyle, padding: "7px 12px" }} />
-              {box.bannerImageSrc && (
-                <div style={{ marginTop: "10px" }}>
-                  <img src={box.bannerImageSrc} alt="Current banner" style={{ width: "100%", maxWidth: "100px", borderRadius: "5px", border: "1px solid #e5e7eb" }} />
-                </div>
-              )}
-              <div style={{ marginTop: "8px" }}>
-                <ToggleSwitch name="removeBannerImage" value="true" label="Remove current image" showStateText={false} />
-              </div>
-              <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "5px" }}>JPG, PNG, WEBP, GIF, or AVIF — max 5MB</div>
-              {errors.bannerImage && <div style={errorStyle}>{errors.bannerImage}</div>}
-            </div>
-          </div>
-        </div>
-
-        {/* Options */}
-        <div style={{ marginBottom: "28px" }}>
-          <div style={sectionHeadingStyle}><AdminIcon type="settings" size="small" /> Options</div>
-          <div className="form-grid-3-opts">
-            {[
-              { key: "isGiftBox", label: "Gift Box Mode", desc: "Enables gift packaging option", iconType: "gift-card" },
-               { key: "giftMessageEnabled", label: "Gift Message Field", desc: "Show text area for gift message", iconType: "email" },
-              { key: "allowDuplicates", label: "Allow Duplicates", desc: "Same product in multiple slots", iconType: "duplicate" },
-            ].map((opt) => (
-              <div key={opt.key} style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: opt.key === "giftMessageEnabled" && !options.isGiftBox ? "not-allowed" : "pointer", padding: "12px 14px", border: options[opt.key] ? "1.5px solid #000000" : "1.5px solid #e5e7eb", borderRadius: "5px", background: options[opt.key] ? "#f9fafb" : "#fafafa", transition: "border-color 0.15s, background 0.15s", opacity: opt.key === "giftMessageEnabled" && !options.isGiftBox ? 0.65 : 1 }}>
-                <ToggleSwitch checked={options[opt.key]} onChange={() => toggleOption(opt.key)} showStateText={false} disabled={opt.key === "giftMessageEnabled" && !options.isGiftBox} />
-                <div>
-                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#000000", display: "flex", alignItems: "center", gap: "5px" }}><AdminIcon type={opt.iconType} size="small" />{opt.label}</div>
-                  <div style={{ fontSize: "11px", color: "#000000", marginTop: "2px" }}>{opt.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-          {(optionValidationMessage || errors.giftMessageEnabled) && (
-            <div style={{ marginTop: "8px", fontSize: "12px", color: "#dc2626", fontWeight: "600" }}>
-              {errors.giftMessageEnabled || optionValidationMessage}
-            </div>
-          )}
-        </div>
-
-        {/* Scope */}
-        <div style={{ marginBottom: "28px" }}>
-          <div style={sectionHeadingStyle}><AdminIcon type="target" size="small" /> Scope</div>
-          <div style={{ marginBottom: "12px" }}>
-            <label style={labelStyle}>Select Scope</label>
-            <div className="form-grid-3-scope">
-              {[
-                { value: "specific_collections", label: "Specific collections" },
-                { value: "specific_products", label: "Specific products" },
-                { value: "wholestore", label: "Whole store" },
-              ].map((opt) => (
-                <label
-                  key={opt.value}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    padding: "0 10px",
-                    minHeight: "40px",
-                    border: `1.5px solid ${scope === opt.value ? "#000000" : "#d1d5db"}`,
-                    borderRadius: "6px",
-                    background: scope === opt.value ? "#f9fafb" : "#fff",
-                    cursor: "pointer",
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="scope-radio"
-                    value={opt.value}
-                    checked={scope === opt.value}
-                    onChange={() => selectScope(opt.value)}
-                    style={{ width: "16px", height: "16px", accentColor: "#6b7280", cursor: "pointer", margin: 0, flexShrink: 0 }}
-                  />
-                  <span style={{ fontSize: "12px", color: "#4b5563", fontWeight: scope === opt.value ? "700" : "600" }}>{opt.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            {scope === "wholestore" ? (
-              <span style={{ fontSize: "12px", color: "#374151", fontWeight: "600" }}>All store products will be available in this combo.</span>
-            ) : (
-              <button
-                type="button"
-                onClick={() => { setScopeSearch(""); setShowScopePicker(true); }}
-                style={{ padding: "8px 16px", background: "#000000", border: "1.5px solid #000000", borderRadius: "5px", fontSize: "13px", fontWeight: "600", color: "#ffffff", cursor: "pointer", transition: "background 0.12s, border-color 0.12s" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "#374151"; e.currentTarget.style.borderColor = "#374151"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "#000000"; e.currentTarget.style.borderColor = "#000000"; }}
-              >
-                {scope === "specific_collections" ? "Select collections" : "Select products"}
-              </button>
-            )}
-            {scope !== "wholestore" && (
-              <span style={{ fontSize: "12px", color: "#000000", fontWeight: "500" }}>{`${scopeItems.length} selected`}</span>
-            )}
-          </div>
-          {scope !== "wholestore" && scopeItems.length > 0 && (
-            <div style={{ marginTop: "10px", padding: "10px 12px", background: "#f9fafb", borderRadius: "5px", border: "1px solid #e5e7eb" }}>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                {scopeItems.map((item) => (
-                  <span key={item.id} onClick={() => setScopeItems((prev) => prev.filter((i) => i.id !== item.id))} style={{ background: "#f3f4f6", color: "#000000", border: "1px solid #d1d5db", borderRadius: "5px", padding: "3px 10px", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", fontWeight: "500" }}>
-                    {item.title}<AdminIcon type="x" size="small" style={{ opacity: 0.75, color: "#000000" }} />
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        </s-section>
-      </Form>
-
+      {/* Loading overlay */}
       {isPageLoading && (
         <div
           aria-live="polite"
@@ -672,9 +390,36 @@ export default function BoxSettingsPage() {
             justifyContent: "center",
           }}
         >
-          <s-spinner accessibilityLabel="Loading page" size="large" />
+          <Spinner accessibilityLabel="Loading page" size="large" />
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title="Delete this box?"
+        primaryAction={{
+          content: "Delete",
+          destructive: true,
+          onAction: () => {
+            const form = document.createElement("form");
+            form.method = "POST";
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = "_action";
+            input.value = "delete";
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+          },
+        }}
+        secondaryActions={[{ content: "Cancel", onAction: () => setShowDeleteConfirm(false) }]}
+      >
+        <Modal.Section>
+          <Text>This will permanently delete "{box.boxName}" and all its settings.</Text>
+        </Modal.Section>
+      </Modal>
 
       {/* Scope Picker Modal */}
       {showScopePicker && scope !== "wholestore" && (() => {
@@ -691,70 +436,389 @@ export default function BoxSettingsPage() {
           );
         }
         return (
-          <div style={modalOverlayStyle} onClick={(e) => { if (e.target === e.currentTarget) setShowScopePicker(false); }}>
-            <div style={modalBoxStyle}>
-              <div style={modalHeaderStyle}>
-                <div>
-                  <div style={{ fontSize: "15px", fontWeight: "700", color: "#111827" }}>
-                    {isCollections ? "Select Collections" : "Select Products"}
-                  </div>
-                  <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>
-                    {scopeItems.length} {isCollections ? "collection" : "product"}{scopeItems.length !== 1 ? "s" : ""} selected
-                  </div>
-                </div>
-                <button type="button" aria-label="Close scope picker" onClick={() => setShowScopePicker(false)} style={{ ...modalCloseBtn, display: "inline-flex", alignItems: "center", justifyContent: "center" }}><AdminIcon type="x" size="small" style={{ color: "#9ca3af" }} /></button>
-              </div>
-              <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
+          <Modal
+            open={showScopePicker}
+            onClose={() => setShowScopePicker(false)}
+            title={isCollections ? "Select Collections" : "Select Products"}
+            primaryAction={{
+              content: `Done${scopeItems.length > 0 ? ` (${scopeItems.length})` : ""}`,
+              onAction: () => setShowScopePicker(false),
+            }}
+            secondaryActions={[{ content: "Cancel", onAction: () => setShowScopePicker(false) }]}
+          >
+            <Modal.Section>
+              <BlockStack gap="300">
                 <input
                   type="text"
                   placeholder={`Search ${isCollections ? "collections" : "products"}...`}
                   value={scopeSearch}
                   onChange={(e) => setScopeSearch(e.target.value)}
                   autoFocus
-                  style={searchInputStyle}
+                  style={{ ...inputStyle, marginBottom: "8px" }}
                 />
-              </div>
-              <div style={modalBodyStyle}>
                 {filtered.length === 0 ? (
-                  <div style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>No items found</div>
-                ) : filtered.map((item, idx) => {
-                  const selected = isScopeSelected(item.id);
-                  return (
-                    <label key={item.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: idx < filtered.length - 1 ? "1px solid #f3f4f6" : "none", cursor: "pointer", background: selected ? "#f9fafb" : "#fff", transition: "background 0.1s" }}>
-                      <ToggleSwitch checked={selected} onChange={() => toggleScopeItem(item)} showStateText={false} />
-                      {item.imageUrl
-                        ? <img src={item.imageUrl} alt={item.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} />
-                        : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}><AdminIcon type={isCollections ? "folder" : "product"} size="small" /></div>
-                      }
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: "13px", fontWeight: "600", color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.title}</div>
-                      </div>
-                      {selected && <span style={{ width: "18px", height: "18px", background: "#000000", border: "1px solid #000000", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><AdminIcon type="check" size="small" style={{ color: "#ffffff" }} /></span>}
-                    </label>
-                  );
-                })}
-              </div>
-              <div style={modalFooterStyle}>
-                <span style={{ fontSize: "12px", color: "#000000" }}>
-                  {scopeItems.length > 0 ? `${scopeItems.length} selected` : "None selected"}
-                </span>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button type="button" onClick={() => setShowScopePicker(false)} style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "5px", padding: "8px 16px", fontSize: "13px", fontWeight: "500", cursor: "pointer", color: "#111827" }}>Cancel</button>
-                  <button type="button" onClick={() => setShowScopePicker(false)} style={{ background: "#000000", border: "none", borderRadius: "5px", padding: "8px 20px", fontSize: "13px", fontWeight: "700", cursor: "pointer", color: "#ffffff", boxShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>
-                    Done{scopeItems.length > 0 ? ` (${scopeItems.length})` : ""}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+                  <Text tone="subdued" alignment="center">No items found</Text>
+                ) : (
+                  <BlockStack gap="0">
+                    {filtered.map((item) => {
+                      const selected = isScopeSelected(item.id);
+                      return (
+                        <div
+                          key={item.id}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                            padding: "10px 0",
+                            borderBottom: "1px solid #f3f4f6",
+                            background: selected ? "#f9fafb" : "#fff",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => toggleScopeItem(item)}
+                        >
+                          <Checkbox
+                            label=""
+                            checked={selected}
+                            onChange={() => toggleScopeItem(item)}
+                          />
+                          {item.imageUrl
+                            ? <img src={item.imageUrl} alt={item.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} />
+                            : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, border: "1px solid #e5e7eb" }} />
+                          }
+                          <Text variant="bodyMd" fontWeight={selected ? "semibold" : "regular"}>{item.title}</Text>
+                        </div>
+                      );
+                    })}
+                  </BlockStack>
+                )}
+              </BlockStack>
+            </Modal.Section>
+          </Modal>
         );
       })()}
-    </s-page>
+
+      <Form
+        id="edit-box-form"
+        method="POST"
+        action={`/app/boxes/${box.id}${location.search ? location.search + "&index" : "?index"}`}
+        encType="multipart/form-data"
+      >
+        <input type="hidden" name="_action" value="save" />
+        <input type="hidden" name="bundlePrice" value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
+        <input type="hidden" name="bundlePriceType" value={priceMode} />
+        <input type="hidden" name="discountType" value={priceMode === "dynamic" ? discountType : "none"} />
+        <input type="hidden" name="discountValue" value={priceMode === "dynamic" ? (discountType === "none" ? "0" : discountValue) : "0"} />
+        <input type="hidden" name="buyQuantity" value={priceMode === "dynamic" ? buyQuantity : "1"} />
+        <input type="hidden" name="getQuantity" value={priceMode === "dynamic" ? getQuantity : "1"} />
+        <input type="hidden" name="itemCount" value={itemCount} />
+        <input type="hidden" name="isGiftBox" value={String(options.isGiftBox)} />
+        <input type="hidden" name="allowDuplicates" value={String(options.allowDuplicates)} />
+        <input type="hidden" name="giftMessageEnabled" value={String(options.giftMessageEnabled)} />
+        <input type="hidden" name="isActive" value={String(options.isActive)} />
+        <input type="hidden" name="scope" value={scope} />
+        <input type="hidden" name="removeBannerImage" value={String(removeBannerImage)} />
+        <input type="hidden" name="scopeItems" value={JSON.stringify(scopeItems.map(i => ({ id: i.id, title: i.title })))} />
+        {scope === "specific_products" && (
+          <input type="hidden" name="eligibleProducts" value={JSON.stringify(
+            scopeItems.map(item => ({
+              productId: item.id,
+              productTitle: item.title,
+              productHandle: item.handle || null,
+              productImageUrl: item.imageUrl || null,
+              variantIds: item.variantIds || [],
+              price: item.price || "0",
+            }))
+          )} />
+        )}
+
+        <BlockStack gap="400">
+          {/* Global error banner */}
+          {errors._global && (
+            <Banner tone="critical">
+              <Text>{errors._global}</Text>
+            </Banner>
+          )}
+
+          {/* Card 1 — Status */}
+          <Card>
+            <BlockStack gap="300">
+              <Text as="h2" variant="headingMd">Status</Text>
+              <Checkbox
+                label="Active on Storefront"
+                helpText="Uncheck to hide this box from customers"
+                checked={options.isActive}
+                onChange={() => toggleOption("isActive")}
+              />
+            </BlockStack>
+          </Card>
+
+          {/* Card 2 — Basic Information */}
+          <Card>
+            <BlockStack gap="400">
+              <Text as="h2" variant="headingMd">Basic Information</Text>
+              <FormLayout>
+                <FormLayout.Group>
+                  <BlockStack gap="100">
+                    <Text as="label" variant="bodySm" fontWeight="semibold">Heading *</Text>
+                    <input
+                      type="text"
+                      name="displayTitle"
+                      defaultValue={box.displayTitle}
+                      style={{ ...inputStyle, borderColor: errors.displayTitle ? "#e11d48" : "#e5e7eb" }}
+                    />
+                    {errors.displayTitle && (
+                      <Text tone="critical" variant="bodySm">{errors.displayTitle}</Text>
+                    )}
+                  </BlockStack>
+                  <BlockStack gap="100">
+                    <Text as="label" variant="bodySm" fontWeight="semibold">Combo Button Title</Text>
+                    <input
+                      type="text"
+                      name="comboProductButtonTitle"
+                      defaultValue={box.comboProductButtonTitle || "BUILD YOUR OWN BOX"}
+                      placeholder="BUILD YOUR OWN BOX"
+                      style={inputStyle}
+                    />
+                  </BlockStack>
+                  <BlockStack gap="100">
+                    <Text as="label" variant="bodySm" fontWeight="semibold">Product Button Title</Text>
+                    <input
+                      type="text"
+                      name="productButtonTitle"
+                      defaultValue={box.productButtonTitle || "Add To Cart"}
+                      placeholder="Add To Cart"
+                      style={inputStyle}
+                    />
+                  </BlockStack>
+                </FormLayout.Group>
+                <FormLayout.Group>
+                  <BlockStack gap="100">
+                    <Text as="label" variant="bodySm" fontWeight="semibold">Number Of Products *</Text>
+                    <input
+                      type="number"
+                      placeholder="e.g. 4"
+                      min="1"
+                      max="20"
+                      value={itemCount}
+                      onChange={(e) => setItemCount(e.target.value)}
+                      style={{ ...inputStyle, borderColor: errors.itemCount ? "#e11d48" : "#e5e7eb" }}
+                    />
+                    {errors.itemCount && (
+                      <Text tone="critical" variant="bodySm">{errors.itemCount}</Text>
+                    )}
+                  </BlockStack>
+
+                  {/* Bundle Price */}
+                  <BlockStack gap="200">
+                    <Text as="label" variant="bodySm" fontWeight="semibold">
+                      Bundle Price ({currencySymbol}) *
+                    </Text>
+                    {/* Price mode toggle tabs */}
+                    <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "6px", overflow: "hidden" }}>
+                      {["manual", "dynamic"].map((mode) => (
+                        <button
+                          key={mode}
+                          type="button"
+                          onClick={() => setPriceMode(mode)}
+                          style={{
+                            flex: 1,
+                            padding: "7px 0",
+                            fontSize: "12px",
+                            fontWeight: "600",
+                            border: "none",
+                            cursor: "pointer",
+                            background: priceMode === mode ? "#000000" : "#f9fafb",
+                            color: priceMode === mode ? "#ffffff" : "#374151",
+                            transition: "background 0.15s",
+                          }}
+                        >
+                          {mode === "manual" ? "Manual" : "Dynamic"}
+                        </button>
+                      ))}
+                    </div>
+                    {priceMode === "manual" && (
+                      <input
+                        type="number"
+                        placeholder="e.g. 1200"
+                        min="0"
+                        step="0.01"
+                        value={manualPrice}
+                        onChange={(e) => setManualPrice(e.target.value)}
+                        style={inputStyle}
+                      />
+                    )}
+                    {priceMode === "dynamic" && (
+                      <div style={{ border: "1px solid #d1d5db", borderRadius: "6px", padding: "12px", background: "#ffffff" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
+                          <BlockStack gap="100">
+                            <Text as="label" variant="bodySm" fontWeight="semibold">Discount Type</Text>
+                            <select
+                              value={discountType}
+                              onChange={(e) => setDiscountType(e.target.value)}
+                              style={{ ...inputStyle, fontSize: "12px" }}
+                            >
+                              <option value="percent">% Off Total</option>
+                              <option value="fixed">{currencySymbol} Fixed Discount</option>
+                              <option value="none">No Discount</option>
+                            </select>
+                          </BlockStack>
+                          {discountType !== "none" && (
+                            <BlockStack gap="100">
+                              <Text as="label" variant="bodySm" fontWeight="semibold">
+                                {discountType === "percent" ? "Discount %" : `Amount (${currencySymbol})`}
+                              </Text>
+                              <input
+                                type="number"
+                                min="0"
+                                step={discountType === "percent" ? "1" : "0.01"}
+                                max={discountType === "percent" ? "99" : undefined}
+                                value={discountValue}
+                                onChange={(e) => setDiscountValue(e.target.value)}
+                                style={{ ...inputStyle, fontSize: "12px" }}
+                              />
+                            </BlockStack>
+                          )}
+                        </div>
+                        <Text variant="bodySm" tone="subdued">
+                          {discountType !== "none" ? "Discount applied on total amount" : "No discount applied"}
+                        </Text>
+                      </div>
+                    )}
+                  </BlockStack>
+
+                  {/* Banner Image */}
+                  <BlockStack gap="200">
+                    <Text as="label" variant="bodySm" fontWeight="semibold">Banner Image</Text>
+                    <input
+                      type="file"
+                      name="bannerImage"
+                      accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                      style={{ ...inputStyle, padding: "7px 12px" }}
+                    />
+                    {box.bannerImageSrc && (
+                      <BlockStack gap="200">
+                        <img
+                          src={box.bannerImageSrc}
+                          alt="Current banner"
+                          style={{ width: "100%", maxWidth: "100px", borderRadius: "5px", border: "1px solid #e5e7eb" }}
+                        />
+                        <Checkbox
+                          label="Remove current image"
+                          checked={removeBannerImage}
+                          onChange={() => setRemoveBannerImage((v) => !v)}
+                        />
+                      </BlockStack>
+                    )}
+                    <Text variant="bodySm" tone="subdued">JPG, PNG, WEBP, GIF, or AVIF — max 5MB</Text>
+                    {errors.bannerImage && (
+                      <Text tone="critical" variant="bodySm">{errors.bannerImage}</Text>
+                    )}
+                  </BlockStack>
+                </FormLayout.Group>
+              </FormLayout>
+            </BlockStack>
+          </Card>
+
+          {/* Card 3 — Options */}
+          <Card>
+            <BlockStack gap="400">
+              <Text as="h2" variant="headingMd">Options</Text>
+              <InlineGrid columns={{ xs: 1, sm: 3 }} gap="300">
+                <Card>
+                  <Checkbox
+                    label="Gift Box Mode"
+                    helpText="Enables gift packaging option"
+                    checked={options.isGiftBox}
+                    onChange={() => toggleOption("isGiftBox")}
+                  />
+                </Card>
+                <Card>
+                  <Checkbox
+                    label="Gift Message Field"
+                    helpText="Show text area for gift message"
+                    checked={options.giftMessageEnabled}
+                    onChange={() => toggleOption("giftMessageEnabled")}
+                    disabled={!options.isGiftBox}
+                  />
+                </Card>
+                <Card>
+                  <Checkbox
+                    label="Allow Duplicates"
+                    helpText="Same product in multiple slots"
+                    checked={options.allowDuplicates}
+                    onChange={() => toggleOption("allowDuplicates")}
+                  />
+                </Card>
+              </InlineGrid>
+              {(optionValidationMessage || errors.giftMessageEnabled) && (
+                <Text tone="critical" variant="bodySm">
+                  {errors.giftMessageEnabled || optionValidationMessage}
+                </Text>
+              )}
+            </BlockStack>
+          </Card>
+
+          {/* Card 4 — Scope */}
+          <Card>
+            <BlockStack gap="400">
+              <Text as="h2" variant="headingMd">Scope</Text>
+              <BlockStack gap="200">
+                <Text as="label" variant="bodySm" fontWeight="semibold">Select Scope</Text>
+                <InlineStack gap="200" wrap={false}>
+                  {[
+                    { value: "specific_collections", label: "Specific collections" },
+                    { value: "specific_products", label: "Specific products" },
+                    { value: "wholestore", label: "Whole store" },
+                  ].map((opt) => (
+                    <Button
+                      key={opt.value}
+                      variant={scope === opt.value ? "primary" : "secondary"}
+                      onClick={() => selectScope(opt.value)}
+                    >
+                      {opt.label}
+                    </Button>
+                  ))}
+                </InlineStack>
+              </BlockStack>
+
+              <InlineStack gap="300" blockAlign="center">
+                {scope === "wholestore" ? (
+                  <Text variant="bodySm">All store products will be available in this combo.</Text>
+                ) : (
+                  <>
+                    <Button
+                      onClick={() => { setScopeSearch(""); setShowScopePicker(true); }}
+                    >
+                      {scope === "specific_collections" ? "Select collections" : "Select products"}
+                    </Button>
+                    <Text variant="bodySm" tone="subdued">{scopeItems.length} selected</Text>
+                  </>
+                )}
+              </InlineStack>
+
+              {scope !== "wholestore" && scopeItems.length > 0 && (
+                <Box padding="300" background="bg-surface-secondary" borderRadius="200">
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                    {scopeItems.map((item) => (
+                      <div
+                        key={item.id}
+                        onClick={() => setScopeItems((prev) => prev.filter((i) => i.id !== item.id))}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <Badge>{item.title} ×</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </Box>
+              )}
+            </BlockStack>
+          </Card>
+        </BlockStack>
+      </Form>
+    </Page>
   );
 }
 
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
-
-

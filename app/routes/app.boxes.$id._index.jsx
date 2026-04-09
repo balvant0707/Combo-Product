@@ -197,9 +197,10 @@ export const action = async ({ request, params }) => {
   const removeBannerImage = formData.get("removeBannerImage") === "true" && !bannerImage;
   const scopeType = formData.get("scope") || "specific_collections";
   const bundlePriceType = formData.get("bundlePriceType") === "dynamic" ? "dynamic" : "manual";
-  const discountType = bundlePriceType === "dynamic" ? (formData.get("discountType") || "none") : "none";
+  const requestedDiscountType = bundlePriceType === "dynamic" ? (formData.get("discountType") || "none") : "none";
+  const discountType = requestedDiscountType === "buy_x_get_y" ? "none" : requestedDiscountType;
   const discountValue = bundlePriceType === "dynamic"
-    ? (discountType === "buy_x_get_y" ? "100" : (formData.get("discountValue") || "0"))
+    ? (discountType === "none" ? "0" : (formData.get("discountValue") || "0"))
     : "0";
   const buyQuantity = bundlePriceType === "dynamic" ? (formData.get("buyQuantity") || "1") : "1";
   const getQuantity = bundlePriceType === "dynamic" ? (formData.get("getQuantity") || "1") : "1";
@@ -313,7 +314,7 @@ export default function BoxSettingsPage() {
   const [itemCount, setItemCount] = useState(String(box.itemCount));
   const [priceMode, setPriceMode] = useState(box.bundlePriceType || "manual");
   const [manualPrice, setManualPrice] = useState(String(box.bundlePrice));
-  const [discountType, setDiscountType] = useState(box.discountType || "percent");
+  const [discountType, setDiscountType] = useState(box.discountType === "buy_x_get_y" ? "none" : (box.discountType || "percent"));
   const [discountValue, setDiscountValue] = useState(box.discountValue || "10");
   const [buyQuantity, setBuyQuantity] = useState(box.buyQuantity || "1");
   const [getQuantity, setGetQuantity] = useState(box.getQuantity || "1");
@@ -432,7 +433,7 @@ export default function BoxSettingsPage() {
         <input type="hidden" name="bundlePrice" value={bundlePrice > 0 ? bundlePrice.toFixed(2) : ""} />
         <input type="hidden" name="bundlePriceType" value={priceMode} />
         <input type="hidden" name="discountType" value={priceMode === "dynamic" ? discountType : "none"} />
-        <input type="hidden" name="discountValue" value={priceMode === "dynamic" ? (discountType === "buy_x_get_y" ? "100" : discountValue) : "0"} />
+        <input type="hidden" name="discountValue" value={priceMode === "dynamic" ? (discountType === "none" ? "0" : discountValue) : "0"} />
         <input type="hidden" name="buyQuantity" value={priceMode === "dynamic" ? buyQuantity : "1"} />
         <input type="hidden" name="getQuantity" value={priceMode === "dynamic" ? getQuantity : "1"} />
         <input type="hidden" name="itemCount" value={itemCount} />
@@ -509,23 +510,10 @@ export default function BoxSettingsPage() {
                       <label style={{ ...labelStyle, fontSize: "10px" }}>Discount Type</label>
                       <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }}>
                         <option value="percent">% Off Total</option>
-                        <option value="fixed">{currencySymbol} Fixed Discount</option>
-                        <option value="buy_x_get_y">Buy X Get Y Free</option>
-                        <option value="none">No Discount</option>
+                        <option value="fixed">{currencySymbol} Fixed Discount</option>`r`n                        <option value="none">No Discount</option>
                       </select>
                     </div>
-                    {discountType === "buy_x_get_y" ? (
-                      <>
-                        <div>
-                          <label style={{ ...labelStyle, fontSize: "10px" }}>Buy Qty (X)</label>
-                          <input type="number" min="1" step="1" value={buyQuantity} onChange={(e) => setBuyQuantity(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
-                        </div>
-                        <div style={{ gridColumn: "1 / -1" }}>
-                          <label style={{ ...labelStyle, fontSize: "10px" }}>Get Free (Y)</label>
-                          <input type="number" min="1" step="1" value={getQuantity} onChange={(e) => setGetQuantity(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
-                        </div>
-                      </>
-                    ) : discountType !== "none" ? (
+                    {discountType !== "none" ? (
                       <div>
                         <label style={{ ...labelStyle, fontSize: "10px" }}>{discountType === "percent" ? "Discount %" : `Amount (${currencySymbol})`}</label>
                         <input type="number" min="0" step={discountType === "percent" ? "1" : "0.01"} max={discountType === "percent" ? "99" : undefined} value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} style={{ ...fieldStyle, fontSize: "12px" }} />
@@ -533,9 +521,7 @@ export default function BoxSettingsPage() {
                     ) : null}
                   </div>
                   <div style={{ fontSize: "11px", color: "#000000", marginTop: "8px" }}>
-                    {discountType === "buy_x_get_y"
-                      ? <>Buy <strong>{buyQuantity}</strong>, get <strong>{getQuantity}</strong> free — <span style={{ color: "#166534", fontWeight: 600 }}>applied at checkout</span></>
-                      : discountType !== "none"
+                    {discountType !== "none"
                         ? <>Discount applied on total amount</>
                         : <>No discount applied</>
                     }
@@ -750,4 +736,6 @@ export default function BoxSettingsPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
+
+
 

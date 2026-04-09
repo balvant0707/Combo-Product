@@ -632,24 +632,69 @@ export default function DashboardPage() {
           padding-bottom: 2px;
           align-items: stretch;
         }
-        .db-quick-flex > s-button {
-          width: 100%;
-          min-width: 0;
-          height: 58px;
-        }
         .db-quick-link {
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 7px 10px;
+          padding: 10px 12px;
           background: #f9fafb;
           border: 1.5px solid #e5e7eb;
-          border-radius: 5px;
+          border-radius: 8px;
           text-decoration: none;
           cursor: pointer;
-          transition: transform 0.13s, background 0.13s;
+          transition: transform 0.13s, background 0.13s, border-color 0.13s, box-shadow 0.13s;
           width: 100%;
           min-width: 0;
+          min-height: 72px;
+          box-sizing: border-box;
+        }
+        .db-quick-link:hover {
+          transform: translateY(-1px);
+          background: #ffffff;
+          border-color: #d1d5db;
+          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        }
+        .db-quick-link-primary {
+          background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+          border-color: #111827;
+          color: #ffffff;
+        }
+        .db-quick-link-primary:hover {
+          background: linear-gradient(180deg, #111827 0%, #0b1220 100%);
+          border-color: #0b1220;
+          box-shadow: 0 6px 16px rgba(17, 24, 39, 0.28);
+        }
+        .db-quick-icon {
+          width: 42px;
+          height: 42px;
+          border-radius: 8px;
+          background: #f3f4f6;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          color: #374151;
+        }
+        .db-quick-link-primary .db-quick-icon {
+          background: rgba(255, 255, 255, 0.14);
+          color: #ffffff;
+        }
+        .db-quick-title {
+          font-size: 14px;
+          font-weight: 800;
+          color: #111827;
+          line-height: 1.25;
+        }
+        .db-quick-sub {
+          font-size: 12px;
+          color: #374151;
+          font-weight: 600;
+          margin-top: 3px;
+          line-height: 1.25;
+        }
+        .db-quick-link-primary .db-quick-title,
+        .db-quick-link-primary .db-quick-sub {
+          color: #ffffff;
         }
         /* Tablet — 2-column KPIs */
         @media (max-width: 900px) {
@@ -711,19 +756,19 @@ export default function DashboardPage() {
             Click Create Box to choose combo type in popup.
           </div>
           <div className="db-quick-flex">
-            <s-button
+            <button
               type="button"
-              variant="primary"
               onClick={() => setShowCreateBoxModal(true)}
-              style={{
-                height: "58px",
-              }}
+              className="db-quick-link db-quick-link-primary"
             >
-              <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
-                <AdminIcon type="package" size="small" />
-                Create Box
-              </span>
-            </s-button>
+              <div className="db-quick-icon">
+                <AdminIcon type="package" size="large" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+                <div className="db-quick-title">Create Box</div>
+                <div className="db-quick-sub">Choose combo type</div>
+              </div>
+            </button>
             {quickActions.map((action) => (
               <a
                 key={action.key}
@@ -736,21 +781,13 @@ export default function DashboardPage() {
                   navigateTo(action.href);
                 }}
                 className="db-quick-link"
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.background = "#f3f4f6";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.background = "#f9fafb";
-                }}
               >
-                <div style={{ width: "42px", height: "42px", borderRadius: "5px", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>
+                <div className="db-quick-icon">
                   <AdminIcon type={action.iconType} size="large" />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: "14px", fontWeight: "700", color: "#000000", lineHeight: 1.3 }}>{action.label}</div>
-                  <div style={{ fontSize: "12px", color: "#000000", fontWeight: "600", marginTop: "2px" }}>{action.sub}</div>
+                  <div className="db-quick-title">{action.label}</div>
+                  <div className="db-quick-sub">{action.sub}</div>
                 </div>
               </a>
             ))}

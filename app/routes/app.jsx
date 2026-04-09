@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, useFetcher, useLoaderData, useLocation, useNavigate, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
+import "@shopify/polaris/build/esm/styles.css";
 import { authenticate } from "../shopify.server";
 import {
   dismissShopReviewPrompt,

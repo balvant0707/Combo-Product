@@ -493,6 +493,33 @@ export default function CreateSpecificComboBoxPage() {
 
   return (
     <s-page heading="Create Specific Combo Box" back-url={withEmbeddedAppParams("/app/boxes", location.search)} inlineSize="large">
+      <style>{`
+        /* ── Specific Combo Responsive ── */
+        .sc-config-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; align-items: start; }
+        .sc-discount-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
+        .sc-scope-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+        .sc-step-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
+        .sc-step-price-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+        .sc-step-filter-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: start; }
+        .sc-hero { padding: 24px 32px; }
+        @media (max-width: 900px) {
+          .sc-config-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .sc-step-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 640px) {
+          .sc-config-grid { grid-template-columns: 1fr 1fr; }
+          .sc-discount-grid { grid-template-columns: 1fr; }
+          .sc-scope-grid { grid-template-columns: 1fr; }
+          .sc-step-grid { grid-template-columns: 1fr; }
+          .sc-step-price-grid { grid-template-columns: 1fr; }
+          .sc-step-filter-grid { grid-template-columns: 1fr 1fr; }
+          .sc-hero { padding: 16px; }
+        }
+        @media (max-width: 420px) {
+          .sc-config-grid { grid-template-columns: 1fr; }
+          .sc-step-filter-grid { grid-template-columns: 1fr; }
+        }
+      `}</style>
 
       <s-button
         slot="primary-action"
@@ -510,7 +537,7 @@ export default function CreateSpecificComboBoxPage() {
       </s-button>
 
       {/* Hero banner */}
-      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.06)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
+      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.06)", overflow: "hidden", position: "relative" }} className="sc-hero">
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
           <div style={{ flex: "1 1 420px", minWidth: "320px" }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}><AdminIcon type="target" size="small" /> Specific Combo Box</div>
@@ -593,7 +620,7 @@ export default function CreateSpecificComboBoxPage() {
               <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", marginBottom: "16px" }}>
                 <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#111827" }}>Combo configuration</div>
                 <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "14px" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "10px", alignItems: "start" }}>
+                  <div className="sc-config-grid">
                   <div>
                     <label style={labelStyle}>Title *</label>
                     <input
@@ -636,7 +663,7 @@ export default function CreateSpecificComboBoxPage() {
                     <input value={comboConfig.ctaButtonLabel || ""} onChange={(e) => updateComboField("ctaButtonLabel", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="BUILD YOUR OWN BOX" />
                   </div>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px", alignItems: "start" }}>
+                  <div className="sc-discount-grid">
                   {/* Combo image */}
                   <div>
                     <label style={labelStyle}>Image</label>
@@ -798,7 +825,7 @@ export default function CreateSpecificComboBoxPage() {
               <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", fontWeight: "700", fontSize: "13px", color: "#000000", textTransform: "uppercase", letterSpacing: "0.07em", display: "flex", alignItems: "center", gap: "6px" }}>
                 <AdminIcon type="settings" size="small" /> Options
               </div>
-              <div style={{ padding: "12px", display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "8px" }}>
+              <div style={{ padding: "12px" }} className="sc-scope-grid">
                 {[
                   { key: "isGiftBox", label: "Gift Box Mode", desc: "Shows gift wrapping option to customers", iconType: "gift-card" },
                   { key: "allowDuplicates", label: "Allow Duplicates", desc: "Same product can fill multiple slots", iconType: "duplicate" },
@@ -850,7 +877,7 @@ export default function CreateSpecificComboBoxPage() {
                         </div>
                       </div>
                       <div style={{ padding: "16px" }}>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "12px", alignItems: "start", marginBottom: "10px" }}>
+                        <div style={{ marginBottom: "10px" }} className="sc-step-grid">
                           <div>
                             <label style={labelStyle}>Step label</label>
                             <input value={step.label} onChange={(e) => updateComboStep(ai, "label", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Main Product" />
@@ -858,7 +885,7 @@ export default function CreateSpecificComboBoxPage() {
                           </div>
                           <div>
                             <label style={labelStyle}>Scope</label>
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "8px" }}>
+                            <div className="sc-step-price-grid">
                               {[
                                 { value: "collection", label: "Specific collections" },
                                 { value: "product", label: "Specific products" },
@@ -930,7 +957,7 @@ export default function CreateSpecificComboBoxPage() {
                     {/* General Settings card */}
                     <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", marginBottom: "16px" }}>
                       <div style={{ padding: "16px" }}>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "12px", alignItems: "start" }}>
+                        <div className="sc-step-filter-grid">
                           <div>
                             <label style={labelStyle}>Heading</label>
                             <input value={step.popup.title} onChange={(e) => updateComboStepPopup(ai, "title", e.target.value)} style={{ ...fieldStyle, borderColor: "#d1d5db" }} placeholder="e.g. Choose your main product" />

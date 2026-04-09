@@ -222,16 +222,7 @@ function EmbedBlockCard({ embedBlockUrl, enabled, onStartLoading }) {
         }}
       >
         {/* Header */}
-        <div
-          style={{
-            padding: "18px 24px 16px",
-            borderBottom: "1px solid #e5e7eb",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "16px",
-          }}
-        >
+        <div className="db-embed-hdr">
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <div
               style={{
@@ -291,23 +282,7 @@ function EmbedBlockCard({ embedBlockUrl, enabled, onStartLoading }) {
             target="_blank"
             rel="noreferrer"
             onClick={() => onStartLoading?.()}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              textDecoration: "none",
-              borderRadius: "5px",
-              padding: "10px 20px",
-              background: "#111827",
-              color: "#ffffff",
-              fontSize: "13px",
-              fontWeight: "700",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
-              transition: "background 0.12s, box-shadow 0.12s",
-            }}
+            className="db-embed-hdr-btn"
             onMouseEnter={(e) => {
               e.currentTarget.style.background = "#000000";
               e.currentTarget.style.boxShadow = "0 4px 14px rgba(0,0,0,0.30)";
@@ -407,7 +382,7 @@ function ThemeCustomizationCard({ themeEditorUrl, onStartLoading }) {
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(2, 1fr)",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
                   gap: "12px",
                   marginBottom: "32px",
                 }}
@@ -617,6 +592,95 @@ export default function DashboardPage() {
 
   return (
     <s-page heading="MixBox – Box & Bundle Builder" inlineSize="large">
+      <style>{`
+        /* ── Dashboard Responsive ── */
+        .db-embed-hdr {
+          padding: 18px 24px 16px;
+          border-bottom: 1px solid #e5e7eb;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+        }
+        .db-embed-hdr-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          text-decoration: none;
+          border-radius: 5px;
+          padding: 10px 20px;
+          background: #111827;
+          color: #ffffff;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          white-space: nowrap;
+          flex-shrink: 0;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+          transition: background 0.12s, box-shadow 0.12s;
+        }
+        .db-kpi-grid {
+          padding: 16px 10px 16px;
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 8px;
+        }
+        .db-quick-flex {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          padding-bottom: 2px;
+        }
+        .db-quick-flex > s-button {
+          flex: 1 1 140px;
+          min-width: 0;
+        }
+        .db-quick-link {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 7px 10px;
+          background: #f9fafb;
+          border: 1.5px solid #e5e7eb;
+          border-radius: 5px;
+          text-decoration: none;
+          cursor: pointer;
+          transition: transform 0.13s, background 0.13s;
+          flex: 1 1 160px;
+          min-width: 0;
+        }
+        /* Tablet — 2-column KPIs */
+        @media (max-width: 900px) {
+          .db-kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+        /* Mobile */
+        @media (max-width: 640px) {
+          .db-embed-hdr {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 14px 16px 12px;
+          }
+          .db-embed-hdr-btn {
+            width: 100%;
+            justify-content: center;
+          }
+          .db-kpi-grid {
+            grid-template-columns: 1fr 1fr;
+            padding: 12px 8px;
+            gap: 8px;
+          }
+          .db-quick-link {
+            flex: 1 1 100%;
+          }
+        }
+        @media (max-width: 400px) {
+          .db-kpi-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
       <s-button slot="primary-action" variant="primary" onClick={() => setShowCreateBoxModal(true)}>
         Create Box
       </s-button>
@@ -641,21 +705,14 @@ export default function DashboardPage() {
           <div style={{ fontSize: "12px", color: "#000000", padding: "2px 4px 10px" }}>
             Click Create Box to choose combo type in popup.
           </div>
-          <div
-            style={{
-              display: "flex",
-              gap: "8px",
-              flexWrap: "nowrap",
-              paddingBottom: "2px",
-            }}
-          >
+          <div className="db-quick-flex">
             <s-button
               type="button"
               variant="primary"
               onClick={() => setShowCreateBoxModal(true)}
               style={{
                 minWidth: 0,
-                flex: "1 1 0",
+                flex: "1 1 140px",
                 height: "58px",
               }}
             >
@@ -672,20 +729,7 @@ export default function DashboardPage() {
                   event.preventDefault();
                   navigateTo(action.href);
                 }}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "7px 10px",
-                  background: "#f9fafb",
-                  border: "1.5px solid #e5e7eb",
-                  borderRadius: "5px",
-                  textDecoration: "none",
-                  cursor: "pointer",
-                  transition: "transform 0.13s, background 0.13s",
-                  minWidth: 0,
-                  flex: "1 1 0",
-                }}
+                className="db-quick-link"
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-1px)";
                   e.currentTarget.style.background = "#f3f4f6";
@@ -709,13 +753,13 @@ export default function DashboardPage() {
       </div>
       {/* Stats */}
       <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }}>
-        <div style={{ padding: "24px 32px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: "12px" }}>
+        <div style={{ padding: "20px 16px 16px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", backdropFilter: "blur(4px)", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000" }}>
             <AdminIcon type="chart-line" size="small" /> Performance
           </div>
           <span style={{ fontSize: "13px", color: "#000000" }}>Last 30 days overview</span>
         </div>
-        <div style={{ padding: "20px 10px 20px;", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px" }}>
+        <div className="db-kpi-grid">
           {stats.map((stat) => (
             <StatCard key={stat.label} {...stat} />
           ))}
@@ -730,7 +774,7 @@ export default function DashboardPage() {
           onClick={() => setIsRecentOrdersOpen((prev) => !prev)}
           style={{
             width: "100%",
-            padding: "24px 32px 20px",
+            padding: "20px 16px 16px",
             border: "none",
             borderBottom: isRecentOrdersOpen ? "1px solid #e5e7eb" : "none",
             background: "transparent",
@@ -830,7 +874,7 @@ export default function DashboardPage() {
           </div>
           <span style={{ fontSize: "18px", fontWeight: "800", color: "#0f172a" }}>Boost your store performance with our apps</span>
         </div>
-        <div style={{ padding: "16px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "14px" }}>
+        <div style={{ padding: "16px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "14px" }}>
           {appsList.map((appItem) => (
             <div key={appItem.key} style={{ border: "1px solid #e5e7eb", borderRadius: "5px", background: "#ffffff", padding: "16px" }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", marginBottom: "10px" }}>
@@ -884,7 +928,7 @@ export default function DashboardPage() {
       </div>
 
 
-      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden" }}>
+      <div style={{ display: "none", marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: "10px" }}>
           <span style={{ width: "26px", height: "26px", borderRadius: "50%", background: "#eff6ff", color: "#0284c7", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "700" }}>
             +
@@ -892,7 +936,7 @@ export default function DashboardPage() {
           <span style={{ fontSize: "18px", fontWeight: "800", color: "#0f172a", lineHeight: 1.1 }}>We're Here to Help You Succeed</span>
         </div>
 
-        <div style={{ padding: "20px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px" }}>
+        <div style={{ padding: "20px 16px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "16px" }}>
           <div>
             <div style={{ fontSize: "16px", fontWeight: "800", color: "#0f172a", marginBottom: "10px", lineHeight: 1.25 }}>Book a Free 30-Minute Setup Call</div>
             <div style={{ fontSize: "13px", color: "#475569", marginBottom: "12px", lineHeight: 1.4 }}>
@@ -976,7 +1020,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div style={{ padding: "0 24px 20px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px" }}>
+        <div style={{ padding: "0 16px 20px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "16px" }}>
           <div style={{ border: "1px solid #e5e7eb", borderRadius: "5px", background: "#ffffff", padding: "16px" }}>
             <div style={{ fontSize: "15px", fontWeight: "800", color: "#111827", marginBottom: "10px" }}>Support</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>

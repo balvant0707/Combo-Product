@@ -185,10 +185,12 @@ export default function ManageBoxesPage() {
   const fetcher = useFetcher();
   const toggleFetcher = useFetcher();
 
+  const PAGE_SIZE = 10;
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [showCreateBoxModal, setShowCreateBoxModal] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
   const [manualPageLoading, setManualPageLoading] = useState(false);
   const isDeleteSubmitting =
     fetcher.state !== "idle" &&
@@ -290,7 +292,7 @@ export default function ManageBoxesPage() {
     [baseBoxes, pendingToggleId, pendingToggleState],
   );
 
-  const displayBoxes = useMemo(() => {
+  const filteredBoxes = useMemo(() => {
     let result = boxesWithPendingToggle;
     if (statusFilter === "active") result = result.filter((b) => b.isActive);
     if (statusFilter === "inactive") result = result.filter((b) => !b.isActive);
@@ -302,6 +304,13 @@ export default function ManageBoxesPage() {
     }
     return result;
   }, [boxesWithPendingToggle, statusFilter, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredBoxes.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const displayBoxes = filteredBoxes.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  // Reset to page 1 when filter/search changes
+  useEffect(() => { setCurrentPage(1); }, [statusFilter, search]);
 
   const totalOrders = baseBoxes.reduce((s, b) => s + b.orderCount, 0);
   const activeCount = boxesWithPendingToggle.filter((b) => b.isActive).length;
@@ -557,6 +566,78 @@ export default function ManageBoxesPage() {
         }
         .cb-copy-btn:hover { background: #f0fdf4; border-color: #2A7A4F; color: #2A7A4F; }
         .cb-copy-btn.copied { background: #dcfce7; border-color: #86efac; color: #16a34a; }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+          .cb-stats { gap: 8px; }
+          .cb-stat-card { padding: 12px 14px; }
+          .cb-stat-val { font-size: 18px; }
+        }
+        @media (max-width: 640px) {
+          .cb-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+          .cb-toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+          .cb-search-wrap { min-width: 0; }
+          .cb-filter-tabs { flex-wrap: wrap; gap: 4px; }
+          .cb-ftab { padding: 6px 10px; font-size: 11px; }
+          /* Hide less-critical table columns on mobile */
+          .cb-table thead th:nth-child(1),
+          .cb-table tbody td:nth-child(1) { display: none; } /* drag handle */
+          .cb-table thead th:nth-child(6),
+          .cb-table tbody td:nth-child(6) { display: none; } /* orders */
+          .cb-table td { padding: 10px 10px; }
+          .cb-table thead th { padding: 10px 10px; }
+          .cb-actions { gap: 4px; }
+          .cb-btn { width: 28px; height: 28px; }
+          .cb-empty { padding: 48px 16px; }
+        }
+        @media (max-width: 480px) {
+          .cb-stats { grid-template-columns: 1fr 1fr; }
+          /* Also hide Code column on very small screens */
+          .cb-table thead th:nth-child(3),
+          .cb-table tbody td:nth-child(3) { display: none; }
+        }
+
+        /* ── Pagination ── */
+        .cb-pagination {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 14px 16px;
+          border-top: 1px solid #f3f4f6;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+        .cb-pagination-info {
+          font-size: 12px;
+          color: #6b7280;
+          font-weight: 500;
+        }
+        .cb-pagination-controls {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+        .cb-page-btn {
+          min-width: 32px;
+          height: 32px;
+          padding: 0 8px;
+          border: 1.5px solid #e5e7eb;
+          border-radius: 6px;
+          background: #fff;
+          font-size: 13px;
+          font-weight: 600;
+          color: #374151;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.12s;
+          line-height: 1;
+        }
+        .cb-page-btn:hover:not(:disabled) { background: #f3f4f6; border-color: #d1d5db; }
+        .cb-page-btn.active { background: #111827; color: #fff; border-color: #111827; }
+        .cb-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .cb-page-ellipsis { font-size: 13px; color: #9ca3af; padding: 0 4px; }
       `}</style>
 
       <ui-title-bar title="MixBox – Box & Bundle Builder">
@@ -627,13 +708,14 @@ export default function ManageBoxesPage() {
               <s-button onClick={() => navigateTo("/app/boxes/specific-combo")}>Specific Combo Box</s-button>
             </div>
           </div>
-        ) : displayBoxes.length === 0 ? (
+        ) : filteredBoxes.length === 0 ? (
           /* No search/filter results */
           <div className="cb-noresults">
             <AdminIcon type="search" size="large" style={{ color: "#d1d5db" }} />
             <p>No boxes match <strong>&ldquo;{search}&rdquo;</strong></p>
           </div>
         ) : (
+          <>
           <div style={{ overflowX: "auto" }}>
             <table className="cb-table">
               <thead>
@@ -780,13 +862,15 @@ export default function ManageBoxesPage() {
                           >
                             <AdminIcon type="edit" size="small" />
                           </button>
-                          <button
-                            className="cb-btn del"
-                            title="Delete"
-                            onClick={() => handleDelete(box.id, box.boxName)}
-                          >
-                            <AdminIcon type="delete" size="small" />
-                          </button>
+                          {box.orderCount === 0 && (
+                            <button
+                              className="cb-btn del"
+                              title="Delete"
+                              onClick={() => handleDelete(box.id, box.boxName)}
+                            >
+                              <AdminIcon type="delete" size="small" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -795,6 +879,59 @@ export default function ManageBoxesPage() {
               </tbody>
             </table>
           </div>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="cb-pagination">
+              <span className="cb-pagination-info">
+                Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filteredBoxes.length)} of {filteredBoxes.length} boxes
+              </span>
+              <div className="cb-pagination-controls">
+                <button
+                  className="cb-page-btn"
+                  disabled={safePage === 1}
+                  onClick={() => setCurrentPage(1)}
+                  title="First page"
+                >«</button>
+                <button
+                  className="cb-page-btn"
+                  disabled={safePage === 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  title="Previous page"
+                >‹</button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - safePage) <= 1)
+                  .reduce((acc, p, idx, arr) => {
+                    if (idx > 0 && p - arr[idx - 1] > 1) acc.push("…");
+                    acc.push(p);
+                    return acc;
+                  }, [])
+                  .map((item, idx) =>
+                    item === "…" ? (
+                      <span key={`ellipsis-${idx}`} className="cb-page-ellipsis">…</span>
+                    ) : (
+                      <button
+                        key={item}
+                        className={`cb-page-btn${item === safePage ? " active" : ""}`}
+                        onClick={() => setCurrentPage(item)}
+                      >{item}</button>
+                    )
+                  )}
+                <button
+                  className="cb-page-btn"
+                  disabled={safePage === totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  title="Next page"
+                >›</button>
+                <button
+                  className="cb-page-btn"
+                  disabled={safePage === totalPages}
+                  onClick={() => setCurrentPage(totalPages)}
+                  title="Last page"
+                >»</button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </s-section>
 

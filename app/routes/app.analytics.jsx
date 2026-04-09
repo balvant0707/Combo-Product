@@ -293,6 +293,33 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
 
   return (
     <div style={{ display: "inline-block" }}>
+      <style>{`
+        .an-date-popover {
+          background: #ffffff;
+          border: 1px solid #e5e7eb;
+          border-radius: 5px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+          z-index: 100;
+          padding: 16px;
+          min-width: 580px;
+        }
+        .an-cal-pair {
+          display: flex;
+          align-items: flex-start;
+          gap: 0;
+        }
+        @media (max-width: 640px) {
+          .an-date-popover {
+            min-width: calc(100vw - 32px);
+            left: 16px !important;
+            right: 16px !important;
+          }
+          .an-cal-pair {
+            flex-direction: column;
+            gap: 16px;
+          }
+        }
+      `}</style>
       {/* Trigger */}
       <button
         ref={triggerRef}
@@ -321,17 +348,11 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
       {open && (
         <div
           ref={popoverRef}
+          className="an-date-popover"
           style={{
             position: "absolute",
             top: `${popoverPos.top}px`,
             right: `${popoverPos.right}px`,
-            background: "#ffffff",
-            border: "1px solid #e5e7eb",
-            borderRadius: "5px",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.13)",
-            zIndex: 100,
-            padding: "16px",
-            minWidth: "580px",
           }}
         >
           {/* Preset select */}
@@ -374,7 +395,7 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
           </div>
 
           {/* Calendars */}
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "0" }}>
+          <div className="an-cal-pair">
             {/* Left calendar with left nav arrow */}
             <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
               <div style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}>
@@ -1113,7 +1134,7 @@ function ComparisonBanner({ period, prevPeriod }) {
     <div
       style={{
         display: "flex",
-        alignItems: "center",
+        alignItems: "flex-start",
         gap: "12px",
         padding: "12px 16px",
         background: "linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%)",
@@ -1122,6 +1143,7 @@ function ComparisonBanner({ period, prevPeriod }) {
         marginBottom: "20px",
         fontSize: "12px",
         color: "#374151",
+        flexWrap: "wrap",
       }}
     >
       <AdminIcon type="calendar" size="base" />
@@ -1245,8 +1267,69 @@ export default function AnalyticsPage() {
 
   return (
     <s-page heading="MixBox – Box & Bundle Builder" inlineSize="large">
+      <style>{`
+        /* ── Analytics Responsive ── */
+        .an-kpi-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 14px;
+        }
+        .an-two-col {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+        .an-period-hdr {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 12px;
+          margin-bottom: 20px;
+        }
+        .an-period-controls {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+        .an-hero {
+          padding: 24px 32px;
+        }
+        /* Tablet */
+        @media (max-width: 900px) {
+          .an-kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+          .an-two-col {
+            grid-template-columns: 1fr;
+          }
+        }
+        /* Mobile */
+        @media (max-width: 640px) {
+          .an-kpi-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+          }
+          .an-hero {
+            padding: 16px;
+          }
+          .an-period-hdr {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          .an-period-controls {
+            width: 100%;
+          }
+        }
+        @media (max-width: 420px) {
+          .an-kpi-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
       {/* Hero banner */}
-      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
+      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }} className="an-hero">
         <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}>
           <AdminIcon type="chart-line" size="small" /> Analytics
         </div>
@@ -1256,23 +1339,14 @@ export default function AnalyticsPage() {
 
       {/* ── Period Selector + Banner ── */}
       <s-section>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: "12px",
-            marginBottom: "20px",
-          }}
-        >
+        <div className="an-period-hdr">
           <div>
             <div style={{ fontSize: "14px", color: "#111827", fontWeight: "700" }}>Performance Overview</div>
             <div style={{ fontSize: "12px", color: "#9ca3af", marginTop: "2px" }}>
               Bundle analytics · period-over-period comparison
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+          <div className="an-period-controls">
             <ComboTypeFilter value={comboType} />
             <DateRangePicker period={period} fromDate={fromDate} toDate={toDate} />
             <SyncOrdersButton />
@@ -1282,7 +1356,7 @@ export default function AnalyticsPage() {
         <ComparisonBanner period={periodRange} prevPeriod={prevPeriod} />
 
         {/* ── KPI Cards ── */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "14px" }}>
+        <div className="an-kpi-grid">
           <KpiCard
             label="Bundle Revenue"
             value={`₹${totalRevenue.toLocaleString("en-IN")}`}
@@ -1352,7 +1426,7 @@ export default function AnalyticsPage() {
       </s-section>
 
       {/* ── Two Column: Products + Box Performance ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+      <div className="an-two-col">
         <s-section heading="Top Products Picked">
           <TopProductsChart data={topProducts} />
         </s-section>

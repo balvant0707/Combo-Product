@@ -275,6 +275,24 @@ export default function CreateBoxPage() {
       heading="Create New Box"
       back-url={withEmbeddedAppParams("/app/boxes", location.search)}
     >
+      <style>{`
+        /* ── Create Box Responsive ── */
+        .form-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+        .form-grid-3-opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+        .form-grid-3-scope { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+        .form-hero { padding: 24px 32px; }
+        @media (max-width: 900px) {
+          .form-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .form-grid-3-opts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .form-grid-3-scope { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @media (max-width: 640px) {
+          .form-grid-3 { grid-template-columns: 1fr; }
+          .form-grid-3-opts { grid-template-columns: 1fr; }
+          .form-grid-3-scope { grid-template-columns: 1fr; }
+          .form-hero { padding: 16px; }
+        }
+      `}</style>
       <s-button
         slot="primary-action"
         variant="primary"
@@ -292,7 +310,7 @@ export default function CreateBoxPage() {
       </s-button>
 
       {/* Hero banner */}
-      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative", padding: "24px 32px" }}>
+      <div style={{ marginBottom: "20px", borderRadius: "5px", background: "#ffffff", border: "1px solid #e5e7eb", boxShadow: "0 8px 24px rgba(15,23,42,0.08)", overflow: "hidden", position: "relative" }} className="form-hero">
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
           <div style={{ flex: "1 1 420px", minWidth: "320px" }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f3f4f6", borderRadius: "999px", padding: "4px 14px", fontSize: "10px", fontWeight: "800", letterSpacing: "0.10em", textTransform: "uppercase", color: "#000000", marginBottom: "10px" }}>
@@ -355,7 +373,7 @@ export default function CreateBoxPage() {
             <div style={sectionHeadingStyle}>
               <AdminIcon type="clipboard" size="small" /> Basic Information
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "14px" }}>
+            <div className="form-grid-3">
               <div>
                 <label style={labelStyle}>Heading *</label>
                 <input type="text" name="displayTitle" placeholder="Shown to customers" style={{ ...fieldStyle, borderColor: errors.displayTitle ? "#e11d48" : "#d1d5db" }} />
@@ -452,7 +470,7 @@ export default function CreateBoxPage() {
           {/* Options */}
           <div style={{ marginBottom: "28px" }}>
             <div style={sectionHeadingStyle}><AdminIcon type="settings" size="small" /> Options</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "10px" }}>
+            <div className="form-grid-3-opts">
               {[
                 { key: "isGiftBox", label: "Gift Box Mode", desc: "Shows gift wrapping option to customers", iconType: "gift-card" },
                 { key: "allowDuplicates", label: "Allow Duplicates", desc: "Same product can fill multiple slots", iconType: "duplicate" },
@@ -474,7 +492,7 @@ export default function CreateBoxPage() {
             <div style={sectionHeadingStyle}><AdminIcon type="target" size="small" /> Scope</div>
             <div style={{ marginBottom: "12px" }}>
               <label style={labelStyle}>Select Scope</label>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "8px" }}>
+              <div className="form-grid-3-scope">
                 {[
                   { value: "specific_collections", label: "Specific collections" },
                   { value: "specific_products", label: "Specific products" },

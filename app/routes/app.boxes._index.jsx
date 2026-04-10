@@ -349,16 +349,16 @@ export default function ManageBoxesPage() {
   const inactiveCount = boxesWithPendingToggle.length - activeCount;
 
   const statCards = [
-    { label: "Total Boxes",  value: baseBoxes.length,  icon: "package",    iconBg: "#eff6ff", iconColor: "#2563eb" },
-    { label: "Active",       value: activeCount,        icon: "check",      iconBg: "#f0fdf4", iconColor: "#16a34a" },
-    { label: "Inactive",     value: inactiveCount,      icon: "hide",       iconBg: "#fafafa", iconColor: "#9ca3af" },
-    { label: "Total Orders", value: totalOrders,        icon: "order",      iconBg: "#fdf4ff", iconColor: "#9333ea" },
+    { label: "Total Bundle Boxes",  value: baseBoxes.length,  icon: "package",    iconBg: "#eff6ff", iconColor: "#2563eb" },
+    { label: "Active Bundle Boxes", value: activeCount,        icon: "check",      iconBg: "#f0fdf4", iconColor: "#16a34a" },
+    { label: "Inactive Bundle Boxes", value: inactiveCount,    icon: "hide",       iconBg: "#fafafa", iconColor: "#9ca3af" },
+    { label: "Total Bundle Orders", value: totalOrders,        icon: "order",      iconBg: "#fdf4ff", iconColor: "#9333ea" },
   ];
 
   return (
     <Page
-      title="Manage Boxes"
-      primaryAction={{ content: "+ Create Box", onAction: openCreateBoxModal }}
+      title="Manage Bundle Boxes"
+      primaryAction={{ content: "+ Create Bundle Box", onAction: openCreateBoxModal }}
     >
       {/* <ui-title-bar title="MixBox – Box & Bundle Builder">
         <button variant="primary" onClick={openCreateBoxModal}>
@@ -404,7 +404,7 @@ export default function ManageBoxesPage() {
                 <TextField
                   label=""
                   labelHidden
-                  placeholder="Search by box name…"
+                  placeholder="Search bundle box by name..."
                   value={search}
                   onChange={(val) => setSearch(val)}
                   clearButton
@@ -419,7 +419,7 @@ export default function ManageBoxesPage() {
                   onClick={() => setStatusFilter("all")}
                   size="slim"
                 >
-                  All ({baseBoxes.length})
+                  All Bundle Boxes ({baseBoxes.length})
                 </Button>
                 <Button
                   variant={statusFilter === "active" ? "primary" : "secondary"}
@@ -427,14 +427,14 @@ export default function ManageBoxesPage() {
                   onClick={() => setStatusFilter("active")}
                   size="slim"
                 >
-                  Active ({activeCount})
+                  Active Bundle Boxes ({activeCount})
                 </Button>
                 <Button
                   variant={statusFilter === "inactive" ? "primary" : "secondary"}
                   onClick={() => setStatusFilter("inactive")}
                   size="slim"
                 >
-                  Inactive ({inactiveCount})
+                  Inactive Bundle Boxes ({inactiveCount})
                 </Button>
               </InlineStack>
             </InlineStack>
@@ -444,8 +444,8 @@ export default function ManageBoxesPage() {
             /* Empty state — no boxes at all */
             <EmptyState
               heading="No combo boxes yet"
-              action={{ content: "Create Box", onAction: openCreateBoxModal }}
-              secondaryAction={{ content: "Create Specific Combo Box", onAction: () => navigateTo("/app/boxes/specific-combo") }}
+              action={{ content: "Create Bundle Box", onAction: openCreateBoxModal }}
+              secondaryAction={{ content: "Create Specific Combo Bundle", onAction: () => navigateTo("/app/boxes/specific-combo") }}
               image=""
             >
               <p>Create your first box to let customers build custom combos on your storefront.</p>
@@ -466,13 +466,13 @@ export default function ManageBoxesPage() {
                 resourceName={{ singular: "box", plural: "boxes" }}
                 itemCount={displayBoxes.length}
                 headings={[
-                  { title: "Box Name" },
-                  { title: "Code" },
-                  { title: "Price" },
-                  { title: "Type" },
-                  { title: "Orders" },
-                  { title: "Enabled" },
-                  { title: "Actions" },
+                  { title: "Bundle Name" },
+                  { title: "Bundle Code" },
+                  { title: "Bundle Price" },
+                  { title: "Bundle Type" },
+                  { title: "Bundle Orders" },
+                  { title: "Live Status" },
+                  { title: "Bundle Actions" },
                 ]}
                 selectable={false}
               >
@@ -481,7 +481,7 @@ export default function ManageBoxesPage() {
                   const isRowTogglePending = isToggleSubmitting && pendingToggleId === box.id;
                   return (
                     <IndexTable.Row key={box.id} id={String(box.id)} position={index}>
-                      {/* Box Name */}
+                      {/* Bundle Name */}
                       <IndexTable.Cell>
                         <InlineStack gap="300" blockAlign="center">
                           <div
@@ -516,10 +516,10 @@ export default function ManageBoxesPage() {
                             <InlineStack gap="150" blockAlign="center">
                               <Text variant="bodyMd" fontWeight="semibold" as="span">{box.boxName}</Text>
                               <Badge tone={box.isActive ? "success" : "enabled"}>
-                                {box.isActive ? "Live" : "Draft"}
+                                {box.isActive ? "Live Bundle" : "Draft"}
                               </Badge>
                               {box.isGiftBox && (
-                                <Badge tone="attention">Gift</Badge>
+                                <Badge tone="attention">Gift Bundle</Badge>
                               )}
                             </InlineStack>
                           </BlockStack>
@@ -539,7 +539,7 @@ export default function ManageBoxesPage() {
                       <IndexTable.Cell>
                         {box.bundlePriceType === "dynamic" ? (
                           <BlockStack gap="050">
-                            <Text as="span" tone="subdued" variant="bodySm" fontStyle="italic">Dynamic</Text>
+                          <Text as="span" tone="subdued" variant="bodySm" fontStyle="italic">Dynamic</Text>
                             {box.discount && (
                               <Text as="span" variant="bodySm" tone="success" fontWeight="semibold">
                                 {box.discount.discountType === "percent"
@@ -562,9 +562,9 @@ export default function ManageBoxesPage() {
                       {/* Type */}
                       <IndexTable.Cell>
                         {box.comboConfig && box.comboConfig.comboType > 0 ? (
-                          <Badge tone="info">{box.comboConfig.comboType}-Step</Badge>
+                          <Badge tone="info">{box.comboConfig.comboType}-Step Bundle</Badge>
                         ) : (
-                          <Badge>Single</Badge>
+                          <Badge>Fixed Bundle</Badge>
                         )}
                       </IndexTable.Cell>
 
@@ -630,7 +630,7 @@ export default function ManageBoxesPage() {
                             onClick={() => navigateTo(box.comboConfig ? `/app/boxes/${box.id}/combo` : `/app/boxes/${box.id}`)}
                             icon={<AdminIcon type="edit" size="small" />}
                           >
-                            Edit
+                            Edit Bundle
                           </Button>
                           {box.orderCount === 0 && (
                             <Button
@@ -639,7 +639,7 @@ export default function ManageBoxesPage() {
                               onClick={() => handleDelete(box.id, box.boxName)}
                               icon={<AdminIcon type="delete" size="small" />}
                             >
-                              Delete
+                              Delete Bundle
                             </Button>
                           )}
                         </InlineStack>
@@ -705,7 +705,7 @@ export default function ManageBoxesPage() {
                   <Text as="h3" variant="headingSm">Create Fixed Bundle Box</Text>
                 </InlineStack>
                 <Text as="p" tone="subdued" variant="bodySm">
-                  Launch a preconfigured Shopify bundle box to increase average order value fast.
+                  Preconfigured Shopify product bundle to increase average order value faster.
                 </Text>
                 <button
                   type="button"
@@ -731,7 +731,7 @@ export default function ManageBoxesPage() {
                   }}
                 >
                   {pendingCreateRoute === "/app/boxes/new" && <Spinner accessibilityLabel="Loading" size="small" />}
-                  Create Box
+                  Create Bundle Box
                 </button>
               </BlockStack>
             </div>
@@ -743,7 +743,7 @@ export default function ManageBoxesPage() {
                   <Text as="h3" variant="headingSm">Create Build-Your-Own Bundle Box</Text>
                 </InlineStack>
                 <Text as="p" tone="subdued" variant="bodySm">
-                  Set up step-based bundle customization so shoppers can build a personalized box.
+                  Step-by-step bundle builder that lets shoppers create a personalized product box.
                 </Text>
                 <button
                   type="button"
@@ -769,7 +769,7 @@ export default function ManageBoxesPage() {
                   }}
                 >
                   {pendingCreateRoute === "/app/boxes/specific-combo" && <Spinner accessibilityLabel="Loading" size="small" />}
-                  Create Box
+                  Create Bundle Box
                 </button>
               </BlockStack>
             </div>

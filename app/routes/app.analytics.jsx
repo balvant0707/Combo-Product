@@ -185,7 +185,7 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
 
   const presets = [
     { key: "7", label: "Last 7 days" },
-    { key: "30", label: "Last 30 days" },
+    { key: "30", label: "Last 30 Days" },
     { key: "90", label: "Last 90 days" },
     { key: "custom", label: "Custom range" },
   ];
@@ -219,7 +219,7 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
     if (period === "custom") {
       if (initFrom && initTo) return `${fmtShortDate(initFrom)} – ${fmtShortDate(initTo)}`;
     }
-    return presets.find((p) => p.key === period)?.label || "Last 30 days";
+    return presets.find((p) => p.key === period)?.label || "Last 30 Days";
   })();
 
   function handlePresetChange(key) {
@@ -504,7 +504,7 @@ function ComboTypeFilter({ value = "all" }) {
         htmlFor="combo-type-filter"
         style={{ fontSize: "12px", color: "#4b5563", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}
       >
-        Box Type
+        Bundle Type Filter
       </label>
       <select
         id="combo-type-filter"
@@ -523,7 +523,7 @@ function ComboTypeFilter({ value = "all" }) {
           cursor: "pointer",
         }}
       >
-        <option value="all">All Combo Products</option>
+        <option value="all">All Bundle Products</option>
         <option value="simple">Simple Combo Product</option>
         <option value="specific">Specific Combo Product</option>
       </select>
@@ -1069,7 +1069,7 @@ function RecentOrdersTable({ data, currencyCode }) {
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
         <thead>
           <tr>
-            {["Order #", "Combo Product", "Type", "Details", "Amount", "Date"].map((h) => (
+            {["Order #", "Bundle Product", "Type", "Bundle Items", "Order Revenue", "Date"].map((h) => (
               <th
                 key={h}
                 style={{
@@ -1241,7 +1241,7 @@ function SyncOrdersButton() {
         ) : (
           <>
             <AdminIcon type="refresh" size="small" />
-            Sync Orders
+            Sync Bundle Orders
           </>
         )}
       </button>
@@ -1296,8 +1296,8 @@ export default function AnalyticsPage() {
 
   return (
     <Page
-      title="Analytics"
-      subtitle="Bundle performance overview"
+      title="Bundle Analytics Dashboard"
+      subtitle="Bundle sales and revenue overview"
     >
       <BlockStack gap="500">
         {/* ── Period Selector + Comparison Banner ── */}
@@ -1305,7 +1305,7 @@ export default function AnalyticsPage() {
           <BlockStack gap="300">
             <InlineStack align="space-between" blockAlign="center" wrap>
               <BlockStack gap="100">
-                <Text as="h2" variant="headingMd">Performance Overview</Text>
+                <Text as="h2" variant="headingMd">Bundle Performance Overview</Text>
                 <Text as="p" tone="subdued" variant="bodySm">Bundle analytics · period-over-period comparison</Text>
               </BlockStack>
               <InlineStack gap="300" wrap>
@@ -1321,7 +1321,7 @@ export default function AnalyticsPage() {
         {/* ── KPI Cards ── */}
         <InlineGrid columns={{ xs: 2, md: 4 }} gap="400">
           <KpiCard
-            label="Bundle Revenue"
+            label="Total Bundle Revenue"
             value={formatCurrencyAmount(totalRevenue, currencyCode)}
             subLabel={prevTotalRevenue ? `prev ${formatCurrencyAmount(prevTotalRevenue || 0, currencyCode)}` : null}
             change={revenueChange}
@@ -1329,7 +1329,7 @@ export default function AnalyticsPage() {
             iconType="money"
           />
           <KpiCard
-            label="Bundles Sold"
+            label="Total Bundles Sold"
             value={totalOrders}
             subLabel={prevTotalOrders ? `prev ${prevTotalOrders}` : null}
             change={ordersChange}
@@ -1337,7 +1337,7 @@ export default function AnalyticsPage() {
             iconType="package"
           />
           <KpiCard
-            label="Avg Bundle Value"
+            label="Average Bundle Order Value"
             value={formatCurrencyAmount(avgBundleValue, currencyCode)}
             subLabel={null}
             change={avgChange}
@@ -1345,7 +1345,7 @@ export default function AnalyticsPage() {
             iconType="chart-line"
           />
           <KpiCard
-            label="Active Box Types"
+            label="Active Bundle Types"
             value={activeBoxCount}
             subLabel={null}
             change={null}
@@ -1359,10 +1359,10 @@ export default function AnalyticsPage() {
         <BlockStack gap="400">
           <Card>
             <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">Revenue Over Time</Text>
+              <Text as="h2" variant="headingMd">Bundle Revenue Over Time</Text>
               <div style={{ height: "1px", background: "#e5e7eb", width: "100%" }} />
               <LineChart
-                title="Total Bundle Revenue"
+                title="Total Revenue from Bundles"
                 totalValue={formatCurrencyAmount(totalRevenue, currencyCode)}
                 change={revenueChange}
                 data={revData}
@@ -1378,10 +1378,10 @@ export default function AnalyticsPage() {
           </Card>
           <Card>
             <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">Bundles Sold</Text>
+              <Text as="h2" variant="headingMd">Bundle Orders Over Time</Text>
               <div style={{ height: "1px", background: "#e5e7eb", width: "100%" }} />
               <LineChart
-                title="Bundles Sold"
+                title="Bundle Orders Over Time"
                 totalValue={String(totalOrders)}
                 change={ordersChange}
                 data={ordData}
@@ -1401,13 +1401,13 @@ export default function AnalyticsPage() {
         <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
           <Card>
             <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">Top Picked Products</Text>
+              <Text as="h2" variant="headingMd">Most Picked Bundle Products</Text>
               <TopProductsChart data={topProducts} />
             </BlockStack>
           </Card>
           <Card>
             <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">Box Performance</Text>
+              <Text as="h2" variant="headingMd">Bundle Box Performance</Text>
               <BoxPerformanceChart data={boxPerformance} currencyCode={currencyCode} />
             </BlockStack>
           </Card>
@@ -1416,7 +1416,7 @@ export default function AnalyticsPage() {
         {/* ── Recent Orders ── */}
         <Card>
           <BlockStack gap="300">
-            <Text as="h2" variant="headingMd">Recent Orders</Text>
+            <Text as="h2" variant="headingMd">Recent Bundle Orders</Text>
             <RecentOrdersTable data={recentOrders} currencyCode={currencyCode} />
           </BlockStack>
         </Card>

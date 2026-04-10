@@ -170,22 +170,22 @@ const createBoxActions = [
     key: "create-box",
     icon: "package",
     label: "Create Fixed Bundle Box",
-    sub: "Launch a preconfigured bundle box to increase average order value fast.",
+    sub: "Preconfigured Shopify product bundle to increase average order value faster.",
     href: "/app/boxes/new",
   },
   {
     key: "create-specific-combo",
     icon: "target",
     label: "Create Build-Your-Own Bundle Box",
-    sub: "Set up step-based bundle customization so shoppers can build a personalized box.",
+    sub: "Step-by-step bundle builder that lets shoppers create a personalized product box.",
     href: "/app/boxes/specific-combo",
   },
 ];
 
 const quickActions = [
-  { key: "manage-boxes", label: "Manage Boxes", sub: "Edit existing combos", href: "/app/boxes" },
-  { key: "analytics", label: "View Analytics", sub: "Sales and revenue", href: "/app/analytics" },
-  { key: "settings", label: "Widget Settings", sub: "Theme and appearance", href: "/app/settings" },
+  { key: "manage-boxes", label: "Manage Bundle Boxes", sub: "Edit existing combos", href: "/app/boxes" },
+  { key: "analytics", label: "View Bundle Analytics", sub: "Sales and revenue", href: "/app/analytics" },
+  { key: "settings", label: "Bundle Widget Settings", sub: "Theme and appearance", href: "/app/settings" },
 ];
 
 const promotedApps = [
@@ -270,14 +270,14 @@ export default function DashboardPage() {
   }
 
   const stats = [
-    { label: "Active Boxes", value: activeBoxCount, sub: "Live combo box types" },
-    { label: "Bundles Sold", value: bundlesSold, sub: "Last 30 days" },
+    { label: "Live Bundle Boxes", value: activeBoxCount, sub: "Live combo box types" },
+    { label: "Bundle Orders", value: bundlesSold, sub: "Last 30 days" },
     {
-      label: "Bundle Revenue",
+      label: "Total Bundle Revenue",
       value: formatCurrencyAmount(Number(bundleRevenue || 0), currencyCode),
       sub: "Last 30 days",
     },
-    { label: "Conversion Rate", value: "—", sub: "Coming soon" },
+    { label: "Bundle Conversion Rate", value: "—", sub: "Coming soon" },
   ];
 
   const orderTableRows = recentOrders.map((order) => [
@@ -306,14 +306,14 @@ export default function DashboardPage() {
 
   return (
     <Page
-      title="Mix-Box Dashboard | Bundle Builder & AOV Growth"
+      title="Shopify Bundle Builder Dashboard"
       primaryAction={{
-        content: "Create Box",
+        content: "Create Bundle Box",
         onAction: () => setShowCreateBoxModal(true),
       }}
       secondaryActions={[
         {
-          content: "View Analytics",
+          content: "View Bundle Analytics",
           onAction: () => navigateTo("/app/analytics"),
         },
       ]}
@@ -377,7 +377,7 @@ export default function DashboardPage() {
             <BlockStack gap="300">
               <InlineStack align="space-between" blockAlign="center">
                 <Text as="h2" variant="headingMd">
-                  Theme App Embed
+                  Bundle App Embed Status
                 </Text>
                 {embedBlockEnabled ? (
                   <Badge tone="success">On</Badge>
@@ -396,7 +396,7 @@ export default function DashboardPage() {
           <Card>
             <BlockStack gap="300">
               <Text as="h2" variant="headingMd">
-                Theme Setup
+                Bundle Widget Setup
               </Text>
 
               <BlockStack gap="150">
@@ -413,7 +413,7 @@ export default function DashboardPage() {
               </BlockStack>
 
               <Button url={themeEditorUrl} target="_blank" variant="primary" fullWidth>
-                Open Theme Editor
+                Open Shopify Theme Editor
               </Button>
             </BlockStack>
           </Card>
@@ -421,7 +421,7 @@ export default function DashboardPage() {
           <Card>
             <BlockStack gap="300">
               <Text as="h2" variant="headingMd">
-                Quick Actions
+                Bundle Builder Quick Actions
               </Text>
               <BlockStack gap="200">
                 <Button
@@ -429,7 +429,7 @@ export default function DashboardPage() {
                   variant="primary"
                   fullWidth
                 >
-                  Create Box
+                  Create Bundle Box
                 </Button>
                 {quickActions.map((action) => (
                   <Button
@@ -450,7 +450,7 @@ export default function DashboardPage() {
           <BlockStack gap="400">
             <InlineStack align="space-between" blockAlign="center">
               <Text as="h2" variant="headingMd">
-                Recent Orders
+                Recent Bundle Orders
               </Text>
               <Button variant="plain" onClick={() => navigateTo("/app/analytics")}>
                 View all
@@ -502,7 +502,7 @@ export default function DashboardPage() {
             <InlineStack gap="200" blockAlign="center">
               <AdminIcon type="collection-list" size="base" style={{ color: "#111827" }} />
               <Text as="h2" variant="headingMd">
-                Discover Conversion-Boosting Shopify Apps
+                Recommended Shopify Growth Apps
               </Text>
             </InlineStack>
             <Text as="p" tone="subdued" variant="bodySm">
@@ -590,7 +590,7 @@ export default function DashboardPage() {
                     }}
                   >
                     {pendingCreateAction === action.key && <Spinner accessibilityLabel="Loading" size="small" />}
-                    Create Box
+                    Create Bundle Box
                   </button>
                 </BlockStack>
               </div>
@@ -624,5 +624,3 @@ export default function DashboardPage() {
 export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
-
-

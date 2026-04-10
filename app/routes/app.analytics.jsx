@@ -1354,6 +1354,7 @@ export default function AnalyticsPage() {
           <Card>
             <BlockStack gap="300">
               <Text as="h2" variant="headingMd">Revenue Over Time</Text>
+              <div style={{ height: "1px", background: "#e5e7eb", width: "100%" }} />
               <LineChart
                 title="Total Bundle Revenue"
                 totalValue={`₹${totalRevenue.toLocaleString("en-IN")}`}
@@ -1366,11 +1367,13 @@ export default function AnalyticsPage() {
                 color="#60a5fa"
                 color2="#818cf8"
               />
+              <div style={{ height: "1px", background: "#e5e7eb", width: "100%" }} />
             </BlockStack>
           </Card>
           <Card>
             <BlockStack gap="300">
               <Text as="h2" variant="headingMd">Bundles Sold</Text>
+              <div style={{ height: "1px", background: "#e5e7eb", width: "100%" }} />
               <LineChart
                 title="Bundles Sold"
                 totalValue={String(totalOrders)}
@@ -1383,6 +1386,7 @@ export default function AnalyticsPage() {
                 color="#34d399"
                 color2="#059669"
               />
+              <div style={{ height: "1px", background: "#e5e7eb", width: "100%" }} />
             </BlockStack>
           </Card>
         </InlineGrid>

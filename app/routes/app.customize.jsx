@@ -11,11 +11,11 @@ import {
   Box,
   Button,
   Card,
-  Checkbox,
   FormLayout,
   InlineGrid,
   InlineStack,
   Page,
+  SettingToggle,
   Spinner,
   Text,
 } from "@shopify/polaris";
@@ -40,7 +40,6 @@ export const action = async ({ request }) => {
     allowDuplicates: formData.get("allowDuplicates"),
     showProductPrices: formData.get("showProductPrices"),
     forceShowOos: formData.get("forceShowOos"),
-    giftMessageField: formData.get("giftMessageField"),
     presetTheme: formData.get("presetTheme"),
     widgetMaxWidth: formData.get("widgetMaxWidth"),
     productCardsPerRow: formData.get("productCardsPerRow"),
@@ -51,6 +50,13 @@ export const action = async ({ request }) => {
 };
 
 const PRODUCT_CARD_ROW_OPTIONS = [3, 4, 5, 6];
+const COLOR_COMBINATIONS = [
+  { label: "Forest", primary: "#2A7A4F", secondary: "#14532D" },
+  { label: "Ocean", primary: "#0E7490", secondary: "#164E63" },
+  { label: "Sunset", primary: "#EA580C", secondary: "#9A3412" },
+  { label: "Plum", primary: "#7C3AED", secondary: "#4C1D95" },
+  { label: "Rose", primary: "#E11D48", secondary: "#9F1239" },
+];
 
 export default function SettingsPage() {
   const { settings } = useLoaderData();
@@ -62,6 +68,9 @@ export default function SettingsPage() {
   const [activeSlotColor, setActiveSlotColor] = useState(settings.activeSlotColor || "#2A7A4F");
   const [widgetMaxWidth, setWidgetMaxWidth] = useState(settings.widgetMaxWidth ?? 1140);
   const [productCardsPerRow, setProductCardsPerRow] = useState(settings.productCardsPerRow ?? 4);
+  const [showSavingsBadge, setShowSavingsBadge] = useState(!!settings.showSavingsBadge);
+  const [showProductPrices, setShowProductPrices] = useState(!!settings.showProductPrices);
+  const [forceShowOos, setForceShowOos] = useState(!!settings.forceShowOos);
 
   useEffect(() => {
     if (actionData?.success) {
@@ -100,6 +109,31 @@ export default function SettingsPage() {
                   Customize the primary and secondary widget colors for your storefront.
                 </Text>
                 <input type="hidden" name="presetTheme" value="custom" />
+                <BlockStack gap="200">
+                  <Text as="p" variant="bodySm" tone="subdued">Recommended color combinations</Text>
+                  <InlineStack gap="200" wrap>
+                    {COLOR_COMBINATIONS.map((combo) => (
+                      <button
+                        key={combo.label}
+                        type="button"
+                        onClick={() => { setButtonColor(combo.primary); setActiveSlotColor(combo.secondary); }}
+                        style={{
+                          border: "1.5px solid #e5e7eb",
+                          borderRadius: 8,
+                          background: "#fff",
+                          cursor: "pointer",
+                          padding: "6px 10px",
+                        }}
+                      >
+                        <InlineStack gap="100" blockAlign="center">
+                          <span style={{ display: "inline-block", width: 12, height: 12, borderRadius: "50%", background: combo.primary }} />
+                          <span style={{ display: "inline-block", width: 12, height: 12, borderRadius: "50%", background: combo.secondary }} />
+                          <Text as="span" variant="bodySm" fontWeight="semibold">{combo.label}</Text>
+                        </InlineStack>
+                      </button>
+                    ))}
+                  </InlineStack>
+                </BlockStack>
                 <InlineGrid columns={2} gap="400">
                   <BlockStack gap="200">
                     <Text as="label" variant="bodySm" fontWeight="semibold">Primary Color</Text>
@@ -290,19 +324,6 @@ export default function SettingsPage() {
                       style={{ width: "100%", padding: "8px 12px", border: "1px solid #c9c6be", borderRadius: 5, fontSize: 13, boxSizing: "border-box" }}
                     />
                   </BlockStack>
-                  <BlockStack gap="200">
-                    <Text as="label" variant="bodySm" fontWeight="semibold" htmlFor="giftMessageField">
-                      Gift Message Placeholder
-                    </Text>
-                    <input
-                      id="giftMessageField"
-                      type="text"
-                      name="giftMessageField"
-                      defaultValue={settings.giftMessageField || ""}
-                      placeholder="e.g. Add a gift message..."
-                      style={{ width: "100%", padding: "8px 12px", border: "1px solid #c9c6be", borderRadius: 5, fontSize: 13, boxSizing: "border-box" }}
-                    />
-                  </BlockStack>
                 </FormLayout.Group>
               </FormLayout>
             </BlockStack>
@@ -312,29 +333,48 @@ export default function SettingsPage() {
           <Card>
             <BlockStack gap="400">
               <Text as="h2" variant="headingMd">Display Options</Text>
+              <input type="hidden" name="showSavingsBadge" value={String(showSavingsBadge)} />
+              <input type="hidden" name="showProductPrices" value={String(showProductPrices)} />
+              <input type="hidden" name="forceShowOos" value={String(forceShowOos)} />
+              {/* Keep existing value as-is; field intentionally removed from Customize UI */}
+              <input type="hidden" name="allowDuplicates" value={String(!!settings.allowDuplicates)} />
               <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
-                {[
-                  { name: "showSavingsBadge",  label: "Show Savings Badge",         desc: "Display a badge showing how much customers save vs buying individually", defaultChecked: settings.showSavingsBadge },
-                  { name: "showProductPrices", label: "Show Product Prices",         desc: "Show individual product prices in the selection grid",                  defaultChecked: settings.showProductPrices },
-                  { name: "allowDuplicates",   label: "Allow Duplicate Products",    desc: "Let customers pick the same product more than once",                    defaultChecked: settings.allowDuplicates },
-                  { name: "forceShowOos",      label: "Show Out-of-Stock Products",  desc: "Show out-of-stock products (greyed out) in the selection grid",         defaultChecked: settings.forceShowOos },
-                ].map((opt) => (
-                  <Card key={opt.name}>
-                    <InlineStack gap="300" blockAlign="start">
-                      <input
-                        type="checkbox"
-                        name={opt.name}
-                        value="true"
-                        defaultChecked={opt.defaultChecked}
-                        style={{ marginTop: 3 }}
-                      />
-                      <BlockStack gap="100">
-                        <Text as="p" variant="bodySm" fontWeight="semibold">{opt.label}</Text>
-                        <Text as="p" variant="bodySm" tone="subdued">{opt.desc}</Text>
-                      </BlockStack>
-                    </InlineStack>
-                  </Card>
-                ))}
+                <Card>
+                  <SettingToggle
+                    enabled={showSavingsBadge}
+                    action={{
+                      content: showSavingsBadge ? "Enable" : "Disable",
+                      onAction: () => setShowSavingsBadge((v) => !v),
+                    }}
+                  >
+                    <Text as="p" variant="bodySm" fontWeight="semibold">Show Savings Badge</Text>
+                    <Text as="p" variant="bodySm" tone="subdued">Display a badge showing how much customers save vs buying individually</Text>
+                  </SettingToggle>
+                </Card>
+                <Card>
+                  <SettingToggle
+                    enabled={showProductPrices}
+                    action={{
+                      content: showProductPrices ? "Enable" : "Disable",
+                      onAction: () => setShowProductPrices((v) => !v),
+                    }}
+                  >
+                    <Text as="p" variant="bodySm" fontWeight="semibold">Show Product Prices</Text>
+                    <Text as="p" variant="bodySm" tone="subdued">Show individual product prices in the selection grid</Text>
+                  </SettingToggle>
+                </Card>
+                <Card>
+                  <SettingToggle
+                    enabled={forceShowOos}
+                    action={{
+                      content: forceShowOos ? "Enable" : "Disable",
+                      onAction: () => setForceShowOos((v) => !v),
+                    }}
+                  >
+                    <Text as="p" variant="bodySm" fontWeight="semibold">Show Out-of-Stock Products</Text>
+                    <Text as="p" variant="bodySm" tone="subdued">Show out-of-stock products (greyed out) in the selection grid</Text>
+                  </SettingToggle>
+                </Card>
               </InlineGrid>
             </BlockStack>
           </Card>

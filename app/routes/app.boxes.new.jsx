@@ -705,12 +705,14 @@ export default function CreateBoxPage() {
                             cursor: "pointer",
                           }}
                         >
-                          <Checkbox
-                            label={item.title}
-                            labelHidden
-                            checked={selected}
-                            onChange={() => toggleScopeItem(item)}
-                          />
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <Checkbox
+                              label={item.title}
+                              labelHidden
+                              checked={selected}
+                              onChange={() => toggleScopeItem(item)}
+                            />
+                          </div>
                           {item.imageUrl ? (
                             <img
                               src={item.imageUrl}

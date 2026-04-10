@@ -495,12 +495,14 @@ export default function BoxSettingsPage() {
                             cursor: "pointer",
                           }}
                         >
-                          <Checkbox
-                            label={item.title}
-                            labelHidden
-                            checked={selected}
-                            onChange={() => toggleScopeItem(item)}
-                          />
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <Checkbox
+                              label={item.title}
+                              labelHidden
+                              checked={selected}
+                              onChange={() => toggleScopeItem(item)}
+                            />
+                          </div>
                           {item.imageUrl ? (
                             <img src={item.imageUrl} alt={item.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} />
                           ) : (

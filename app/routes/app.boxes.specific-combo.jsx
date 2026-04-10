@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
 import {
   Badge, Banner, BlockStack, Box, Button, Card, Checkbox,
-  Divider, DropZone, FormLayout, InlineGrid, InlineStack, Layout, Modal, Page,
+  DropZone, FormLayout, InlineGrid, InlineStack, Modal, Page,
   Select, Spinner, Text, TextField, Tabs
 } from "@shopify/polaris";
 import { boundary } from "@shopify/shopify-app-react-router/server";
@@ -637,25 +637,32 @@ export default function CreateSpecificComboBoxPage() {
                   </BlockStack>
                 </FormLayout.Group>
               </FormLayout>
+            </BlockStack>
+          </Card>
 
+          {/* ── Setup Row Card ── */}
+          <Card>
+            <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
               {/* Number of steps */}
-              <InlineStack gap="300" blockAlign="center">
-                <Text as="p" variant="bodyMd">Number of steps:</Text>
-                <Button
-                  onClick={() => setStepCount(comboConfig.type - 1)}
-                  disabled={comboConfig.type <= MIN_COMBO_STEPS}
-                >
-                  -
-                </Button>
-                <Text as="p" variant="bodyMd" fontWeight="bold">{comboConfig.type}</Text>
-                <Button
-                  onClick={() => setStepCount(comboConfig.type + 1)}
-                  disabled={comboConfig.type >= MAX_COMBO_STEPS}
-                >
-                  +
-                </Button>
-                <Text as="p" variant="bodySm" tone="subdued">{comboConfig.type} product selections required (2–8)</Text>
-              </InlineStack>
+              <BlockStack gap="100">
+                <Text as="label" variant="bodySm" fontWeight="semibold">Number of steps</Text>
+                <InlineStack gap="200" blockAlign="center">
+                  <Button
+                    onClick={() => setStepCount(comboConfig.type - 1)}
+                    disabled={comboConfig.type <= MIN_COMBO_STEPS}
+                  >
+                    -
+                  </Button>
+                  <Text as="p" variant="bodyMd" fontWeight="bold">{comboConfig.type}</Text>
+                  <Button
+                    onClick={() => setStepCount(comboConfig.type + 1)}
+                    disabled={comboConfig.type >= MAX_COMBO_STEPS}
+                  >
+                    +
+                  </Button>
+                </InlineStack>
+                <Text as="p" variant="bodySm" tone="subdued">{comboConfig.type} selections required (2–8)</Text>
+              </BlockStack>
 
               {/* Combo image upload */}
               <BlockStack gap="100">
@@ -681,17 +688,10 @@ export default function CreateSpecificComboBoxPage() {
                   <Text as="p" variant="bodySm" tone="critical">{errors.comboImage}</Text>
                 )}
               </BlockStack>
-            </BlockStack>
-          </Card>
 
-          {/* ── Pricing Card ── */}
-          <Card>
-            <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">Pricing ({currencySymbol})</Text>
-
-              {/* Price mode toggle */}
-              <BlockStack gap="200">
-                <Text as="p" variant="bodySm" fontWeight="semibold">Price Mode</Text>
+              {/* Price mode */}
+              <BlockStack gap="100">
+                <Text as="label" variant="bodySm" fontWeight="semibold">Price Mode</Text>
                 <InlineStack gap="200">
                   {["manual", "dynamic"].map((mode) => (
                     <Button
@@ -704,6 +704,13 @@ export default function CreateSpecificComboBoxPage() {
                   ))}
                 </InlineStack>
               </BlockStack>
+            </InlineGrid>
+          </Card>
+
+          {/* ── Pricing Card ── */}
+          <Card>
+            <BlockStack gap="400">
+              <Text as="h2" variant="headingMd">Pricing ({currencySymbol})</Text>
 
               {comboConfig.bundlePriceType === "manual" && (
                 <BlockStack gap="100">
@@ -838,7 +845,8 @@ export default function CreateSpecificComboBoxPage() {
                   <Box paddingBlockStart="400">
                     <BlockStack gap="400">
                       {/* Picker setup */}
-                      <BlockStack gap="300">
+                      <div style={{ border: "1px solid #e5e7eb", borderRadius: "8px", padding: "16px", background: "#ffffff" }}>
+                        <BlockStack gap="300">
                           <Text as="h3" variant="headingSm">Picker Setup</Text>
                           <Text as="p" variant="bodySm" tone="subdued">Each step has its own independent collection and product selector</Text>
 
@@ -979,11 +987,11 @@ export default function CreateSpecificComboBoxPage() {
                             </BlockStack>
                           )}
                         </BlockStack>
-
-                      <Divider />
+                      </div>
 
                       {/* Step general settings */}
-                      <BlockStack gap="300">
+                      <div style={{ border: "1px solid #e5e7eb", borderRadius: "8px", padding: "16px", background: "#ffffff" }}>
+                        <BlockStack gap="300">
                           <Text as="h3" variant="headingSm">Step Settings</Text>
                           <InlineGrid columns={{ xs: 1, md: 4 }} gap="400">
                             <BlockStack gap="100">
@@ -1027,6 +1035,7 @@ export default function CreateSpecificComboBoxPage() {
                             </BlockStack>
                           </InlineGrid>
                         </BlockStack>
+                      </div>
 
                       {/* Hidden step image inputs (kept for form submission) */}
                       <div style={{ display: "none" }}>

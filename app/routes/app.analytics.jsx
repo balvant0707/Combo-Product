@@ -180,6 +180,7 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
   const triggerRef = useRef(null);
   const popoverRef = useRef(null);
   const [open, setOpen] = useState(false);
+  const [popoverStyle, setPopoverStyle] = useState({ top: 0, left: 0, width: 580 });
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -213,6 +214,36 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
     }
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    function updatePopoverPosition() {
+      const triggerEl = triggerRef.current;
+      if (!triggerEl) return;
+      const rect = triggerEl.getBoundingClientRect();
+      const viewportPadding = 16;
+      const idealWidth = 580;
+      const maxWidth = Math.max(280, window.innerWidth - viewportPadding * 2);
+      const width = Math.min(idealWidth, maxWidth);
+      const left = Math.max(
+        viewportPadding,
+        Math.min(rect.right - width, window.innerWidth - viewportPadding - width),
+      );
+      setPopoverStyle({
+        top: rect.bottom + 8,
+        left,
+        width,
+      });
+    }
+
+    updatePopoverPosition();
+    window.addEventListener("resize", updatePopoverPosition);
+    window.addEventListener("scroll", updatePopoverPosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePopoverPosition);
+      window.removeEventListener("scroll", updatePopoverPosition, true);
+    };
   }, [open]);
 
   const activeLabel = (() => {
@@ -316,9 +347,8 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
           border: 1px solid #e5e7eb;
           border-radius: 5px;
           box-shadow: 0 8px 32px rgba(0,0,0,0.13);
-          z-index: 10001;
+          z-index: 99999;
           padding: 16px;
-          min-width: 580px;
         }
         .an-cal-pair {
           display: flex;
@@ -327,9 +357,9 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
         }
         @media (max-width: 640px) {
           .an-date-popover {
-            min-width: min(580px, calc(100vw - 32px));
-            right: 0 !important;
-            left: auto !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            width: auto !important;
           }
           .an-cal-pair {
             flex-direction: column;
@@ -367,9 +397,11 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
           ref={popoverRef}
           className="an-date-popover"
           style={{
-            position: "absolute",
-            top: "calc(100% + 8px)",
-            right: 0,
+            position: "fixed",
+            top: `${popoverStyle.top}px`,
+            left: `${popoverStyle.left}px`,
+            width: `${popoverStyle.width}px`,
+            maxWidth: "calc(100vw - 32px)",
           }}
         >
           {/* Preset select */}
@@ -1069,7 +1101,7 @@ function RecentOrdersTable({ data, currencyCode }) {
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
         <thead>
           <tr>
-            {["Order #", "Bundle Product", "Type", "Bundle Items", "Order Revenue", "Date"].map((h) => (
+            {["No", "Bundle Product", "Type", "Bundle Items", "Order Revenue", "Date"].map((h) => (
               <th
                 key={h}
                 style={{
@@ -1102,7 +1134,7 @@ function RecentOrdersTable({ data, currencyCode }) {
               >
                 <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6" }}>
                   <span style={{fontWeight: "700", color: "#111827", background: "#f3f4f6", padding: "2px 8px", borderRadius: "5px" }}>
-                    #{order.orderId}
+                    {index + 1}
                   </span>
                 </td>
                 <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6", color: "#374151", fontWeight: "600" }}>

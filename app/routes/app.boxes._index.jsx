@@ -710,15 +710,14 @@ export default function ManageBoxesPage() {
                   disabled={pendingCreateRoute !== null}
                   onClick={() => goToCreateRoute("/app/boxes/new")}
                   style={{
-                    width: "160px",
+                    width: "200px",
                     maxWidth: "100%",
-                    border: "1px solid #111827",
+                    border: "1px solid #000000",
                     borderRadius: 0,
-                    background: "#111827",
+                    background: "#000000",
                     color: "#ffffff",
                     padding: "9px 12px",
                     fontSize: "15px",
-                    fontWeight: 700,
                     cursor: pendingCreateRoute !== null ? "not-allowed" : "pointer",
                     opacity: pendingCreateRoute !== null && pendingCreateRoute !== "/app/boxes/new" ? 0.65 : 1,
                     display: "flex",

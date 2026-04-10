@@ -280,8 +280,8 @@ export default function DashboardPage() {
     { label: "Bundle Conversion Rate", value: "—", sub: "Coming soon" },
   ];
 
-  const orderTableRows = recentOrders.map((order) => [
-    `#${order.orderId}`,
+  const orderTableRows = recentOrders.map((order, index) => [
+    String(index + 1),
     order.boxTitle,
     <Badge
       tone={order.comboType === "specific" ? "info" : "success"}
@@ -471,7 +471,7 @@ export default function DashboardPage() {
             ) : (
               <DataTable
                 columnContentTypes={["text", "text", "text", "numeric", "numeric", "text"]}
-                headings={["Order", "Box", "Type", "Items", "Revenue", "Date"]}
+                headings={["No", "Box", "Type", "Items", "Revenue", "Date"]}
                 rows={orderTableRows}
                 hoverable
               />
@@ -571,15 +571,14 @@ export default function DashboardPage() {
                     disabled={pendingCreateAction !== null}
                     onClick={() => handleCreateBoxAction(action)}
                     style={{
-                      width: "160px",
+                      width: "200px",
                       maxWidth: "100%",
-                      border: "1px solid #111827",
+                      border: "1px solid #000000",
                       borderRadius: 0,
-                      background: "#111827",
+                      background: "#000000",
                       color: "#ffffff",
                       padding: "9px 12px",
                       fontSize: "15px",
-                      fontWeight: 700,
                       cursor: pendingCreateAction !== null ? "not-allowed" : "pointer",
                       opacity: pendingCreateAction !== null && pendingCreateAction !== action.key ? 0.65 : 1,
                       display: "flex",

@@ -250,7 +250,6 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const navigation = useNavigation();
   const [showCreateBoxModal, setShowCreateBoxModal] = useState(false);
-  const [showSetupSteps, setShowSetupSteps] = useState(false);
   const [pendingCreateAction, setPendingCreateAction] = useState(null);
 
   const justSubscribed = new URLSearchParams(location.search).get("subscribed") === "1";
@@ -389,39 +388,29 @@ export default function DashboardPage() {
                 )}
               </InlineStack>
               <Text as="p" tone="subdued" variant="bodySm">
-                Enable the Combo Builder app embed in Theme Customize.
+                Enable the MixBox – Box & Bundle Builder app embed in Theme Customize.
               </Text>
             </BlockStack>
           </Card>
 
           <Card>
             <BlockStack gap="300">
-              <InlineStack align="space-between" blockAlign="center">
-                <Text as="h2" variant="headingMd">
-                  Theme Setup
-                </Text>
-                <Button
-                  variant="plain"
-                  onClick={() => setShowSetupSteps((v) => !v)}
-                >
-                  {showSetupSteps ? "Hide guide" : "Show guide"}
-                </Button>
-              </InlineStack>
+              <Text as="h2" variant="headingMd">
+                Theme Setup
+              </Text>
 
-              {showSetupSteps && (
-                <BlockStack gap="150">
-                  {[
-                    "Opens Theme Customization on your live product template.",
-                    "Combo Builder block is auto-added to the Apps section.",
-                    "Drag the block to the right position.",
-                    "Click Save and your storefront is live.",
-                  ].map((step, i) => (
-                    <Text key={i} as="p" variant="bodySm">
-                      {i + 1}. {step}
-                    </Text>
-                  ))}
-                </BlockStack>
-              )}
+              <BlockStack gap="150">
+                {[
+                  "Opens Theme Customization on your live product template.",
+                  "Combo Builder block is auto-added to the Apps section.",
+                  "Drag the block to the right position.",
+                  "Click Save and your storefront is live.",
+                ].map((step, i) => (
+                  <Text key={i} as="p" variant="bodySm">
+                    {i + 1}. {step}
+                  </Text>
+                ))}
+              </BlockStack>
 
               <Button url={themeEditorUrl} target="_blank" variant="primary" fullWidth>
                 Open Theme Editor

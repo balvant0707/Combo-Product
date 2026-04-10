@@ -234,6 +234,7 @@ export default function ManageBoxesPage() {
   const PAGE_SIZE = 10;
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [showCreateBoxModal, setShowCreateBoxModal] = useState(false);
+  const [pendingCreateRoute, setPendingCreateRoute] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -281,9 +282,10 @@ export default function ManageBoxesPage() {
   }
   function closeCreateBoxModal() {
     setShowCreateBoxModal(false);
+    setPendingCreateRoute(null);
   }
   function goToCreateRoute(path) {
-    closeCreateBoxModal();
+    setPendingCreateRoute(path);
     navigateTo(path);
   }
 
@@ -687,91 +689,49 @@ export default function ManageBoxesPage() {
       <Modal
         open={showCreateBoxModal}
         onClose={closeCreateBoxModal}
-        title="Create Box"
+        title="Choose Bundle Type"
       >
         <Modal.Section>
           <BlockStack gap="300">
-            <button
-              type="button"
-              onClick={() => goToCreateRoute("/app/boxes/new")}
-              style={{
-                width: "100%",
-                border: "1px solid #e5e7eb",
-                borderRadius: "8px",
-                background: "#f9fafb",
-                padding: "16px 14px",
-                display: "flex",
-                alignItems: "center",
-                gap: "14px",
-                cursor: "pointer",
-                textAlign: "left",
-              }}
-            >
-              <div
-                style={{
-                  width: "48px",
-                  height: "48px",
-                  borderRadius: "8px",
-                  background: "#f3f4f6",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#111827",
-                  flexShrink: 0,
-                }}
-              >
-                <AdminIcon type="package" size="base" />
-              </div>
-              <div>
-                <div style={{ fontSize: "15px", fontWeight: 700, color: "#111827", lineHeight: 1.2 }}>
-                  Create Combo Box
-                </div>
-                <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "2px", lineHeight: 1.35 }}>
-                  Quick setup for fixed bundles and a fast purchase flow.
-                </div>
-              </div>
-            </button>
+            <Card>
+              <BlockStack gap="200">
+                <InlineStack gap="200" blockAlign="center">
+                  <AdminIcon type="package" size="base" />
+                  <Text as="h3" variant="headingSm">Create Fixed Bundle Box</Text>
+                </InlineStack>
+                <Text as="p" tone="subdued" variant="bodySm">
+                  Launch a preconfigured Shopify bundle box to increase average order value fast.
+                </Text>
+                <Button
+                  variant="primary"
+                  loading={pendingCreateRoute === "/app/boxes/new"}
+                  disabled={pendingCreateRoute !== null}
+                  onClick={() => goToCreateRoute("/app/boxes/new")}
+                >
+                  Continue
+                </Button>
+              </BlockStack>
+            </Card>
 
-            <button
-              type="button"
-              onClick={() => goToCreateRoute("/app/boxes/specific-combo")}
-              style={{
-                width: "100%",
-                border: "1px solid #e5e7eb",
-                borderRadius: "8px",
-                background: "#f9fafb",
-                padding: "16px 14px",
-                display: "flex",
-                alignItems: "center",
-                gap: "14px",
-                cursor: "pointer",
-                textAlign: "left",
-              }}
-            >
-              <div
-                style={{
-                  width: "48px",
-                  height: "48px",
-                  borderRadius: "8px",
-                  background: "#f3f4f6",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#111827",
-                  flexShrink: 0,
-                }}
-              >
-                <AdminIcon type="target" size="base" />
-              </div>
-              <div>
-                <div style={{ fontSize: "15px", fontWeight: 700, color: "#111827", lineHeight: 1.2 }}>
-                  Create Specific Combo Box
-                </div>
-                <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "2px", lineHeight: 1.35 }}>
-                  Guided step-by-step customization for personalized bundles.
-                </div>
-              </div>
-            </button>
+            <Card>
+              <BlockStack gap="200">
+                <InlineStack gap="200" blockAlign="center">
+                  <AdminIcon type="target" size="base" />
+                  <Text as="h3" variant="headingSm">Create Build-Your-Own Bundle Box</Text>
+                </InlineStack>
+                <Text as="p" tone="subdued" variant="bodySm">
+                  Set up step-based bundle customization so shoppers can build a personalized box.
+                </Text>
+                <Button
+                  variant="primary"
+                  loading={pendingCreateRoute === "/app/boxes/specific-combo"}
+                  disabled={pendingCreateRoute !== null}
+                  onClick={() => goToCreateRoute("/app/boxes/specific-combo")}
+                >
+                  Continue
+                </Button>
+              </BlockStack>
+            </Card>
           </BlockStack>
         </Modal.Section>
       </Modal>

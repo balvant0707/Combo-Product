@@ -340,30 +340,30 @@ export default function SettingsPage() {
               <input type="hidden" name="allowDuplicates" value={String(!!settings.allowDuplicates)} />
               <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
                 <Card>
-                  <InlineStack align="space-between" blockAlign="start">
+                  <InlineStack gap="200" blockAlign="start">
+                    <ToggleSwitch checked={showSavingsBadge} onChange={() => setShowSavingsBadge((v) => !v)} showStateText={false} />
                     <BlockStack gap="100">
                       <Text as="p" variant="bodySm" fontWeight="semibold">Show Savings Badge</Text>
                       <Text as="p" variant="bodySm" tone="subdued">Display a badge showing how much customers save vs buying individually</Text>
                     </BlockStack>
-                    <ToggleSwitch checked={showSavingsBadge} onChange={() => setShowSavingsBadge((v) => !v)} showStateText={false} />
                   </InlineStack>
                 </Card>
                 <Card>
-                  <InlineStack align="space-between" blockAlign="start">
+                  <InlineStack gap="200" blockAlign="start">
+                    <ToggleSwitch checked={showProductPrices} onChange={() => setShowProductPrices((v) => !v)} showStateText={false} />
                     <BlockStack gap="100">
                       <Text as="p" variant="bodySm" fontWeight="semibold">Show Product Prices</Text>
                       <Text as="p" variant="bodySm" tone="subdued">Show individual product prices in the selection grid</Text>
                     </BlockStack>
-                    <ToggleSwitch checked={showProductPrices} onChange={() => setShowProductPrices((v) => !v)} showStateText={false} />
                   </InlineStack>
                 </Card>
                 <Card>
-                  <InlineStack align="space-between" blockAlign="start">
+                  <InlineStack gap="200" blockAlign="start">
+                    <ToggleSwitch checked={forceShowOos} onChange={() => setForceShowOos((v) => !v)} showStateText={false} />
                     <BlockStack gap="100">
                       <Text as="p" variant="bodySm" fontWeight="semibold">Show Out-of-Stock Products</Text>
                       <Text as="p" variant="bodySm" tone="subdued">Show out-of-stock products (greyed out) in the selection grid</Text>
                     </BlockStack>
-                    <ToggleSwitch checked={forceShowOos} onChange={() => setForceShowOos((v) => !v)} showStateText={false} />
                   </InlineStack>
                 </Card>
               </InlineGrid>

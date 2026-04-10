@@ -20,6 +20,7 @@ import {
 } from "@shopify/polaris";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
+import { AdminIcon } from "../components/admin-icons";
 import { getActiveBoxCount } from "../models/boxes.server";
 import {
   getBundlesSoldCount,
@@ -164,14 +165,16 @@ export const loader = async ({ request }) => {
 const createBoxActions = [
   {
     key: "create-box",
-    label: "Create Combo Box",
-    sub: "Quick setup for fixed bundles and a fast purchase flow.",
+    icon: "package",
+    label: "Create Fixed Bundle Box",
+    sub: "Launch a preconfigured Shopify bundle box to increase average order value fast.",
     href: "/app/boxes/new",
   },
   {
     key: "create-specific-combo",
-    label: "Create Specific Combo Box",
-    sub: "Guided step-by-step customization for personalized bundles.",
+    icon: "target",
+    label: "Create Build-Your-Own Bundle Box",
+    sub: "Set up step-based bundle customization so shoppers can build a personalized box.",
     href: "/app/boxes/specific-combo",
   },
 ];
@@ -242,12 +245,23 @@ export default function DashboardPage() {
   const navigation = useNavigation();
   const [showCreateBoxModal, setShowCreateBoxModal] = useState(false);
   const [showSetupSteps, setShowSetupSteps] = useState(false);
+  const [pendingCreateAction, setPendingCreateAction] = useState(null);
 
   const justSubscribed = new URLSearchParams(location.search).get("subscribed") === "1";
   const isPageLoading = navigation.state !== "idle";
 
   function navigateTo(path) {
     navigate(withEmbeddedAppParams(path, location.search));
+  }
+
+  function closeCreateBoxModal() {
+    setShowCreateBoxModal(false);
+    setPendingCreateAction(null);
+  }
+
+  function handleCreateBoxAction(action) {
+    setPendingCreateAction(action.key);
+    navigateTo(action.href);
   }
 
   const stats = [
@@ -287,7 +301,7 @@ export default function DashboardPage() {
 
   return (
     <Page
-      title="MixBox — Box &amp; Bundle Builder"
+      title="MixBox Dashboard | Shopify Bundle Builder & AOV Growth"
       primaryAction={{
         content: "Create Box",
         onAction: () => setShowCreateBoxModal(true),
@@ -489,8 +503,14 @@ export default function DashboardPage() {
         {/* ── Promoted Apps ── */}
         <Card>
           <BlockStack gap="400">
-            <Text as="h2" variant="headingMd">
-              Boost your store with our apps
+            <InlineStack gap="200" blockAlign="center">
+              <AdminIcon type="collection-list" size="base" style={{ color: "#111827" }} />
+              <Text as="h2" variant="headingMd">
+                Discover Conversion-Boosting Shopify Apps
+              </Text>
+            </InlineStack>
+            <Text as="p" tone="subdued" variant="bodySm">
+              Recommended apps to grow revenue, improve trust, and increase store conversions.
             </Text>
             <Divider />
             <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
@@ -520,26 +540,28 @@ export default function DashboardPage() {
       {/* ── Create Box Modal ── */}
       <Modal
         open={showCreateBoxModal}
-        onClose={() => setShowCreateBoxModal(false)}
-        title="Choose Box Type"
+        onClose={closeCreateBoxModal}
+        title="Choose Bundle Type"
       >
         <Modal.Section>
           <BlockStack gap="300">
             {createBoxActions.map((action) => (
               <Card key={action.key}>
                 <BlockStack gap="200">
-                  <Text as="h3" variant="headingSm">
-                    {action.label}
-                  </Text>
+                  <InlineStack gap="200" blockAlign="center">
+                    <AdminIcon type={action.icon} size="base" />
+                    <Text as="h3" variant="headingSm">
+                      {action.label}
+                    </Text>
+                  </InlineStack>
                   <Text as="p" tone="subdued" variant="bodySm">
                     {action.sub}
                   </Text>
                   <Button
                     variant="primary"
-                    onClick={() => {
-                      setShowCreateBoxModal(false);
-                      navigateTo(action.href);
-                    }}
+                    loading={pendingCreateAction === action.key}
+                    disabled={pendingCreateAction !== null}
+                    onClick={() => handleCreateBoxAction(action)}
                   >
                     Continue
                   </Button>

@@ -222,9 +222,9 @@ const nativeInputStyle = {
 };
 
 const scopeOptions = [
-  { value: "specific_collections", label: "Specific collections" },
-  { value: "specific_products", label: "Specific products" },
-  { value: "wholestore", label: "Whole store" },
+  { value: "specific_collections", label: "Show on Selected Collections" },
+  { value: "specific_products", label: "Show on Selected Products" },
+  { value: "wholestore", label: "Show Storewide" },
 ];
 
 export default function CreateBoxPage() {
@@ -322,7 +322,7 @@ export default function CreateBoxPage() {
 
   return (
     <Page
-      title="Create New Box"
+      title="Create Custom Combo Box"
       backAction={{ content: "Boxes", onAction: handleBackAction }}
       primaryAction={{
         content: isSaving ? "Saving..." : "Save & Publish",
@@ -389,7 +389,7 @@ export default function CreateBoxPage() {
               <InlineStack gap="200" blockAlign="start">
                 <ToggleSwitch checked={options.isActive} onChange={() => toggleOption("isActive")} showStateText={false} />
                 <BlockStack gap="100">
-                  <Text as="p" variant="bodySm" fontWeight="semibold">Active on Storefront</Text>
+                  <Text as="p" variant="bodySm" fontWeight="semibold">Publish on Storefront</Text>
                   <Text as="p" variant="bodySm" tone="subdued">Uncheck to hide this box from customers</Text>
                 </BlockStack>
               </InlineStack>
@@ -398,13 +398,13 @@ export default function CreateBoxPage() {
             {/* Card 2 — Basic Information */}
             <Card>
               <BlockStack gap="400">
-                <Text as="h2" variant="headingMd">Basic Information</Text>
+                <Text as="h2" variant="headingMd">Bundle Setup</Text>
                 <FormLayout>
                   <FormLayout.Group>
                     {/* Display Title */}
                     <BlockStack gap="100">
                       <label htmlFor="new-displayTitle" style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
-                        Combo Box Heading <span aria-hidden="true">*</span>
+                        Bundle Title <span aria-hidden="true">*</span>
                       </label>
                       <input
                         id="new-displayTitle"
@@ -423,10 +423,10 @@ export default function CreateBoxPage() {
                       )}
                     </BlockStack>
 
-                    {/* Combo Product Button Title */}
+                    {/* Bundle CTA Button Text */}
                     <BlockStack gap="100">
                       <label htmlFor="new-comboBtn" style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
-                        Combo Product Button Label
+                        Bundle CTA Button Text
                       </label>
                       <input
                         id="new-comboBtn"
@@ -438,10 +438,10 @@ export default function CreateBoxPage() {
                       />
                     </BlockStack>
 
-                    {/* Product Button Title */}
+                    {/* Add Bundle to Cart Button Text */}
                     <BlockStack gap="100">
                       <label htmlFor="new-productBtn" style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
-                        Add to Cart Button Label
+                        Add Bundle to Cart Button Text
                       </label>
                       <input
                         id="new-productBtn"
@@ -458,7 +458,7 @@ export default function CreateBoxPage() {
                     {/* Item Count */}
                     <BlockStack gap="100">
                       <label htmlFor="new-itemCount" style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
-                        Number of Products <span aria-hidden="true">*</span>
+                        Items Required in Bundle <span aria-hidden="true">*</span>
                       </label>
                       <input
                         id="new-itemCount"
@@ -481,7 +481,7 @@ export default function CreateBoxPage() {
                     {/* Bundle Price */}
                     <BlockStack gap="100">
                       <span style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
-                        Bundle Price ({currencySymbol}) <span aria-hidden="true">*</span>
+                        Bundle Pricing <span aria-hidden="true">*</span>
                       </span>
                       <InlineStack gap="0">
                         {["manual", "dynamic"].map((mode) => (
@@ -491,7 +491,7 @@ export default function CreateBoxPage() {
                             onClick={() => setPriceMode(mode)}
                             size="slim"
                           >
-                            {mode === "manual" ? "Manual" : "Dynamic"}
+                            {mode === "manual" ? "Fixed Price" : "Dynamic Price"}
                           </Button>
                         ))}
                       </InlineStack>
@@ -550,7 +550,7 @@ export default function CreateBoxPage() {
 
                     {/* Banner Image */}
                     <BlockStack gap="100">
-                      <Text as="label" variant="bodySm" fontWeight="semibold">Banner Image (optional)</Text>
+                      <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Banner Image</Text>
                       <input type="file" ref={bannerImageRef} name="bannerImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ display: "none" }} />
                       {bannerImagePreview ? (
                         <div style={{ position: "relative", display: "inline-block", width: "120px" }}>
@@ -580,26 +580,26 @@ export default function CreateBoxPage() {
             {/* Card 3 — Options */}
             <Card>
               <BlockStack gap="400">
-                <Text as="h2" variant="headingMd">Options</Text>
+                <Text as="h2" variant="headingMd">Bundle Options</Text>
                 <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
                   <InlineStack gap="200" blockAlign="start">
                     <ToggleSwitch checked={options.isGiftBox} onChange={() => toggleOption("isGiftBox")} showStateText={false} />
                     <BlockStack gap="100">
-                      <Text as="p" variant="bodySm" fontWeight="semibold">Gift Box Mode</Text>
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Enable Gift Box Option</Text>
                       <Text as="p" variant="bodySm" tone="subdued">Shows gift wrapping option to customers</Text>
                     </BlockStack>
                   </InlineStack>
                   <InlineStack gap="200" blockAlign="start">
                     <ToggleSwitch checked={options.giftMessageEnabled} onChange={() => toggleOption("giftMessageEnabled")} disabled={!options.isGiftBox} showStateText={false} />
                     <BlockStack gap="100">
-                      <Text as="p" variant="bodySm" fontWeight="semibold">Gift Message Field</Text>
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Enable Gift Message Field</Text>
                       <Text as="p" variant="bodySm" tone="subdued">Show text area for gift message</Text>
                     </BlockStack>
                   </InlineStack>
                   <InlineStack gap="200" blockAlign="start">
                     <ToggleSwitch checked={options.allowDuplicates} onChange={() => toggleOption("allowDuplicates")} showStateText={false} />
                     <BlockStack gap="100">
-                      <Text as="p" variant="bodySm" fontWeight="semibold">Allow Duplicates</Text>
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Allow Duplicate Products</Text>
                       <Text as="p" variant="bodySm" tone="subdued">Same product can fill multiple slots</Text>
                     </BlockStack>
                   </InlineStack>
@@ -615,10 +615,10 @@ export default function CreateBoxPage() {
             {/* Card 4 — Scope */}
             <Card>
               <BlockStack gap="400">
-                <Text as="h2" variant="headingMd">Scope</Text>
+                <Text as="h2" variant="headingMd">Display Scope</Text>
 
                 <BlockStack gap="200">
-                  <Text as="label" variant="bodySm" fontWeight="semibold">Select Scope</Text>
+                  <Text as="label" variant="bodySm" fontWeight="semibold">Choose Display Scope</Text>
                   <InlineStack gap="200">
                     {scopeOptions.map((opt) => (
                       <Button
@@ -640,7 +640,7 @@ export default function CreateBoxPage() {
                     <Button
                       onClick={() => { setScopeSearch(""); setShowScopePicker(true); }}
                     >
-                      {scope === "specific_collections" ? "Select collections" : "Select products"}
+                      {scope === "specific_collections" ? "Choose Collections" : "Show on Selected Products"}
                     </Button>
                   )}
                   {scope !== "wholestore" && (
@@ -674,7 +674,7 @@ export default function CreateBoxPage() {
           <Modal
             open={showScopePicker}
             onClose={() => setShowScopePicker(false)}
-            title={isCollections ? "Select Collections" : "Select Products"}
+            title={isCollections ? "Choose Collections" : "Show on Selected Products"}
             primaryAction={{
               content: `Done${scopeItems.length > 0 ? ` (${scopeItems.length} selected)` : ""}`,
               onAction: () => setShowScopePicker(false),
@@ -763,3 +763,4 @@ export const headers = (headersArgs) => {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
+

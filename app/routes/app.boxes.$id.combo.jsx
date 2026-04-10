@@ -722,7 +722,7 @@ export default function SpecificComboBoxPage() {
   /* ─────────────── Render ─────────────── */
   return (
     <Page
-      title="Edit Specific Combo Box"
+      title="Edit Specific Combo Bundle"
       backAction={{ content: "Boxes", onAction: handleBackAction }}
       primaryAction={{
         content: isSaving ? "Saving..." : "Save & Publish",
@@ -757,12 +757,12 @@ export default function SpecificComboBoxPage() {
           <BlockStack gap="400">
             <InlineStack align="space-between" blockAlign="center">
               <BlockStack gap="100">
-                <Text as="h2" variant="headingMd">Specific Combo Box</Text>
+                <Text as="h2" variant="headingMd">Specific Combo Bundle Setup</Text>
                 <Text as="p" variant="bodySm" tone="subdued">{box.boxName}</Text>
               </BlockStack>
               <InlineStack gap="200" blockAlign="center">
                 <ToggleSwitch checked={comboConfig.isActive !== false} onChange={() => updateComboField("isActive", !(comboConfig.isActive !== false))} showStateText={false} />
-                <Text as="p" variant="bodySm" tone="subdued">Active on Storefront</Text>
+                <Text as="p" variant="bodySm" tone="subdued">Publish on Storefront</Text>
               </InlineStack>
             </InlineStack>
           </BlockStack>
@@ -771,13 +771,13 @@ export default function SpecificComboBoxPage() {
         {/* ── Combo Configuration ── */}
         <Card>
           <BlockStack gap="400">
-            <Text as="h2" variant="headingMd">Generak Configuration</Text>
+            <Text as="h2" variant="headingMd">General Bundle Configuration</Text>
             <Divider />
 
             {/* Row 1: Title | Steps | Description | CTA Button */}
             <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="400">
               <BlockStack gap="100">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Title *</Text>
+                <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Title *</Text>
                 <input
                   value={comboConfig.listingTitle || ""}
                   onChange={(e) => updateComboField("listingTitle", e.target.value)}
@@ -787,7 +787,7 @@ export default function SpecificComboBoxPage() {
               </BlockStack>
 
               <BlockStack gap="100">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Description</Text>
+                <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Description</Text>
                 <input
                   value={comboConfig.subtitle}
                   onChange={(e) => updateComboField("subtitle", e.target.value)}
@@ -797,7 +797,7 @@ export default function SpecificComboBoxPage() {
               </BlockStack>
 
               <BlockStack gap="100">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Combo Product Button Title</Text>
+                <Text as="label" variant="bodySm" fontWeight="semibold">Start Bundle Button Text</Text>
                 <input
                   value={comboConfig.ctaButtonLabel ?? comboConfig.comboButtonTitle ?? ""}
                   onChange={(e) => updateComboField("ctaButtonLabel", e.target.value)}
@@ -811,7 +811,7 @@ export default function SpecificComboBoxPage() {
             <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
               
               <BlockStack gap="100">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Number of Steps</Text>
+                <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Steps</Text>
                 <InlineStack gap="200" blockAlign="center">
                   <Button
                     onClick={() => setStepCount(comboConfig.type - 1)}
@@ -841,7 +841,7 @@ export default function SpecificComboBoxPage() {
 
               {/* Image uploader */}
               <BlockStack gap="100">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Image</Text>
+                <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Image</Text>
                 <input type="file" ref={comboImageRef} name="comboImage" form="combo-config-form" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ display: "none" }} />
                 {comboImagePreview ? (
                   <div
@@ -872,7 +872,7 @@ export default function SpecificComboBoxPage() {
 
               {/* Bundle Price */}
               <BlockStack gap="200">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Price ({currencySymbol}) *</Text>
+                <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Price Type *</Text>
                 <InlineStack gap="0">
                   {["manual", "dynamic"].map((mode) => (
                     <button
@@ -892,7 +892,7 @@ export default function SpecificComboBoxPage() {
                         borderRadius: mode === "manual" ? "5px 0 0 5px" : "0 5px 5px 0",
                       }}
                     >
-                      {mode === "manual" ? "Manual" : "Dynamic"}
+                      {mode === "manual" ? "Fixed Bundle Price" : "Auto Calculated Bundle Price"}
                     </button>
                   ))}
                 </InlineStack>
@@ -911,7 +911,7 @@ export default function SpecificComboBoxPage() {
                   <BlockStack gap="300">
                     <InlineGrid columns={2} gap="300">
                       <BlockStack gap="100">
-                        <Text as="label" variant="bodySm" fontWeight="semibold">Discount Type</Text>
+                        <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Discount Type</Text>
                         <select
                           value={normalizeSpecificDiscountType(comboConfig.discountType)}
                           onChange={(e) => updateComboField("discountType", normalizeSpecificDiscountType(e.target.value))}
@@ -954,26 +954,26 @@ export default function SpecificComboBoxPage() {
         {/* ── Options ── */}
         <Card>
           <BlockStack gap="400">
-            <Text as="h2" variant="headingMd">General Options</Text>
+            <Text as="h2" variant="headingMd">Additional Bundle Options</Text>
             <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
               <InlineStack gap="200" blockAlign="start">
                 <ToggleSwitch checked={!!comboConfig.isGiftBox} onChange={() => updateComboField("isGiftBox", !comboConfig.isGiftBox)} showStateText={false} />
                 <BlockStack gap="100">
-                  <Text as="p" variant="bodySm" fontWeight="semibold">Gift Box Mode</Text>
+                  <Text as="p" variant="bodySm" fontWeight="semibold">Enable Gift Packaging Option</Text>
                   <Text as="p" variant="bodySm" tone="subdued">Shows gift wrapping option to customers</Text>
                 </BlockStack>
               </InlineStack>
               <InlineStack gap="200" blockAlign="start">
                 <ToggleSwitch checked={!!comboConfig.giftMessageEnabled} onChange={() => updateComboField("giftMessageEnabled", !comboConfig.giftMessageEnabled)} disabled={!comboConfig.isGiftBox} showStateText={false} />
                 <BlockStack gap="100">
-                  <Text as="p" variant="bodySm" fontWeight="semibold">Gift Message Field</Text>
+                  <Text as="p" variant="bodySm" fontWeight="semibold">Enable Gift Note Field</Text>
                   <Text as="p" variant="bodySm" tone="subdued">Show text area for gift message</Text>
                 </BlockStack>
               </InlineStack>
               <InlineStack gap="200" blockAlign="start">
                 <ToggleSwitch checked={!!comboConfig.allowDuplicates} onChange={() => updateComboField("allowDuplicates", !comboConfig.allowDuplicates)} showStateText={false} />
                 <BlockStack gap="100">
-                  <Text as="p" variant="bodySm" fontWeight="semibold">Allow Duplicates</Text>
+                  <Text as="p" variant="bodySm" fontWeight="semibold">Allow Repeating Products</Text>
                   <Text as="p" variant="bodySm" tone="subdued">Same product can fill multiple slots</Text>
                 </BlockStack>
               </InlineStack>
@@ -990,14 +990,14 @@ export default function SpecificComboBoxPage() {
         <Card>
           <BlockStack gap="400">
             <InlineStack align="space-between" blockAlign="center">
-              <Text as="h2" variant="headingMd">Steps ({comboConfig.type} total)</Text>
+              <Text as="h2" variant="headingMd">Bundle Steps Configuration ({comboConfig.type} total)</Text>
               <InlineStack gap="200">
                 <Button
                   onClick={() => setStepCount(comboConfig.type - 1)}
                   disabled={comboConfig.type <= MIN_COMBO_STEPS}
                   size="slim"
                 >
-                  - Remove Step
+                  Delete Selected Step
                 </Button>
                 <Button
                   onClick={() => setStepCount(comboConfig.type + 1)}
@@ -1005,7 +1005,7 @@ export default function SpecificComboBoxPage() {
                   size="slim"
                   variant="primary"
                 >
-                  + Add Step
+                  Add New Step
                 </Button>
               </InlineStack>
             </InlineStack>
@@ -1026,13 +1026,13 @@ export default function SpecificComboBoxPage() {
                   <BlockStack gap="400">
                     {/* Picker setup */}
                     <BlockStack gap="300">
-                      <Text as="h3" variant="headingSm">Picker Setup</Text>
+                      <Text as="h3" variant="headingSm">Step Product Picker Setup</Text>
                       <Text as="p" variant="bodySm" tone="subdued">Each step has its own independent collection and product selector</Text>
 
                       <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
                         {/* Step Label */}
                         <BlockStack gap="100">
-                          <Text as="label" variant="bodySm" fontWeight="semibold">Step Label</Text>
+                          <Text as="label" variant="bodySm" fontWeight="semibold">Step Name</Text>
                           <input
                             value={step.label}
                             onChange={(e) => updateComboStep(ai, "label", e.target.value)}
@@ -1044,11 +1044,11 @@ export default function SpecificComboBoxPage() {
 
                         {/* Scope selector */}
                         <BlockStack gap="200">
-                          <Text as="label" variant="bodySm" fontWeight="semibold">Scope</Text>
+                          <Text as="label" variant="bodySm" fontWeight="semibold">Step Product Source</Text>
                           <InlineGrid columns={2} gap="200">
                             {[
-                              { value: "collection", label: "Specific collections" },
-                              { value: "product", label: "Specific products" },
+                              { value: "collection", label: "Use Selected Collections" },
+                              { value: "product", label: "Use Selected Products" },
                             ].map((opt) => (
                               <label
                                 key={opt.value}
@@ -1090,7 +1090,7 @@ export default function SpecificComboBoxPage() {
                                   setShowCollModal(true);
                                 }}
                               >
-                                Select collections
+                                Choose Step Collections
                               </Button>
                             ) : (
                               <Button
@@ -1164,10 +1164,10 @@ export default function SpecificComboBoxPage() {
 
                     {/* General settings */}
                     <BlockStack gap="300">
-                      <Text as="h3" variant="headingSm">Step Settings</Text>
+                      <Text as="h3" variant="headingSm">Step Content Settings</Text>
                       <InlineGrid columns={{ xs: 1, md: 4 }} gap="400">
                         <BlockStack gap="100">
-                          <Text as="label" variant="bodySm" fontWeight="semibold">Heading</Text>
+                          <Text as="label" variant="bodySm" fontWeight="semibold">Step Heading</Text>
                           <input
                             value={step.popup.title}
                             onChange={(e) => updateComboStepPopup(ai, "title", e.target.value)}
@@ -1176,7 +1176,7 @@ export default function SpecificComboBoxPage() {
                           />
                         </BlockStack>
                         <BlockStack gap="100">
-                          <Text as="label" variant="bodySm" fontWeight="semibold">Description</Text>
+                          <Text as="label" variant="bodySm" fontWeight="semibold">Step Description</Text>
                           <input
                             value={step.popup.desc}
                             onChange={(e) => updateComboStepPopup(ai, "desc", e.target.value)}
@@ -1185,7 +1185,7 @@ export default function SpecificComboBoxPage() {
                           />
                         </BlockStack>
                         <BlockStack gap="100">
-                          <Text as="label" variant="bodySm" fontWeight="semibold">Product Button Title</Text>
+                          <Text as="label" variant="bodySm" fontWeight="semibold">Step Selection Button Text</Text>
                           <input
                             value={step.popup.btn}
                             onChange={(e) => updateComboStepPopup(ai, "btn", e.target.value)}
@@ -1197,7 +1197,7 @@ export default function SpecificComboBoxPage() {
                           <BlockStack gap="100">
                             <InlineStack gap="150" blockAlign="center">
                               <ToggleSwitch checked={step.optional === true} onChange={() => updateComboStep(ai, "optional", !(step.optional === true))} showStateText={false} />
-                              <Text as="p" variant="bodySm" fontWeight="semibold">Optional Step</Text>
+                              <Text as="p" variant="bodySm" fontWeight="semibold">Make This Step Optional</Text>
                             </InlineStack>
                             <Text as="p" variant="bodySm" tone="subdued">If enabled, customers can skip this step.</Text>
                           </BlockStack>
@@ -1237,7 +1237,7 @@ export default function SpecificComboBoxPage() {
       <Modal
         open={showCollModal}
         onClose={() => setShowCollModal(false)}
-        title={`Select Collections — ${comboConfig.steps[collModalStepIdx]?.label || ""}`}
+        title={`Choose Step Collections — ${comboConfig.steps[collModalStepIdx]?.label || ""}`}
         primaryAction={{
           content: `Done${tempColls.length > 0 ? ` (${tempColls.length} selected)` : ""}`,
           onAction: confirmColl,
@@ -1404,5 +1404,6 @@ export default function SpecificComboBoxPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
+
 
 

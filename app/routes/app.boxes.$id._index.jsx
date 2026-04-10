@@ -458,7 +458,7 @@ export default function BoxSettingsPage() {
           <Modal
             open={showScopePicker}
             onClose={() => setShowScopePicker(false)}
-            title={isCollections ? "Select Collections" : "Select Products"}
+            title={isCollections ? "Choose Collections" : "Show on Selected Products"}
             primaryAction={{
               content: `Done${scopeItems.length > 0 ? ` (${scopeItems.length} selected)` : ""}`,
               onAction: () => setShowScopePicker(false),
@@ -576,7 +576,7 @@ export default function BoxSettingsPage() {
               <InlineStack gap="200" blockAlign="start">
                 <ToggleSwitch checked={options.isActive} onChange={() => toggleOption("isActive")} showStateText={false} />
                 <BlockStack gap="100">
-                  <Text as="p" variant="bodySm" fontWeight="semibold">Active on Storefront</Text>
+                  <Text as="p" variant="bodySm" fontWeight="semibold">Publish on Storefront</Text>
                   <Text as="p" variant="bodySm" tone="subdued">Uncheck to hide this box from customers</Text>
                 </BlockStack>
               </InlineStack>
@@ -586,11 +586,11 @@ export default function BoxSettingsPage() {
           {/* Card 2 — Basic Information */}
           <Card>
             <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">Basic Information</Text>
+              <Text as="h2" variant="headingMd">Bundle Setup</Text>
               <FormLayout>
                 <FormLayout.Group>
                   <BlockStack gap="100">
-                    <Text as="label" variant="bodySm" fontWeight="semibold">Heading *</Text>
+                    <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Title *</Text>
                     <input
                       type="text"
                       name="displayTitle"
@@ -603,7 +603,7 @@ export default function BoxSettingsPage() {
                     )}
                   </BlockStack>
                   <BlockStack gap="100">
-                    <Text as="label" variant="bodySm" fontWeight="semibold">Combo Button Title</Text>
+                    <Text as="label" variant="bodySm" fontWeight="semibold">Bundle CTA Button Text</Text>
                     <input
                       type="text"
                       name="comboProductButtonTitle"
@@ -613,7 +613,7 @@ export default function BoxSettingsPage() {
                     />
                   </BlockStack>
                   <BlockStack gap="100">
-                    <Text as="label" variant="bodySm" fontWeight="semibold">Product Button Title</Text>
+                    <Text as="label" variant="bodySm" fontWeight="semibold">Add Bundle to Cart Button Text</Text>
                     <input
                       type="text"
                       name="productButtonTitle"
@@ -625,7 +625,7 @@ export default function BoxSettingsPage() {
                 </FormLayout.Group>
                 <FormLayout.Group>
                   <BlockStack gap="100">
-                    <Text as="label" variant="bodySm" fontWeight="semibold">Number Of Products *</Text>
+                    <Text as="label" variant="bodySm" fontWeight="semibold">Items Required in Bundle *</Text>
                     <input
                       type="number"
                       placeholder="e.g. 4"
@@ -643,7 +643,7 @@ export default function BoxSettingsPage() {
                   {/* Bundle Price */}
                   <BlockStack gap="200">
                     <Text as="label" variant="bodySm" fontWeight="semibold">
-                      Bundle Price ({currencySymbol}) *
+                      Bundle Pricing *
                     </Text>
                     {/* Price mode toggle tabs */}
                     <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "6px", overflow: "hidden" }}>
@@ -664,7 +664,7 @@ export default function BoxSettingsPage() {
                             transition: "background 0.15s",
                           }}
                         >
-                          {mode === "manual" ? "Manual" : "Dynamic"}
+                          {mode === "manual" ? "Fixed Price" : "Dynamic Price"}
                         </button>
                       ))}
                     </div>
@@ -720,7 +720,7 @@ export default function BoxSettingsPage() {
 
                   {/* Banner Image */}
                   <BlockStack gap="200">
-                    <Text as="label" variant="bodySm" fontWeight="semibold">Banner Image</Text>
+                    <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Banner Image</Text>
                     <input type="file" ref={bannerImageRef} name="bannerImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ display: "none" }} />
                     {(box.bannerImageSrc && !removeBannerImage && !bannerImagePreview) ? (
                       <div
@@ -766,13 +766,13 @@ export default function BoxSettingsPage() {
           {/* Card 3 — Options */}
           <Card>
             <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">Options</Text>
+              <Text as="h2" variant="headingMd">Bundle Options</Text>
               <InlineGrid columns={{ xs: 1, sm: 3 }} gap="300">
                 <Card>
                   <InlineStack gap="200" blockAlign="start">
                     <ToggleSwitch checked={options.isGiftBox} onChange={() => toggleOption("isGiftBox")} showStateText={false} />
                     <BlockStack gap="100">
-                      <Text as="p" variant="bodySm" fontWeight="semibold">Gift Box Mode</Text>
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Enable Gift Box Option</Text>
                       <Text as="p" variant="bodySm" tone="subdued">Enables gift packaging option</Text>
                     </BlockStack>
                   </InlineStack>
@@ -781,7 +781,7 @@ export default function BoxSettingsPage() {
                   <InlineStack gap="200" blockAlign="start">
                     <ToggleSwitch checked={options.giftMessageEnabled} onChange={() => toggleOption("giftMessageEnabled")} disabled={!options.isGiftBox} showStateText={false} />
                     <BlockStack gap="100">
-                      <Text as="p" variant="bodySm" fontWeight="semibold">Gift Message Field</Text>
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Enable Gift Message Field</Text>
                       <Text as="p" variant="bodySm" tone="subdued">Show text area for gift message</Text>
                     </BlockStack>
                   </InlineStack>
@@ -790,7 +790,7 @@ export default function BoxSettingsPage() {
                   <InlineStack gap="200" blockAlign="start">
                     <ToggleSwitch checked={options.allowDuplicates} onChange={() => toggleOption("allowDuplicates")} showStateText={false} />
                     <BlockStack gap="100">
-                      <Text as="p" variant="bodySm" fontWeight="semibold">Allow Duplicates</Text>
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Allow Duplicate Products</Text>
                       <Text as="p" variant="bodySm" tone="subdued">Same product in multiple slots</Text>
                     </BlockStack>
                   </InlineStack>
@@ -807,14 +807,14 @@ export default function BoxSettingsPage() {
           {/* Card 4 — Scope */}
           <Card>
             <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">Scope</Text>
+              <Text as="h2" variant="headingMd">Display Scope</Text>
               <BlockStack gap="200">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Select Scope</Text>
+                <Text as="label" variant="bodySm" fontWeight="semibold">Choose Display Scope</Text>
                 <InlineStack gap="200" wrap={false}>
                   {[
-                    { value: "specific_collections", label: "Specific collections" },
-                    { value: "specific_products", label: "Specific products" },
-                    { value: "wholestore", label: "Whole store" },
+                    { value: "specific_collections", label: "Show on Selected Collections" },
+                    { value: "specific_products", label: "Show on Selected Products" },
+                    { value: "wholestore", label: "Show Storewide" },
                   ].map((opt) => (
                     <Button
                       key={opt.value}
@@ -835,7 +835,7 @@ export default function BoxSettingsPage() {
                     <Button
                       onClick={() => { setScopeSearch(""); setShowScopePicker(true); }}
                     >
-                      {scope === "specific_collections" ? "Select collections" : "Select products"}
+                      {scope === "specific_collections" ? "Choose Collections" : "Show on Selected Products"}
                     </Button>
                     <Text variant="bodySm" tone="subdued">{scopeItems.length} selected</Text>
                   </>
@@ -868,5 +868,6 @@ export default function BoxSettingsPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
+
 
 

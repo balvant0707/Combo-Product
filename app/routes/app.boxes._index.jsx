@@ -419,7 +419,7 @@ export default function ManageBoxesPage() {
                   onClick={() => setStatusFilter("all")}
                   size="slim"
                 >
-                  All Bundle Boxes ({baseBoxes.length})
+                  All ({baseBoxes.length})
                 </Button>
                 <Button
                   variant={statusFilter === "active" ? "primary" : "secondary"}
@@ -427,14 +427,14 @@ export default function ManageBoxesPage() {
                   onClick={() => setStatusFilter("active")}
                   size="slim"
                 >
-                  Active Bundle Boxes ({activeCount})
+                  Active ({activeCount})
                 </Button>
                 <Button
                   variant={statusFilter === "inactive" ? "primary" : "secondary"}
                   onClick={() => setStatusFilter("inactive")}
                   size="slim"
                 >
-                  Inactive Bundle Boxes ({inactiveCount})
+                  Inactive ({inactiveCount})
                 </Button>
               </InlineStack>
             </InlineStack>
@@ -630,7 +630,6 @@ export default function ManageBoxesPage() {
                             onClick={() => navigateTo(box.comboConfig ? `/app/boxes/${box.id}/combo` : `/app/boxes/${box.id}`)}
                             icon={<AdminIcon type="edit" size="small" />}
                           >
-                            Edit
                           </Button>
                           {box.orderCount === 0 && (
                             <Button
@@ -639,7 +638,6 @@ export default function ManageBoxesPage() {
                               onClick={() => handleDelete(box.id, box.boxName)}
                               icon={<AdminIcon type="delete" size="small" />}
                             >
-                              Delete
                             </Button>
                           )}
                         </InlineStack>

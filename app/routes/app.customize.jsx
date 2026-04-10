@@ -181,7 +181,7 @@ export default function SettingsPage() {
                 <input type="hidden" name="widgetMaxWidth" value={widgetMaxWidth} />
 
                 {/* Preset buttons */}
-                <InlineGrid columns={{ xs: 2, md: 3 }} gap="300">
+                <InlineGrid columns={{ xs: 1, md: 5 }} gap="300">
                   {[
                     { value: 0,    label: "Full Width", desc: "100%" },
                     { value: 860,  label: "Narrow",     desc: "860px" },
@@ -281,31 +281,31 @@ export default function SettingsPage() {
               <input type="hidden" name="allowDuplicates" value={String(!!settings.allowDuplicates)} />
               <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
                 <Card>
-                  <InlineStack gap="200" blockAlign="start">
-                    <ToggleSwitch checked={showSavingsBadge} onChange={() => setShowSavingsBadge((v) => !v)} showStateText={false} />
-                    <BlockStack gap="100">
+                  <BlockStack gap="100">
+                    <InlineStack gap="150" blockAlign="center">
+                      <ToggleSwitch checked={showSavingsBadge} onChange={() => setShowSavingsBadge((v) => !v)} showStateText={false} />
                       <Text as="p" variant="bodySm" fontWeight="semibold">Show Savings Badge</Text>
-                      <Text as="p" variant="bodySm" tone="subdued">Display a badge showing how much customers save vs buying individually</Text>
-                    </BlockStack>
-                  </InlineStack>
+                    </InlineStack>
+                    <Text as="p" variant="bodySm" tone="subdued">Display a badge showing how much customers save vs buying individually</Text>
+                  </BlockStack>
                 </Card>
                 <Card>
-                  <InlineStack gap="200" blockAlign="start">
-                    <ToggleSwitch checked={showProductPrices} onChange={() => setShowProductPrices((v) => !v)} showStateText={false} />
-                    <BlockStack gap="100">
+                  <BlockStack gap="100">
+                    <InlineStack gap="150" blockAlign="center">
+                      <ToggleSwitch checked={showProductPrices} onChange={() => setShowProductPrices((v) => !v)} showStateText={false} />
                       <Text as="p" variant="bodySm" fontWeight="semibold">Show Product Prices</Text>
-                      <Text as="p" variant="bodySm" tone="subdued">Show individual product prices in the selection grid</Text>
-                    </BlockStack>
-                  </InlineStack>
+                    </InlineStack>
+                    <Text as="p" variant="bodySm" tone="subdued">Show individual product prices in the selection grid</Text>
+                  </BlockStack>
                 </Card>
                 <Card>
-                  <InlineStack gap="200" blockAlign="start">
-                    <ToggleSwitch checked={forceShowOos} onChange={() => setForceShowOos((v) => !v)} showStateText={false} />
-                    <BlockStack gap="100">
+                  <BlockStack gap="100">
+                    <InlineStack gap="150" blockAlign="center">
+                      <ToggleSwitch checked={forceShowOos} onChange={() => setForceShowOos((v) => !v)} showStateText={false} />
                       <Text as="p" variant="bodySm" fontWeight="semibold">Show Out-of-Stock Products</Text>
-                      <Text as="p" variant="bodySm" tone="subdued">Show out-of-stock products (greyed out) in the selection grid</Text>
-                    </BlockStack>
-                  </InlineStack>
+                    </InlineStack>
+                    <Text as="p" variant="bodySm" tone="subdued">Show out-of-stock products (greyed out) in the selection grid</Text>
+                  </BlockStack>
                 </Card>
               </InlineGrid>
             </BlockStack>

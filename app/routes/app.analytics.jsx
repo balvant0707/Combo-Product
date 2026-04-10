@@ -163,7 +163,6 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
   const triggerRef = useRef(null);
   const popoverRef = useRef(null);
   const [open, setOpen] = useState(false);
-  const [popoverPos, setPopoverPos] = useState({ top: 0, right: 0 });
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -289,25 +288,18 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
   };
 
   function handleToggle() {
-    if (!open && triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setPopoverPos({
-        top: rect.bottom + 8,
-        right: window.innerWidth - rect.right,
-      });
-    }
     setOpen((o) => !o);
   }
 
   return (
-    <div style={{ display: "inline-block" }}>
+    <div style={{ display: "inline-block", position: "relative" }}>
       <style>{`
         .an-date-popover {
           background: #ffffff;
           border: 1px solid #e5e7eb;
           border-radius: 5px;
           box-shadow: 0 8px 32px rgba(0,0,0,0.13);
-          z-index: 100;
+          z-index: 10001;
           padding: 16px;
           min-width: 580px;
         }
@@ -318,9 +310,9 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
         }
         @media (max-width: 640px) {
           .an-date-popover {
-            min-width: calc(100vw - 32px);
-            left: 16px !important;
-            right: 16px !important;
+            min-width: min(580px, calc(100vw - 32px));
+            right: 0 !important;
+            left: auto !important;
           }
           .an-cal-pair {
             flex-direction: column;
@@ -358,10 +350,9 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
           ref={popoverRef}
           className="an-date-popover"
           style={{
-            position: "fixed",
-            top: `${popoverPos.top}px`,
-            right: `${popoverPos.right}px`,
-            zIndex: 10001,
+            position: "absolute",
+            top: "calc(100% + 8px)",
+            right: 0,
           }}
         >
           {/* Preset select */}
@@ -539,28 +530,25 @@ function KpiCard({ label, value, subLabel, change, accentColor, iconType, subtit
         transition: "box-shadow 0.2s",
       }}
     >
-      {/* Top accent line */}
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "3px", background: accentColor, borderRadius: "5px 5px 0 0" }} />
-
-      {/* Icon bubble */}
-      <div
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "36px",
-          height: "36px",
-          borderRadius: "5px",
-          background: `${accentColor}15`,
-          fontSize: "18px",
-          marginBottom: "12px",
-        }}
-      >
-        <AdminIcon type={iconType} size="base" style={{ color: accentColor }} />
-      </div>
-
-      <div style={{ fontSize: "11px", color: "#000000", textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: "600", marginBottom: "6px" }}>
-        {label}
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "36px",
+            height: "36px",
+            borderRadius: "5px",
+            background: `${accentColor}15`,
+            fontSize: "18px",
+            flexShrink: 0,
+          }}
+        >
+          <AdminIcon type={iconType} size="base" style={{ color: accentColor }} />
+        </div>
+        <div style={{ fontSize: "11px", color: "#000000", textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: "600" }}>
+          {label}
+        </div>
       </div>
       <div style={{ fontSize: "28px", fontWeight: "800", color: "#111827", lineHeight: 1, letterSpacing: "-0.5px", marginBottom: "10px" }}>
         {value}

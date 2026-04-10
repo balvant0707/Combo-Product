@@ -1074,6 +1074,7 @@ export default function SpecificComboBoxPage() {
                           <InlineStack gap="300" blockAlign="center">
                             {stepScope === "collection" ? (
                               <Button
+                                variant="primary"
                                 onClick={() => {
                                   setCollModalStepIdx(ai);
                                   setTempColls([...step.collections]);
@@ -1081,10 +1082,11 @@ export default function SpecificComboBoxPage() {
                                   setShowCollModal(true);
                                 }}
                               >
-                                Select collections
+                                Select Collections
                               </Button>
                             ) : (
                               <Button
+                                variant="primary"
                                 onClick={() => {
                                   setStepProdModalIdx(ai);
                                   setTempStepProds([...(step.selectedProducts || [])]);
@@ -1092,7 +1094,7 @@ export default function SpecificComboBoxPage() {
                                   setShowStepProdModal(true);
                                 }}
                               >
-                                Select products
+                                Select Products
                               </Button>
                             )}
                             <Text as="p" variant="bodySm" tone="subdued">
@@ -1184,13 +1186,13 @@ export default function SpecificComboBoxPage() {
                           />
                         </BlockStack>
                         <BlockStack gap="100">
-                          <InlineStack gap="200" blockAlign="start">
-                            <ToggleSwitch checked={step.optional === true} onChange={() => updateComboStep(ai, "optional", !(step.optional === true))} showStateText={false} />
-                            <BlockStack gap="100">
+                          <BlockStack gap="100">
+                            <InlineStack gap="150" blockAlign="center">
+                              <ToggleSwitch checked={step.optional === true} onChange={() => updateComboStep(ai, "optional", !(step.optional === true))} showStateText={false} />
                               <Text as="p" variant="bodySm" fontWeight="semibold">Optional Step</Text>
-                              <Text as="p" variant="bodySm" tone="subdued">If enabled, customers can skip this step.</Text>
-                            </BlockStack>
-                          </InlineStack>
+                            </InlineStack>
+                            <Text as="p" variant="bodySm" tone="subdued">If enabled, customers can skip this step.</Text>
+                          </BlockStack>
                         </BlockStack>
                       </InlineGrid>
                     </BlockStack>
@@ -1227,11 +1229,10 @@ export default function SpecificComboBoxPage() {
       <Modal
         open={showCollModal}
         onClose={() => setShowCollModal(false)}
-        title={`Select Collection — ${comboConfig.steps[collModalStepIdx]?.label || ""}`}
+        title={`Select Collections — ${comboConfig.steps[collModalStepIdx]?.label || ""}`}
         primaryAction={{
-          content: `Confirm (${tempColls.length})`,
+          content: `Done${tempColls.length > 0 ? ` (${tempColls.length} selected)` : ""}`,
           onAction: confirmColl,
-          disabled: tempColls.length === 0,
         }}
         secondaryActions={[
           { content: "Cancel", onAction: () => setShowCollModal(false) },
@@ -1316,13 +1317,12 @@ export default function SpecificComboBoxPage() {
         onClose={() => setShowStepProdModal(false)}
         title={
           stepProdModalIdx !== null && stepProducts[stepProdModalIdx]
-            ? `Select Product — scoped to collection`
-            : `Select Product — ${comboConfig.steps[stepProdModalIdx]?.label || ""}`
+            ? `Select Products — scoped to collection`
+            : `Select Products — ${comboConfig.steps[stepProdModalIdx]?.label || ""}`
         }
         primaryAction={{
-          content: `Confirm (${tempStepProds.length})`,
+          content: `Done${tempStepProds.length > 0 ? ` (${tempStepProds.length} selected)` : ""}`,
           onAction: confirmStepProd,
-          disabled: tempStepProds.length === 0,
         }}
         secondaryActions={[
           { content: "Cancel", onAction: () => setShowStepProdModal(false) },

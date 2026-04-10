@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState } from "react";
-import { useFetcher, useLoaderData, useLocation, useNavigate, useNavigation } from "react-router";
+import { useLoaderData, useLocation, useNavigate, useNavigation } from "react-router";
 import {
   Badge,
   Banner,
@@ -21,7 +21,6 @@ import {
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { AdminIcon } from "../components/admin-icons";
-import { ToggleSwitch } from "../components/toggle-switch";
 import { getActiveBoxCount } from "../models/boxes.server";
 import { getShopCurrencyCode } from "../models/shop.server";
 import {
@@ -33,7 +32,6 @@ import {
   buildThemeEditorUrl,
   buildEmbedBlockUrl,
   getEmbedBlockStatus,
-  setEmbedBlockStatus,
 } from "../utils/theme-editor.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 import { formatCurrencyAmount } from "../utils/currency";
@@ -168,25 +166,6 @@ export const loader = async ({ request }) => {
   };
 };
 
-export const action = async ({ request }) => {
-  const { session, admin } = await authenticate.admin(request);
-  const formData = await request.formData();
-  const intent = formData.get("_action");
-
-  if (intent === "toggle_embed_block") {
-    const enabled = String(formData.get("enabled")) === "true";
-    const result = await setEmbedBlockStatus({
-      shop: session.shop,
-      admin,
-      session,
-      enabled,
-    });
-    return { ok: result.ok, ...result };
-  }
-
-  return { ok: false };
-};
-
 const createBoxActions = [
   {
     key: "create-box",
@@ -271,20 +250,12 @@ export default function DashboardPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const navigation = useNavigation();
-  const embedToggleFetcher = useFetcher();
   const [showCreateBoxModal, setShowCreateBoxModal] = useState(false);
   const [showSetupSteps, setShowSetupSteps] = useState(false);
   const [pendingCreateAction, setPendingCreateAction] = useState(null);
 
   const justSubscribed = new URLSearchParams(location.search).get("subscribed") === "1";
   const isPageLoading = navigation.state !== "idle";
-  const isEmbedToggleSubmitting =
-    embedToggleFetcher.state !== "idle" &&
-    embedToggleFetcher.formData?.get("_action") === "toggle_embed_block";
-  const pendingEmbedEnabled = isEmbedToggleSubmitting
-    ? String(embedToggleFetcher.formData?.get("enabled")) === "true"
-    : null;
-  const effectiveEmbedEnabled = pendingEmbedEnabled ?? embedBlockEnabled;
 
   function navigateTo(path) {
     navigate(withEmbeddedAppParams(path, location.search));
@@ -298,16 +269,6 @@ export default function DashboardPage() {
   function handleCreateBoxAction(action) {
     setPendingCreateAction(action.key);
     navigateTo(action.href);
-  }
-
-  function handleEmbedToggle(nextEnabled) {
-    embedToggleFetcher.submit(
-      {
-        _action: "toggle_embed_block",
-        enabled: String(nextEnabled),
-      },
-      { method: "post" },
-    );
   }
 
   const stats = [
@@ -474,36 +435,20 @@ export default function DashboardPage() {
                   </InlineStack>
 
                   <InlineStack align="space-between" blockAlign="center">
-                    <InlineStack gap="200" blockAlign="center">
-                      <ToggleSwitch
-                        checked={effectiveEmbedEnabled}
-                        onChange={(event) => handleEmbedToggle(event.target.checked)}
-                        disabled={isEmbedToggleSubmitting}
-                        showStateText={false}
-                      />
-                      <Text as="p" variant="bodySm" fontWeight="semibold">
-                        Theme App Embed
-                      </Text>
-                    </InlineStack>
-                    <Text as="p" variant="bodySm" tone={effectiveEmbedEnabled ? "success" : "subdued"}>
-                      {effectiveEmbedEnabled ? "Enabled" : "Disabled"}
+                    <Text as="p" variant="bodySm" fontWeight="semibold">
+                      Theme App Embed
                     </Text>
+                    <Button
+                      url={embedBlockUrl}
+                      target="_blank"
+                      variant={embedBlockEnabled ? "secondary" : "primary"}
+                    >
+                      {embedBlockEnabled ? "Active" : "Activate"}
+                    </Button>
                   </InlineStack>
 
-                  {embedToggleFetcher.data?.requiresManualSetup && (
-                    <Banner tone="warning" title="Manual setup required">
-                      <p>{embedToggleFetcher.data?.message || "Open Theme Editor to add the app embed block once."}</p>
-                    </Banner>
-                  )}
-
-                  {embedToggleFetcher.data?.ok === false && !embedToggleFetcher.data?.requiresManualSetup && embedToggleFetcher.data?.message && (
-                    <Banner tone="critical" title="Could not update theme app embed">
-                      <p>{embedToggleFetcher.data.message}</p>
-                    </Banner>
-                  )}
-
                   <Text as="p" tone="subdued" variant="bodySm">
-                    One click opens the theme editor with the Combo Builder block pre-loaded.
+                    Click Activate to open Theme Customize → App embeds and enable the Combo Builder embed block.
                   </Text>
 
                   {showSetupSteps && (

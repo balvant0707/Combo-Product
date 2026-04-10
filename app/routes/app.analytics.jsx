@@ -292,7 +292,7 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
     if (!open && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       setPopoverPos({
-        top: rect.bottom + window.scrollY + 8,
+        top: rect.bottom + 8,
         right: window.innerWidth - rect.right,
       });
     }
@@ -358,9 +358,10 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
           ref={popoverRef}
           className="an-date-popover"
           style={{
-            position: "absolute",
+            position: "fixed",
             top: `${popoverPos.top}px`,
             right: `${popoverPos.right}px`,
+            zIndex: 10001,
           }}
         >
           {/* Preset select */}

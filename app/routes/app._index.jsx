@@ -191,7 +191,7 @@ const promotedApps = [
     title: "CartLift: Cart Drawer and Upsell",
     tag: "Upsell",
     url: "https://apps.shopify.com/cartlift-cart-drawer-upsell",
-    image: "/public/images/cartlift.png",
+    image: "/images/cartlift.png",
     description: "Grow average order value with cart drawer upsells and smart cart offers.",
   },
   {
@@ -199,7 +199,7 @@ const promotedApps = [
     title: "Fomoify Sales Popup and Proof",
     tag: "Social Proof",
     url: "https://apps.shopify.com/fomoify-sales-popup-proof",
-    image: "/public/images/fomoify.png",
+    image: "/images/fomoify.png",
     description: "Increase trust using real-time sales popups and conversion proof nudges.",
   },
 ];
@@ -519,17 +519,18 @@ export default function DashboardPage() {
               {promotedApps.map((appItem) => (
                 <Card key={appItem.key}>
                   <BlockStack gap="200">
-                    <Box>
-                      <img
-                        src={appItem.image}
-                        alt={appItem.title}
-                        style={{ width: "100%", maxHeight: "120px", objectFit: "contain", display: "block" }}
-                      />
-                    </Box>
-                    <InlineStack align="space-between" blockAlign="start">
-                      <Text as="h3" variant="headingSm">
-                        {appItem.title}
-                      </Text>
+                    <InlineStack align="space-between" blockAlign="center" wrap={false}>
+                      <InlineStack gap="200" blockAlign="center" wrap={false}>
+                        <img
+                          src={appItem.image}
+                          alt={appItem.title}
+                          onError={(e) => { e.currentTarget.style.display = "none"; }}
+                          style={{ width: "34px", height: "34px", objectFit: "contain", display: "block", flexShrink: 0 }}
+                        />
+                        <Text as="h3" variant="headingSm">
+                          {appItem.title}
+                        </Text>
+                      </InlineStack>
                       <Badge>{appItem.tag}</Badge>
                     </InlineStack>
                     <Text as="p" tone="subdued" variant="bodySm">

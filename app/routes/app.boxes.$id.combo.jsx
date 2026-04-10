@@ -3,7 +3,7 @@ import { useFetcher, useLoaderData, useLocation, useNavigation, useRouteError } 
 import {
   Badge, Banner, BlockStack, Box, Button, Card, Checkbox,
   Divider, DropZone, FormLayout, InlineGrid, InlineStack, Modal, Page,
-  Spinner, Tabs, Text, TextField
+  SettingToggle, Spinner, Tabs, Text, TextField
 } from "@shopify/polaris";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -752,12 +752,16 @@ export default function SpecificComboBoxPage() {
                 <Text as="h2" variant="headingMd">Specific Combo Box</Text>
                 <Text as="p" variant="bodySm" tone="subdued">{box.boxName}</Text>
               </BlockStack>
-              <Checkbox
-                label="Active on Storefront"
-                helpText="Uncheck to hide from customers"
-                checked={comboConfig.isActive !== false}
-                onChange={(v) => updateComboField("isActive", v)}
-              />
+              <SettingToggle
+                enabled={comboConfig.isActive !== false}
+                action={{
+                  content: comboConfig.isActive !== false ? "On" : "Off",
+                  onAction: () => updateComboField("isActive", !(comboConfig.isActive !== false)),
+                }}
+              >
+                <Text as="p" variant="bodySm" fontWeight="semibold">Active on Storefront</Text>
+                <Text as="p" variant="bodySm" tone="subdued">Uncheck to hide from customers</Text>
+              </SettingToggle>
             </InlineStack>
           </BlockStack>
         </Card>
@@ -949,25 +953,37 @@ export default function SpecificComboBoxPage() {
           <BlockStack gap="400">
             <Text as="h2" variant="headingMd">Options</Text>
             <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
-              <Checkbox
-                label="Gift Box Mode"
-                helpText="Shows gift wrapping option to customers"
-                checked={!!comboConfig.isGiftBox}
-                onChange={(v) => updateComboField("isGiftBox", v)}
-              />
-              <Checkbox
-                label="Gift Message Field"
-                helpText="Show text area for gift message"
-                checked={!!comboConfig.giftMessageEnabled}
-                onChange={(v) => updateComboField("giftMessageEnabled", v)}
-                disabled={!comboConfig.isGiftBox}
-              />
-              <Checkbox
-                label="Allow Duplicates"
-                helpText="Same product can fill multiple slots"
-                checked={!!comboConfig.allowDuplicates}
-                onChange={(v) => updateComboField("allowDuplicates", v)}
-              />
+              <SettingToggle
+                enabled={!!comboConfig.isGiftBox}
+                action={{
+                  content: comboConfig.isGiftBox ? "On" : "Off",
+                  onAction: () => updateComboField("isGiftBox", !comboConfig.isGiftBox),
+                }}
+              >
+                <Text as="p" variant="bodySm" fontWeight="semibold">Gift Box Mode</Text>
+                <Text as="p" variant="bodySm" tone="subdued">Shows gift wrapping option to customers</Text>
+              </SettingToggle>
+              <SettingToggle
+                enabled={!!comboConfig.giftMessageEnabled}
+                action={{
+                  content: comboConfig.giftMessageEnabled ? "On" : "Off",
+                  onAction: () => updateComboField("giftMessageEnabled", !comboConfig.giftMessageEnabled),
+                  disabled: !comboConfig.isGiftBox,
+                }}
+              >
+                <Text as="p" variant="bodySm" fontWeight="semibold">Gift Message Field</Text>
+                <Text as="p" variant="bodySm" tone="subdued">Show text area for gift message</Text>
+              </SettingToggle>
+              <SettingToggle
+                enabled={!!comboConfig.allowDuplicates}
+                action={{
+                  content: comboConfig.allowDuplicates ? "On" : "Off",
+                  onAction: () => updateComboField("allowDuplicates", !comboConfig.allowDuplicates),
+                }}
+              >
+                <Text as="p" variant="bodySm" fontWeight="semibold">Allow Duplicates</Text>
+                <Text as="p" variant="bodySm" tone="subdued">Same product can fill multiple slots</Text>
+              </SettingToggle>
             </InlineGrid>
             {/* Hidden inputs for boolean values */}
             <input type="hidden" name="isGiftBox" value={String(!!comboConfig.isGiftBox)} />
@@ -1183,12 +1199,16 @@ export default function SpecificComboBoxPage() {
                           />
                         </BlockStack>
                         <BlockStack gap="100">
-                          <Checkbox
-                            label="Optional step"
-                            helpText="If enabled, customers can skip this step."
-                            checked={step.optional === true}
-                            onChange={(v) => updateComboStep(ai, "optional", v)}
-                          />
+                          <SettingToggle
+                            enabled={step.optional === true}
+                            action={{
+                              content: step.optional === true ? "On" : "Off",
+                              onAction: () => updateComboStep(ai, "optional", !(step.optional === true)),
+                            }}
+                          >
+                            <Text as="p" variant="bodySm" fontWeight="semibold">Optional Step</Text>
+                            <Text as="p" variant="bodySm" tone="subdued">If enabled, customers can skip this step.</Text>
+                          </SettingToggle>
                         </BlockStack>
                       </InlineGrid>
                     </BlockStack>

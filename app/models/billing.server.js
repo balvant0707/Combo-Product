@@ -173,10 +173,16 @@ export async function cancelSubscription(billing, shop, subscriptionId) {
   let currentPeriodEnd = existing?.currentPeriodEnd ?? null;
   let effectiveSubscriptionId = subscriptionId || existing?.subscriptionId || null;
 
-  if (!SKIP_BILLING && subscriptionId && !subscriptionId.includes("/dev")) {
+  if (!SKIP_BILLING && !effectiveSubscriptionId) {
+    const activeSubscription = await getActiveShopifySubscription(billing);
+    effectiveSubscriptionId = activeSubscription?.id || null;
+    currentPeriodEnd = activeSubscription?.currentPeriodEnd || currentPeriodEnd;
+  }
+
+  if (!SKIP_BILLING && effectiveSubscriptionId && !effectiveSubscriptionId.includes("/dev")) {
     try {
       const cancelledSubscription = await billing.cancel({
-        subscriptionId,
+        subscriptionId: effectiveSubscriptionId,
         isTest: BILLING_IS_TEST,
         prorate: false,
       });

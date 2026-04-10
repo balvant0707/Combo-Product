@@ -9,7 +9,7 @@ import { getCurrencySymbol } from "../utils/currency";
 import {
   Badge, Banner, BlockStack, Box, Button, Card, Checkbox,
   DropZone, FormLayout, InlineGrid, InlineStack, Layout, Modal, Page,
-  Spinner, Text, TextField
+  SettingToggle, Spinner, Text, TextField
 } from "@shopify/polaris";
 
 /* ─────────────────────────── GraphQL ─────────────────────────── */
@@ -564,12 +564,16 @@ export default function BoxSettingsPage() {
           <Card>
             <BlockStack gap="300">
               <Text as="h2" variant="headingMd">Status</Text>
-              <Checkbox
-                label="Active on Storefront"
-                helpText="Uncheck to hide this box from customers"
-                checked={options.isActive}
-                onChange={() => toggleOption("isActive")}
-              />
+              <SettingToggle
+                enabled={options.isActive}
+                action={{
+                  content: options.isActive ? "On" : "Off",
+                  onAction: () => toggleOption("isActive"),
+                }}
+              >
+                <Text as="p" variant="bodySm" fontWeight="semibold">Active on Storefront</Text>
+                <Text as="p" variant="bodySm" tone="subdued">Uncheck to hide this box from customers</Text>
+              </SettingToggle>
             </BlockStack>
           </Card>
 
@@ -597,7 +601,7 @@ export default function BoxSettingsPage() {
                     <input
                       type="text"
                       name="comboProductButtonTitle"
-                      defaultValue={box.comboProductButtonTitle || "BUILD YOUR OWN BOX"}
+                      defaultValue={box.comboProductButtonTitle || ""}
                       placeholder="BUILD YOUR OWN BOX"
                       style={inputStyle}
                     />
@@ -607,7 +611,7 @@ export default function BoxSettingsPage() {
                     <input
                       type="text"
                       name="productButtonTitle"
-                      defaultValue={box.productButtonTitle || "Add To Cart"}
+                      defaultValue={box.productButtonTitle || ""}
                       placeholder="Add To Cart"
                       style={inputStyle}
                     />
@@ -759,29 +763,41 @@ export default function BoxSettingsPage() {
               <Text as="h2" variant="headingMd">Options</Text>
               <InlineGrid columns={{ xs: 1, sm: 3 }} gap="300">
                 <Card>
-                  <Checkbox
-                    label="Gift Box Mode"
-                    helpText="Enables gift packaging option"
-                    checked={options.isGiftBox}
-                    onChange={() => toggleOption("isGiftBox")}
-                  />
+                  <SettingToggle
+                    enabled={options.isGiftBox}
+                    action={{
+                      content: options.isGiftBox ? "On" : "Off",
+                      onAction: () => toggleOption("isGiftBox"),
+                    }}
+                  >
+                    <Text as="p" variant="bodySm" fontWeight="semibold">Gift Box Mode</Text>
+                    <Text as="p" variant="bodySm" tone="subdued">Enables gift packaging option</Text>
+                  </SettingToggle>
                 </Card>
                 <Card>
-                  <Checkbox
-                    label="Gift Message Field"
-                    helpText="Show text area for gift message"
-                    checked={options.giftMessageEnabled}
-                    onChange={() => toggleOption("giftMessageEnabled")}
-                    disabled={!options.isGiftBox}
-                  />
+                  <SettingToggle
+                    enabled={options.giftMessageEnabled}
+                    action={{
+                      content: options.giftMessageEnabled ? "On" : "Off",
+                      onAction: () => toggleOption("giftMessageEnabled"),
+                      disabled: !options.isGiftBox,
+                    }}
+                  >
+                    <Text as="p" variant="bodySm" fontWeight="semibold">Gift Message Field</Text>
+                    <Text as="p" variant="bodySm" tone="subdued">Show text area for gift message</Text>
+                  </SettingToggle>
                 </Card>
                 <Card>
-                  <Checkbox
-                    label="Allow Duplicates"
-                    helpText="Same product in multiple slots"
-                    checked={options.allowDuplicates}
-                    onChange={() => toggleOption("allowDuplicates")}
-                  />
+                  <SettingToggle
+                    enabled={options.allowDuplicates}
+                    action={{
+                      content: options.allowDuplicates ? "On" : "Off",
+                      onAction: () => toggleOption("allowDuplicates"),
+                    }}
+                  >
+                    <Text as="p" variant="bodySm" fontWeight="semibold">Allow Duplicates</Text>
+                    <Text as="p" variant="bodySm" tone="subdued">Same product in multiple slots</Text>
+                  </SettingToggle>
                 </Card>
               </InlineGrid>
               {(optionValidationMessage || errors.giftMessageEnabled) && (

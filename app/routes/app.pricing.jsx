@@ -453,7 +453,7 @@ export default function PricingPage() {
               {isPaid && (
                 <form method="post" style={{ display: "inline" }}>
                   <input type="hidden" name="intent" value="cancel" />
-                  <input type="hidden" name="subscriptionId" value={subscription?.subscriptionId || ""} />
+                  <input type="hidden" name="subscriptionId" value={subscription?.subscriptionId || subscription?.id || ""} />
                   <button
                     type="submit"
                     disabled={isSubmitting && submittingIntent === "cancel"}

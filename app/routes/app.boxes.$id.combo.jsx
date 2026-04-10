@@ -1,8 +1,8 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useFetcher, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
 import {
   Badge, Banner, BlockStack, Box, Button, Card, Checkbox,
-  Divider, FormLayout, InlineGrid, InlineStack, Modal, Page,
+  Divider, DropZone, FormLayout, InlineGrid, InlineStack, Modal, Page,
   Spinner, Tabs, Text, TextField
 } from "@shopify/polaris";
 import { boundary } from "@shopify/shopify-app-react-router/server";
@@ -106,9 +106,6 @@ const DEFAULT_COMBO_CONFIG = {
   isGiftBox: false,
   allowDuplicates: false,
   giftMessageEnabled: false,
-  showProductImages: true,
-  showProgressBar: true,
-  allowReselection: true,
   steps: Array.from({ length: MIN_COMBO_STEPS }, (_, index) => buildDefaultStep(index)),
 };
 
@@ -317,9 +314,6 @@ export const loader = async ({ request, params }) => {
       buyQuantity:       rawBuyQuantity,
       getQuantity:       rawGetQuantity,
       isActive:          cfg.isActive,
-      showProductImages: cfg.showProductImages,
-      showProgressBar:   cfg.showProgressBar,
-      allowReselection:  cfg.allowReselection,
       steps,
     });
   } else if (box.comboStepsConfig) {
@@ -519,9 +513,6 @@ export default function SpecificComboBoxPage() {
           bundlePrice:      box.config.bundlePrice != null ? parseFloat(box.config.bundlePrice) : DEFAULT_COMBO_CONFIG.bundlePrice,
           bundlePriceType:  box.config.bundlePriceType    ?? DEFAULT_COMBO_CONFIG.bundlePriceType,
           isActive:         box.config.isActive,
-          showProductImages:box.config.showProductImages,
-          showProgressBar:  box.config.showProgressBar,
-          allowReselection: box.config.allowReselection,
           steps: mergeSteps(rawSteps, type),
         };
       } catch {}
@@ -529,6 +520,20 @@ export default function SpecificComboBoxPage() {
     return DEFAULT_COMBO_CONFIG;
   });
   const [comboActiveStep, setComboActiveStep] = useState(0);
+
+  const comboImageRef = useRef(null);
+  const [comboImageHover, setComboImageHover] = useState(false);
+
+  const handleComboImageDrop = useCallback((_dropFiles, acceptedFiles) => {
+    const file = acceptedFiles[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setComboImagePreview(ev.target?.result || null);
+    reader.readAsDataURL(file);
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    if (comboImageRef.current) comboImageRef.current.files = dt.files;
+  }, []);
 
   /* Single combo image preview (existing image or newly selected file) */
   const [comboImagePreview, setComboImagePreview] = useState(() => {
@@ -828,36 +833,34 @@ export default function SpecificComboBoxPage() {
             {/* Row 2: Image | Bundle Price */}
             <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
               {/* Image uploader */}
-              <BlockStack gap="200">
+              <BlockStack gap="100">
                 <Text as="label" variant="bodySm" fontWeight="semibold">Image</Text>
-                <InlineStack gap="300" blockAlign="start">
-                  <div style={{ width: "76px", height: "76px", border: "1.5px solid #e5e7eb", borderRadius: "6px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                    {comboImagePreview
-                      ? <img src={comboImagePreview} alt="Combo preview" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                      : <Text as="p" variant="bodySm" tone="subdued">No image</Text>
-                    }
-                  </div>
-                  <BlockStack gap="100">
-                    <input
-                      type="file"
-                      name="comboImage"
-                      form="combo-config-form"
-                      accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-                      style={{ fontSize: "13px" }}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = (ev) => setComboImagePreview(ev.target.result);
-                        reader.readAsDataURL(file);
-                      }}
-                    />
-                    <Text as="p" variant="bodySm" tone="subdued">JPG, PNG, WEBP, GIF, or AVIF - max 2MB</Text>
-                    {comboErrors.comboImage && (
-                      <Text as="p" variant="bodySm" tone="critical">{comboErrors.comboImage}</Text>
+                <input type="file" ref={comboImageRef} name="comboImage" form="combo-config-form" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ display: "none" }} />
+                {comboImagePreview ? (
+                  <div
+                    style={{ position: "relative", display: "inline-block", width: "120px" }}
+                    onMouseEnter={() => setComboImageHover(true)}
+                    onMouseLeave={() => setComboImageHover(false)}
+                  >
+                    <img src={comboImagePreview} alt="Combo preview" style={{ width: "120px", borderRadius: "6px", border: "1px solid #e5e7eb", display: "block" }} />
+                    {comboImageHover && (
+                      <button
+                        type="button"
+                        onClick={() => { setComboImagePreview(null); if (comboImageRef.current) comboImageRef.current.value = ""; }}
+                        style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(0,0,0,0.65)", border: "none", borderRadius: "50%", width: "22px", height: "22px", cursor: "pointer", color: "#fff", fontSize: "14px", lineHeight: "22px", textAlign: "center", padding: 0 }}
+                        aria-label="Remove image"
+                      >×</button>
                     )}
-                  </BlockStack>
-                </InlineStack>
+                  </div>
+                ) : (
+                  <DropZone accept="image/jpeg,image/png,image/webp,image/gif,image/avif" type="image" allowMultiple={false} onDrop={handleComboImageDrop}>
+                    <DropZone.FileUpload />
+                  </DropZone>
+                )}
+                <Text as="p" variant="bodySm" tone="subdued">JPG, PNG, WEBP, GIF, or AVIF - max 2MB</Text>
+                {comboErrors.comboImage && (
+                  <Text as="p" variant="bodySm" tone="critical">{comboErrors.comboImage}</Text>
+                )}
               </BlockStack>
 
               {/* Bundle Price */}
@@ -965,29 +968,11 @@ export default function SpecificComboBoxPage() {
                 checked={!!comboConfig.allowDuplicates}
                 onChange={(v) => updateComboField("allowDuplicates", v)}
               />
-              <Checkbox
-                label="Show Product Images"
-                checked={!!comboConfig.showProductImages}
-                onChange={(v) => updateComboField("showProductImages", v)}
-              />
-              <Checkbox
-                label="Show Progress Bar"
-                checked={!!comboConfig.showProgressBar}
-                onChange={(v) => updateComboField("showProgressBar", v)}
-              />
-              <Checkbox
-                label="Allow Reselection"
-                checked={!!comboConfig.allowReselection}
-                onChange={(v) => updateComboField("allowReselection", v)}
-              />
             </InlineGrid>
             {/* Hidden inputs for boolean values */}
             <input type="hidden" name="isGiftBox" value={String(!!comboConfig.isGiftBox)} />
             <input type="hidden" name="giftMessageEnabled" value={String(!!comboConfig.giftMessageEnabled)} />
             <input type="hidden" name="allowDuplicates" value={String(!!comboConfig.allowDuplicates)} />
-            <input type="hidden" name="showProductImages" value={String(!!comboConfig.showProductImages)} />
-            <input type="hidden" name="showProgressBar" value={String(!!comboConfig.showProgressBar)} />
-            <input type="hidden" name="allowReselection" value={String(!!comboConfig.allowReselection)} />
             <input type="hidden" name="isActive" value={String(comboConfig.isActive !== false)} />
           </BlockStack>
         </Card>

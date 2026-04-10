@@ -351,14 +351,14 @@ export default function ManageBoxesPage() {
 
   return (
     <Page
-      title="Combo Boxes"
+      title="Manage Boxes"
       primaryAction={{ content: "+ Create Box", onAction: openCreateBoxModal }}
     >
-      <ui-title-bar title="MixBox – Box & Bundle Builder">
+      {/* <ui-title-bar title="MixBox – Box & Bundle Builder">
         <button variant="primary" onClick={openCreateBoxModal}>
           + Create Box
         </button>
-      </ui-title-bar>
+      </ui-title-bar> */}
 
       <BlockStack gap="400">
         {/* Stats row */}

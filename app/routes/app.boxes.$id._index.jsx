@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Form, useActionData, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -8,7 +8,7 @@ import { withEmbeddedAppParams, withEmbeddedAppToastFromRequest } from "../utils
 import { getCurrencySymbol } from "../utils/currency";
 import {
   Badge, Banner, BlockStack, Box, Button, Card, Checkbox,
-  FormLayout, InlineGrid, InlineStack, Layout, Modal, Page,
+  DropZone, FormLayout, InlineGrid, InlineStack, Layout, Modal, Page,
   Spinner, Text, TextField
 } from "@shopify/polaris";
 
@@ -135,9 +135,6 @@ export const loader = async ({ request, params }) => {
       bundlePrice:       cfg.bundlePrice != null ? parseFloat(cfg.bundlePrice) : undefined,
       bundlePriceType:   cfg.bundlePriceType   ?? undefined,
       isActive:          cfg.isActive,
-      showProductImages: cfg.showProductImages,
-      showProgressBar:   cfg.showProgressBar,
-      allowReselection:  cfg.allowReselection,
       steps,
     });
   } else if (box.comboStepsConfig) {
@@ -331,6 +328,21 @@ export default function BoxSettingsPage() {
   const [scopeSearch, setScopeSearch] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [removeBannerImage, setRemoveBannerImage] = useState(false);
+  const [bannerImagePreview, setBannerImagePreview] = useState(null);
+  const [bannerImageHover, setBannerImageHover] = useState(false);
+  const bannerImageRef = useRef(null);
+
+  const handleBannerDrop = useCallback((_dropFiles, acceptedFiles) => {
+    const file = acceptedFiles[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setBannerImagePreview(ev.target?.result || null);
+    reader.readAsDataURL(file);
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    if (bannerImageRef.current) bannerImageRef.current.files = dt.files;
+    setRemoveBannerImage(false);
+  }, []);
 
   const numItemCount = Math.max(1, parseInt(itemCount) || 1);
   const dynamicPrice = 0;
@@ -573,6 +585,7 @@ export default function BoxSettingsPage() {
                       type="text"
                       name="displayTitle"
                       defaultValue={box.displayTitle}
+                      placeholder="e.g. Build Your Perfect Snack Box"
                       style={{ ...inputStyle, borderColor: errors.displayTitle ? "#e11d48" : "#e5e7eb" }}
                     />
                     {errors.displayTitle && (
@@ -698,25 +711,37 @@ export default function BoxSettingsPage() {
                   {/* Banner Image */}
                   <BlockStack gap="200">
                     <Text as="label" variant="bodySm" fontWeight="semibold">Banner Image</Text>
-                    <input
-                      type="file"
-                      name="bannerImage"
-                      accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-                      style={{ ...inputStyle, padding: "7px 12px" }}
-                    />
-                    {box.bannerImageSrc && (
-                      <BlockStack gap="200">
-                        <img
-                          src={box.bannerImageSrc}
-                          alt="Current banner"
-                          style={{ width: "100%", maxWidth: "100px", borderRadius: "5px", border: "1px solid #e5e7eb" }}
-                        />
-                        <Checkbox
-                          label="Remove current image"
-                          checked={removeBannerImage}
-                          onChange={() => setRemoveBannerImage((v) => !v)}
-                        />
-                      </BlockStack>
+                    <input type="file" ref={bannerImageRef} name="bannerImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ display: "none" }} />
+                    {(box.bannerImageSrc && !removeBannerImage && !bannerImagePreview) ? (
+                      <div
+                        style={{ position: "relative", display: "inline-block", width: "120px" }}
+                        onMouseEnter={() => setBannerImageHover(true)}
+                        onMouseLeave={() => setBannerImageHover(false)}
+                      >
+                        <img src={box.bannerImageSrc} alt="Current banner" style={{ width: "120px", borderRadius: "6px", border: "1px solid #e5e7eb", display: "block" }} />
+                        {bannerImageHover && (
+                          <button
+                            type="button"
+                            onClick={() => setRemoveBannerImage(true)}
+                            style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(0,0,0,0.65)", border: "none", borderRadius: "50%", width: "22px", height: "22px", cursor: "pointer", color: "#fff", fontSize: "14px", lineHeight: "22px", textAlign: "center", padding: 0 }}
+                            aria-label="Remove banner image"
+                          >×</button>
+                        )}
+                      </div>
+                    ) : bannerImagePreview ? (
+                      <div style={{ position: "relative", display: "inline-block", width: "120px" }}>
+                        <img src={bannerImagePreview} alt="New banner" style={{ width: "120px", borderRadius: "6px", border: "1px solid #e5e7eb", display: "block" }} />
+                        <button
+                          type="button"
+                          onClick={() => { setBannerImagePreview(null); if (bannerImageRef.current) bannerImageRef.current.value = ""; }}
+                          style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(0,0,0,0.65)", border: "none", borderRadius: "50%", width: "22px", height: "22px", cursor: "pointer", color: "#fff", fontSize: "14px", lineHeight: "22px", textAlign: "center", padding: 0 }}
+                          aria-label="Remove new image"
+                        >×</button>
+                      </div>
+                    ) : (
+                      <DropZone accept="image/jpeg,image/png,image/webp,image/gif,image/avif" type="image" allowMultiple={false} onDrop={handleBannerDrop}>
+                        <DropZone.FileUpload />
+                      </DropZone>
                     )}
                     <Text variant="bodySm" tone="subdued">JPG, PNG, WEBP, GIF, or AVIF — max 5MB</Text>
                     {errors.bannerImage && (

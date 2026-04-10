@@ -130,9 +130,6 @@ export const loader = async ({ request }) => {
             ctaButtonLabel,
             addToCartLabel,
             productButtonTitle: addToCartLabel,
-            showProgressBar: box.config.showProgressBar !== false,
-            showProductImages: box.config.showProductImages !== false,
-            allowReselection: box.config.allowReselection !== false,
             steps,
           };
         }
@@ -164,9 +161,6 @@ export const loader = async ({ request }) => {
                 : (typeof parsed.addToCartLabel === "string" && parsed.addToCartLabel.trim()
                   ? parsed.addToCartLabel.trim()
                   : addToCartLabel),
-              showProgressBar: parsed.showProgressBar !== false,
-              showProductImages: parsed.showProductImages !== false,
-              allowReselection: parsed.allowReselection !== false,
               steps,
             };
           } catch { return null; }

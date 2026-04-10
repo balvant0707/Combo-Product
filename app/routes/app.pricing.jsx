@@ -211,45 +211,57 @@ const PLAN_UI = [
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
 
+const PLAN_TIER = { FREE: 0, BASIC: 1, ADVANCE: 2, PLUS: 3, PRO: 3 };
+
 function currentPlanKey(subscription) {
   if (!subscription) return null;
   const plan = String(subscription.plan || "").toUpperCase();
-  if (plan === "FREE" && subscription.status === "ACTIVE")    return "FREE";
-  if (plan === "BASIC" && subscription.status === "ACTIVE")   return "BASIC";
-  if (plan === "ADVANCE" && subscription.status === "ACTIVE") return "ADVANCE";
-  if (plan === "PRO" && subscription.status === "ACTIVE")     return "PLUS";
-  if (plan === "PLUS" && subscription.status === "ACTIVE")    return "PLUS";
+  const status = String(subscription.status || "").toUpperCase();
+  const isActiveStatus = status === "ACTIVE";
+  const isCancelledWithAccess =
+    status === "CANCELLED" &&
+    subscription.currentPeriodEnd &&
+    new Date(subscription.currentPeriodEnd).getTime() > Date.now();
+
+  if (!isActiveStatus && !isCancelledWithAccess) return null;
+  if (plan === "FREE")    return "FREE";
+  if (plan === "BASIC")   return "BASIC";
+  if (plan === "ADVANCE") return "ADVANCE";
+  if (plan === "PRO")     return "PLUS";
+  if (plan === "PLUS")    return "PLUS";
   return null;
+}
+
+function isLowerTierThanActive(planKey, activePlanKey) {
+  if (!activePlanKey) return false;
+  return (PLAN_TIER[planKey] ?? 0) < (PLAN_TIER[activePlanKey] ?? 0);
 }
 
 /* ── Plan Card ───────────────────────────────────────────────────── */
 
 function PlanCard({ plan, activePlanKey, subscription, isSubmitting, submittingPlan, trialDays }) {
-  const isActive = activePlanKey === plan.key;
-  const isFree   = plan.key === "FREE";
+  const isActive   = activePlanKey === plan.key;
+  const isFree     = plan.key === "FREE";
+  const isDisabled = isActive || isLowerTierThanActive(plan.key, activePlanKey);
+
+  const disabledBtnStyle = {
+    width: "100%", padding: "14px", borderRadius: "10px", border: "none",
+    fontSize: "14px", fontWeight: "700", textAlign: "center", cursor: "default",
+    background: "#e5e7eb", color: "#9ca3af", opacity: 0.85,
+  };
 
   let btn;
 
   if (isActive) {
     btn = (
-      <button
-        disabled
-        aria-label={`${plan.name} — current plan`}
-        style={{
-          width: "100%",
-          padding: "14px",
-          borderRadius: "10px",
-          border: "none",
-          fontSize: "14px",
-          fontWeight: "700",
-          textAlign: "center",
-          cursor: "default",
-          background: "#6b7280",
-          color: "#fff",
-          opacity: 0.75,
-        }}
-      >
+      <button disabled aria-label={`${plan.name} — current plan`} style={{ ...disabledBtnStyle, background: "#6b7280", color: "#fff" }}>
         Current plan
+      </button>
+    );
+  } else if (isDisabled) {
+    btn = (
+      <button disabled aria-label={`${plan.name} — included in your current plan`} style={disabledBtnStyle}>
+        Not available
       </button>
     );
   } else if (isFree) {
@@ -262,18 +274,10 @@ function PlanCard({ plan, activePlanKey, subscription, isSubmitting, submittingP
           disabled={busy}
           aria-label="Start free plan"
           style={{
-            width: "100%",
-            padding: "14px",
-            borderRadius: "10px",
-            border: "none",
-            fontSize: "14px",
-            fontWeight: "700",
-            textAlign: "center",
-            cursor: busy ? "wait" : "pointer",
-            background: "#111827",
-            color: "#fff",
-            opacity: busy ? 0.8 : 1,
-            transition: "opacity 0.2s",
+            width: "100%", padding: "14px", borderRadius: "10px", border: "none",
+            fontSize: "14px", fontWeight: "700", textAlign: "center",
+            cursor: busy ? "wait" : "pointer", background: "#111827",
+            color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",
           }}
         >
           {busy ? "Starting…" : plan.cta}
@@ -292,18 +296,11 @@ function PlanCard({ plan, activePlanKey, subscription, isSubmitting, submittingP
           disabled={busy}
           aria-label={`Subscribe to ${plan.name} plan at $${plan.price}/month`}
           style={{
-            width: "100%",
-            padding: "14px",
-            borderRadius: "10px",
-            border: "none",
-            fontSize: "14px",
-            fontWeight: "700",
-            textAlign: "center",
+            width: "100%", padding: "14px", borderRadius: "10px", border: "none",
+            fontSize: "14px", fontWeight: "700", textAlign: "center",
             cursor: busy ? "wait" : "pointer",
             background: plan.highlight ? "#2A7A4F" : "#111827",
-            color: "#fff",
-            opacity: busy ? 0.8 : 1,
-            transition: "opacity 0.2s",
+            color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",
           }}
         >
           {busy ? "Preparing billing…" : plan.cta}

@@ -1,8 +1,8 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
 import {
   Badge, Banner, BlockStack, Box, Button, Card, Checkbox,
-  FormLayout, InlineGrid, InlineStack, Layout, Modal, Page,
+  Divider, DropZone, FormLayout, InlineGrid, InlineStack, Layout, Modal, Page,
   Select, Spinner, Text, TextField, Tabs
 } from "@shopify/polaris";
 import { boundary } from "@shopify/shopify-app-react-router/server";
@@ -115,9 +115,6 @@ const DEFAULT_COMBO = {
   isGiftBox: false,
   allowDuplicates: false,
   giftMessageEnabled: false,
-  showProductImages: true,
-  showProgressBar: true,
-  allowReselection: true,
   steps: Array.from({ length: MIN_COMBO_STEPS }, (_, index) => buildDefaultStep(index)),
 };
 
@@ -388,6 +385,18 @@ export default function CreateSpecificComboBoxPage() {
   /* Combo image preview (data URL set by FileReader) */
   const [comboImagePreview, setComboImagePreview] = useState(null);
   const [stepImagePreviews, setStepImagePreviews] = useState(Array(8).fill(null));
+  const comboImageRef = useRef(null);
+
+  const handleComboImageDrop = useCallback((_dropFiles, acceptedFiles) => {
+    const file = acceptedFiles[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setComboImagePreview(ev.target?.result || null);
+    reader.readAsDataURL(file);
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    if (comboImageRef.current) comboImageRef.current.files = dt.files;
+  }, []);
 
   /* -- Collection modal -- */
   const [showCollModal, setShowCollModal] = useState(false);
@@ -395,6 +404,15 @@ export default function CreateSpecificComboBoxPage() {
   const [collSearch, setCollSearch] = useState("");
   const [collStatusFilter, setCollStatusFilter] = useState("all");
   const [tempColls, setTempColls] = useState([]);
+  const [pendingCollLoad, setPendingCollLoad] = useState(null);
+
+  useEffect(() => {
+    if (!pendingCollLoad) return;
+    const { stepIdx, collId } = pendingCollLoad;
+    setPendingCollLoad(null);
+    collProdsFetchers[stepIdx].load(`/app/boxes/specific-combo?collectionId=${encodeURIComponent(collId)}`);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingCollLoad]);
 
   /* -- Step product modal -- */
   const [showStepProdModal, setShowStepProdModal] = useState(false);
@@ -438,10 +456,11 @@ export default function CreateSpecificComboBoxPage() {
   function confirmColl() {
     if (tempColls.length === 0) return;
     const idx = collModalStepIdx;
+    const firstCollId = tempColls[0].id;
     setComboConfig((prev) => ({ ...prev, steps: prev.steps.map((s, i) => i !== idx ? s : { ...s, collections: tempColls, selectedProducts: [] }) }));
     setStepProducts((p) => { const n = [...p]; n[idx] = null; return n; });
-    collProdsFetchers[idx].load(withEmbeddedAppParams(`/app/boxes/specific-combo?collectionId=${encodeURIComponent(tempColls[0].id)}`, location.search));
     setShowCollModal(false);
+    setPendingCollLoad({ stepIdx: idx, collId: firstCollId });
   }
   function confirmStepProd() {
     updateComboStep(stepProdModalIdx, "selectedProducts", tempStepProds);
@@ -640,39 +659,29 @@ export default function CreateSpecificComboBoxPage() {
               </InlineStack>
 
               {/* Combo image upload */}
-              <FormLayout>
-                <BlockStack gap="200">
-                  <Text as="label" variant="bodySm" fontWeight="semibold">Combo Image (optional)</Text>
-                  <InlineStack gap="400" blockAlign="start">
-                    <div style={{ width: "80px", height: "80px", borderRadius: "6px", border: "1.5px solid #e5e7eb", background: "#f9fafb", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      {comboImagePreview ? (
-                        <img src={comboImagePreview} alt="Combo preview" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                      ) : (
-                        <Text as="span" variant="bodySm" tone="subdued">No image</Text>
-                      )}
-                    </div>
-                    <BlockStack gap="100">
-                      <input
-                        type="file"
-                        name="comboImage"
-                        accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-                        style={{ fontSize: "14px" }}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          const reader = new FileReader();
-                          reader.onload = (ev) => setComboImagePreview(ev.target?.result || null);
-                          reader.readAsDataURL(file);
-                        }}
-                      />
-                      <Text as="p" variant="bodySm" tone="subdued">JPG, PNG, WEBP, GIF, or AVIF – max 2MB. Used as the image for all combo steps.</Text>
-                      {errors.comboImage && (
-                        <Text as="p" variant="bodySm" tone="critical">{errors.comboImage}</Text>
-                      )}
-                    </BlockStack>
-                  </InlineStack>
-                </BlockStack>
-              </FormLayout>
+              <BlockStack gap="100">
+                <Text as="label" variant="bodySm" fontWeight="semibold">Combo Image (optional)</Text>
+                <input type="file" ref={comboImageRef} name="comboImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ display: "none" }} />
+                {comboImagePreview ? (
+                  <div style={{ position: "relative", display: "inline-block", width: "120px" }}>
+                    <img src={comboImagePreview} alt="Combo preview" style={{ width: "120px", borderRadius: "6px", border: "1px solid #e5e7eb", display: "block" }} />
+                    <button
+                      type="button"
+                      onClick={() => { setComboImagePreview(null); if (comboImageRef.current) comboImageRef.current.value = ""; }}
+                      style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(0,0,0,0.65)", border: "none", borderRadius: "50%", width: "22px", height: "22px", cursor: "pointer", color: "#fff", fontSize: "14px", lineHeight: "22px", textAlign: "center", padding: 0 }}
+                      aria-label="Remove image"
+                    >×</button>
+                  </div>
+                ) : (
+                  <DropZone accept="image/jpeg,image/png,image/webp,image/gif,image/avif" type="image" allowMultiple={false} onDrop={handleComboImageDrop}>
+                    <DropZone.FileUpload />
+                  </DropZone>
+                )}
+                <Text as="p" variant="bodySm" tone="subdued">JPG, PNG, WEBP, GIF, or AVIF – max 2MB</Text>
+                {errors.comboImage && (
+                  <Text as="p" variant="bodySm" tone="critical">{errors.comboImage}</Text>
+                )}
+              </BlockStack>
             </BlockStack>
           </Card>
 
@@ -830,9 +839,8 @@ export default function CreateSpecificComboBoxPage() {
                   <Box paddingBlockStart="400">
                     <BlockStack gap="400">
                       {/* Picker setup */}
-                      <Card>
-                        <BlockStack gap="300">
-                          <Text as="h3" variant="headingSm">Picker setup</Text>
+                      <BlockStack gap="300">
+                          <Text as="h3" variant="headingSm">Picker Setup</Text>
                           <Text as="p" variant="bodySm" tone="subdued">Each step has its own independent collection and product selector</Text>
 
                           {comboStepErrors[comboActiveStep] && (
@@ -988,59 +996,53 @@ export default function CreateSpecificComboBoxPage() {
                             </BlockStack>
                           )}
                         </BlockStack>
-                      </Card>
+
+                      <Divider />
 
                       {/* Step general settings */}
-                      <Card>
-                        <BlockStack gap="300">
-                          <InlineStack align="space-between" blockAlign="center">
-                            <Text as="h3" variant="headingSm">Step {comboActiveStep + 1} Settings</Text>
-                            <Checkbox
-                              label="Optional step"
-                              helpText="If enabled, customers can skip this step."
-                              checked={activeStepData.optional === true}
-                              onChange={(checked) => updateComboStep(comboActiveStep, "optional", checked)}
-                            />
-                          </InlineStack>
-
-                          <FormLayout>
-                            <FormLayout.Group>
-                              <BlockStack gap="100">
-                                <Text as="label" variant="bodySm" fontWeight="semibold">Heading</Text>
-                                <input
-                                  type="text"
-                                  value={activeStepData.popup.title}
-                                  onChange={(e) => updateComboStepPopup(comboActiveStep, "title", e.target.value)}
-                                  style={inputStyle}
-                                  placeholder="e.g. Choose your main product"
-                                />
-                              </BlockStack>
-
-                              <BlockStack gap="100">
-                                <Text as="label" variant="bodySm" fontWeight="semibold">Description</Text>
-                                <input
-                                  type="text"
-                                  value={activeStepData.popup.desc}
-                                  onChange={(e) => updateComboStepPopup(comboActiveStep, "desc", e.target.value)}
-                                  style={inputStyle}
-                                  placeholder="Select the primary product."
-                                />
-                              </BlockStack>
-
-                              <BlockStack gap="100">
-                                <Text as="label" variant="bodySm" fontWeight="semibold">Product Button Title</Text>
-                                <input
-                                  type="text"
-                                  value={activeStepData.popup.btn}
-                                  onChange={(e) => updateComboStepPopup(comboActiveStep, "btn", e.target.value)}
-                                  style={inputStyle}
-                                  placeholder="e.g. Confirm selection"
-                                />
-                              </BlockStack>
-                            </FormLayout.Group>
-                          </FormLayout>
+                      <BlockStack gap="300">
+                          <Text as="h3" variant="headingSm">Step Settings</Text>
+                          <InlineGrid columns={{ xs: 1, md: 4 }} gap="400">
+                            <BlockStack gap="100">
+                              <Text as="label" variant="bodySm" fontWeight="semibold">Heading</Text>
+                              <input
+                                type="text"
+                                value={activeStepData.popup.title}
+                                onChange={(e) => updateComboStepPopup(comboActiveStep, "title", e.target.value)}
+                                style={inputStyle}
+                                placeholder="e.g. Choose your main product"
+                              />
+                            </BlockStack>
+                            <BlockStack gap="100">
+                              <Text as="label" variant="bodySm" fontWeight="semibold">Description</Text>
+                              <input
+                                type="text"
+                                value={activeStepData.popup.desc}
+                                onChange={(e) => updateComboStepPopup(comboActiveStep, "desc", e.target.value)}
+                                style={inputStyle}
+                                placeholder="Select the primary product."
+                              />
+                            </BlockStack>
+                            <BlockStack gap="100">
+                              <Text as="label" variant="bodySm" fontWeight="semibold">Product Button Title</Text>
+                              <input
+                                type="text"
+                                value={activeStepData.popup.btn}
+                                onChange={(e) => updateComboStepPopup(comboActiveStep, "btn", e.target.value)}
+                                style={inputStyle}
+                                placeholder="e.g. Confirm selection"
+                              />
+                            </BlockStack>
+                            <BlockStack gap="100">
+                              <Checkbox
+                                label="Optional step"
+                                helpText="If enabled, customers can skip this step."
+                                checked={activeStepData.optional === true}
+                                onChange={(checked) => updateComboStep(comboActiveStep, "optional", checked)}
+                              />
+                            </BlockStack>
+                          </InlineGrid>
                         </BlockStack>
-                      </Card>
 
                       {/* Hidden step image inputs (kept for form submission) */}
                       <div style={{ display: "none" }}>
@@ -1098,9 +1100,6 @@ export default function CreateSpecificComboBoxPage() {
               <input type="hidden" name="isGiftBox" value={String(comboConfig.isGiftBox)} />
               <input type="hidden" name="giftMessageEnabled" value={String(comboConfig.giftMessageEnabled)} />
               <input type="hidden" name="allowDuplicates" value={String(comboConfig.allowDuplicates)} />
-              <input type="hidden" name="showProductImages" value={String(comboConfig.showProductImages)} />
-              <input type="hidden" name="showProgressBar" value={String(comboConfig.showProgressBar)} />
-              <input type="hidden" name="allowReselection" value={String(comboConfig.allowReselection)} />
               <input type="hidden" name="isActive" value={String(comboConfig.isActive)} />
             </BlockStack>
           </Card>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Form, useActionData, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -8,7 +8,7 @@ import { withEmbeddedAppParams, withEmbeddedAppToastFromRequest } from "../utils
 import { getCurrencySymbol } from "../utils/currency";
 import {
   Badge, Banner, BlockStack, Box, Button, Card, Checkbox,
-  FormLayout, InlineGrid, InlineStack, Layout, Modal, Page,
+  DropZone, FormLayout, InlineGrid, InlineStack, Layout, Modal, Page,
   Select, Spinner, Text, TextField
 } from "@shopify/polaris";
 
@@ -249,6 +249,19 @@ export default function CreateBoxPage() {
   const [discountValue, setDiscountValue] = useState("10");
   const [buyQuantity, setBuyQuantity] = useState("1");
   const [getQuantity, setGetQuantity] = useState("1");
+  const [bannerImagePreview, setBannerImagePreview] = useState(null);
+  const bannerImageRef = useRef(null);
+
+  const handleBannerDrop = useCallback((_dropFiles, acceptedFiles) => {
+    const file = acceptedFiles[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setBannerImagePreview(ev.target?.result || null);
+    reader.readAsDataURL(file);
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    if (bannerImageRef.current) bannerImageRef.current.files = dt.files;
+  }, []);
 
   const errors = actionData?.errors || {};
 
@@ -513,12 +526,22 @@ export default function CreateBoxPage() {
                     {/* Banner Image */}
                     <BlockStack gap="100">
                       <Text as="label" variant="bodySm" fontWeight="semibold">Banner Image (optional)</Text>
-                      <input
-                        type="file"
-                        name="bannerImage"
-                        accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-                        style={{ ...nativeInputStyle, padding: "7px 12px" }}
-                      />
+                      <input type="file" ref={bannerImageRef} name="bannerImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ display: "none" }} />
+                      {bannerImagePreview ? (
+                        <div style={{ position: "relative", display: "inline-block", width: "120px" }}>
+                          <img src={bannerImagePreview} alt="Banner preview" style={{ width: "120px", borderRadius: "6px", border: "1px solid #e5e7eb", display: "block" }} />
+                          <button
+                            type="button"
+                            onClick={() => { setBannerImagePreview(null); if (bannerImageRef.current) bannerImageRef.current.value = ""; }}
+                            style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(0,0,0,0.65)", border: "none", borderRadius: "50%", width: "22px", height: "22px", cursor: "pointer", color: "#fff", fontSize: "14px", lineHeight: "22px", textAlign: "center", padding: 0 }}
+                            aria-label="Remove image"
+                          >×</button>
+                        </div>
+                      ) : (
+                        <DropZone accept="image/jpeg,image/png,image/webp,image/gif,image/avif" type="image" allowMultiple={false} onDrop={handleBannerDrop}>
+                          <DropZone.FileUpload />
+                        </DropZone>
+                      )}
                       <Text variant="bodySm" tone="subdued">JPG, PNG, WEBP, GIF, or AVIF — max 5MB</Text>
                       {errors.bannerImage && (
                         <Text tone="critical" variant="bodySm">{errors.bannerImage}</Text>

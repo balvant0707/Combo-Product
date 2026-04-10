@@ -191,6 +191,7 @@ const promotedApps = [
     title: "CartLift: Cart Drawer and Upsell",
     tag: "Upsell",
     url: "https://apps.shopify.com/cartlift-cart-drawer-upsell",
+    image: "/apps-icons/cartlift.png",
     description: "Grow average order value with cart drawer upsells and smart cart offers.",
   },
   {
@@ -198,6 +199,7 @@ const promotedApps = [
     title: "Fomoify Sales Popup and Proof",
     tag: "Social Proof",
     url: "https://apps.shopify.com/fomoify-sales-popup-proof",
+    image: "/apps-icons/fomoify.png",
     description: "Increase trust using real-time sales popups and conversion proof nudges.",
   },
 ];
@@ -517,6 +519,13 @@ export default function DashboardPage() {
               {promotedApps.map((appItem) => (
                 <Card key={appItem.key}>
                   <BlockStack gap="200">
+                    <Box>
+                      <img
+                        src={appItem.image}
+                        alt={appItem.title}
+                        style={{ width: "100%", maxHeight: "120px", objectFit: "contain", display: "block" }}
+                      />
+                    </Box>
                     <InlineStack align="space-between" blockAlign="start">
                       <Text as="h3" variant="headingSm">
                         {appItem.title}
@@ -557,14 +566,31 @@ export default function DashboardPage() {
                   <Text as="p" tone="subdued" variant="bodySm">
                     {action.sub}
                   </Text>
-                  <Button
-                    variant="primary"
-                    loading={pendingCreateAction === action.key}
+                  <button
+                    type="button"
                     disabled={pendingCreateAction !== null}
                     onClick={() => handleCreateBoxAction(action)}
+                    style={{
+                      width: "100%",
+                      border: "1px solid #111827",
+                      borderRadius: 0,
+                      background: "#111827",
+                      color: "#ffffff",
+                      padding: "9px 12px",
+                      fontSize: "15px",
+                      fontWeight: 700,
+                      cursor: pendingCreateAction !== null ? "not-allowed" : "pointer",
+                      opacity: pendingCreateAction !== null && pendingCreateAction !== action.key ? 0.65 : 1,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                      minHeight: "40px",
+                    }}
                   >
+                    {pendingCreateAction === action.key && <Spinner accessibilityLabel="Loading" size="small" />}
                     Continue
-                  </Button>
+                  </button>
                 </BlockStack>
               </Card>
             ))}

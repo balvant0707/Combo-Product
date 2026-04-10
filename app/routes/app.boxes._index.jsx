@@ -702,14 +702,31 @@ export default function ManageBoxesPage() {
                 <Text as="p" tone="subdued" variant="bodySm">
                   Launch a preconfigured Shopify bundle box to increase average order value fast.
                 </Text>
-                <Button
-                  variant="primary"
-                  loading={pendingCreateRoute === "/app/boxes/new"}
+                <button
+                  type="button"
                   disabled={pendingCreateRoute !== null}
                   onClick={() => goToCreateRoute("/app/boxes/new")}
+                  style={{
+                    width: "100%",
+                    border: "1px solid #111827",
+                    borderRadius: 0,
+                    background: "#111827",
+                    color: "#ffffff",
+                    padding: "9px 12px",
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    cursor: pendingCreateRoute !== null ? "not-allowed" : "pointer",
+                    opacity: pendingCreateRoute !== null && pendingCreateRoute !== "/app/boxes/new" ? 0.65 : 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    minHeight: "40px",
+                  }}
                 >
+                  {pendingCreateRoute === "/app/boxes/new" && <Spinner accessibilityLabel="Loading" size="small" />}
                   Continue
-                </Button>
+                </button>
               </BlockStack>
             </Card>
 
@@ -722,14 +739,31 @@ export default function ManageBoxesPage() {
                 <Text as="p" tone="subdued" variant="bodySm">
                   Set up step-based bundle customization so shoppers can build a personalized box.
                 </Text>
-                <Button
-                  variant="primary"
-                  loading={pendingCreateRoute === "/app/boxes/specific-combo"}
+                <button
+                  type="button"
                   disabled={pendingCreateRoute !== null}
                   onClick={() => goToCreateRoute("/app/boxes/specific-combo")}
+                  style={{
+                    width: "100%",
+                    border: "1px solid #111827",
+                    borderRadius: 0,
+                    background: "#111827",
+                    color: "#ffffff",
+                    padding: "9px 12px",
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    cursor: pendingCreateRoute !== null ? "not-allowed" : "pointer",
+                    opacity: pendingCreateRoute !== null && pendingCreateRoute !== "/app/boxes/specific-combo" ? 0.65 : 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    minHeight: "40px",
+                  }}
                 >
+                  {pendingCreateRoute === "/app/boxes/specific-combo" && <Spinner accessibilityLabel="Loading" size="small" />}
                   Continue
-                </Button>
+                </button>
               </BlockStack>
             </Card>
           </BlockStack>

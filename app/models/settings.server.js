@@ -3,7 +3,6 @@ import db from "../db.server";
 const DEFAULTS = {
   widgetHeadingText: "Pick your favorite products and build your own box!",
   ctaButtonLabel: "BUILD YOUR OWN BOX",
-  addToCartLabel: "Add To Cart",
   buttonColor: "#2A7A4F",
   activeSlotColor: "#2A7A4F",
   showSavingsBadge: false,
@@ -35,7 +34,6 @@ export async function upsertSettings(shop, data) {
   const payload = {
     widgetHeadingText: data.widgetHeadingText ?? DEFAULTS.widgetHeadingText,
     ctaButtonLabel: data.ctaButtonLabel ?? DEFAULTS.ctaButtonLabel,
-    addToCartLabel: data.addToCartLabel ?? DEFAULTS.addToCartLabel,
     buttonColor: data.buttonColor ?? DEFAULTS.buttonColor,
     activeSlotColor: data.activeSlotColor ?? DEFAULTS.activeSlotColor,
     // Checkboxes: absent field = unchecked = false (never fall back to default)

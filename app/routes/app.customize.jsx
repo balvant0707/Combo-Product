@@ -33,7 +33,6 @@ export const action = async ({ request }) => {
   const data = {
     widgetHeadingText: formData.get("widgetHeadingText"),
     ctaButtonLabel: formData.get("ctaButtonLabel"),
-    addToCartLabel: formData.get("addToCartLabel"),
     buttonColor: formData.get("buttonColor"),
     activeSlotColor: formData.get("activeSlotColor"),
     showSavingsBadge: formData.get("showSavingsBadge"),
@@ -281,51 +280,34 @@ export default function SettingsPage() {
               <Text as="p" tone="subdued">
                 Customize the text shown to customers inside the combo builder widget.
               </Text>
-              <FormLayout>
-                <FormLayout.Group>
-                  <BlockStack gap="200">
-                    <Text as="label" variant="bodySm" fontWeight="semibold" htmlFor="widgetHeadingText">
-                      Widget Heading
-                    </Text>
-                    <input
-                      id="widgetHeadingText"
-                      type="text"
-                      name="widgetHeadingText"
-                      defaultValue={settings.widgetHeadingText || ""}
-                      placeholder="e.g. Build Your Box"
-                      style={{ width: "100%", padding: "8px 12px", border: "1px solid #c9c6be", borderRadius: 5, fontSize: 13, boxSizing: "border-box" }}
-                    />
-                  </BlockStack>
-                  <BlockStack gap="200">
-                    <Text as="label" variant="bodySm" fontWeight="semibold" htmlFor="ctaButtonLabel">
-                      CTA Button Label
-                    </Text>
-                    <input
-                      id="ctaButtonLabel"
-                      type="text"
-                      name="ctaButtonLabel"
-                      defaultValue={settings.ctaButtonLabel || ""}
-                      placeholder="e.g. Complete Your Box"
-                      style={{ width: "100%", padding: "8px 12px", border: "1px solid #c9c6be", borderRadius: 5, fontSize: 13, boxSizing: "border-box" }}
-                    />
-                  </BlockStack>
-                </FormLayout.Group>
-                <FormLayout.Group>
-                  <BlockStack gap="200">
-                    <Text as="label" variant="bodySm" fontWeight="semibold" htmlFor="addToCartLabel">
-                      Add to Cart Label
-                    </Text>
-                    <input
-                      id="addToCartLabel"
-                      type="text"
-                      name="addToCartLabel"
-                      defaultValue={settings.addToCartLabel || ""}
-                      placeholder="e.g. Add Box to Cart"
-                      style={{ width: "100%", padding: "8px 12px", border: "1px solid #c9c6be", borderRadius: 5, fontSize: 13, boxSizing: "border-box" }}
-                    />
-                  </BlockStack>
-                </FormLayout.Group>
-              </FormLayout>
+              <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
+                <BlockStack gap="200">
+                  <Text as="label" variant="bodySm" fontWeight="semibold" htmlFor="widgetHeadingText">
+                    Widget Heading
+                  </Text>
+                  <input
+                    id="widgetHeadingText"
+                    type="text"
+                    name="widgetHeadingText"
+                    defaultValue={settings.widgetHeadingText || ""}
+                    placeholder="Pick your favorite products and build your own box!"
+                    style={{ width: "100%", padding: "8px 12px", border: "1px solid #c9c6be", borderRadius: 5, fontSize: 13, boxSizing: "border-box" }}
+                  />
+                </BlockStack>
+                <BlockStack gap="200">
+                  <Text as="label" variant="bodySm" fontWeight="semibold" htmlFor="ctaButtonLabel">
+                    CTA Button Label
+                  </Text>
+                  <input
+                    id="ctaButtonLabel"
+                    type="text"
+                    name="ctaButtonLabel"
+                    defaultValue={settings.ctaButtonLabel || ""}
+                    placeholder="BUILD YOUR OWN BOX"
+                    style={{ width: "100%", padding: "8px 12px", border: "1px solid #c9c6be", borderRadius: 5, fontSize: 13, boxSizing: "border-box" }}
+                  />
+                </BlockStack>
+              </InlineGrid>
             </BlockStack>
           </Card>
 

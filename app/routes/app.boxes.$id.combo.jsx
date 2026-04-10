@@ -823,7 +823,7 @@ export default function SpecificComboBoxPage() {
                 <input
                   value={comboConfig.ctaButtonLabel ?? comboConfig.comboButtonTitle ?? ""}
                   onChange={(e) => updateComboField("ctaButtonLabel", e.target.value)}
-                  placeholder="e.g. BUILD YOUR OWN BOX"
+                  placeholder="e.g. Build your own box"
                   style={inputStyle}
                 />
               </BlockStack>
@@ -946,7 +946,7 @@ export default function SpecificComboBoxPage() {
         {/* ── Options ── */}
         <Card>
           <BlockStack gap="400">
-            <Text as="h2" variant="headingMd">Options</Text>
+            <Text as="h2" variant="headingMd">General Options</Text>
             <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
               <InlineStack gap="200" blockAlign="start">
                 <ToggleSwitch checked={!!comboConfig.isGiftBox} onChange={() => updateComboField("isGiftBox", !comboConfig.isGiftBox)} showStateText={false} />

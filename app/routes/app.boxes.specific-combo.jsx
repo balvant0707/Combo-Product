@@ -811,12 +811,65 @@ export default function CreateSpecificComboBoxPage() {
             </BlockStack>
           </Card>
 
+             <Card>
+            <BlockStack gap="400">
+              <Text as="h2" variant="headingMd">General Options</Text>
+              <FormLayout>
+                <FormLayout.Group>
+                  <InlineStack gap="200" blockAlign="start">
+                    <ToggleSwitch checked={comboConfig.isGiftBox} onChange={() => updateComboField("isGiftBox", !comboConfig.isGiftBox)} showStateText={false} />
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Gift Box Mode</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">Shows gift wrapping option to customers</Text>
+                    </BlockStack>
+                  </InlineStack>
+                  <InlineStack gap="200" blockAlign="start">
+                    <ToggleSwitch checked={comboConfig.giftMessageEnabled} onChange={() => updateComboField("giftMessageEnabled", !comboConfig.giftMessageEnabled)} disabled={!comboConfig.isGiftBox} showStateText={false} />
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Gift Message Field</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">Show text area for gift message</Text>
+                    </BlockStack>
+                  </InlineStack>
+                  <InlineStack gap="200" blockAlign="start">
+                    <ToggleSwitch checked={comboConfig.allowDuplicates} onChange={() => updateComboField("allowDuplicates", !comboConfig.allowDuplicates)} showStateText={false} />
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Allow Duplicates</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">Same product can fill multiple slots</Text>
+                    </BlockStack>
+                  </InlineStack>
+                </FormLayout.Group>
+              </FormLayout>
+
+              {/* Hidden inputs for boolean options */}
+              <input type="hidden" name="isGiftBox" value={String(comboConfig.isGiftBox)} />
+              <input type="hidden" name="giftMessageEnabled" value={String(comboConfig.giftMessageEnabled)} />
+              <input type="hidden" name="allowDuplicates" value={String(comboConfig.allowDuplicates)} />
+              <input type="hidden" name="isActive" value={String(comboConfig.isActive)} />
+            </BlockStack>
+          </Card>
+
           {/* ── Steps Editor Card ── */}
           <Card>
             <BlockStack gap="400">
               <InlineStack align="space-between" blockAlign="center">
-                <Text as="h2" variant="headingMd">Steps</Text>
-                <Badge>{comboConfig.type} total</Badge>
+                <Text as="h2" variant="headingMd">Steps ({comboConfig.type} total)</Text>
+                <InlineStack gap="200">
+                  <Button
+                    onClick={() => setStepCount(comboConfig.type - 1)}
+                    disabled={comboConfig.type <= MIN_COMBO_STEPS}
+                    size="slim"
+                  >
+                    - Remove Step
+                  </Button>
+                  <Button
+                    onClick={() => setStepCount(comboConfig.type + 1)}
+                    disabled={comboConfig.type >= MAX_COMBO_STEPS}
+                    size="slim"
+                    variant="primary"
+                  >
+                    + Add Step
+                  </Button>
+                </InlineStack>
               </InlineStack>
 
               <Tabs
@@ -1065,42 +1118,6 @@ export default function CreateSpecificComboBoxPage() {
           </Card>
 
           {/* ── Options Card ── */}
-          <Card>
-            <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">Options</Text>
-              <FormLayout>
-                <FormLayout.Group>
-                  <InlineStack gap="200" blockAlign="start">
-                    <ToggleSwitch checked={comboConfig.isGiftBox} onChange={() => updateComboField("isGiftBox", !comboConfig.isGiftBox)} showStateText={false} />
-                    <BlockStack gap="100">
-                      <Text as="p" variant="bodySm" fontWeight="semibold">Gift Box Mode</Text>
-                      <Text as="p" variant="bodySm" tone="subdued">Shows gift wrapping option to customers</Text>
-                    </BlockStack>
-                  </InlineStack>
-                  <InlineStack gap="200" blockAlign="start">
-                    <ToggleSwitch checked={comboConfig.giftMessageEnabled} onChange={() => updateComboField("giftMessageEnabled", !comboConfig.giftMessageEnabled)} disabled={!comboConfig.isGiftBox} showStateText={false} />
-                    <BlockStack gap="100">
-                      <Text as="p" variant="bodySm" fontWeight="semibold">Gift Message Field</Text>
-                      <Text as="p" variant="bodySm" tone="subdued">Show text area for gift message</Text>
-                    </BlockStack>
-                  </InlineStack>
-                  <InlineStack gap="200" blockAlign="start">
-                    <ToggleSwitch checked={comboConfig.allowDuplicates} onChange={() => updateComboField("allowDuplicates", !comboConfig.allowDuplicates)} showStateText={false} />
-                    <BlockStack gap="100">
-                      <Text as="p" variant="bodySm" fontWeight="semibold">Allow Duplicates</Text>
-                      <Text as="p" variant="bodySm" tone="subdued">Same product can fill multiple slots</Text>
-                    </BlockStack>
-                  </InlineStack>
-                </FormLayout.Group>
-              </FormLayout>
-
-              {/* Hidden inputs for boolean options */}
-              <input type="hidden" name="isGiftBox" value={String(comboConfig.isGiftBox)} />
-              <input type="hidden" name="giftMessageEnabled" value={String(comboConfig.giftMessageEnabled)} />
-              <input type="hidden" name="allowDuplicates" value={String(comboConfig.allowDuplicates)} />
-              <input type="hidden" name="isActive" value={String(comboConfig.isActive)} />
-            </BlockStack>
-          </Card>
         </BlockStack>
       </Form>
 

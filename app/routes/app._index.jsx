@@ -648,3 +648,4 @@ export default function DashboardPage() {
 export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
+

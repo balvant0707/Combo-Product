@@ -167,7 +167,7 @@ const createBoxActions = [
     key: "create-box",
     icon: "package",
     label: "Create Fixed Bundle Box",
-    sub: "Launch a preconfigured Shopify bundle box to increase average order value fast.",
+    sub: "Launch a preconfigured bundle box to increase average order value fast.",
     href: "/app/boxes/new",
   },
   {
@@ -191,7 +191,7 @@ const promotedApps = [
     title: "CartLift: Cart Drawer and Upsell",
     tag: "Upsell",
     url: "https://apps.shopify.com/cartlift-cart-drawer-upsell",
-    image: "/apps-icons/cartlift.png",
+    image: "/public/images/cartlift.png",
     description: "Grow average order value with cart drawer upsells and smart cart offers.",
   },
   {
@@ -199,7 +199,7 @@ const promotedApps = [
     title: "Fomoify Sales Popup and Proof",
     tag: "Social Proof",
     url: "https://apps.shopify.com/fomoify-sales-popup-proof",
-    image: "/apps-icons/fomoify.png",
+    image: "/public/images/fomoify.png",
     description: "Increase trust using real-time sales popups and conversion proof nudges.",
   },
 ];
@@ -303,7 +303,7 @@ export default function DashboardPage() {
 
   return (
     <Page
-      title="MixBox Dashboard | Shopify Bundle Builder & AOV Growth"
+      title="Mix-Box Dashboard | Bundle Builder & AOV Growth"
       primaryAction={{
         content: "Create Box",
         onAction: () => setShowCreateBoxModal(true),

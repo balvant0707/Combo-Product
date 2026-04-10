@@ -690,7 +690,7 @@ export default function ManageBoxesPage() {
         open={showCreateBoxModal}
         onClose={closeCreateBoxModal}
         title="Choose Bundle Type"
-        size="small"
+        size="medium"
       >
         <Modal.Section>
           <BlockStack gap="300">

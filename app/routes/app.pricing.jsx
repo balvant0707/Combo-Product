@@ -114,7 +114,7 @@ export const action = async ({ request }) => {
         path: "/app?subscribed=1",
         request,
       });
-      await createSubscription(billing, returnUrl, billingCycle);
+      await createSubscription(billing, returnUrl, billingCycle, planKey);
       return null;
     } catch (e) {
       if (e instanceof Response) throw e;

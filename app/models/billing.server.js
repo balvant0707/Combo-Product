@@ -138,14 +138,19 @@ export async function syncSubscription(billing, shop) {
 /**
  * Requests billing for the selected paid plan. Shopify handles the redirect.
  */
-export async function createSubscription(billing, returnUrl, billingCycle = "monthly") {
+export async function createSubscription(
+  billing,
+  returnUrl,
+  billingCycle = "monthly",
+  planKey = "PLUS",
+) {
   if (SKIP_BILLING) return null;
 
   if (typeof returnUrl !== "string" || !/^https?:\/\//i.test(returnUrl)) {
     throw new Error("Invalid billing return URL.");
   }
 
-  const plan = getPlanNameForBillingCycle(billingCycle);
+  const plan = getPlanNameForBillingCycle(billingCycle, String(planKey || "PLUS").toUpperCase());
   const currentSubscription = await getActiveShopifySubscription(billing);
 
   try {

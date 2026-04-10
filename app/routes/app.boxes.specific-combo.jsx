@@ -3,7 +3,7 @@ import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigat
 import {
   Badge, Banner, BlockStack, Box, Button, Card, Checkbox,
   Divider, DropZone, FormLayout, InlineGrid, InlineStack, Layout, Modal, Page,
-  Select, SettingToggle, Spinner, Text, TextField, Tabs
+  Select, Spinner, Text, TextField, Tabs
 } from "@shopify/polaris";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -12,6 +12,7 @@ import { getShopCurrencyCode } from "../models/shop.server";
 import { withEmbeddedAppParams, withEmbeddedAppToastFromRequest } from "../utils/embedded-app";
 import { validateComboConfig } from "../utils/combo-config";
 import { formatCurrencyAmount, getCurrencySymbol } from "../utils/currency";
+import { ToggleSwitch } from "../components/toggle-switch";
 
 /* ─────────────────────────────── GraphQL ─────────────────────────────── */
 const COLLECTIONS_QUERY = `#graphql
@@ -592,16 +593,10 @@ export default function CreateSpecificComboBoxPage() {
             <BlockStack gap="400">
               <InlineStack align="space-between" blockAlign="center">
                 <Text as="h2" variant="headingMd">Bundle Settings</Text>
-                <SettingToggle
-                  enabled={comboConfig.isActive}
-                  action={{
-                    content: comboConfig.isActive ? "On" : "Off",
-                    onAction: () => updateComboField("isActive", !comboConfig.isActive),
-                  }}
-                >
-                  <Text as="p" variant="bodySm" fontWeight="semibold">Active on Storefront</Text>
-                  <Text as="p" variant="bodySm" tone="subdued">Uncheck to hide from customers</Text>
-                </SettingToggle>
+                <InlineStack gap="200" blockAlign="center">
+                  <Text as="p" variant="bodySm" tone="subdued">Active on Storefront</Text>
+                  <ToggleSwitch checked={comboConfig.isActive} onChange={() => updateComboField("isActive", !comboConfig.isActive)} showStateText={false} />
+                </InlineStack>
               </InlineStack>
 
               <FormLayout>
@@ -1038,16 +1033,13 @@ export default function CreateSpecificComboBoxPage() {
                               />
                             </BlockStack>
                             <BlockStack gap="100">
-                              <SettingToggle
-                                enabled={activeStepData.optional === true}
-                                action={{
-                                  content: activeStepData.optional === true ? "On" : "Off",
-                                  onAction: () => updateComboStep(comboActiveStep, "optional", !(activeStepData.optional === true)),
-                                }}
-                              >
-                                <Text as="p" variant="bodySm" fontWeight="semibold">Optional Step</Text>
-                                <Text as="p" variant="bodySm" tone="subdued">If enabled, customers can skip this step.</Text>
-                              </SettingToggle>
+                              <InlineStack align="space-between" blockAlign="start">
+                                <BlockStack gap="100">
+                                  <Text as="p" variant="bodySm" fontWeight="semibold">Optional Step</Text>
+                                  <Text as="p" variant="bodySm" tone="subdued">If enabled, customers can skip this step.</Text>
+                                </BlockStack>
+                                <ToggleSwitch checked={activeStepData.optional === true} onChange={() => updateComboStep(comboActiveStep, "optional", !(activeStepData.optional === true))} showStateText={false} />
+                              </InlineStack>
                             </BlockStack>
                           </InlineGrid>
                         </BlockStack>
@@ -1083,37 +1075,27 @@ export default function CreateSpecificComboBoxPage() {
               <Text as="h2" variant="headingMd">Options</Text>
               <FormLayout>
                 <FormLayout.Group>
-                  <SettingToggle
-                    enabled={comboConfig.isGiftBox}
-                    action={{
-                      content: comboConfig.isGiftBox ? "On" : "Off",
-                      onAction: () => updateComboField("isGiftBox", !comboConfig.isGiftBox),
-                    }}
-                  >
-                    <Text as="p" variant="bodySm" fontWeight="semibold">Gift Box Mode</Text>
-                    <Text as="p" variant="bodySm" tone="subdued">Shows gift wrapping option to customers</Text>
-                  </SettingToggle>
-                  <SettingToggle
-                    enabled={comboConfig.giftMessageEnabled}
-                    action={{
-                      content: comboConfig.giftMessageEnabled ? "On" : "Off",
-                      onAction: () => updateComboField("giftMessageEnabled", !comboConfig.giftMessageEnabled),
-                      disabled: !comboConfig.isGiftBox,
-                    }}
-                  >
-                    <Text as="p" variant="bodySm" fontWeight="semibold">Gift Message Field</Text>
-                    <Text as="p" variant="bodySm" tone="subdued">Show text area for gift message</Text>
-                  </SettingToggle>
-                  <SettingToggle
-                    enabled={comboConfig.allowDuplicates}
-                    action={{
-                      content: comboConfig.allowDuplicates ? "On" : "Off",
-                      onAction: () => updateComboField("allowDuplicates", !comboConfig.allowDuplicates),
-                    }}
-                  >
-                    <Text as="p" variant="bodySm" fontWeight="semibold">Allow Duplicates</Text>
-                    <Text as="p" variant="bodySm" tone="subdued">Same product can fill multiple slots</Text>
-                  </SettingToggle>
+                  <InlineStack align="space-between" blockAlign="start">
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Gift Box Mode</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">Shows gift wrapping option to customers</Text>
+                    </BlockStack>
+                    <ToggleSwitch checked={comboConfig.isGiftBox} onChange={() => updateComboField("isGiftBox", !comboConfig.isGiftBox)} showStateText={false} />
+                  </InlineStack>
+                  <InlineStack align="space-between" blockAlign="start">
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Gift Message Field</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">Show text area for gift message</Text>
+                    </BlockStack>
+                    <ToggleSwitch checked={comboConfig.giftMessageEnabled} onChange={() => updateComboField("giftMessageEnabled", !comboConfig.giftMessageEnabled)} disabled={!comboConfig.isGiftBox} showStateText={false} />
+                  </InlineStack>
+                  <InlineStack align="space-between" blockAlign="start">
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Allow Duplicates</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">Same product can fill multiple slots</Text>
+                    </BlockStack>
+                    <ToggleSwitch checked={comboConfig.allowDuplicates} onChange={() => updateComboField("allowDuplicates", !comboConfig.allowDuplicates)} showStateText={false} />
+                  </InlineStack>
                 </FormLayout.Group>
               </FormLayout>
 

@@ -1350,7 +1350,7 @@ export default function AnalyticsPage() {
         </InlineGrid>
 
         {/* ── Revenue & Orders Charts ── */}
-        <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
+        <BlockStack gap="400">
           <Card>
             <BlockStack gap="300">
               <Text as="h2" variant="headingMd">Revenue Over Time</Text>
@@ -1389,7 +1389,7 @@ export default function AnalyticsPage() {
               <div style={{ height: "1px", background: "#e5e7eb", width: "100%" }} />
             </BlockStack>
           </Card>
-        </InlineGrid>
+        </BlockStack>
 
         {/* ── Top Products + Box Performance ── */}
         <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">

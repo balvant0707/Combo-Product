@@ -6,10 +6,11 @@ import { getBox, updateBox, deleteBox, getBannerImageSrc } from "../models/boxes
 import { getShopCurrencyCode } from "../models/shop.server";
 import { withEmbeddedAppParams, withEmbeddedAppToastFromRequest } from "../utils/embedded-app";
 import { getCurrencySymbol } from "../utils/currency";
+import { ToggleSwitch } from "../components/toggle-switch";
 import {
   Badge, Banner, BlockStack, Box, Button, Card, Checkbox,
   DropZone, FormLayout, InlineGrid, InlineStack, Layout, Modal, Page,
-  SettingToggle, Spinner, Text, TextField
+  Spinner, Text, TextField
 } from "@shopify/polaris";
 
 /* ─────────────────────────── GraphQL ─────────────────────────── */
@@ -566,16 +567,13 @@ export default function BoxSettingsPage() {
           <Card>
             <BlockStack gap="300">
               <Text as="h2" variant="headingMd">Status</Text>
-              <SettingToggle
-                enabled={options.isActive}
-                action={{
-                  content: options.isActive ? "On" : "Off",
-                  onAction: () => toggleOption("isActive"),
-                }}
-              >
-                <Text as="p" variant="bodySm" fontWeight="semibold">Active on Storefront</Text>
-                <Text as="p" variant="bodySm" tone="subdued">Uncheck to hide this box from customers</Text>
-              </SettingToggle>
+              <InlineStack align="space-between" blockAlign="start">
+                <BlockStack gap="100">
+                  <Text as="p" variant="bodySm" fontWeight="semibold">Active on Storefront</Text>
+                  <Text as="p" variant="bodySm" tone="subdued">Uncheck to hide this box from customers</Text>
+                </BlockStack>
+                <ToggleSwitch checked={options.isActive} onChange={() => toggleOption("isActive")} showStateText={false} />
+              </InlineStack>
             </BlockStack>
           </Card>
 
@@ -765,41 +763,31 @@ export default function BoxSettingsPage() {
               <Text as="h2" variant="headingMd">Options</Text>
               <InlineGrid columns={{ xs: 1, sm: 3 }} gap="300">
                 <Card>
-                  <SettingToggle
-                    enabled={options.isGiftBox}
-                    action={{
-                      content: options.isGiftBox ? "On" : "Off",
-                      onAction: () => toggleOption("isGiftBox"),
-                    }}
-                  >
-                    <Text as="p" variant="bodySm" fontWeight="semibold">Gift Box Mode</Text>
-                    <Text as="p" variant="bodySm" tone="subdued">Enables gift packaging option</Text>
-                  </SettingToggle>
+                  <InlineStack align="space-between" blockAlign="start">
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Gift Box Mode</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">Enables gift packaging option</Text>
+                    </BlockStack>
+                    <ToggleSwitch checked={options.isGiftBox} onChange={() => toggleOption("isGiftBox")} showStateText={false} />
+                  </InlineStack>
                 </Card>
                 <Card>
-                  <SettingToggle
-                    enabled={options.giftMessageEnabled}
-                    action={{
-                      content: options.giftMessageEnabled ? "On" : "Off",
-                      onAction: () => toggleOption("giftMessageEnabled"),
-                      disabled: !options.isGiftBox,
-                    }}
-                  >
-                    <Text as="p" variant="bodySm" fontWeight="semibold">Gift Message Field</Text>
-                    <Text as="p" variant="bodySm" tone="subdued">Show text area for gift message</Text>
-                  </SettingToggle>
+                  <InlineStack align="space-between" blockAlign="start">
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Gift Message Field</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">Show text area for gift message</Text>
+                    </BlockStack>
+                    <ToggleSwitch checked={options.giftMessageEnabled} onChange={() => toggleOption("giftMessageEnabled")} disabled={!options.isGiftBox} showStateText={false} />
+                  </InlineStack>
                 </Card>
                 <Card>
-                  <SettingToggle
-                    enabled={options.allowDuplicates}
-                    action={{
-                      content: options.allowDuplicates ? "On" : "Off",
-                      onAction: () => toggleOption("allowDuplicates"),
-                    }}
-                  >
-                    <Text as="p" variant="bodySm" fontWeight="semibold">Allow Duplicates</Text>
-                    <Text as="p" variant="bodySm" tone="subdued">Same product in multiple slots</Text>
-                  </SettingToggle>
+                  <InlineStack align="space-between" blockAlign="start">
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Allow Duplicates</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">Same product in multiple slots</Text>
+                    </BlockStack>
+                    <ToggleSwitch checked={options.allowDuplicates} onChange={() => toggleOption("allowDuplicates")} showStateText={false} />
+                  </InlineStack>
                 </Card>
               </InlineGrid>
               {(optionValidationMessage || errors.giftMessageEnabled) && (

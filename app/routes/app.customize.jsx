@@ -4,6 +4,7 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { getSettings, upsertSettings } from "../models/settings.server";
 import { showPolarisToast } from "../utils/polaris-toast";
+import { ToggleSwitch } from "../components/toggle-switch";
 import {
   Badge,
   Banner,
@@ -15,7 +16,6 @@ import {
   InlineGrid,
   InlineStack,
   Page,
-  SettingToggle,
   Spinner,
   Text,
 } from "@shopify/polaris";
@@ -338,42 +338,33 @@ export default function SettingsPage() {
               <input type="hidden" name="forceShowOos" value={String(forceShowOos)} />
               {/* Keep existing value as-is; field intentionally removed from Customize UI */}
               <input type="hidden" name="allowDuplicates" value={String(!!settings.allowDuplicates)} />
-              <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
+              <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
                 <Card>
-                  <SettingToggle
-                    enabled={showSavingsBadge}
-                    action={{
-                      content: showSavingsBadge ? "Enable" : "Disable",
-                      onAction: () => setShowSavingsBadge((v) => !v),
-                    }}
-                  >
-                    <Text as="p" variant="bodySm" fontWeight="semibold">Show Savings Badge</Text>
-                    <Text as="p" variant="bodySm" tone="subdued">Display a badge showing how much customers save vs buying individually</Text>
-                  </SettingToggle>
+                  <InlineStack align="space-between" blockAlign="start">
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Show Savings Badge</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">Display a badge showing how much customers save vs buying individually</Text>
+                    </BlockStack>
+                    <ToggleSwitch checked={showSavingsBadge} onChange={() => setShowSavingsBadge((v) => !v)} showStateText={false} />
+                  </InlineStack>
                 </Card>
                 <Card>
-                  <SettingToggle
-                    enabled={showProductPrices}
-                    action={{
-                      content: showProductPrices ? "Enable" : "Disable",
-                      onAction: () => setShowProductPrices((v) => !v),
-                    }}
-                  >
-                    <Text as="p" variant="bodySm" fontWeight="semibold">Show Product Prices</Text>
-                    <Text as="p" variant="bodySm" tone="subdued">Show individual product prices in the selection grid</Text>
-                  </SettingToggle>
+                  <InlineStack align="space-between" blockAlign="start">
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Show Product Prices</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">Show individual product prices in the selection grid</Text>
+                    </BlockStack>
+                    <ToggleSwitch checked={showProductPrices} onChange={() => setShowProductPrices((v) => !v)} showStateText={false} />
+                  </InlineStack>
                 </Card>
                 <Card>
-                  <SettingToggle
-                    enabled={forceShowOos}
-                    action={{
-                      content: forceShowOos ? "Enable" : "Disable",
-                      onAction: () => setForceShowOos((v) => !v),
-                    }}
-                  >
-                    <Text as="p" variant="bodySm" fontWeight="semibold">Show Out-of-Stock Products</Text>
-                    <Text as="p" variant="bodySm" tone="subdued">Show out-of-stock products (greyed out) in the selection grid</Text>
-                  </SettingToggle>
+                  <InlineStack align="space-between" blockAlign="start">
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Show Out-of-Stock Products</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">Show out-of-stock products (greyed out) in the selection grid</Text>
+                    </BlockStack>
+                    <ToggleSwitch checked={forceShowOos} onChange={() => setForceShowOos((v) => !v)} showStateText={false} />
+                  </InlineStack>
                 </Card>
               </InlineGrid>
             </BlockStack>

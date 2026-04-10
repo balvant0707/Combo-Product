@@ -363,41 +363,54 @@ export default function CreateBoxPage() {
                   <FormLayout.Group>
                     {/* Display Title */}
                     <BlockStack gap="100">
-                      <Text as="label" variant="bodySm" fontWeight="semibold">Heading *</Text>
+                      <label htmlFor="new-displayTitle" style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
+                        Combo Box Heading <span aria-hidden="true">*</span>
+                      </label>
                       <input
+                        id="new-displayTitle"
                         type="text"
                         name="displayTitle"
-                        placeholder="Shown to customers"
+                        placeholder="e.g. Build Your Perfect Snack Box"
+                        aria-label="Combo box heading shown to customers on the storefront"
+                        aria-required="true"
                         style={{
                           ...nativeInputStyle,
                           borderColor: errors.displayTitle ? "#e11d48" : "#e5e7eb",
                         }}
                       />
                       {errors.displayTitle && (
-                        <Text tone="critical" variant="bodySm">{errors.displayTitle}</Text>
+                        <Text tone="critical" variant="bodySm" role="alert">{errors.displayTitle}</Text>
                       )}
                     </BlockStack>
 
                     {/* Combo Product Button Title */}
                     <BlockStack gap="100">
-                      <Text as="label" variant="bodySm" fontWeight="semibold">Combo Product Button Title</Text>
+                      <label htmlFor="new-comboBtn" style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
+                        Combo Product Button Label
+                      </label>
                       <input
+                        id="new-comboBtn"
                         type="text"
                         name="comboProductButtonTitle"
                         defaultValue="BUILD YOUR OWN BOX"
                         placeholder="BUILD YOUR OWN BOX"
+                        aria-label="Button label that opens the combo product builder"
                         style={nativeInputStyle}
                       />
                     </BlockStack>
 
                     {/* Product Button Title */}
                     <BlockStack gap="100">
-                      <Text as="label" variant="bodySm" fontWeight="semibold">Product Button Title</Text>
+                      <label htmlFor="new-productBtn" style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
+                        Add to Cart Button Label
+                      </label>
                       <input
+                        id="new-productBtn"
                         type="text"
                         name="productButtonTitle"
                         defaultValue="Add To Cart"
                         placeholder="Add To Cart"
+                        aria-label="Add to cart button label shown to customers"
                         style={nativeInputStyle}
                       />
                     </BlockStack>
@@ -406,8 +419,11 @@ export default function CreateBoxPage() {
                   <FormLayout.Group>
                     {/* Item Count */}
                     <BlockStack gap="100">
-                      <Text as="label" variant="bodySm" fontWeight="semibold">Number Of Products *</Text>
+                      <label htmlFor="new-itemCount" style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
+                        Number of Products <span aria-hidden="true">*</span>
+                      </label>
                       <input
+                        id="new-itemCount"
                         type="number"
                         placeholder="e.g. 4"
                         min="1"
@@ -420,13 +436,15 @@ export default function CreateBoxPage() {
                         }}
                       />
                       {errors.itemCount && (
-                        <Text tone="critical" variant="bodySm">{errors.itemCount}</Text>
+                        <Text tone="critical" variant="bodySm" role="alert">{errors.itemCount}</Text>
                       )}
                     </BlockStack>
 
                     {/* Bundle Price */}
                     <BlockStack gap="100">
-                      <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Price ({currencySymbol}) *</Text>
+                      <span style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
+                        Bundle Price ({currencySymbol}) <span aria-hidden="true">*</span>
+                      </span>
                       <InlineStack gap="0">
                         {["manual", "dynamic"].map((mode) => (
                           <Button
@@ -601,50 +619,86 @@ export default function CreateBoxPage() {
           </BlockStack>
         </Form>
 
-        {/* Scope Picker Modal */}
-        <Modal
-          open={showScopePicker && scope !== "wholestore"}
-          onClose={() => setShowScopePicker(false)}
-          title={scope === "specific_collections" ? "Select Collections" : "Select Products"}
-          primaryAction={{
-            content: `Done${scopeItems.length > 0 ? ` (${scopeItems.length})` : ""}`,
-            onAction: () => setShowScopePicker(false),
-          }}
-          secondaryActions={[{ content: "Cancel", onAction: () => setShowScopePicker(false) }]}
-        >
-          <Modal.Section>
-            <BlockStack gap="300">
-              <TextField
-                label=""
-                placeholder={`Search ${isCollections ? "collections" : "products"}...`}
-                value={scopeSearch}
-                onChange={(v) => setScopeSearch(v)}
-                autoComplete="off"
-                autoFocus
-              />
-              <BlockStack gap="200">
+        {/* Scope Picker Modal — product & collection picker */}
+        {showScopePicker && scope !== "wholestore" && (
+          <Modal
+            open={showScopePicker}
+            onClose={() => setShowScopePicker(false)}
+            title={isCollections ? "Select Collections" : "Select Products"}
+            primaryAction={{
+              content: `Done${scopeItems.length > 0 ? ` (${scopeItems.length} selected)` : ""}`,
+              onAction: () => setShowScopePicker(false),
+            }}
+            secondaryActions={[{ content: "Cancel", onAction: () => setShowScopePicker(false) }]}
+          >
+            <Modal.Section>
+              <BlockStack gap="300">
+                <TextField
+                  label={isCollections ? "Search collections" : "Search products"}
+                  labelHidden
+                  placeholder={`Search ${isCollections ? "collections" : "products"}…`}
+                  value={scopeSearch}
+                  onChange={(v) => setScopeSearch(v)}
+                  autoComplete="off"
+                  autoFocus
+                  clearButton
+                  onClearButtonClick={() => setScopeSearch("")}
+                />
                 {filtered.length === 0 ? (
-                  <Text tone="subdued" variant="bodySm">No items found</Text>
-                ) : filtered.map((item) => (
-                  <InlineStack key={item.id} gap="300" blockAlign="center">
-                    <Checkbox
-                      label={item.title}
-                      checked={isScopeSelected(item.id)}
-                      onChange={() => toggleScopeItem(item)}
-                    />
-                    {item.imageUrl && (
-                      <img
-                        src={item.imageUrl}
-                        alt={item.title}
-                        style={{ width: 32, height: 32, objectFit: "cover", borderRadius: 4, border: "1px solid #e5e7eb", flexShrink: 0 }}
-                      />
-                    )}
-                  </InlineStack>
-                ))}
+                  <Text tone="subdued" alignment="center" variant="bodySm">
+                    No {isCollections ? "collections" : "products"} found
+                  </Text>
+                ) : (
+                  <BlockStack gap="0">
+                    {filtered.map((item) => {
+                      const selected = isScopeSelected(item.id);
+                      return (
+                        <div
+                          key={item.id}
+                          role="option"
+                          aria-selected={selected}
+                          onClick={() => toggleScopeItem(item)}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                            padding: "10px 0",
+                            borderBottom: "1px solid #f3f4f6",
+                            background: selected ? "#f0fdf4" : "#fff",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <Checkbox
+                            label={item.title}
+                            labelHidden
+                            checked={selected}
+                            onChange={() => toggleScopeItem(item)}
+                          />
+                          {item.imageUrl ? (
+                            <img
+                              src={item.imageUrl}
+                              alt={item.title}
+                              style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }}
+                            />
+                          ) : (
+                            <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, border: "1px solid #e5e7eb" }} />
+                          )}
+                          <Text
+                            variant="bodyMd"
+                            fontWeight={selected ? "semibold" : "regular"}
+                            as="span"
+                          >
+                            {item.title}
+                          </Text>
+                        </div>
+                      );
+                    })}
+                  </BlockStack>
+                )}
               </BlockStack>
-            </BlockStack>
-          </Modal.Section>
-        </Modal>
+            </Modal.Section>
+          </Modal>
+        )}
       </BlockStack>
     </Page>
   );

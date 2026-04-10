@@ -19,36 +19,88 @@ export const PLANS = {
     price:    0,
     interval: null,
     trialDays: 0,
-    boxLimit: 1,
+    orderLimit: 10,
+    boxLimit: Infinity,
     features: [
-      "1 combo box",
-      "2-step & 3-step bundles",
-      "Storefront widget",
-      "Basic analytics",
+      "10 orders/month",
+      "Basic email support",
+      "Unlimited single combo product",
+      "Unlimited specific combo product",
+      "Multi-currency support for discounts",
     ],
   },
-  PRO: {
-    key:      "PRO",
-    name:     "Pro",
-    price:    MONTHLY_PRICE,
+  BASIC: {
+    key:      "BASIC",
+    name:     "Basic",
+    price:    7.99,
     currencyCode: BILLING_CURRENCY_CODE,
     interval: "EVERY_30_DAYS",
     trialDays: TRIAL_DAYS,
+    orderLimit: 50,
     boxLimit: Infinity,
     features: [
-      "Unlimited combo boxes",
-      "2-step & 3-step bundles",
-      "Smart & manual collections",
-      "Dynamic pricing & discounts",
-      "Storefront widget",
-      "Advanced analytics",
-      "Priority support",
-      "Early access to new features",
+      "50 orders/month",
+      "Email & live support",
+      "Onboarding chat support",
+      "Unlimited single combo product",
+      "Unlimited specific combo product",
+    ],
+  },
+  ADVANCE: {
+    key:      "ADVANCE",
+    name:     "Advance",
+    price:    12.99,
+    currencyCode: BILLING_CURRENCY_CODE,
+    interval: "EVERY_30_DAYS",
+    trialDays: TRIAL_DAYS,
+    orderLimit: 100,
+    boxLimit: Infinity,
+    features: [
+      "100 orders/month",
+      "Email support",
+      "Priority & developer support",
+      "Unlimited single combo product",
+      "Unlimited specific combo product",
+    ],
+  },
+  PLUS: {
+    key:      "PLUS",
+    name:     "Plus",
+    price:    24.99,
+    currencyCode: BILLING_CURRENCY_CODE,
+    interval: "EVERY_30_DAYS",
+    trialDays: TRIAL_DAYS,
+    orderLimit: Infinity,
+    boxLimit: Infinity,
+    features: [
+      "Unlimited orders",
+      "Highest-priority support",
+      "Unlimited single combo product",
+      "Unlimited specific combo product",
+      "Guided bundles",
+    ],
+  },
+  // Legacy alias — maps old PRO subs to PLUS
+  PRO: {
+    key:      "PLUS",
+    name:     "Plus",
+    price:    24.99,
+    currencyCode: BILLING_CURRENCY_CODE,
+    interval: "EVERY_30_DAYS",
+    trialDays: TRIAL_DAYS,
+    orderLimit: Infinity,
+    boxLimit: Infinity,
+    features: [
+      "Unlimited orders",
+      "Highest-priority support",
+      "Unlimited single combo product",
+      "Unlimited specific combo product",
+      "Guided bundles",
     ],
   },
 };
 
-export const PLAN_KEYS = ["FREE", "PRO"];
+export const PLAN_KEYS = ["FREE", "BASIC", "ADVANCE", "PLUS"];
 
 function toDateOrNull(value) {
   if (!value) return null;
@@ -113,8 +165,10 @@ export function hasRemainingBillingPeriod(subscription, now = new Date()) {
   return !!currentPeriodEnd && currentPeriodEnd.getTime() > now.getTime();
 }
 
+const PAID_PLAN_KEYS = new Set(["BASIC", "ADVANCE", "PLUS", "PRO"]);
+
 export function isPaidPlanActive(subscription, now = new Date()) {
-  if (!subscription || subscription.plan !== "PRO") return false;
+  if (!subscription || !PAID_PLAN_KEYS.has(subscription.plan)) return false;
   if (subscription.status === "ACTIVE") return true;
   return subscription.status === "CANCELLED" && hasRemainingBillingPeriod(subscription, now);
 }
@@ -128,11 +182,16 @@ export function hasPlanAccess(subscription, now = new Date()) {
 }
 
 export function isCancellationScheduled(subscription, now = new Date()) {
-  return !!subscription && subscription.plan === "PRO" && subscription.status === "CANCELLED" && hasRemainingBillingPeriod(subscription, now);
+  return (
+    !!subscription &&
+    PAID_PLAN_KEYS.has(subscription.plan) &&
+    subscription.status === "CANCELLED" &&
+    hasRemainingBillingPeriod(subscription, now)
+  );
 }
 
 /** Mark subscription as CANCELLED, preserving paid access until currentPeriodEnd when available */
-export async function cancelPlan(shop, { subscriptionId = null, currentPeriodEnd = null } = {}) {
+export async function cancelPlan(shop, { subscriptionId = null, currentPeriodEnd = null, plan = "PLUS" } = {}) {
   const endsAt = toDateOrNull(currentPeriodEnd);
   if (!endsAt || endsAt.getTime() <= Date.now()) {
     await deleteSubscription(shop);
@@ -140,7 +199,7 @@ export async function cancelPlan(shop, { subscriptionId = null, currentPeriodEnd
   }
 
   return saveSubscription(shop, {
-    plan: "PRO",
+    plan: PAID_PLAN_KEYS.has(plan) ? plan : "PLUS",
     status: "CANCELLED",
     subscriptionId,
     trialEndsAt: null,
@@ -157,7 +216,13 @@ export async function hasActivePlan(shop) {
 /** Get the box limit for the shop's current plan */
 export async function getBoxLimit(shop) {
   const sub = await getSubscription(shop);
-  if (isPaidPlanActive(sub)) return PLANS.PRO.boxLimit;
-  if (isFreePlanActive(sub)) return PLANS.FREE.boxLimit;
-  return PLANS.FREE.boxLimit;
+  const plan = PLANS[sub?.plan] ?? PLANS.FREE;
+  return plan.boxLimit;
+}
+
+/** Get the order limit for the shop's current plan */
+export async function getOrderLimit(shop) {
+  const sub = await getSubscription(shop);
+  const plan = PLANS[sub?.plan] ?? PLANS.FREE;
+  return plan.orderLimit;
 }

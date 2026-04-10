@@ -3106,36 +3106,6 @@
           })(product, addBtn);
         }
 
-        // ── Hover preview: show product image in the active slot step box ──
-        ;(function (p) {
-          function getActiveNumEl() {
-            var stepEls = slotSteps.querySelectorAll('.cb-slot-step');
-            var el = stepEls[activeSlotIndex];
-            return el ? el.querySelector('.cb-slot-step-num') : null;
-          }
-          card.addEventListener('mouseenter', function () {
-            if (slots[activeSlotIndex]) return; // slot already filled — don't override
-            var numEl = getActiveNumEl();
-            if (!numEl) return;
-            numEl.innerHTML = '';
-            if (p.productImageUrl) {
-              var img = document.createElement('img');
-              img.src = p.productImageUrl;
-              img.alt = p.productTitle || '';
-              img.className = 'cb-slot-step-thumb cb-slot-step-preview';
-              numEl.appendChild(img);
-            } else {
-              numEl.textContent = (p.productTitle || '?').charAt(0).toUpperCase();
-            }
-          });
-          card.addEventListener('mouseleave', function () {
-            if (slots[activeSlotIndex]) return;
-            var numEl = getActiveNumEl();
-            if (!numEl) return;
-            numEl.innerHTML = '';
-            numEl.textContent = activeSlotIndex + 1;
-          });
-        })(product);
 
         productGrid.appendChild(card);
       });

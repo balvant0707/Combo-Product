@@ -9,7 +9,7 @@ import { getCurrencySymbol } from "../utils/currency";
 import {
   Badge, Banner, BlockStack, Box, Button, Card, Checkbox,
   FormLayout, InlineGrid, InlineStack, Layout, Modal, Page,
-  Spinner, Text
+  Spinner, Text, TextField
 } from "@shopify/polaris";
 
 /* ─────────────────────────── GraphQL ─────────────────────────── */
@@ -441,23 +441,28 @@ export default function BoxSettingsPage() {
             onClose={() => setShowScopePicker(false)}
             title={isCollections ? "Select Collections" : "Select Products"}
             primaryAction={{
-              content: `Done${scopeItems.length > 0 ? ` (${scopeItems.length})` : ""}`,
+              content: `Done${scopeItems.length > 0 ? ` (${scopeItems.length} selected)` : ""}`,
               onAction: () => setShowScopePicker(false),
             }}
             secondaryActions={[{ content: "Cancel", onAction: () => setShowScopePicker(false) }]}
           >
             <Modal.Section>
               <BlockStack gap="300">
-                <input
-                  type="text"
-                  placeholder={`Search ${isCollections ? "collections" : "products"}...`}
+                <TextField
+                  label={isCollections ? "Search collections" : "Search products"}
+                  labelHidden
+                  placeholder={`Search ${isCollections ? "collections" : "products"}…`}
                   value={scopeSearch}
-                  onChange={(e) => setScopeSearch(e.target.value)}
+                  onChange={(v) => setScopeSearch(v)}
+                  autoComplete="off"
                   autoFocus
-                  style={{ ...inputStyle, marginBottom: "8px" }}
+                  clearButton
+                  onClearButtonClick={() => setScopeSearch("")}
                 />
                 {filtered.length === 0 ? (
-                  <Text tone="subdued" alignment="center">No items found</Text>
+                  <Text tone="subdued" alignment="center" variant="bodySm">
+                    No {isCollections ? "collections" : "products"} found
+                  </Text>
                 ) : (
                   <BlockStack gap="0">
                     {filtered.map((item) => {
@@ -465,27 +470,31 @@ export default function BoxSettingsPage() {
                       return (
                         <div
                           key={item.id}
+                          role="option"
+                          aria-selected={selected}
+                          onClick={() => toggleScopeItem(item)}
                           style={{
                             display: "flex",
                             alignItems: "center",
                             gap: "12px",
                             padding: "10px 0",
                             borderBottom: "1px solid #f3f4f6",
-                            background: selected ? "#f9fafb" : "#fff",
+                            background: selected ? "#f0fdf4" : "#fff",
                             cursor: "pointer",
                           }}
-                          onClick={() => toggleScopeItem(item)}
                         >
                           <Checkbox
-                            label=""
+                            label={item.title}
+                            labelHidden
                             checked={selected}
                             onChange={() => toggleScopeItem(item)}
                           />
-                          {item.imageUrl
-                            ? <img src={item.imageUrl} alt={item.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} />
-                            : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, border: "1px solid #e5e7eb" }} />
-                          }
-                          <Text variant="bodyMd" fontWeight={selected ? "semibold" : "regular"}>{item.title}</Text>
+                          {item.imageUrl ? (
+                            <img src={item.imageUrl} alt={item.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} />
+                          ) : (
+                            <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, border: "1px solid #e5e7eb" }} />
+                          )}
+                          <Text variant="bodyMd" fontWeight={selected ? "semibold" : "regular"} as="span">{item.title}</Text>
                         </div>
                       );
                     })}

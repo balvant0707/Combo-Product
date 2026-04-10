@@ -710,7 +710,7 @@ export default function SpecificComboBoxPage() {
   return (
     <Page
       title="Edit Specific Combo Box"
-      backAction={{ content: "Boxes", url: withEmbeddedAppParams(`/app/boxes/${box.id}`, location.search) }}
+      backAction={{ content: "Boxes", url: withEmbeddedAppParams("/app/boxes", location.search) }}
       primaryAction={{
         content: isSaving ? "Saving..." : "Save & Publish",
         loading: isSaving,

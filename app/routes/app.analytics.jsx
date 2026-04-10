@@ -472,19 +472,34 @@ function ComboTypeFilter({ value = "all" }) {
 
   function handleChange(nextValue) {
     const normalized = nextValue === "simple" || nextValue === "specific" ? nextValue : "all";
+    // Build params from current search to preserve date / period params
     const params = new URLSearchParams(location.search);
     if (normalized === "all") params.delete("comboType");
     else params.set("comboType", normalized);
+    // Remove embedded-only params — withEmbeddedAppParams will re-add them
+    for (const key of ["embedded", "host", "shop", "locale"]) {
+      if (params.has(key)) params.delete(key);
+    }
     const nextQuery = params.toString();
-    navigate(withEmbeddedAppParams(`${location.pathname}${nextQuery ? `?${nextQuery}` : ""}`, location.search));
+    navigate(
+      withEmbeddedAppParams(
+        `${location.pathname}${nextQuery ? `?${nextQuery}` : ""}`,
+        location.search,
+      ),
+    );
   }
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-      <label style={{ fontSize: "12px", color: "#4b5563", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+      <label
+        htmlFor="combo-type-filter"
+        style={{ fontSize: "12px", color: "#4b5563", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}
+      >
         Box Type
       </label>
       <select
+        id="combo-type-filter"
+        aria-label="Filter analytics by combo product type"
         value={value}
         onChange={(e) => handleChange(e.target.value)}
         style={{

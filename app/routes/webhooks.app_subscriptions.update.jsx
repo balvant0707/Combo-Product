@@ -54,7 +54,8 @@ export const action = async ({ request }) => {
         subscriptionId: subscriptionId || existing?.subscriptionId || null,
         currentPeriodEnd,
       });
-      await setShopPlanStatus(shop, nextSubscription?.plan === "PRO" ? "active" : "free").catch(() => {});
+      const isPaid = nextSubscription?.plan && nextSubscription.plan !== "FREE";
+      await setShopPlanStatus(shop, isPaid ? "active" : "free").catch(() => {});
       break;
     }
 

@@ -111,6 +111,26 @@ export const loader = async ({ request }) => {
     getEmbedBlockStatus({ shop, admin, session }),
   ]);
 
+  // Order limit tracking for upgrade prompt
+  const { getSubscription } = await import("../models/subscription.server.js");
+  const { PLANS } = await import("../models/subscription.server.js");
+  const subscription = await getSubscription(shop);
+  const currentPlan = PLANS[subscription?.plan] ?? PLANS.FREE;
+  const orderLimit = currentPlan.orderLimit;
+
+  // Count orders in the current calendar month
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const { getAnalytics } = await import("../models/orders.server.js");
+  const monthlyAnalytics = await getAnalytics(
+    shop,
+    monthStart.toISOString().slice(0, 10),
+    now.toISOString().slice(0, 10),
+  );
+  const monthlyOrderCount = monthlyAnalytics.totalOrders;
+  const orderLimitReached = isFinite(orderLimit) && monthlyOrderCount >= orderLimit;
+  const orderLimitWarning = isFinite(orderLimit) && !orderLimitReached && monthlyOrderCount >= orderLimit * 0.8;
+
   return {
     activeBoxCount,
     bundlesSold,
@@ -123,6 +143,11 @@ export const loader = async ({ request }) => {
     knowledgeBaseLink,
     reviewLink,
     reportIssueLink,
+    currentPlanName: currentPlan.name,
+    orderLimit: isFinite(orderLimit) ? orderLimit : null,
+    monthlyOrderCount,
+    orderLimitReached,
+    orderLimitWarning,
     recentOrders: recentOrders.map((order) => ({
       id: order.id,
       orderId: order.orderId,
@@ -205,6 +230,11 @@ export default function DashboardPage() {
     knowledgeBaseLink,
     reviewLink,
     recentOrders,
+    currentPlanName,
+    orderLimit,
+    monthlyOrderCount,
+    orderLimitReached,
+    orderLimitWarning,
   } = useLoaderData();
 
   const location = useLocation();
@@ -272,8 +302,34 @@ export default function DashboardPage() {
       <BlockStack gap="500">
         {/* ── Banners ── */}
         {justSubscribed && (
-          <Banner tone="success" title="Pro plan activated">
-            <p>All premium features are now unlocked.</p>
+          <Banner tone="success" title="Plan activated">
+            <p>All features for your new plan are now unlocked.</p>
+          </Banner>
+        )}
+
+        {/* ── Order limit upgrade prompt ── */}
+        {orderLimitReached && (
+          <Banner
+            tone="critical"
+            title={`${currentPlanName} plan order limit reached (${monthlyOrderCount}/${orderLimit} orders this month)`}
+            action={{ content: "Upgrade plan", url: withEmbeddedAppParams("/app/pricing", location.search) }}
+          >
+            <p>
+              Your store has reached the monthly order limit for the <strong>{currentPlanName}</strong> plan.
+              New bundle orders may not be tracked until you upgrade.
+            </p>
+          </Banner>
+        )}
+        {orderLimitWarning && !orderLimitReached && (
+          <Banner
+            tone="warning"
+            title={`Approaching ${currentPlanName} plan order limit (${monthlyOrderCount}/${orderLimit} orders this month)`}
+            action={{ content: "View plans", url: withEmbeddedAppParams("/app/pricing", location.search) }}
+          >
+            <p>
+              You have used <strong>{monthlyOrderCount}</strong> of your <strong>{orderLimit}</strong> monthly
+              orders on the <strong>{currentPlanName}</strong> plan. Upgrade to avoid interruption.
+            </p>
           </Banner>
         )}
 

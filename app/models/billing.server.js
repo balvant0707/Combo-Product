@@ -15,6 +15,7 @@ import {
   YEARLY_PRICE,
   getBillingReplacementBehavior,
   getPlanNameForBillingCycle,
+  getPlanKeyFromName,
 } from "../config/billing";
 
 const SKIP_BILLING = process.env.SKIP_BILLING === "true";
@@ -101,8 +102,9 @@ export async function syncSubscription(billing, shop) {
   const existingLocal = await getSubscription(shop);
 
   if (shopifySub) {
+    const isPaidPlan = existingLocal?.plan && existingLocal.plan !== "FREE";
     const preserveScheduledCancellation =
-      existingLocal?.plan === "PRO" &&
+      isPaidPlan &&
       existingLocal?.status === "CANCELLED" &&
       existingLocal?.subscriptionId === shopifySub.id &&
       hasRemainingBillingPeriod(existingLocal);
@@ -111,8 +113,9 @@ export async function syncSubscription(billing, shop) {
       return { subscription: existingLocal, billingUnavailable };
     }
 
+    const resolvedPlan = getPlanKeyFromName(shopifySub.name) || "PLUS";
     await saveSubscription(shop, {
-      plan: "PRO",
+      plan: resolvedPlan,
       status: shopifySub.status,
       subscriptionId: shopifySub.id,
       trialEndsAt: null,
@@ -123,7 +126,8 @@ export async function syncSubscription(billing, shop) {
   }
 
   let local = await getSubscription(shop);
-  if (!billingUnavailable && !shopifySub && local?.plan === "PRO" && !hasRemainingBillingPeriod(local)) {
+  const isPaidLocal = local?.plan && local.plan !== "FREE";
+  if (!billingUnavailable && !shopifySub && isPaidLocal && !hasRemainingBillingPeriod(local)) {
     await deleteSubscription(shop);
     local = await getSubscription(shop);
   }

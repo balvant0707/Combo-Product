@@ -778,7 +778,7 @@ function LineChart({
                   strokeDasharray={i === 0 ? "none" : "4,4"}
                 />
                 {showYAxisLabels ? (
-                  <text x={ML - 8} y={y + 4} textAnchor="end" fontSize="9.5" fill="#9ca3af" fontFamily="monospace">
+                  <text x={ML - 8} y={y + 4} textAnchor="end" fontSize="9.5" fill="#9ca3af">
                     {formatY(tick)}
                   </text>
                 ) : null}
@@ -816,7 +816,7 @@ function LineChart({
           {xLabels.map((idx) => {
             if (!data[idx]) return null;
             return (
-              <text key={idx} x={xPos(idx, n)} y={H - 8} textAnchor="middle" fontSize="9.5" fill="#9ca3af" fontFamily="monospace">
+              <text key={idx} x={xPos(idx, n)} y={H - 8} textAnchor="middle" fontSize="9.5" fill="#9ca3af" >
                 {fmtShortDate(data[idx].date)}
               </text>
             );
@@ -870,23 +870,23 @@ function LineChart({
                       stroke="#374151"
                       strokeWidth="1"
                     />
-                    <text x={tx + 10} y={ty + 18} fontSize="10" fill="#ffffff" fontFamily="monospace" fontWeight="600">
+                    <text x={tx + 10} y={ty + 18} fontSize="10" fill="#ffffff"  fontWeight="600">
                       {fmtShortDate(data[hoverIdx].date)}
                     </text>
                     <circle cx={tx + 10} cy={ty + 32} r="3.5" fill={color} />
-                    <text x={tx + 18} y={ty + 36} fontSize="11" fill="#f9fafb" fontFamily="monospace">
+                    <text x={tx + 18} y={ty + 36} fontSize="11" fill="#f9fafb" >
                       {formatY(data[hoverIdx].value)}
                     </text>
-                    <text x={tx + TW - 10} y={ty + 36} textAnchor="end" fontSize="9" fill="#ffffff" fontFamily="monospace">
+                    <text x={tx + TW - 10} y={ty + 36} textAnchor="end" fontSize="9" fill="#ffffff" >
                       {periodLabel.slice(0, 16)}
                     </text>
                     {prevArr[hoverIdx] && (
                       <>
                         <line x1={tx + 8} y1={ty + 44} x2={tx + 18} y2={ty + 44} stroke="#6b7280" strokeWidth="1.5" strokeDasharray="3,2" />
-                        <text x={tx + 22} y={ty + 49} fontSize="11" fill="#ffffff" fontFamily="monospace">
+                        <text x={tx + 22} y={ty + 49} fontSize="11" fill="#ffffff" >
                           {formatY(prevArr[hoverIdx].value)}
                         </text>
-                        <text x={tx + TW - 10} y={ty + 49} textAnchor="end" fontSize="9" fill="#ffffff" fontFamily="monospace">
+                        <text x={tx + TW - 10} y={ty + 49} textAnchor="end" fontSize="9" fill="#ffffff" >
                           prev period
                         </text>
                       </>
@@ -966,7 +966,7 @@ function TopProductsChart({ data }) {
           <div key={p.productId} style={{ display: "grid", gridTemplateColumns: "28px 1fr 130px 48px", gap: "8px", alignItems: "center", marginBottom: "10px" }}>
             <div style={{ fontSize: "11px", fontWeight: "700", color: "#d1d5db", textAlign: "right" }}>{i + 1}</div>
             <div
-              style={{ fontSize: "11px", color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "monospace" }}
+              style={{ fontSize: "11px", color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}
               title={p.productId}
             >
               #{shortId}
@@ -991,7 +991,7 @@ function TopProductsChart({ data }) {
                 )}
               </div>
             </div>
-            <div style={{ fontSize: "11px", fontWeight: "700", color, textAlign: "right", fontFamily: "monospace" }}>{sharePct}%</div>
+            <div style={{ fontSize: "11px", fontWeight: "700", color, textAlign: "right"}}>{sharePct}%</div>
           </div>
         );
       })}
@@ -1026,7 +1026,7 @@ function BoxPerformanceChart({ data, currencyCode }) {
           <div key={b.boxId} style={{ marginBottom: "18px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "7px" }}>
               <div style={{ fontSize: "13px", fontWeight: "700", color: "#111827" }}>{b.boxTitle}</div>
-              <div style={{ display: "flex", gap: "10px", fontSize: "11px", color: "#000000", fontFamily: "monospace" }}>
+              <div style={{ display: "flex", gap: "10px", fontSize: "11px", color: "#000000"}}>
                 <span style={{ color: "#2A7A4F", fontWeight: "700" }}>{shareRev}% rev</span>
                 <span>{b.orders} orders</span>
               </div>
@@ -1043,7 +1043,7 @@ function BoxPerformanceChart({ data, currencyCode }) {
                 }}
               />
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#9ca3af", fontFamily: "monospace" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#9ca3af"}}>
               <span>{fmtCurrency(b.revenue, currencyCode)}</span>
               <span>{shareOrders}% of orders</span>
             </div>
@@ -1101,7 +1101,7 @@ function RecentOrdersTable({ data, currencyCode }) {
                 style={{ background: index % 2 === 0 ? "#fff" : "#fafafa" }}
               >
                 <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6" }}>
-                  <span style={{ fontFamily: "monospace", fontWeight: "700", color: "#111827", background: "#f3f4f6", padding: "2px 8px", borderRadius: "5px" }}>
+                  <span style={{fontWeight: "700", color: "#111827", background: "#f3f4f6", padding: "2px 8px", borderRadius: "5px" }}>
                     #{order.orderId}
                   </span>
                 </td>
@@ -1140,11 +1140,11 @@ function RecentOrdersTable({ data, currencyCode }) {
                   {detailsText}
                 </td>
                 <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6" }}>
-                  <span style={{ fontFamily: "monospace", fontWeight: "800", color: "#2A7A4F", background: "#f0fdf4", padding: "2px 8px", borderRadius: "5px" }}>
+                  <span style={{fontWeight: "800", color: "#2A7A4F", background: "#f0fdf4", padding: "2px 8px", borderRadius: "5px" }}>
                     {formatCurrencyAmount(Number(order.bundlePrice || 0), currencyCode)}
                   </span>
                 </td>
-                <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6", color: "#9ca3af", fontSize: "12px", fontFamily: "monospace" }}>
+                <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6", color: "#9ca3af", fontSize: "12px"}}>
                   {new Date(order.orderDate).toLocaleDateString(undefined)}
                 </td>
               </tr>
@@ -1178,10 +1178,10 @@ function ComparisonBanner({ period, prevPeriod }) {
       <AdminIcon type="calendar" size="base" />
       <div style={{ lineHeight: 1.6 }}>
         <span style={{ fontWeight: "700", color: "#1d4ed8" }}>Current: </span>
-        <span style={{ fontFamily: "monospace", color: "#374151" }}>{fmtDate(period.from)} → {fmtDate(period.to)}</span>
+        <span style={{ color: "#374151" }}>{fmtDate(period.from)} → {fmtDate(period.to)}</span>
         <span style={{ margin: "0 14px", color: "#d1d5db" }}>vs</span>
         <span style={{ fontWeight: "700", color: "#000000" }}>Previous: </span>
-        <span style={{ fontFamily: "monospace", color: "#000000" }}>{fmtDate(prevPeriod.from)} → {fmtDate(prevPeriod.to)}</span>
+        <span style={{ color: "#000000" }}>{fmtDate(prevPeriod.from)} → {fmtDate(prevPeriod.to)}</span>
       </div>
     </div>
   );

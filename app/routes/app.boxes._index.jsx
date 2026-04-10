@@ -516,10 +516,10 @@ export default function ManageBoxesPage() {
                             <InlineStack gap="150" blockAlign="center">
                               <Text variant="bodyMd" fontWeight="semibold" as="span">{box.boxName}</Text>
                               <Badge tone={box.isActive ? "success" : "enabled"}>
-                                {box.isActive ? "Live Bundle" : "Draft"}
+                                {box.isActive ? "Live" : "Draft"}
                               </Badge>
                               {box.isGiftBox && (
-                                <Badge tone="attention">Gift Bundle</Badge>
+                                <Badge tone="attention">Gift</Badge>
                               )}
                             </InlineStack>
                           </BlockStack>
@@ -630,7 +630,7 @@ export default function ManageBoxesPage() {
                             onClick={() => navigateTo(box.comboConfig ? `/app/boxes/${box.id}/combo` : `/app/boxes/${box.id}`)}
                             icon={<AdminIcon type="edit" size="small" />}
                           >
-                            Edit Bundle
+                            Edit
                           </Button>
                           {box.orderCount === 0 && (
                             <Button
@@ -639,7 +639,7 @@ export default function ManageBoxesPage() {
                               onClick={() => handleDelete(box.id, box.boxName)}
                               icon={<AdminIcon type="delete" size="small" />}
                             >
-                              Delete Bundle
+                              Delete
                             </Button>
                           )}
                         </InlineStack>

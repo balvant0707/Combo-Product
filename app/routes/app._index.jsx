@@ -306,7 +306,7 @@ export default function DashboardPage() {
 
   return (
     <Page
-      title="Shopify Bundle Builder Dashboard"
+      title="Dashboard"
       primaryAction={{
         content: "Create Bundle Box",
         onAction: () => setShowCreateBoxModal(true),

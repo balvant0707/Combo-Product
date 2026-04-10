@@ -605,10 +605,10 @@ export default function CreateSpecificComboBoxPage() {
           {/* ── Combo Configuration ── */}
           <Card>
             <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">Combo Configuration</Text>
+              <Text as="h2" variant="headingMd">General Configuration</Text>
               <div style={{ height: "1px", background: "#e5e7eb", width: "100%" }} />
 
-              <InlineGrid columns={{ xs: 1, sm: 2, md: 4 }} gap="400">
+              <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="400">
                 <BlockStack gap="100">
                   <Text as="label" variant="bodySm" fontWeight="semibold">Title *</Text>
                   <input
@@ -620,23 +620,6 @@ export default function CreateSpecificComboBoxPage() {
                   {errors.comboName && (
                     <Text as="p" variant="bodySm" tone="critical">{errors.comboName}</Text>
                   )}
-                </BlockStack>
-
-                <BlockStack gap="100">
-                  <Text as="label" variant="bodySm" fontWeight="semibold">Number of Steps</Text>
-                  <InlineStack gap="200" blockAlign="center">
-                    <Button onClick={() => setStepCount(comboConfig.type - 1)} disabled={comboConfig.type <= MIN_COMBO_STEPS} size="slim">-</Button>
-                    <input
-                      type="number"
-                      min={MIN_COMBO_STEPS}
-                      max={MAX_COMBO_STEPS}
-                      value={comboConfig.type}
-                      onChange={(e) => { const parsed = parseInt(e.target.value, 10); if (!Number.isNaN(parsed)) setStepCount(parsed); }}
-                      style={{ width: "56px", textAlign: "center", fontSize: "16px", fontWeight: "700", border: "1.5px solid #d1d5db", borderRadius: "5px", height: "32px", padding: "0 6px", boxSizing: "border-box" }}
-                    />
-                    <Button onClick={() => setStepCount(comboConfig.type + 1)} disabled={comboConfig.type >= MAX_COMBO_STEPS} size="slim">+</Button>
-                  </InlineStack>
-                  <Text as="p" variant="bodySm" tone="subdued">{comboConfig.type} selections required (2–8)</Text>
                 </BlockStack>
 
                 <BlockStack gap="100">
@@ -662,7 +645,25 @@ export default function CreateSpecificComboBoxPage() {
                 </BlockStack>
               </InlineGrid>
 
-              <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
+              <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
+
+                <BlockStack gap="100">
+                  <Text as="label" variant="bodySm" fontWeight="semibold">Number of Steps</Text>
+                  <InlineStack gap="200" blockAlign="center">
+                    <Button onClick={() => setStepCount(comboConfig.type - 1)} disabled={comboConfig.type <= MIN_COMBO_STEPS} size="slim">-</Button>
+                    <input
+                      type="number"
+                      min={MIN_COMBO_STEPS}
+                      max={MAX_COMBO_STEPS}
+                      value={comboConfig.type}
+                      onChange={(e) => { const parsed = parseInt(e.target.value, 10); if (!Number.isNaN(parsed)) setStepCount(parsed); }}
+                      style={{ width: "56px", textAlign: "center", fontSize: "16px", fontWeight: "700", border: "1.5px solid #d1d5db", borderRadius: "5px", height: "32px", padding: "0 6px", boxSizing: "border-box" }}
+                    />
+                    <Button onClick={() => setStepCount(comboConfig.type + 1)} disabled={comboConfig.type >= MAX_COMBO_STEPS} size="slim">+</Button>
+                  </InlineStack>
+                  <Text as="p" variant="bodySm" tone="subdued">{comboConfig.type} selections required (2–8)</Text>
+                </BlockStack>
+
                 <BlockStack gap="100">
                   <Text as="label" variant="bodySm" fontWeight="semibold">Image</Text>
                   <input type="file" ref={comboImageRef} name="comboImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ display: "none" }} />

@@ -764,11 +764,11 @@ export default function SpecificComboBoxPage() {
         {/* ── Combo Configuration ── */}
         <Card>
           <BlockStack gap="400">
-            <Text as="h2" variant="headingMd">Combo Configuration</Text>
+            <Text as="h2" variant="headingMd">Generak Configuration</Text>
             <Divider />
 
             {/* Row 1: Title | Steps | Description | CTA Button */}
-            <InlineGrid columns={{ xs: 1, sm: 2, md: 4 }} gap="400">
+            <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="400">
               <BlockStack gap="100">
                 <Text as="label" variant="bodySm" fontWeight="semibold">Title *</Text>
                 <input
@@ -779,6 +779,30 @@ export default function SpecificComboBoxPage() {
                 />
               </BlockStack>
 
+              <BlockStack gap="100">
+                <Text as="label" variant="bodySm" fontWeight="semibold">Description</Text>
+                <input
+                  value={comboConfig.subtitle}
+                  onChange={(e) => updateComboField("subtitle", e.target.value)}
+                  placeholder="Choose a product for each step"
+                  style={inputStyle}
+                />
+              </BlockStack>
+
+              <BlockStack gap="100">
+                <Text as="label" variant="bodySm" fontWeight="semibold">Combo Product Button Title</Text>
+                <input
+                  value={comboConfig.ctaButtonLabel ?? comboConfig.comboButtonTitle ?? ""}
+                  onChange={(e) => updateComboField("ctaButtonLabel", e.target.value)}
+                  placeholder="e.g. Build your own box"
+                  style={inputStyle}
+                />
+              </BlockStack>
+            </InlineGrid>
+
+            {/* Row 2: Image | Bundle Price */}
+            <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
+              
               <BlockStack gap="100">
                 <Text as="label" variant="bodySm" fontWeight="semibold">Number of Steps</Text>
                 <InlineStack gap="200" blockAlign="center">
@@ -808,29 +832,6 @@ export default function SpecificComboBoxPage() {
                 <Text as="p" variant="bodySm" tone="subdued">{comboConfig.type} selections required (2–8)</Text>
               </BlockStack>
 
-              <BlockStack gap="100">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Description</Text>
-                <input
-                  value={comboConfig.subtitle}
-                  onChange={(e) => updateComboField("subtitle", e.target.value)}
-                  placeholder="Choose a product for each step"
-                  style={inputStyle}
-                />
-              </BlockStack>
-
-              <BlockStack gap="100">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Combo Product Button Title</Text>
-                <input
-                  value={comboConfig.ctaButtonLabel ?? comboConfig.comboButtonTitle ?? ""}
-                  onChange={(e) => updateComboField("ctaButtonLabel", e.target.value)}
-                  placeholder="e.g. Build your own box"
-                  style={inputStyle}
-                />
-              </BlockStack>
-            </InlineGrid>
-
-            {/* Row 2: Image | Bundle Price */}
-            <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
               {/* Image uploader */}
               <BlockStack gap="100">
                 <Text as="label" variant="bodySm" fontWeight="semibold">Image</Text>

@@ -588,243 +588,226 @@ export default function CreateSpecificComboBoxPage() {
             </Banner>
           )}
 
-          {/* ── Bundle Settings Card ── */}
+          {/* ── Specific Combo Box Header ── */}
           <Card>
-            <BlockStack gap="400">
-              <InlineStack align="space-between" blockAlign="center">
-                <Text as="h2" variant="headingMd">Bundle Settings</Text>
-                <InlineStack gap="200" blockAlign="center">
-                  <ToggleSwitch checked={comboConfig.isActive} onChange={() => updateComboField("isActive", !comboConfig.isActive)} showStateText={false} />
-                  <Text as="p" variant="bodySm" tone="subdued">Active on Storefront</Text>
-                </InlineStack>
+            <InlineStack align="space-between" blockAlign="center">
+              <BlockStack gap="100">
+                <Text as="h2" variant="headingMd">Specific Combo Box</Text>
+                <Text as="p" variant="bodySm" tone="subdued">Create and configure your specific combo experience</Text>
+              </BlockStack>
+              <InlineStack gap="200" blockAlign="center">
+                <ToggleSwitch checked={comboConfig.isActive} onChange={() => updateComboField("isActive", !comboConfig.isActive)} showStateText={false} />
+                <Text as="p" variant="bodySm" tone="subdued">Active on Storefront</Text>
               </InlineStack>
-
-              <FormLayout>
-                <FormLayout.Group>
-                  <BlockStack gap="100">
-                    <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Title *</Text>
-                    <input
-                      type="text"
-                      name="comboName"
-                      placeholder="e.g. Premium Bundle"
-                      style={{ ...inputStyle, borderColor: errors.comboName ? "#e11d48" : "#e5e7eb" }}
-                    />
-                    {errors.comboName && (
-                      <Text as="p" variant="bodySm" tone="critical">{errors.comboName}</Text>
-                    )}
-                  </BlockStack>
-
-                  <BlockStack gap="100">
-                    <Text as="label" variant="bodySm" fontWeight="semibold">Description</Text>
-                    <input
-                      type="text"
-                      style={inputStyle}
-                      value={comboConfig.subtitle}
-                      onChange={(e) => updateComboField("subtitle", e.target.value)}
-                      placeholder="Choose a product for each step"
-                    />
-                  </BlockStack>
-
-                  <BlockStack gap="100">
-                    <Text as="label" variant="bodySm" fontWeight="semibold">Combo Product Button Title</Text>
-                    <input
-                      type="text"
-                      style={inputStyle}
-                      value={comboConfig.ctaButtonLabel || ""}
-                      onChange={(e) => updateComboField("ctaButtonLabel", e.target.value)}
-                      placeholder="BUILD YOUR OWN BOX"
-                    />
-                  </BlockStack>
-                </FormLayout.Group>
-              </FormLayout>
-            </BlockStack>
+            </InlineStack>
           </Card>
 
-          {/* ── Setup Row Card ── */}
-          <Card>
-            <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
-              {/* Number of steps */}
-              <BlockStack gap="100">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Number of steps</Text>
-                <InlineStack gap="200" blockAlign="center">
-                  <Button
-                    onClick={() => setStepCount(comboConfig.type - 1)}
-                    disabled={comboConfig.type <= MIN_COMBO_STEPS}
-                  >
-                    -
-                  </Button>
-                  <Text as="p" variant="bodyMd" fontWeight="bold">{comboConfig.type}</Text>
-                  <Button
-                    onClick={() => setStepCount(comboConfig.type + 1)}
-                    disabled={comboConfig.type >= MAX_COMBO_STEPS}
-                  >
-                    +
-                  </Button>
-                </InlineStack>
-                <Text as="p" variant="bodySm" tone="subdued">{comboConfig.type} selections required (2–8)</Text>
-              </BlockStack>
-
-              {/* Combo image upload */}
-              <BlockStack gap="100">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Combo Image (optional)</Text>
-                <input type="file" ref={comboImageRef} name="comboImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ display: "none" }} />
-                {comboImagePreview ? (
-                  <div style={{ position: "relative", display: "inline-block", width: "120px" }}>
-                    <img src={comboImagePreview} alt="Combo preview" style={{ width: "120px", borderRadius: "6px", border: "1px solid #e5e7eb", display: "block" }} />
-                    <button
-                      type="button"
-                      onClick={() => { setComboImagePreview(null); if (comboImageRef.current) comboImageRef.current.value = ""; }}
-                      style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(0,0,0,0.65)", border: "none", borderRadius: "50%", width: "22px", height: "22px", cursor: "pointer", color: "#fff", fontSize: "14px", lineHeight: "22px", textAlign: "center", padding: 0 }}
-                      aria-label="Remove image"
-                    >×</button>
-                  </div>
-                ) : (
-                  <DropZone accept="image/jpeg,image/png,image/webp,image/gif,image/avif" type="image" allowMultiple={false} onDrop={handleComboImageDrop}>
-                    <DropZone.FileUpload />
-                  </DropZone>
-                )}
-                <Text as="p" variant="bodySm" tone="subdued">JPG, PNG, WEBP, GIF, or AVIF – max 2MB</Text>
-                {errors.comboImage && (
-                  <Text as="p" variant="bodySm" tone="critical">{errors.comboImage}</Text>
-                )}
-              </BlockStack>
-
-              {/* Price mode */}
-              <BlockStack gap="100">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Price Mode</Text>
-                <InlineStack gap="200">
-                  {["manual", "dynamic"].map((mode) => (
-                    <Button
-                      key={mode}
-                      variant={comboConfig.bundlePriceType === mode ? "primary" : "secondary"}
-                      onClick={() => updateComboField("bundlePriceType", mode)}
-                    >
-                      {mode === "manual" ? "Manual" : "Dynamic"}
-                    </Button>
-                  ))}
-                </InlineStack>
-              </BlockStack>
-            </InlineGrid>
-          </Card>
-
-          {/* ── Pricing Card ── */}
+          {/* ── Combo Configuration ── */}
           <Card>
             <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">Pricing ({currencySymbol})</Text>
+              <Text as="h2" variant="headingMd">Combo Configuration</Text>
+              <div style={{ height: "1px", background: "#e5e7eb", width: "100%" }} />
 
-              {comboConfig.bundlePriceType === "manual" && (
+              <InlineGrid columns={{ xs: 1, sm: 2, md: 4 }} gap="400">
                 <BlockStack gap="100">
-                  <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Price ({currencySymbol}) *</Text>
+                  <Text as="label" variant="bodySm" fontWeight="semibold">Title *</Text>
                   <input
-                    type="number"
-                    placeholder="e.g. 1200"
-                    min="0"
-                    step="0.01"
+                    type="text"
+                    name="comboName"
+                    placeholder="e.g. Beauty Bundle - 10% Discount"
+                    style={{ ...inputStyle, borderColor: errors.comboName ? "#e11d48" : "#e5e7eb" }}
+                  />
+                  {errors.comboName && (
+                    <Text as="p" variant="bodySm" tone="critical">{errors.comboName}</Text>
+                  )}
+                </BlockStack>
+
+                <BlockStack gap="100">
+                  <Text as="label" variant="bodySm" fontWeight="semibold">Number of Steps</Text>
+                  <InlineStack gap="200" blockAlign="center">
+                    <Button onClick={() => setStepCount(comboConfig.type - 1)} disabled={comboConfig.type <= MIN_COMBO_STEPS} size="slim">-</Button>
+                    <input
+                      type="number"
+                      min={MIN_COMBO_STEPS}
+                      max={MAX_COMBO_STEPS}
+                      value={comboConfig.type}
+                      onChange={(e) => { const parsed = parseInt(e.target.value, 10); if (!Number.isNaN(parsed)) setStepCount(parsed); }}
+                      style={{ width: "56px", textAlign: "center", fontSize: "16px", fontWeight: "700", border: "1.5px solid #d1d5db", borderRadius: "5px", height: "32px", padding: "0 6px", boxSizing: "border-box" }}
+                    />
+                    <Button onClick={() => setStepCount(comboConfig.type + 1)} disabled={comboConfig.type >= MAX_COMBO_STEPS} size="slim">+</Button>
+                  </InlineStack>
+                  <Text as="p" variant="bodySm" tone="subdued">{comboConfig.type} selections required (2–8)</Text>
+                </BlockStack>
+
+                <BlockStack gap="100">
+                  <Text as="label" variant="bodySm" fontWeight="semibold">Description</Text>
+                  <input
+                    type="text"
                     style={inputStyle}
-                    value={comboConfig.bundlePrice || ""}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (!val || parseFloat(val) === 0) {
-                        updateComboField("bundlePriceType", "dynamic");
-                      } else {
-                        updateComboField("bundlePrice", val);
-                      }
-                    }}
+                    value={comboConfig.subtitle}
+                    onChange={(e) => updateComboField("subtitle", e.target.value)}
+                    placeholder="Build your own makeup kit"
                   />
                 </BlockStack>
-              )}
 
-              {comboConfig.bundlePriceType === "dynamic" && (
-                <Card background="bg-surface-secondary">
-                  <BlockStack gap="300">
-                    <InlineGrid columns={2} gap="300">
-                      <BlockStack gap="100">
-                        <Text as="label" variant="bodySm" fontWeight="semibold">Discount Type</Text>
-                        <select
-                          value={normalizeSpecificDiscountType(comboConfig.discountType)}
-                          onChange={(e) => {
-                            const nextType = normalizeSpecificDiscountType(e.target.value);
-                            updateComboField("discountType", nextType);
-                          }}
-                          style={{ ...inputStyle, fontWeight: "600" }}
-                        >
-                          {discountTypeOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
-                      </BlockStack>
+                <BlockStack gap="100">
+                  <Text as="label" variant="bodySm" fontWeight="semibold">Combo Product Button Title</Text>
+                  <input
+                    type="text"
+                    style={inputStyle}
+                    value={comboConfig.ctaButtonLabel || ""}
+                    onChange={(e) => updateComboField("ctaButtonLabel", e.target.value)}
+                    placeholder="BUILD YOUR OWN BOX"
+                  />
+                </BlockStack>
+              </InlineGrid>
 
-                      {comboConfig.discountType !== "none" && (
-                        <BlockStack gap="100">
-                          {comboConfig.discountType === "buy_x_get_y" ? (
-                            <InlineGrid columns={2} gap="200">
-                              <BlockStack gap="100">
-                                <Text as="label" variant="bodySm" fontWeight="semibold">Buy X quantity</Text>
-                                <input
-                                  type="number"
-                                  min="1"
-                                  step="1"
-                                  value={comboConfig.buyQuantity ?? 1}
-                                  onChange={(e) => updateComboField("buyQuantity", Math.max(1, parseInt(e.target.value || "1", 10) || 1))}
-                                  style={inputStyle}
-                                />
-                              </BlockStack>
-                              <BlockStack gap="100">
-                                <Text as="label" variant="bodySm" fontWeight="semibold">Get Y free quantity</Text>
-                                <input
-                                  type="number"
-                                  min="1"
-                                  step="1"
-                                  value={comboConfig.getQuantity ?? 1}
-                                  onChange={(e) => updateComboField("getQuantity", Math.max(1, parseInt(e.target.value || "1", 10) || 1))}
-                                  style={inputStyle}
-                                />
-                              </BlockStack>
-                            </InlineGrid>
-                          ) : (
+              <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
+                <BlockStack gap="100">
+                  <Text as="label" variant="bodySm" fontWeight="semibold">Image</Text>
+                  <input type="file" ref={comboImageRef} name="comboImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ display: "none" }} />
+                  {comboImagePreview ? (
+                    <div style={{ position: "relative", display: "inline-block", width: "120px" }}>
+                      <img src={comboImagePreview} alt="Combo preview" style={{ width: "120px", borderRadius: "6px", border: "1px solid #e5e7eb", display: "block" }} />
+                      <button
+                        type="button"
+                        onClick={() => { setComboImagePreview(null); if (comboImageRef.current) comboImageRef.current.value = ""; }}
+                        style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(0,0,0,0.65)", border: "none", borderRadius: "50%", width: "22px", height: "22px", cursor: "pointer", color: "#fff", fontSize: "14px", lineHeight: "22px", textAlign: "center", padding: 0 }}
+                        aria-label="Remove image"
+                      >×</button>
+                    </div>
+                  ) : (
+                    <DropZone accept="image/jpeg,image/png,image/webp,image/gif,image/avif" type="image" allowMultiple={false} onDrop={handleComboImageDrop}>
+                      <DropZone.FileUpload />
+                    </DropZone>
+                  )}
+                  <Text as="p" variant="bodySm" tone="subdued">JPG, PNG, WEBP, GIF, or AVIF - max 2MB</Text>
+                  {errors.comboImage && (
+                    <Text as="p" variant="bodySm" tone="critical">{errors.comboImage}</Text>
+                  )}
+                </BlockStack>
+
+                <BlockStack gap="200">
+                  <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Price ({currencySymbol}) *</Text>
+                  <InlineStack gap="0">
+                    {["manual", "dynamic"].map((mode) => (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => updateComboField("bundlePriceType", mode)}
+                        style={{
+                          flex: 1,
+                          padding: "7px 0",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          border: "1px solid #d1d5db",
+                          cursor: "pointer",
+                          background: comboConfig.bundlePriceType === mode ? "#000000" : "#f9fafb",
+                          color: comboConfig.bundlePriceType === mode ? "#ffffff" : "#374151",
+                          transition: "background 0.15s",
+                          borderRadius: mode === "manual" ? "5px 0 0 5px" : "0 5px 5px 0",
+                        }}
+                      >
+                        {mode === "manual" ? "Manual" : "Dynamic"}
+                      </button>
+                    ))}
+                  </InlineStack>
+
+                  {comboConfig.bundlePriceType === "manual" && (
+                    <input
+                      type="number"
+                      placeholder="e.g. 1200"
+                      min="0"
+                      step="0.01"
+                      style={inputStyle}
+                      value={comboConfig.bundlePrice || ""}
+                      onChange={(e) => updateComboField("bundlePrice", e.target.value)}
+                    />
+                  )}
+
+                  {comboConfig.bundlePriceType === "dynamic" && (
+                    <Card background="bg-surface-secondary">
+                      <BlockStack gap="300">
+                        <InlineGrid columns={2} gap="300">
+                          <BlockStack gap="100">
+                            <Text as="label" variant="bodySm" fontWeight="semibold">Discount Type</Text>
+                            <select
+                              value={normalizeSpecificDiscountType(comboConfig.discountType)}
+                              onChange={(e) => updateComboField("discountType", normalizeSpecificDiscountType(e.target.value))}
+                              style={{ ...inputStyle, fontWeight: "600" }}
+                            >
+                              {discountTypeOptions.map((opt) => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                              ))}
+                            </select>
+                          </BlockStack>
+
+                          {comboConfig.discountType !== "none" && (
                             <BlockStack gap="100">
-                              <Text as="label" variant="bodySm" fontWeight="semibold">
-                                {comboConfig.discountType === "percent" ? "Discount %" : `Amount (${currencySymbol})`}
-                              </Text>
-                              <input
-                                type="number"
-                                min="0"
-                                step={comboConfig.discountType === "fixed" ? "0.01" : "1"}
-                                max={comboConfig.discountType === "fixed" ? undefined : "100"}
-                                value={comboConfig.discountValue}
-                                onChange={(e) => updateComboField("discountValue", e.target.value)}
-                                style={inputStyle}
-                              />
+                              {comboConfig.discountType === "buy_x_get_y" ? (
+                                <InlineGrid columns={2} gap="200">
+                                  <BlockStack gap="100">
+                                    <Text as="label" variant="bodySm" fontWeight="semibold">Buy X quantity</Text>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      step="1"
+                                      value={comboConfig.buyQuantity ?? 1}
+                                      onChange={(e) => updateComboField("buyQuantity", Math.max(1, parseInt(e.target.value || "1", 10) || 1))}
+                                      style={inputStyle}
+                                    />
+                                  </BlockStack>
+                                  <BlockStack gap="100">
+                                    <Text as="label" variant="bodySm" fontWeight="semibold">Get Y free quantity</Text>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      step="1"
+                                      value={comboConfig.getQuantity ?? 1}
+                                      onChange={(e) => updateComboField("getQuantity", Math.max(1, parseInt(e.target.value || "1", 10) || 1))}
+                                      style={inputStyle}
+                                    />
+                                  </BlockStack>
+                                </InlineGrid>
+                              ) : (
+                                <BlockStack gap="100">
+                                  <Text as="label" variant="bodySm" fontWeight="semibold">
+                                    {comboConfig.discountType === "percent" ? "Discount %" : `Amount (${currencySymbol})`}
+                                  </Text>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step={comboConfig.discountType === "fixed" ? "0.01" : "1"}
+                                    max={comboConfig.discountType === "fixed" ? undefined : "100"}
+                                    value={comboConfig.discountValue}
+                                    onChange={(e) => updateComboField("discountValue", e.target.value)}
+                                    style={inputStyle}
+                                  />
+                                </BlockStack>
+                              )}
                             </BlockStack>
                           )}
-                          {comboConfig.discountType === "buy_x_get_y" && comboDynamicDiscountBreakdown.discountAmount > 0 && (
-                            <Text as="p" variant="bodySm" tone="success">
-                              Product discount: {formatCurrencyAmount(comboDynamicDiscountBreakdown.discountAmount, currencyCode)}
-                              {" "}({comboDynamicDiscountBreakdown.freeUnits} free)
-                              {" "} | Order discount: {formatCurrencyAmount(comboDynamicDiscountBreakdown.discountAmount, currencyCode)}
+                        </InlineGrid>
+
+                        <InlineStack align="space-between" blockAlign="center">
+                          <Text as="p" variant="bodySm" tone="subdued">
+                            {comboConfig.discountType === "percent" || comboConfig.discountType === "fixed"
+                              ? "Discount applied on total amount"
+                              : comboDynamicMrp > 0
+                                ? (comboConfig.discountType === "none" ? "Sum of step products:" : "After discount:")
+                                : "Price calculated from selected step products"}
+                          </Text>
+                          {comboDynamicMrp > 0 && (
+                            <Text as="p" variant="bodyMd" fontWeight="bold" tone="success">
+                              {formatCurrencyAmount(comboDynamicPrice, currencyCode)}
                             </Text>
                           )}
-                        </BlockStack>
-                      )}
-                    </InlineGrid>
-
-                    <InlineStack align="space-between" blockAlign="center">
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        {comboConfig.discountType === "percent" || comboConfig.discountType === "fixed"
-                          ? "Discount applied on total amount"
-                          : comboDynamicMrp > 0
-                            ? (comboConfig.discountType === "none" ? "Sum of step products:" : "After discount:")
-                            : "Price calculated from selected step products"}
-                      </Text>
-                      {comboDynamicMrp > 0 && (
-                        <Text as="p" variant="bodyMd" fontWeight="bold" tone="success">
-                          {formatCurrencyAmount(comboDynamicPrice, currencyCode)}
-                        </Text>
-                      )}
-                    </InlineStack>
-                  </BlockStack>
-                </Card>
-              )}
+                        </InlineStack>
+                      </BlockStack>
+                    </Card>
+                  )}
+                </BlockStack>
+              </InlineGrid>
             </BlockStack>
           </Card>
 
@@ -872,20 +855,39 @@ export default function CreateSpecificComboBoxPage() {
 
                               <BlockStack gap="200">
                                 <Text as="label" variant="bodySm" fontWeight="semibold">Scope</Text>
-                                <InlineStack gap="200">
-                                  <Button
-                                    variant={stepScope === "collection" ? "primary" : "secondary"}
-                                    onClick={() => updateStepScope(comboActiveStep, "collection")}
-                                  >
-                                    Specific collections
-                                  </Button>
-                                  <Button
-                                    variant={stepScope === "product" ? "primary" : "secondary"}
-                                    onClick={() => updateStepScope(comboActiveStep, "product")}
-                                  >
-                                    Specific products
-                                  </Button>
-                                </InlineStack>
+                                <InlineGrid columns={2} gap="200">
+                                  {[
+                                    { value: "collection", label: "Specific collections" },
+                                    { value: "product", label: "Specific products" },
+                                  ].map((opt) => (
+                                    <label
+                                      key={opt.value}
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "8px",
+                                        padding: "0 10px",
+                                        minHeight: "40px",
+                                        border: `1.5px solid ${stepScope === opt.value ? "#000000" : "#d1d5db"}`,
+                                        borderRadius: "6px",
+                                        background: stepScope === opt.value ? "#f9fafb" : "#fff",
+                                        cursor: "pointer",
+                                      }}
+                                    >
+                                      <input
+                                        type="radio"
+                                        name={`step-scope-${comboActiveStep}`}
+                                        value={opt.value}
+                                        checked={stepScope === opt.value}
+                                        onChange={() => updateStepScope(comboActiveStep, opt.value)}
+                                        style={{ width: "16px", height: "16px", cursor: "pointer", margin: 0, flexShrink: 0 }}
+                                      />
+                                      <Text as="span" variant="bodySm" fontWeight={stepScope === opt.value ? "semibold" : "regular"}>
+                                        {opt.label}
+                                      </Text>
+                                    </label>
+                                  ))}
+                                </InlineGrid>
 
                                 <InlineStack gap="300" blockAlign="center">
                                   {stepScope === "collection" ? (

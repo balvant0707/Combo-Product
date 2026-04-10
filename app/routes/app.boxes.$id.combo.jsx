@@ -829,8 +829,8 @@ export default function SpecificComboBoxPage() {
               </BlockStack>
             </InlineGrid>
 
-            {/* Row 2: Combo image + pricing (stacked in one row layout) */}
-            <InlineGrid columns={{ xs: 1, md: 1 }} gap="400">
+            {/* Row 2: Image | Bundle Price */}
+            <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
               {/* Image uploader */}
               <BlockStack gap="100">
                 <Text as="label" variant="bodySm" fontWeight="semibold">Image</Text>
@@ -1037,20 +1037,39 @@ export default function SpecificComboBoxPage() {
                         {/* Scope selector */}
                         <BlockStack gap="200">
                           <Text as="label" variant="bodySm" fontWeight="semibold">Scope</Text>
-                          <InlineStack gap="200">
-                            <Button
-                              variant={stepScope === "collection" ? "primary" : "secondary"}
-                              onClick={() => updateStepScope(ai, "collection")}
-                            >
-                              Specific collections
-                            </Button>
-                            <Button
-                              variant={stepScope === "product" ? "primary" : "secondary"}
-                              onClick={() => updateStepScope(ai, "product")}
-                            >
-                              Specific products
-                            </Button>
-                          </InlineStack>
+                          <InlineGrid columns={2} gap="200">
+                            {[
+                              { value: "collection", label: "Specific collections" },
+                              { value: "product", label: "Specific products" },
+                            ].map((opt) => (
+                              <label
+                                key={opt.value}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                  padding: "0 10px",
+                                  minHeight: "40px",
+                                  border: `1.5px solid ${stepScope === opt.value ? "#000000" : "#d1d5db"}`,
+                                  borderRadius: "6px",
+                                  background: stepScope === opt.value ? "#f9fafb" : "#fff",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                <input
+                                  type="radio"
+                                  name={`step-scope-${ai}`}
+                                  value={opt.value}
+                                  checked={stepScope === opt.value}
+                                  onChange={() => updateStepScope(ai, opt.value)}
+                                  style={{ width: "16px", height: "16px", cursor: "pointer", margin: 0, flexShrink: 0 }}
+                                />
+                                <span style={{ fontSize: "12px", color: "#4b5563", fontWeight: stepScope === opt.value ? "700" : "600" }}>
+                                  {opt.label}
+                                </span>
+                              </label>
+                            ))}
+                          </InlineGrid>
 
                           <InlineStack gap="300" blockAlign="center">
                             {stepScope === "collection" ? (

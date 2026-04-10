@@ -12,7 +12,6 @@ import {
   Box,
   Button,
   Card,
-  FormLayout,
   InlineGrid,
   InlineStack,
   Page,
@@ -31,8 +30,6 @@ export const action = async ({ request }) => {
   const formData = await request.formData();
 
   const data = {
-    widgetHeadingText: formData.get("widgetHeadingText"),
-    ctaButtonLabel: formData.get("ctaButtonLabel"),
     buttonColor: formData.get("buttonColor"),
     activeSlotColor: formData.get("activeSlotColor"),
     showSavingsBadge: formData.get("showSavingsBadge"),
@@ -97,8 +94,8 @@ export default function SettingsPage() {
             </Banner>
           )}
 
-          {/* Theme Customizer + Widget Width side by side */}
-          <InlineGrid columns={{ xs: 1, md: 2 }} gap="400" alignItems="start">
+          {/* Theme Customizer + Widget Width stacked (top and bottom) */}
+          <BlockStack gap="400">
 
             {/* Theme Customizer Card */}
             <Card>
@@ -236,7 +233,7 @@ export default function SettingsPage() {
               </BlockStack>
             </Card>
 
-          </InlineGrid>
+          </BlockStack>
 
           {/* Product Grid Card */}
           <Card>
@@ -270,44 +267,6 @@ export default function SettingsPage() {
                   );
                 })}
               </InlineStack>
-            </BlockStack>
-          </Card>
-
-          {/* Widget Text Labels Card */}
-          <Card>
-            <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">Widget Text Labels</Text>
-              <Text as="p" tone="subdued">
-                Customize the text shown to customers inside the combo builder widget.
-              </Text>
-              <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
-                <BlockStack gap="200">
-                  <Text as="label" variant="bodySm" fontWeight="semibold" htmlFor="widgetHeadingText">
-                    Widget Heading
-                  </Text>
-                  <input
-                    id="widgetHeadingText"
-                    type="text"
-                    name="widgetHeadingText"
-                    defaultValue={settings.widgetHeadingText || ""}
-                    placeholder="Pick your favorite products and build your own box!"
-                    style={{ width: "100%", padding: "8px 12px", border: "1px solid #c9c6be", borderRadius: 5, fontSize: 13, boxSizing: "border-box" }}
-                  />
-                </BlockStack>
-                <BlockStack gap="200">
-                  <Text as="label" variant="bodySm" fontWeight="semibold" htmlFor="ctaButtonLabel">
-                    CTA Button Label
-                  </Text>
-                  <input
-                    id="ctaButtonLabel"
-                    type="text"
-                    name="ctaButtonLabel"
-                    defaultValue={settings.ctaButtonLabel || ""}
-                    placeholder="BUILD YOUR OWN BOX"
-                    style={{ width: "100%", padding: "8px 12px", border: "1px solid #c9c6be", borderRadius: 5, fontSize: 13, boxSizing: "border-box" }}
-                  />
-                </BlockStack>
-              </InlineGrid>
             </BlockStack>
           </Card>
 

@@ -32,8 +32,14 @@ export async function upsertSettings(shop, data) {
   const existing = await db.appSettings.findUnique({ where: { shop } });
 
   const payload = {
-    widgetHeadingText: data.widgetHeadingText ?? DEFAULTS.widgetHeadingText,
-    ctaButtonLabel: data.ctaButtonLabel ?? DEFAULTS.ctaButtonLabel,
+    widgetHeadingText:
+      data.widgetHeadingText === undefined || data.widgetHeadingText === null
+        ? (existing?.widgetHeadingText ?? DEFAULTS.widgetHeadingText)
+        : data.widgetHeadingText,
+    ctaButtonLabel:
+      data.ctaButtonLabel === undefined || data.ctaButtonLabel === null
+        ? (existing?.ctaButtonLabel ?? DEFAULTS.ctaButtonLabel)
+        : data.ctaButtonLabel,
     buttonColor: data.buttonColor ?? DEFAULTS.buttonColor,
     activeSlotColor: data.activeSlotColor ?? DEFAULTS.activeSlotColor,
     // Checkboxes: absent field = unchecked = false (never fall back to default)

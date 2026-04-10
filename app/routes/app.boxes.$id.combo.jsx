@@ -829,8 +829,8 @@ export default function SpecificComboBoxPage() {
               </BlockStack>
             </InlineGrid>
 
-            {/* Row 2: Image | Bundle Price */}
-            <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
+            {/* Row 2: Combo image + pricing (stacked in one row layout) */}
+            <InlineGrid columns={{ xs: 1, md: 1 }} gap="400">
               {/* Image uploader */}
               <BlockStack gap="100">
                 <Text as="label" variant="bodySm" fontWeight="semibold">Image</Text>
@@ -1037,39 +1037,20 @@ export default function SpecificComboBoxPage() {
                         {/* Scope selector */}
                         <BlockStack gap="200">
                           <Text as="label" variant="bodySm" fontWeight="semibold">Scope</Text>
-                          <InlineGrid columns={2} gap="200">
-                            {[
-                              { value: "collection", label: "Specific collections" },
-                              { value: "product", label: "Specific products" },
-                            ].map((opt) => (
-                              <label
-                                key={opt.value}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "8px",
-                                  padding: "0 10px",
-                                  minHeight: "40px",
-                                  border: `1.5px solid ${stepScope === opt.value ? "#000000" : "#d1d5db"}`,
-                                  borderRadius: "6px",
-                                  background: stepScope === opt.value ? "#f9fafb" : "#fff",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                <input
-                                  type="radio"
-                                  name={`step-scope-${ai}`}
-                                  value={opt.value}
-                                  checked={stepScope === opt.value}
-                                  onChange={() => updateStepScope(ai, opt.value)}
-                                  style={{ width: "16px", height: "16px", cursor: "pointer", margin: 0, flexShrink: 0 }}
-                                />
-                                <span style={{ fontSize: "12px", color: "#4b5563", fontWeight: stepScope === opt.value ? "700" : "600" }}>
-                                  {opt.label}
-                                </span>
-                              </label>
-                            ))}
-                          </InlineGrid>
+                          <InlineStack gap="200">
+                            <Button
+                              variant={stepScope === "collection" ? "primary" : "secondary"}
+                              onClick={() => updateStepScope(ai, "collection")}
+                            >
+                              Specific collections
+                            </Button>
+                            <Button
+                              variant={stepScope === "product" ? "primary" : "secondary"}
+                              onClick={() => updateStepScope(ai, "product")}
+                            >
+                              Specific products
+                            </Button>
+                          </InlineStack>
 
                           <InlineStack gap="300" blockAlign="center">
                             {stepScope === "collection" ? (
@@ -1082,7 +1063,7 @@ export default function SpecificComboBoxPage() {
                                   setShowCollModal(true);
                                 }}
                               >
-                                Select Collections
+                                Select collections
                               </Button>
                             ) : (
                               <Button
@@ -1094,7 +1075,7 @@ export default function SpecificComboBoxPage() {
                                   setShowStepProdModal(true);
                                 }}
                               >
-                                Select Products
+                                Select products
                               </Button>
                             )}
                             <Text as="p" variant="bodySm" tone="subdued">
@@ -1241,70 +1222,61 @@ export default function SpecificComboBoxPage() {
         <Modal.Section>
           <BlockStack gap="300">
             <TextField
-              label=""
+              label="Search collections"
+              labelHidden
               placeholder="Search collections..."
               value={collSearch}
               onChange={setCollSearch}
               autoFocus
               autoComplete="off"
+              clearButton
+              onClearButtonClick={() => setCollSearch("")}
             />
-            <BlockStack gap="0">
-              {filteredColls.length === 0 ? (
-                <Box padding="400">
-                  <Text as="p" variant="bodySm" tone="subdued" alignment="center">
-                    No collections found{collSearch ? ` for "${collSearch}"` : ""}
-                  </Text>
-                </Box>
-              ) : filteredColls.map((coll) => {
-                const isSelected = tempColls.some((c) => c.id === coll.id);
-                const alreadyAdded = comboConfig.steps.some((step, stepIdx) =>
-                  stepIdx !== collModalStepIdx &&
-                  Array.isArray(step.collections) &&
-                  step.collections.some((selectedColl) => selectedColl.id === coll.id)
-                );
-                return (
-                  <div
-                    key={coll.id}
-                    onClick={() => setTempColls(isSelected ? tempColls.filter((c) => c.id !== coll.id) : [...tempColls, coll])}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "10px 16px",
-                      borderBottom: "1px solid #f3f4f6",
-                      borderLeft: isSelected ? "3px solid #000000" : "3px solid transparent",
-                      cursor: "pointer",
-                      background: isSelected ? "#f9fafb" : "#fff",
-                      userSelect: "none",
-                    }}
-                  >
-                    {coll.imageUrl
-                      ? <img src={coll.imageUrl} alt={coll.title} style={{ width: "38px", height: "38px", objectFit: "cover", borderRadius: "5px", border: "1px solid #e5e7eb", flexShrink: 0 }} />
-                      : <div style={{ width: "38px", height: "38px", borderRadius: "5px", background: "#f3f4f6", border: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <Text as="span" variant="bodySm" tone="subdued">Img</Text>
-                        </div>
-                    }
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Text as="p" variant="bodySm" fontWeight="semibold">{coll.title}</Text>
-                      <Text as="p" variant="bodySm" tone="subdued">{coll.handle}</Text>
+            {filteredColls.length === 0 ? (
+              <Text tone="subdued" alignment="center" variant="bodySm">
+                No collections found
+              </Text>
+            ) : (
+              <BlockStack gap="0">
+                {filteredColls.map((coll) => {
+                  const isSelected = tempColls.some((c) => c.id === coll.id);
+                  return (
+                    <div
+                      key={coll.id}
+                      role="option"
+                      aria-selected={isSelected}
+                      onClick={() => setTempColls(isSelected ? tempColls.filter((c) => c.id !== coll.id) : [...tempColls, coll])}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "10px 0",
+                        borderBottom: "1px solid #f3f4f6",
+                        background: isSelected ? "#f0fdf4" : "#fff",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          label={coll.title}
+                          labelHidden
+                          checked={isSelected}
+                          onChange={() => setTempColls(isSelected ? tempColls.filter((c) => c.id !== coll.id) : [...tempColls, coll])}
+                        />
+                      </div>
+                      {coll.imageUrl ? (
+                        <img src={coll.imageUrl} alt={coll.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", border: "1px solid #e5e7eb", flexShrink: 0 }} />
+                      ) : (
+                        <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", border: "1px solid #e5e7eb", flexShrink: 0 }} />
+                      )}
+                      <Text variant="bodyMd" fontWeight={isSelected ? "semibold" : "regular"} as="span">
+                        {coll.title}
+                      </Text>
                     </div>
-                    {alreadyAdded && <Badge tone="success">Added</Badge>}
-                    <div style={{
-                      width: "18px", height: "18px", borderRadius: "50%",
-                      border: `2px solid ${isSelected ? "#000000" : "#d1d5db"}`,
-                      background: isSelected ? "#000000" : "transparent",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
-                    }}>
-                      {isSelected && <span style={{ color: "#fff", fontSize: "10px", lineHeight: 1 }}>✓</span>}
-                    </div>
-                  </div>
-                );
-              })}
-            </BlockStack>
-            <Text as="p" variant="bodySm" tone="subdued">
-              {tempColls.length > 0 ? `${tempColls.length} selected` : "No collection selected"}
-            </Text>
+                  );
+                })}
+              </BlockStack>
+            )}
           </BlockStack>
         </Modal.Section>
       </Modal>
@@ -1331,77 +1303,70 @@ export default function SpecificComboBoxPage() {
         <Modal.Section>
           <BlockStack gap="300">
             <TextField
-              label=""
+              label="Search products"
+              labelHidden
               placeholder="Search products..."
               value={stepProdSearch}
               onChange={setStepProdSearch}
               autoFocus
               autoComplete="off"
+              clearButton
+              onClearButtonClick={() => setStepProdSearch("")}
             />
-            <BlockStack gap="0">
-              {isLoadingStepProds ? (
-                <Box padding="400">
-                  <Text as="p" variant="bodySm" tone="subdued" alignment="center">Loading products...</Text>
-                </Box>
-              ) : filteredStepProds.length === 0 ? (
-                <Box padding="400">
-                  <Text as="p" variant="bodySm" tone="subdued" alignment="center">No products found</Text>
-                </Box>
-              ) : filteredStepProds.map((product) => {
-                const isSel = tempStepProds.some((p) => p.id === product.id);
-                return (
-                  <div
-                    key={product.id}
-                    onClick={() => setTempStepProds(
-                      isSel
-                        ? tempStepProds.filter((p) => p.id !== product.id)
-                        : [...tempStepProds, { id: product.id, title: product.title, handle: product.handle, imageUrl: product.imageUrl, price: product.price }]
-                    )}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "10px 16px",
-                      borderBottom: "1px solid #f3f4f6",
-                      borderLeft: isSel ? "3px solid #000000" : "3px solid transparent",
-                      cursor: "pointer",
-                      background: isSel ? "#f9fafb" : "#fff",
-                      userSelect: "none",
-                    }}
-                  >
-                    <div style={{
-                      width: "18px", height: "18px", borderRadius: "4px",
-                      border: `2px solid ${isSel ? "#000000" : "#d1d5db"}`,
-                      background: isSel ? "#000000" : "transparent",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
-                    }}>
-                      {isSel && <span style={{ color: "#fff", fontSize: "10px", lineHeight: 1 }}>✓</span>}
-                    </div>
-                    {product.imageUrl
-                      ? <img src={product.imageUrl} alt={product.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} />
-                      : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}>
-                          <Text as="span" variant="bodySm" tone="subdued">Img</Text>
-                        </div>
-                    }
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Text as="p" variant="bodySm" fontWeight="semibold">{product.title}</Text>
-                      <Text as="p" variant="bodySm" tone="subdued">{product.handle}</Text>
-                    </div>
-                    {product.price && parseFloat(product.price) > 0 && (
-                      <Text as="p" variant="bodySm" fontWeight="semibold">
-                        {formatCurrencyAmount(parseFloat(product.price), currencyCode)}
+            {isLoadingStepProds ? (
+              <div style={{ padding: "24px 0", textAlign: "center" }}>
+                <Spinner accessibilityLabel="Loading products" size="small" />
+              </div>
+            ) : filteredStepProds.length === 0 ? (
+              <Text as="p" variant="bodySm" tone="subdued" alignment="center">No products found</Text>
+            ) : (
+              <BlockStack gap="0">
+                {filteredStepProds.map((product) => {
+                  const isSel = tempStepProds.some((p) => p.id === product.id);
+                  return (
+                    <div
+                      key={product.id}
+                      role="option"
+                      aria-selected={isSel}
+                      onClick={() => setTempStepProds(
+                        isSel
+                          ? tempStepProds.filter((p) => p.id !== product.id)
+                          : [...tempStepProds, { id: product.id, title: product.title, handle: product.handle, imageUrl: product.imageUrl, price: product.price }]
+                      )}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "10px 0",
+                        borderBottom: "1px solid #f3f4f6",
+                        background: isSel ? "#f0fdf4" : "#fff",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          label={product.title}
+                          labelHidden
+                          checked={isSel}
+                          onChange={() => setTempStepProds(
+                            isSel
+                              ? tempStepProds.filter((p) => p.id !== product.id)
+                              : [...tempStepProds, { id: product.id, title: product.title, handle: product.handle, imageUrl: product.imageUrl, price: product.price }]
+                          )}
+                        />
+                      </div>
+                      {product.imageUrl
+                        ? <img src={product.imageUrl} alt={product.title} style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "5px", flexShrink: 0, border: "1px solid #e5e7eb" }} />
+                        : <div style={{ width: "40px", height: "40px", borderRadius: "5px", background: "#f3f4f6", flexShrink: 0, border: "1px solid #e5e7eb" }} />
+                      }
+                      <Text variant="bodyMd" fontWeight={isSel ? "semibold" : "regular"} as="span">
+                        {product.title}
                       </Text>
-                    )}
-                  </div>
-                );
-              })}
-            </BlockStack>
-            <Text as="p" variant="bodySm" tone="subdued">
-              {tempStepProds.length > 0
-                ? `${tempStepProds.length} product${tempStepProds.length !== 1 ? "s" : ""} selected`
-                : "No product selected"}
-            </Text>
+                    </div>
+                  );
+                })}
+              </BlockStack>
+            )}
           </BlockStack>
         </Modal.Section>
       </Modal>

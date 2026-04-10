@@ -69,6 +69,68 @@ export async function getEmbedBlockStatus({ shop, admin, session }) {
   }
 }
 
+export async function setEmbedBlockStatus({ shop, admin, session, enabled }) {
+  try {
+    const themeId = await getMainThemeId(admin);
+    if (!themeId) {
+      return { ok: false, requiresManualSetup: true, message: "Main theme not found." };
+    }
+
+    const assetUrl = `https://${shop}/admin/api/2026-04/themes/${themeId}/assets.json?asset[key]=config/settings_data.json`;
+    const response = await fetch(assetUrl, {
+      headers: { "X-Shopify-Access-Token": session.accessToken },
+    });
+    if (!response.ok) {
+      return { ok: false, requiresManualSetup: true, message: "Unable to read theme settings." };
+    }
+
+    const data = await response.json();
+    const settingsData = JSON.parse(data.asset?.value || "{}");
+    settingsData.current = settingsData.current || {};
+    settingsData.current.blocks = settingsData.current.blocks || {};
+
+    const entries = Object.entries(settingsData.current.blocks);
+    const embedEntry = entries.find(([, block]) => block?.type?.includes("combo-embed"));
+    if (!embedEntry) {
+      // First-time activation needs theme editor because Shopify owns app embed block registration.
+      return { ok: false, requiresManualSetup: true, message: "Open Theme Editor once to add the app embed block." };
+    }
+
+    const [blockKey, embedBlock] = embedEntry;
+    const nextDisabled = !enabled;
+    if (embedBlock.disabled === nextDisabled) {
+      return { ok: true, changed: false };
+    }
+
+    settingsData.current.blocks[blockKey] = {
+      ...embedBlock,
+      disabled: nextDisabled,
+    };
+
+    const updateResp = await fetch(`https://${shop}/admin/api/2026-04/themes/${themeId}/assets.json`, {
+      method: "PUT",
+      headers: {
+        "X-Shopify-Access-Token": session.accessToken,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        asset: {
+          key: "config/settings_data.json",
+          value: JSON.stringify(settingsData),
+        },
+      }),
+    });
+
+    if (!updateResp.ok) {
+      return { ok: false, requiresManualSetup: false, message: "Unable to update theme settings." };
+    }
+
+    return { ok: true, changed: true };
+  } catch {
+    return { ok: false, requiresManualSetup: false, message: "Failed to update embed status." };
+  }
+}
+
 export async function buildEmbedBlockUrl({ shop, admin }) {
   const storeHandle = getStoreHandle(shop);
   const apiKey = process.env.SHOPIFY_API_KEY?.trim();

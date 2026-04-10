@@ -3,6 +3,7 @@ import { Outlet, useFetcher, useLoaderData, useLocation, useNavigate, useRouteEr
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider as ShopifyAppProvider } from "@shopify/shopify-app-react-router/react";
 import { AppProvider as PolarisAppProvider } from "@shopify/polaris";
+import { BlockStack, Box, Button, InlineStack, Modal, Text, TextField } from "@shopify/polaris";
 import enTranslations from "@shopify/polaris/locales/en.json";
 import "@shopify/polaris/build/esm/styles.css";
 import { authenticate } from "../shopify.server";
@@ -97,6 +98,7 @@ export default function App() {
 
   const [showReviewPopup, setShowReviewPopup] = useState(() => Boolean(reviewPrompt?.shouldShow));
   const [rating, setRating] = useState(5);
+  const [feedback, setFeedback] = useState("");
 
   useEffect(() => {
     if (reviewFetcher.state !== "idle" || !reviewFetcher.data?.ok) return;
@@ -127,6 +129,18 @@ export default function App() {
     setShowReviewPopup(false);
     reviewFetcher.submit(
       { _action: "dismiss_review_popup" },
+      { method: "post", action: reviewActionUrl },
+    );
+  }
+
+  function submitReview() {
+    if (reviewFetcher.state !== "idle") return;
+    reviewFetcher.submit(
+      {
+        _action: "submit_review_popup",
+        rating: String(rating),
+        feedback,
+      },
       { method: "post", action: reviewActionUrl },
     );
   }
@@ -184,156 +198,76 @@ export default function App() {
       </s-app-nav>
       <Outlet />
 
-      {showReviewPopup && (
-        <div
-          role="presentation"
-          onClick={dismissPopup}
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 9999,
-            background: "rgba(15, 23, 42, 0.45)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "16px",
-          }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="App review"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              width: "min(520px, 100%)",
-              background: "#ffffff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "12px",
-              boxShadow: "0 30px 70px rgba(15, 23, 42, 0.25)",
-              padding: "20px",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-              <div style={{ fontSize: "18px", fontWeight: "700", color: "#111827" }}>
-                Enjoying MixBox - Box & Bundle Builder?
-              </div>
-              <button
-                type="button"
-                onClick={dismissPopup}
-                disabled={reviewFetcher.state !== "idle"}
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  cursor: "pointer",
-                  color: "#111827",
-                  fontSize: "20px",
-                  lineHeight: 1,
-                  padding: 0,
-                }}
-                aria-label="Close review popup"
-              >
-                x
-              </button>
-            </div>
-
-            <p style={{ margin: "0 0 14px", color: "#111827", fontSize: "14px", lineHeight: 1.5 }}>
+      <Modal
+        open={showReviewPopup}
+        onClose={dismissPopup}
+        title="Enjoying MixBox - Box & Bundle Builder?"
+        size="small"
+      >
+        <Modal.Section>
+          <BlockStack gap="400">
+            <Text as="p" variant="bodyMd">
               It has been {reviewPrompt?.daysSinceInstall ?? 0} days since app install. Please share a quick review.
               Closing this popup snoozes it for {reviewPrompt?.snoozeDays ?? 1} day.
-            </p>
+            </Text>
 
-            <reviewFetcher.Form method="post" action={reviewActionUrl}>
-              <input type="hidden" name="_action" value="submit_review_popup" />
-              <input type="hidden" name="rating" value={rating} />
+            <BlockStack gap="200">
+              <Text as="p" variant="bodyMd" fontWeight="semibold">Rating</Text>
+              <InlineStack gap="200" wrap>
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setRating(value)}
+                    disabled={reviewFetcher.state !== "idle"}
+                    aria-label={`Rate ${value} star${value > 1 ? "s" : ""}`}
+                    style={{
+                      width: "44px",
+                      height: "40px",
+                      borderRadius: "8px",
+                      border: "1px solid #f59e0b",
+                      background: value <= rating ? "#fffbeb" : "#ffffff",
+                      color: "#f59e0b",
+                      fontWeight: "700",
+                      fontSize: "20px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ★
+                  </button>
+                ))}
+              </InlineStack>
+            </BlockStack>
 
-              <div style={{ marginBottom: "12px" }}>
-                <div style={{ fontSize: "12px", fontWeight: "600", color: "#111827", marginBottom: "8px" }}>Rating</div>
-                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                  {[1, 2, 3, 4, 5].map((value) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setRating(value)}
-                      disabled={reviewFetcher.state !== "idle"}
-                      aria-label={`Rate ${value} star${value > 1 ? "s" : ""}`}
-                      style={{
-                        width: "40px",
-                        height: "36px",
-                        borderRadius: "8px",
-                        border: value <= rating ? "1px solid #f59e0b" : "1px solid #d1d5db",
-                        background: value <= rating ? "#fffbeb" : "#ffffff",
-                        color: value <= rating ? "#f59e0b" : "#9ca3af",
-                        fontWeight: "700",
-                        fontSize: "18px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      ★
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <TextField
+              label="Feedback (optional)"
+              value={feedback}
+              onChange={setFeedback}
+              name="feedback"
+              maxLength={2000}
+              autoComplete="off"
+              multiline={4}
+              placeholder="What can we improve?"
+              disabled={reviewFetcher.state !== "idle"}
+            />
 
-              <div style={{ marginBottom: "14px" }}>
-                <div style={{ fontSize: "12px", fontWeight: "600", color: "#111827", marginBottom: "8px" }}>Feedback (optional)</div>
-                <textarea
-                  name="feedback"
-                  maxLength={2000}
-                  placeholder="What can we improve?"
-                  disabled={reviewFetcher.state !== "idle"}
-                  style={{
-                    width: "100%",
-                    minHeight: "88px",
-                    borderRadius: "8px",
-                    border: "1px solid #d1d5db",
-                    padding: "10px",
-                    fontSize: "13px",
-                    fontFamily: "inherit",
-                    color: "#111827",
-                    resize: "vertical",
-                  }}
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", flexWrap: "wrap" }}>
-                <button
-                  type="button"
-                  onClick={dismissPopup}
-                  disabled={reviewFetcher.state !== "idle"}
-                  style={{
-                    border: "1px solid #d1d5db",
-                    background: "#ffffff",
-                    color: "#111827",
-                    borderRadius: "8px",
-                    padding: "8px 14px",
-                    fontSize: "13px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                  }}
-                >
+            <Box>
+              <InlineStack align="end" gap="200">
+                <Button onClick={dismissPopup} disabled={reviewFetcher.state !== "idle"}>
                   Remind me tomorrow
-                </button>
-                <button
-                  type="submit"
-                  disabled={reviewFetcher.state !== "idle"}
-                  style={{
-                    border: "1px solid #000000",
-                    background: "#000000",
-                    color: "#ffffff",
-                    borderRadius: "8px",
-                    padding: "8px 14px",
-                    fontSize: "13px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                  }}
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={submitReview}
+                  loading={reviewFetcher.state !== "idle"}
                 >
-                  {reviewFetcher.state !== "idle" ? "Saving..." : "Submit review"}
-                </button>
-              </div>
-            </reviewFetcher.Form>
-          </div>
-        </div>
-      )}
+                  Submit review
+                </Button>
+              </InlineStack>
+            </Box>
+          </BlockStack>
+        </Modal.Section>
+      </Modal>
       </PolarisAppProvider>
     </ShopifyAppProvider>
   );

@@ -707,7 +707,8 @@ export default function ManageBoxesPage() {
                   disabled={pendingCreateRoute !== null}
                   onClick={() => goToCreateRoute("/app/boxes/new")}
                   style={{
-                    width: "100%",
+                    width: "160px",
+                    maxWidth: "100%",
                     border: "1px solid #111827",
                     borderRadius: 0,
                     background: "#111827",
@@ -725,7 +726,7 @@ export default function ManageBoxesPage() {
                   }}
                 >
                   {pendingCreateRoute === "/app/boxes/new" && <Spinner accessibilityLabel="Loading" size="small" />}
-                  Continue
+                  Create Box
                 </button>
               </BlockStack>
             </Card>
@@ -744,7 +745,8 @@ export default function ManageBoxesPage() {
                   disabled={pendingCreateRoute !== null}
                   onClick={() => goToCreateRoute("/app/boxes/specific-combo")}
                   style={{
-                    width: "100%",
+                    width: "160px",
+                    maxWidth: "100%",
                     border: "1px solid #111827",
                     borderRadius: 0,
                     background: "#111827",
@@ -762,7 +764,7 @@ export default function ManageBoxesPage() {
                   }}
                 >
                   {pendingCreateRoute === "/app/boxes/specific-combo" && <Spinner accessibilityLabel="Loading" size="small" />}
-                  Continue
+                  Create Box
                 </button>
               </BlockStack>
             </Card>

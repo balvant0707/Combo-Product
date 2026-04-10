@@ -571,7 +571,8 @@ export default function DashboardPage() {
                     disabled={pendingCreateAction !== null}
                     onClick={() => handleCreateBoxAction(action)}
                     style={{
-                      width: "100%",
+                      width: "160px",
+                      maxWidth: "100%",
                       border: "1px solid #111827",
                       borderRadius: 0,
                       background: "#111827",
@@ -589,7 +590,7 @@ export default function DashboardPage() {
                     }}
                   >
                     {pendingCreateAction === action.key && <Spinner accessibilityLabel="Loading" size="small" />}
-                    Continue
+                    Create Box
                   </button>
                 </BlockStack>
               </Card>

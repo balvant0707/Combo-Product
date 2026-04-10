@@ -1105,7 +1105,7 @@ export default function CreateSpecificComboBoxPage() {
         secondaryActions={[
           { content: "Cancel", onAction: () => setShowCollModal(false) },
         ]}
-        size="large"
+        size="medium"
       >
         <Modal.Section>
           <BlockStack gap="300">
@@ -1185,7 +1185,7 @@ export default function CreateSpecificComboBoxPage() {
         secondaryActions={[
           { content: "Cancel", onAction: () => setShowStepProdModal(false) },
         ]}
-        size="large"
+        size="medium"
       >
         <Modal.Section>
           <BlockStack gap="300">

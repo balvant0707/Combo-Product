@@ -4,7 +4,9 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { AdminIcon } from "../components/admin-icons";
 import { getAnalytics } from "../models/orders.server";
+import { getShopCurrencyCode } from "../models/shop.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
+import { formatCurrencyAmount } from "../utils/currency";
 import {
   BlockStack,
   Card,
@@ -35,9 +37,13 @@ export const loader = async ({ request }) => {
     toDate = toD.toISOString().slice(0, 10);
   }
 
-  const analytics = await getAnalytics(session.shop, fromDate, toDate, { comboTypeFilter: comboType });
+  const [analytics, currencyCode] = await Promise.all([
+    getAnalytics(session.shop, fromDate, toDate, { comboTypeFilter: comboType }),
+    getShopCurrencyCode(session.shop),
+  ]);
   return {
     analytics,
+    currencyCode,
     period: customFrom ? "custom" : period,
     fromDate,
     toDate,
@@ -46,20 +52,31 @@ export const loader = async ({ request }) => {
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
-function fmtCurrency(val) {
-  if (val >= 100000) return `₹${(val / 100000).toFixed(1)}L`;
-  if (val >= 1000) return `₹${(val / 1000).toFixed(1)}k`;
-  return `₹${Math.round(val)}`;
+function fmtCurrency(val, currencyCode) {
+  const numericValue = Number(val) || 0;
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: currencyCode || "USD",
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(numericValue);
+  } catch {
+    return formatCurrencyAmount(numericValue, currencyCode || "USD", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+  }
 }
 
 function fmtShortDate(isoStr) {
   if (!isoStr) return "";
   const d = new Date(isoStr + "T00:00:00");
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+  return d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
 }
 
 function fmtDate(isoStr) {
-  return new Date(isoStr).toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+  return new Date(isoStr).toLocaleDateString(undefined, { day: "2-digit", month: "short" });
 }
 
 // ─── Date Range Picker ────────────────────────────────────────────────────────
@@ -983,7 +1000,7 @@ function TopProductsChart({ data }) {
 }
 
 // ─── Box Performance Chart ────────────────────────────────────────────────────
-function BoxPerformanceChart({ data }) {
+function BoxPerformanceChart({ data, currencyCode }) {
   if (!data || data.length === 0) {
     return (
       <div style={{ padding: "40px 0", textAlign: "center", color: "#9ca3af", fontSize: "13px" }}>
@@ -1027,7 +1044,7 @@ function BoxPerformanceChart({ data }) {
               />
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#9ca3af", fontFamily: "monospace" }}>
-              <span>{fmtCurrency(b.revenue)}</span>
+              <span>{fmtCurrency(b.revenue, currencyCode)}</span>
               <span>{shareOrders}% of orders</span>
             </div>
           </div>
@@ -1037,7 +1054,7 @@ function BoxPerformanceChart({ data }) {
   );
 }
 
-function RecentOrdersTable({ data }) {
+function RecentOrdersTable({ data, currencyCode }) {
   if (!data || data.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "40px 0", color: "#9ca3af", fontSize: "13px" }}>
@@ -1124,11 +1141,11 @@ function RecentOrdersTable({ data }) {
                 </td>
                 <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6" }}>
                   <span style={{ fontFamily: "monospace", fontWeight: "800", color: "#2A7A4F", background: "#f0fdf4", padding: "2px 8px", borderRadius: "5px" }}>
-                    {`₹${Number(order.bundlePrice || 0).toLocaleString("en-IN")}`}
+                    {formatCurrencyAmount(Number(order.bundlePrice || 0), currencyCode)}
                   </span>
                 </td>
                 <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6", color: "#9ca3af", fontSize: "12px", fontFamily: "monospace" }}>
-                  {new Date(order.orderDate).toLocaleDateString("en-IN")}
+                  {new Date(order.orderDate).toLocaleDateString(undefined)}
                 </td>
               </tr>
             );
@@ -1245,7 +1262,7 @@ function SyncOrdersButton() {
 
 // ─── Main Analytics Page ──────────────────────────────────────────────────────
 export default function AnalyticsPage() {
-  const { analytics, period, fromDate, toDate, comboType } = useLoaderData();
+  const { analytics, period, fromDate, toDate, comboType, currencyCode } = useLoaderData();
   const {
     totalOrders,
     totalRevenue,
@@ -1305,8 +1322,8 @@ export default function AnalyticsPage() {
         <InlineGrid columns={{ xs: 2, md: 4 }} gap="400">
           <KpiCard
             label="Bundle Revenue"
-            value={`₹${totalRevenue.toLocaleString("en-IN")}`}
-            subLabel={prevTotalRevenue ? `prev ₹${(prevTotalRevenue || 0).toLocaleString("en-IN")}` : null}
+            value={formatCurrencyAmount(totalRevenue, currencyCode)}
+            subLabel={prevTotalRevenue ? `prev ${formatCurrencyAmount(prevTotalRevenue || 0, currencyCode)}` : null}
             change={revenueChange}
             accentColor="#3b82f6"
             iconType="money"
@@ -1321,7 +1338,7 @@ export default function AnalyticsPage() {
           />
           <KpiCard
             label="Avg Bundle Value"
-            value={`₹${avgBundleValue.toLocaleString("en-IN")}`}
+            value={formatCurrencyAmount(avgBundleValue, currencyCode)}
             subLabel={null}
             change={avgChange}
             accentColor="#8b5cf6"
@@ -1346,13 +1363,13 @@ export default function AnalyticsPage() {
               <div style={{ height: "1px", background: "#e5e7eb", width: "100%" }} />
               <LineChart
                 title="Total Bundle Revenue"
-                totalValue={`₹${totalRevenue.toLocaleString("en-IN")}`}
+                totalValue={formatCurrencyAmount(totalRevenue, currencyCode)}
                 change={revenueChange}
                 data={revData}
                 prevData={prevRevData}
                 periodLabel={periodLabel}
                 prevPeriodLabel={prevPeriodLabel}
-                formatY={fmtCurrency}
+                formatY={(value) => fmtCurrency(value, currencyCode)}
                 color="#60a5fa"
                 color2="#818cf8"
               />
@@ -1391,7 +1408,7 @@ export default function AnalyticsPage() {
           <Card>
             <BlockStack gap="300">
               <Text as="h2" variant="headingMd">Box Performance</Text>
-              <BoxPerformanceChart data={boxPerformance} />
+              <BoxPerformanceChart data={boxPerformance} currencyCode={currencyCode} />
             </BlockStack>
           </Card>
         </InlineGrid>
@@ -1400,7 +1417,7 @@ export default function AnalyticsPage() {
         <Card>
           <BlockStack gap="300">
             <Text as="h2" variant="headingMd">Recent Orders</Text>
-            <RecentOrdersTable data={recentOrders} />
+            <RecentOrdersTable data={recentOrders} currencyCode={currencyCode} />
           </BlockStack>
         </Card>
       </BlockStack>
@@ -1411,4 +1428,8 @@ export default function AnalyticsPage() {
 export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
+
+
+
+
 

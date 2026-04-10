@@ -9,8 +9,23 @@
     return 'cb_' + Math.random().toString(36).slice(2, 10) + '_' + Date.now();
   }
 
-  function formatPrice(amount, currencySymbol) {
-    return currencySymbol + Number(amount).toLocaleString('en-IN', {
+  function formatPrice(amount, currencySymbol, currencyCode) {
+    var numericAmount = Number(amount) || 0;
+    var code = String(currencyCode || "").trim().toUpperCase();
+    if (/^[A-Z]{3}$/.test(code)) {
+      try {
+        return new Intl.NumberFormat(undefined, {
+          style: "currency",
+          currency: code,
+          currencyDisplay: "narrowSymbol",
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(numericAmount);
+      } catch (_err) {}
+    }
+
+    var symbol = currencySymbol || "$";
+    return symbol + numericAmount.toLocaleString(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
@@ -167,13 +182,13 @@
     if (!totalEl) return;
     totalEl.innerHTML =
       'Total <span class="cb-sticky-price">' +
-      formatPrice(amount || 0, currencySymbol) +
+      formatPrice(amount || 0, currencySymbol, null) +
       '/-</span>';
   }
 
   function setBoxCardPrice(box, amount, currencySymbol) {
     if (!box || !box._priceTextEl) return;
-    box._priceTextEl.textContent = formatPrice(amount || 0, currencySymbol);
+    box._priceTextEl.textContent = formatPrice(amount || 0, currencySymbol, null);
   }
 
   function setWizardStep2Preview(ctx, slots) {
@@ -822,7 +837,8 @@
     if (!root) return;
 
     var shop = root.dataset.shop || config.shop;
-    var currencySymbol = root.dataset.currencySymbol || config.currencySymbol || '\u20B9';
+    var currencySymbol = root.dataset.currencySymbol || config.currencySymbol || "$";
+    var currencyCode = root.dataset.currency || config.currency || "USD";
     var layout = root.dataset.layout || config.layout || 'grid';
     var layoutMode = root.dataset.layoutMode || config.layoutMode || 'grid';
     var enableStickyCart = parseBooleanSetting(
@@ -953,7 +969,7 @@
       var step2Heading = root.dataset.step2Heading || config.step2Heading || 'Step 2: Select your products';
       var step3Heading = root.dataset.step3Heading || config.step3Heading || 'Step 3: Complete your order';
       var step3Buttons = root.dataset.step3Buttons || config.step3Buttons || 'both';
-      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, layout: layout, layoutMode: layoutMode, enableStickyCart: enableStickyCart, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root, step1Label: step1Label, step2Label: step2Label, step3Label: step3Label, cartBtnLabel: cartBtnLabel, checkoutBtnLabel: checkoutBtnLabel, step1Heading: step1Heading, step2Heading: step2Heading, step3Heading: step3Heading, step3Buttons: step3Buttons });
+      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, currencyCode: currencyCode, layout: layout, layoutMode: layoutMode, enableStickyCart: enableStickyCart, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root, step1Label: step1Label, step2Label: step2Label, step3Label: step3Label, cartBtnLabel: cartBtnLabel, checkoutBtnLabel: checkoutBtnLabel, step1Heading: step1Heading, step2Heading: step2Heading, step3Heading: step3Heading, step3Buttons: step3Buttons });
     });
   }
 
@@ -963,7 +979,8 @@
       mountId: el.id,
       shop: shop,
       apiBase: el.dataset.apiBase || DEFAULT_API_BASE,
-      currencySymbol: el.dataset.currencySymbol || (window.Shopify && window.Shopify.currency && window.Shopify.currency.symbol) || '\u20B9',
+      currencySymbol: el.dataset.currencySymbol || (window.Shopify && window.Shopify.currency && window.Shopify.currency.symbol) || "$",
+      currency: el.dataset.currency || (window.Shopify && window.Shopify.currency && window.Shopify.currency.active) || "USD",
       layout: el.dataset.layout || 'grid',
       layoutMode: el.dataset.layoutMode || 'grid',
       heading: el.dataset.heading || 'Build Your Own Box!',
@@ -1319,7 +1336,7 @@
     var priceText = document.createElement('div');
     priceText.className = 'cb-box-price-text';
     var _initPrice = isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0);
-    priceText.textContent = formatPrice(_initPrice, ctx.currencySymbol);
+    priceText.textContent = formatPrice(_initPrice, ctx.currencySymbol, ctx.currencyCode);
     box._priceTextEl = priceText;
     body.appendChild(priceText);
 
@@ -1744,14 +1761,14 @@
           var dynSavings = dynamicBreakdown.discountAmount;
           if (hasSelected && dynSavings > 0.005) {
             var dynSavingsBadge = (ctx.settings && ctx.settings.showSavingsBadge)
-              ? '<span class="cb-sticky-save">Save ' + formatPrice(dynSavings, ctx.currencySymbol) + '</span>'
+              ? '<span class="cb-sticky-save">Save ' + formatPrice(dynSavings, ctx.currencySymbol, ctx.currencyCode) + '</span>'
               : '';
             var dynFreeUnitsBadge =
               box && box.comboConfig && box.comboConfig.discountType === 'buy_x_get_y' && dynamicBreakdown.freeUnits > 0
                 ? '<span class="cb-sticky-save">Free items: ' + dynamicBreakdown.freeUnits + '</span>'
                 : '';
             _stickySavingsEl.innerHTML =
-              '<span class="cb-sticky-mrp">MRP: ' + formatPrice(totalMrp, ctx.currencySymbol) + '</span>' +
+              '<span class="cb-sticky-mrp">MRP: ' + formatPrice(totalMrp, ctx.currencySymbol, ctx.currencyCode) + '</span>' +
               dynSavingsBadge +
               dynFreeUnitsBadge;
             _stickySavingsEl.style.display = 'flex';
@@ -1762,10 +1779,10 @@
           var bundlePrice = parseFloat(box.bundlePrice);
           var savingsAmt = totalMrp - bundlePrice;
           var savingsBadge = (ctx.settings && ctx.settings.showSavingsBadge && savingsAmt > 0)
-            ? '<span class="cb-sticky-save">Save ' + formatPrice(savingsAmt, ctx.currencySymbol) + '</span>'
+            ? '<span class="cb-sticky-save">Save ' + formatPrice(savingsAmt, ctx.currencySymbol, ctx.currencyCode) + '</span>'
             : '';
           _stickySavingsEl.innerHTML =
-            '<span class="cb-sticky-mrp">MRP: ' + formatPrice(totalMrp, ctx.currencySymbol) + '</span>' +
+            '<span class="cb-sticky-mrp">MRP: ' + formatPrice(totalMrp, ctx.currencySymbol, ctx.currencyCode) + '</span>' +
             savingsBadge;
           _stickySavingsEl.style.display = 'flex';
         } else {
@@ -1955,12 +1972,12 @@
           if (sp && sp > 0) {
             var pEl = document.createElement('span');
             pEl.className = 'cb-product-price';
-            pEl.textContent = formatPrice(sp, ctx.currencySymbol);
+            pEl.textContent = formatPrice(sp, ctx.currencySymbol, ctx.currencyCode);
             priceWrap.appendChild(pEl);
             if (cp && cp > sp) {
               var cEl = document.createElement('span');
               cEl.className = 'cb-product-compare-price';
-              cEl.textContent = formatPrice(cp, ctx.currencySymbol);
+              cEl.textContent = formatPrice(cp, ctx.currencySymbol, ctx.currencyCode);
               priceWrap.appendChild(cEl);
             }
           }
@@ -2673,14 +2690,14 @@
         var savings = isDynamic ? dynamicBreakdown.discountAmount : Math.max(0, totalMrp - bundlePriceRaw);
         if (hasAnyProduct && savings > 0.005) {
           var savingsBadge = (ctx.settings && ctx.settings.showSavingsBadge)
-            ? '<span class="cb-sticky-save">Save ' + formatPrice(savings, ctx.currencySymbol) + '</span>'
+            ? '<span class="cb-sticky-save">Save ' + formatPrice(savings, ctx.currencySymbol, ctx.currencyCode) + '</span>'
             : '';
           var freeUnitsBadge =
             box && box.comboConfig && box.comboConfig.discountType === 'buy_x_get_y' && dynamicBreakdown.freeUnits > 0
               ? '<span class="cb-sticky-save">Free items: ' + dynamicBreakdown.freeUnits + '</span>'
               : '';
           _stickySavingsEl.innerHTML =
-            '<span class="cb-sticky-mrp">MRP: ' + formatPrice(originalPrice, ctx.currencySymbol) + '</span>' +
+            '<span class="cb-sticky-mrp">MRP: ' + formatPrice(originalPrice, ctx.currencySymbol, ctx.currencyCode) + '</span>' +
             savingsBadge +
             (isDynamic ? freeUnitsBadge : '');
           _stickySavingsEl.style.display = 'flex';
@@ -2931,12 +2948,12 @@
           if (sp && sp > 0) {
             var pEl = document.createElement('span');
             pEl.className = 'cb-product-price';
-            pEl.textContent = formatPrice(sp, ctx.currencySymbol);
+            pEl.textContent = formatPrice(sp, ctx.currencySymbol, ctx.currencyCode);
             priceWrap.appendChild(pEl);
             if (cp && cp > sp) {
               var cEl = document.createElement('span');
               cEl.className = 'cb-product-compare-price';
-              cEl.textContent = formatPrice(cp, ctx.currencySymbol);
+              cEl.textContent = formatPrice(cp, ctx.currencySymbol, ctx.currencyCode);
               priceWrap.appendChild(cEl);
             }
           }
@@ -3373,7 +3390,7 @@
 
   function addToCart(box, slots, sessionId, giftMessage, inlineBtn, stickyBtn, readyLabel, currencySymbol, apiBase, shop, onSuccess, checkoutUrl) {
     var resolvedReadyLabel = readyLabel || 'Add To Cart';
-    var resolvedCurrencySymbol = currencySymbol || '\u20B9';
+    var resolvedCurrencySymbol = currencySymbol || "$";
     var resolvedApiBase = String(apiBase || DEFAULT_API_BASE || '').replace(/\/+$/, '');
     var sectionIds = ['cart-drawer', 'cart-icon-bubble', 'cart-notification-button', 'cart-notification'];
     var selectedItemsCount = slots.filter(Boolean).length;
@@ -3932,3 +3949,6 @@
   }
 
 })();
+
+
+

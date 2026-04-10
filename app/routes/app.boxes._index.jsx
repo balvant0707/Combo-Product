@@ -13,8 +13,10 @@ import {
   upsertComboConfig,
   getBoxListImageSrc,
 } from "../models/boxes.server";
+import { getShopCurrencyCode } from "../models/shop.server";
 import { AdminIcon } from "../components/admin-icons";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
+import { formatCurrencyAmount, getCurrencySymbol } from "../utils/currency";
 import {
   Badge,
   BlockStack,
@@ -90,7 +92,9 @@ export const loader = async ({ request }) => {
     boxes = await listBoxes(session.shop, false, true);
   }
   activateAllBundleProducts(session.shop, admin).catch(() => {});
+  const currencyCode = await getShopCurrencyCode(session.shop);
   return {
+    currencyCode,
     boxes: boxes.map((b) => ({
       id: b.id,
       boxCode: b.boxCode || null,
@@ -224,7 +228,7 @@ function CopyCodeBtn({ code }) {
 }
 
 export default function ManageBoxesPage() {
-  const { boxes } = useLoaderData();
+  const { boxes, currencyCode } = useLoaderData();
   const location = useLocation();
   const navigate = useNavigate();
   const navigation = useNavigation();
@@ -539,9 +543,9 @@ export default function ManageBoxesPage() {
                             {box.discount && (
                               <Text as="span" variant="bodySm" tone="success" fontWeight="semibold">
                                 {box.discount.discountType === "percent"
-                                  ? `${box.discount.discountValue}% off`
-                                  : box.discount.discountType === "fixed"
-                                    ? `₹${box.discount.discountValue} off`
+                                    ? `${box.discount.discountValue}% off`
+                                    : box.discount.discountType === "fixed"
+                                    ? `${getCurrencySymbol(currencyCode)}${box.discount.discountValue} off`
                                     : box.discount.discountType === "buy_x_get_y"
                                       ? `Buy ${box.discount.buyQuantity || 1} Get ${box.discount.getQuantity || 1} Free`
                                       : `${box.discount.discountValue} off`}
@@ -550,7 +554,7 @@ export default function ManageBoxesPage() {
                           </BlockStack>
                         ) : (
                           <Text as="span" fontWeight="bold" variant="bodyMd">
-                            &#8377;{Number(box.bundlePrice).toLocaleString("en-IN")}
+                            {formatCurrencyAmount(Number(box.bundlePrice || 0), currencyCode)}
                           </Text>
                         )}
                       </IndexTable.Cell>

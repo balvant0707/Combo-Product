@@ -22,6 +22,7 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { AdminIcon } from "../components/admin-icons";
 import { getActiveBoxCount } from "../models/boxes.server";
+import { getShopCurrencyCode } from "../models/shop.server";
 import {
   getBundlesSoldCount,
   getBundleRevenue,
@@ -33,6 +34,7 @@ import {
   getEmbedBlockStatus,
 } from "../utils/theme-editor.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
+import { formatCurrencyAmount } from "../utils/currency";
 
 function parseOrderSelectedProducts(value) {
   if (Array.isArray(value)) {
@@ -98,12 +100,13 @@ export const loader = async ({ request }) => {
     }
   }
 
-  const [activeBoxCount, bundlesSold, bundleRevenue, recentOrders] =
+  const [activeBoxCount, bundlesSold, bundleRevenue, recentOrders, currencyCode] =
     await Promise.all([
       getActiveBoxCount(shop),
       getBundlesSoldCount(shop),
       getBundleRevenue(shop),
       getRecentOrders(shop, 10),
+      getShopCurrencyCode(shop),
     ]);
 
   const [themeEditorUrl, embedBlockUrl, embedBlockEnabled] = await Promise.all([
@@ -149,6 +152,7 @@ export const loader = async ({ request }) => {
     monthlyOrderCount,
     orderLimitReached,
     orderLimitWarning,
+    currencyCode,
     recentOrders: recentOrders.map((order) => ({
       id: order.id,
       orderId: order.orderId,
@@ -240,6 +244,7 @@ export default function DashboardPage() {
     monthlyOrderCount,
     orderLimitReached,
     orderLimitWarning,
+    currencyCode,
   } = useLoaderData();
 
   const location = useLocation();
@@ -271,7 +276,7 @@ export default function DashboardPage() {
     { label: "Bundles Sold", value: bundlesSold, sub: "Last 30 days" },
     {
       label: "Bundle Revenue",
-      value: `\u20B9${Number(bundleRevenue).toLocaleString("en-IN")}`,
+      value: formatCurrencyAmount(Number(bundleRevenue || 0), currencyCode),
       sub: "Last 30 days",
     },
     { label: "Conversion Rate", value: "—", sub: "Coming soon" },
@@ -286,8 +291,8 @@ export default function DashboardPage() {
       {order.comboType === "specific" ? "Specific" : "Simple"}
     </Badge>,
     order.itemCount,
-    `\u20B9${order.bundlePrice.toLocaleString("en-IN")}`,
-    new Date(order.orderDate).toLocaleDateString("en-IN", {
+    formatCurrencyAmount(Number(order.bundlePrice || 0), currencyCode),
+    new Date(order.orderDate).toLocaleDateString(undefined, {
       day: "2-digit",
       month: "short",
       year: "numeric",

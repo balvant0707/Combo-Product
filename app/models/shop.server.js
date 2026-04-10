@@ -224,7 +224,7 @@ export async function getShopCurrencyCode(shop) {
     where: { shop },
     select: { currency: true },
   });
-  return row?.currency || "INR";
+  return row?.currency || "USD";
 }
 
 export async function markShopUninstalled(shop) {

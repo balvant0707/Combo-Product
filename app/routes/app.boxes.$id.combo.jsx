@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import { useFetcher, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
+import { useFetcher, useLoaderData, useLocation, useNavigate, useNavigation, useRouteError } from "react-router";
 import {
   Badge, Banner, BlockStack, Box, Button, Card, Checkbox,
   Divider, DropZone, FormLayout, InlineGrid, InlineStack, Modal, Page,
@@ -439,12 +439,14 @@ export default function SpecificComboBoxPage() {
   const collProdsFetcher7 = useFetcher();
   const collProdsFetchers = [collProdsFetcher0, collProdsFetcher1, collProdsFetcher2, collProdsFetcher3, collProdsFetcher4, collProdsFetcher5, collProdsFetcher6, collProdsFetcher7];
   const location = useLocation();
+  const navigate = useNavigate();
   const currencySymbol = getCurrencySymbol(currencyCode);
 
   const comboErrors = comboFetcher.data?.errors || {};
   const comboStepImgErrors = {};
   const isPageLoading = comboFetcher.state !== "idle" || navigation.state !== "idle";
   const isSaving = comboFetcher.state === "submitting";
+  const [isBackNavigating, setIsBackNavigating] = useState(false);
 
   // Toast state
   const [toast, setToast] = useState(null); // { type: "success"|"error", message: string }
@@ -712,11 +714,16 @@ export default function SpecificComboBoxPage() {
   const isLoadingStepProds = stepProdModalIdx !== null && collProdsFetchers[stepProdModalIdx]?.state === "loading";
   const filteredStepProds = activeScopedProducts.filter((p) => !stepProdSearch || p.title.toLowerCase().includes(stepProdSearch.toLowerCase()));
 
+  function handleBackAction() {
+    setIsBackNavigating(true);
+    navigate(withEmbeddedAppParams("/app/boxes", location.search));
+  }
+
   /* ─────────────── Render ─────────────── */
   return (
     <Page
       title="Edit Specific Combo Box"
-      backAction={{ content: "Boxes", url: withEmbeddedAppParams("/app/boxes", location.search) }}
+      backAction={{ content: "Boxes", onAction: handleBackAction }}
       primaryAction={{
         content: isSaving ? "Saving..." : "Save & Publish",
         loading: isSaving,
@@ -1206,7 +1213,7 @@ export default function SpecificComboBoxPage() {
       </BlockStack>
 
       {/* Loading overlay */}
-      {isPageLoading && (
+      {(isPageLoading || isBackNavigating) && (
         <div
           aria-live="polite"
           aria-busy="true"
@@ -1397,3 +1404,5 @@ export default function SpecificComboBoxPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
+
+

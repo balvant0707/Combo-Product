@@ -211,8 +211,6 @@ const PLAN_UI = [
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
 
-const PLAN_TIER = { FREE: 0, BASIC: 1, ADVANCE: 2, PLUS: 3, PRO: 3 };
-
 function currentPlanKey(subscription) {
   if (!subscription) return null;
   const plan = String(subscription.plan || "").toUpperCase();
@@ -232,17 +230,11 @@ function currentPlanKey(subscription) {
   return null;
 }
 
-function isLowerTierThanActive(planKey, activePlanKey) {
-  if (!activePlanKey) return false;
-  return (PLAN_TIER[planKey] ?? 0) < (PLAN_TIER[activePlanKey] ?? 0);
-}
-
 /* ── Plan Card ───────────────────────────────────────────────────── */
 
-function PlanCard({ plan, activePlanKey, subscription, isSubmitting, submittingPlan, trialDays }) {
+function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan, trialDays }) {
   const isActive   = activePlanKey === plan.key;
   const isFree     = plan.key === "FREE";
-  const isDisabled = isActive || isLowerTierThanActive(plan.key, activePlanKey);
 
   const disabledBtnStyle = {
     width: "100%", padding: "14px", borderRadius: "10px", border: "none",
@@ -256,12 +248,6 @@ function PlanCard({ plan, activePlanKey, subscription, isSubmitting, submittingP
     btn = (
       <button disabled aria-label={`${plan.name} — current plan`} style={{ ...disabledBtnStyle, background: "#6b7280", color: "#fff" }}>
         Current plan
-      </button>
-    );
-  } else if (isDisabled) {
-    btn = (
-      <button disabled aria-label={`${plan.name} — included in your current plan`} style={disabledBtnStyle}>
-        Not available
       </button>
     );
   } else if (isFree) {
@@ -492,7 +478,6 @@ export default function PricingPage() {
               key={plan.key}
               plan={plan}
               activePlanKey={activePlanKey}
-              subscription={subscription}
               isSubmitting={isSubmitting}
               submittingPlan={submittingPlan}
               trialDays={trialDays}
@@ -607,3 +592,7 @@ export function ErrorBoundary() {
 }
 
 export const headers = (h) => boundary.headers(h);
+
+
+
+

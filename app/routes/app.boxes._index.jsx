@@ -690,10 +690,11 @@ export default function ManageBoxesPage() {
         open={showCreateBoxModal}
         onClose={closeCreateBoxModal}
         title="Choose Bundle Type"
+        size="small"
       >
         <Modal.Section>
           <BlockStack gap="300">
-            <Card>
+            <div style={{ border: "1px solid #e5e7eb", borderRadius: 0, padding: "16px" }}>
               <BlockStack gap="200">
                 <InlineStack gap="200" blockAlign="center">
                   <AdminIcon type="package" size="base" />
@@ -729,9 +730,9 @@ export default function ManageBoxesPage() {
                   Create Box
                 </button>
               </BlockStack>
-            </Card>
+            </div>
 
-            <Card>
+            <div style={{ border: "1px solid #e5e7eb", borderRadius: 0, padding: "16px" }}>
               <BlockStack gap="200">
                 <InlineStack gap="200" blockAlign="center">
                   <AdminIcon type="target" size="base" />
@@ -767,7 +768,7 @@ export default function ManageBoxesPage() {
                   Create Box
                 </button>
               </BlockStack>
-            </Card>
+            </div>
           </BlockStack>
         </Modal.Section>
       </Modal>

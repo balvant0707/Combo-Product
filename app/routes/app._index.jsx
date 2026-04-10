@@ -552,11 +552,15 @@ export default function DashboardPage() {
         open={showCreateBoxModal}
         onClose={closeCreateBoxModal}
         title="Choose Bundle Type"
+        size="small"
       >
         <Modal.Section>
           <BlockStack gap="300">
             {createBoxActions.map((action) => (
-              <Card key={action.key}>
+              <div
+                key={action.key}
+                style={{ border: "1px solid #e5e7eb", borderRadius: 0, padding: "16px" }}
+              >
                 <BlockStack gap="200">
                   <InlineStack gap="200" blockAlign="center">
                     <AdminIcon type={action.icon} size="base" />
@@ -594,7 +598,7 @@ export default function DashboardPage() {
                     Create Box
                   </button>
                 </BlockStack>
-              </Card>
+              </div>
             ))}
           </BlockStack>
         </Modal.Section>

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
+import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigate, useNavigation, useRouteError } from "react-router";
 import {
   Badge, Banner, BlockStack, Box, Button, Card, Checkbox,
   DropZone, FormLayout, InlineGrid, InlineStack, Modal, Page,
@@ -350,10 +350,12 @@ export default function CreateSpecificComboBoxPage() {
   const { products, collections, currencyCode } = useLoaderData();
   const actionData = useActionData();
   const location = useLocation();
+  const navigate = useNavigate();
   const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
   const currencySymbol = getCurrencySymbol(currencyCode);
   const isPageLoading = navigation.state !== "idle";
+  const [isBackNavigating, setIsBackNavigating] = useState(false);
 
   const collProdsFetcher0 = useFetcher();
   const collProdsFetcher1 = useFetcher();
@@ -534,17 +536,22 @@ export default function CreateSpecificComboBoxPage() {
     { label: "None", value: "none" },
   ];
 
+  function handleBackAction() {
+    setIsBackNavigating(true);
+    navigate(withEmbeddedAppParams("/app/boxes", location.search));
+  }
+
   return (
     <Page
       title="Create Specific Combo Box"
-      backAction={{ content: "Boxes", url: withEmbeddedAppParams("/app/boxes", location.search) }}
+      backAction={{ content: "Boxes", onAction: handleBackAction }}
       primaryAction={{
         content: isSaving ? "Saving..." : "Save & Publish",
         loading: isSaving,
         onAction: () => document.getElementById("specific-combo-form")?.requestSubmit(),
       }}
     >
-      {isPageLoading && (
+      {(isPageLoading || isBackNavigating) && (
         <div
           aria-live="polite"
           aria-busy="true"

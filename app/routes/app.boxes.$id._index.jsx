@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { Form, useActionData, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
+import { Form, useActionData, useLoaderData, useLocation, useNavigate, useNavigation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { getBox, updateBox, deleteBox, getBannerImageSrc } from "../models/boxes.server";
@@ -290,10 +290,12 @@ export default function BoxSettingsPage() {
   const { box, products, collections, currencyCode } = useLoaderData();
   const actionData = useActionData();
   const location = useLocation();
+  const navigate = useNavigate();
   const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
   const isPageLoading = navigation.state !== "idle";
   const currencySymbol = getCurrencySymbol(currencyCode);
+  const [isBackNavigating, setIsBackNavigating] = useState(false);
 
   const errors = actionData?.errors || {};
 
@@ -369,12 +371,16 @@ export default function BoxSettingsPage() {
     setScope(nextScope);
     setScopeItems([]);
   }
+  function handleBackAction() {
+    setIsBackNavigating(true);
+    navigate(withEmbeddedAppParams("/app/boxes", location.search));
+  }
 
   /* ─────────────── Render ─────────────── */
   return (
     <Page
       title="Edit Box"
-      backAction={{ content: "Boxes", url: withEmbeddedAppParams("/app/boxes", location.search) }}
+      backAction={{ content: "Boxes", onAction: handleBackAction }}
       primaryAction={{
         content: isSaving ? "Saving..." : "Save Changes",
         loading: isSaving,
@@ -389,7 +395,7 @@ export default function BoxSettingsPage() {
       ]}
     >
       {/* Loading overlay */}
-      {isPageLoading && (
+      {(isPageLoading || isBackNavigating) && (
         <div
           aria-live="polite"
           aria-busy="true"
@@ -862,3 +868,5 @@ export default function BoxSettingsPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
+
+

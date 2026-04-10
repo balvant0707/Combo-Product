@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { Form, useActionData, useLoaderData, useLocation, useNavigation, useRouteError } from "react-router";
+import { Form, useActionData, useLoaderData, useLocation, useNavigate, useNavigation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { createBox } from "../models/boxes.server";
@@ -231,9 +231,12 @@ export default function CreateBoxPage() {
   const { products, collections, currencyCode } = useLoaderData();
   const actionData = useActionData();
   const location = useLocation();
+  const navigate = useNavigate();
   const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
+  const isPageLoading = navigation.state !== "idle";
   const currencySymbol = getCurrencySymbol(currencyCode);
+  const [isBackNavigating, setIsBackNavigating] = useState(false);
 
   const [scope, setScope] = useState("specific_collections");
   const [scopeItems, setScopeItems] = useState([]);
@@ -277,6 +280,11 @@ export default function CreateBoxPage() {
   })();
   const bundlePrice = priceMode === "manual" ? parseFloat(manualPrice) || 0 : dynamicPrice;
 
+  function handleBackAction() {
+    setIsBackNavigating(true);
+    navigate(withEmbeddedAppParams("/app/boxes", location.search));
+  }
+
   function toggleOption(name) {
     let validationMessage = "";
     setOptions((prev) => {
@@ -315,13 +323,30 @@ export default function CreateBoxPage() {
   return (
     <Page
       title="Create New Box"
-      backAction={{ content: "Boxes", url: withEmbeddedAppParams("/app/boxes", location.search) }}
+      backAction={{ content: "Boxes", onAction: handleBackAction }}
       primaryAction={{
         content: isSaving ? "Saving..." : "Save & Publish",
         loading: isSaving,
         onAction: () => document.getElementById("create-box-form")?.requestSubmit(),
       }}
     >
+      {(isPageLoading || isBackNavigating) && (
+        <div
+          aria-live="polite"
+          aria-busy="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 10001,
+            background: "rgba(255,255,255,0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Spinner accessibilityLabel="Loading page" size="large" />
+        </div>
+      )}
       <BlockStack gap="500">
         {/* Error Banner */}
         {errors._global && (

@@ -552,7 +552,8 @@ export default function DashboardPage() {
         open={showCreateBoxModal}
         onClose={closeCreateBoxModal}
         title="Choose Bundle Type"
-        size="small"
+        size="medium"
+        style={{ maxWidth: "30.75rem",borderRadius: "0px" }}
       >
         <Modal.Section>
           <BlockStack gap="300">

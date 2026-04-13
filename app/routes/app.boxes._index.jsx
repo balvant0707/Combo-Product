@@ -693,9 +693,8 @@ export default function ManageBoxesPage() {
         onClose={closeCreateBoxModal}
         title="Choose Bundle Type"
         size="medium"
-        style={{ borderRadius: "0px !important", maxWidth: "30rem !important" }}
       >
-        <Modal.Section>
+        <Modal.Section  style={{ borderRadius: "0px !important", maxWidth: "30rem !important" }}>
           <BlockStack gap="300">
             <div style={{ border: "1px solid #e5e7eb", borderRadius: 0, padding: "16px" }}>
               <BlockStack gap="200">
@@ -748,15 +747,14 @@ export default function ManageBoxesPage() {
                   disabled={pendingCreateRoute !== null}
                   onClick={() => goToCreateRoute("/app/boxes/specific-combo")}
                   style={{
-                    width: "160px",
+                    width: "200px",
                     maxWidth: "100%",
                     border: "1px solid #111827",
                     borderRadius: 0,
                     background: "#111827",
                     color: "#ffffff",
                     padding: "9px 12px",
-                    fontSize: "15px",
-                    fontWeight: 700,
+                    fontSize: "14px",
                     cursor: pendingCreateRoute !== null ? "not-allowed" : "pointer",
                     opacity: pendingCreateRoute !== null && pendingCreateRoute !== "/app/boxes/specific-combo" ? 0.65 : 1,
                     display: "flex",

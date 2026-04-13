@@ -608,7 +608,7 @@ export default function BoxSettingsPage() {
                       type="text"
                       name="comboProductButtonTitle"
                       defaultValue={box.comboProductButtonTitle || ""}
-                      placeholder="BUILD YOUR OWN BOX"
+                      placeholder="Build your own box"
                       style={inputStyle}
                     />
                   </BlockStack>

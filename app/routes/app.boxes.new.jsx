@@ -432,7 +432,7 @@ export default function CreateBoxPage() {
                         id="new-comboBtn"
                         type="text"
                         name="comboProductButtonTitle"
-                        placeholder="BUILD YOUR OWN BOX"
+                        placeholder="Build your own box"
                         aria-label="Button label that opens the combo product builder"
                         style={nativeInputStyle}
                       />

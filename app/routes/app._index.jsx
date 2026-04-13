@@ -160,9 +160,11 @@ export const loader = async ({ request }) => {
   const monthlyOrderCount = monthlyAnalytics.totalOrders;
   const orderLimitReached = isFinite(orderLimit) && monthlyOrderCount >= orderLimit;
   const orderLimitWarning = isFinite(orderLimit) && !orderLimitReached && monthlyOrderCount >= orderLimit * 0.8;
-  const bundleConversionRate = totalStoreOrdersLast30Days > 0
-    ? (bundlesSold / totalStoreOrdersLast30Days) * 100
-    : 0;
+  const bundleConversionRate = totalStoreOrdersLast30Days == null
+    ? null
+    : totalStoreOrdersLast30Days > 0
+      ? (bundlesSold / totalStoreOrdersLast30Days) * 100
+      : 0;
 
   return {
     activeBoxCount,
@@ -314,7 +316,7 @@ export default function DashboardPage() {
     },
     {
       label: "Bundle Conversion Rate",
-      value: `${Number(bundleConversionRate || 0).toFixed(1)}%`,
+      value: bundleConversionRate == null ? "—" : `${Number(bundleConversionRate).toFixed(1)}%`,
       sub: totalStoreOrdersLast30Days == null
         ? "Unavailable (orders permission/query)"
         : `${bundlesSold}/${totalStoreOrdersLast30Days} orders (last 30 days)`,

@@ -258,7 +258,7 @@ function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan }) {
           disabled={busy}
           aria-label="Start free plan"
           style={{
-            width: "100%", padding: "14px", borderRadius: "10px", border: "none",
+            width: "100%", padding: "14px", borderRadius: "0", border: "none",
             fontSize: "14px", fontWeight: "700", textAlign: "center",
             cursor: busy ? "wait" : "pointer", background: "#111827",
             color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",
@@ -280,7 +280,7 @@ function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan }) {
           disabled={busy}
           aria-label={`Subscribe to ${plan.name} plan at $${plan.price}/month`}
           style={{
-            width: "100%", padding: "14px", borderRadius: "10px", border: "none",
+            width: "100%", padding: "14px", borderRadius: "0", border: "none",
             fontSize: "14px", fontWeight: "700", textAlign: "center",
             cursor: busy ? "wait" : "pointer",
             background: plan.highlight ? "#2A7A4F" : "#111827",
@@ -546,11 +546,11 @@ export default function PricingPage() {
                     },
                     {
                       label: "Onboarding chat",
-                      values: ["—", "✓", "—", "—"],
+                      values: ["-", "✓", "✓", "✓"],
                     },
                     {
                       label: "Guided bundles",
-                      values: ["—", "—", "—", "✓"],
+                      values: ["—", "✓", "✓", "✓"],
                     },
                   ].map((row) => (
                     <tr key={row.label} style={{ borderBottom: "1px solid #f3f4f6" }}>

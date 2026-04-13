@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useLoaderData, useLocation, useNavigate, useNavigation } from "react-router";
 import {
   Badge,
@@ -87,11 +87,53 @@ async function getShopifyOrdersCount(admin, fromIso, toIso) {
     const response = await admin.graphql(ORDERS_COUNT_QUERY, { variables: { query } });
     const json = await response.json();
     const raw = json?.data?.ordersCount;
-    if (Array.isArray(json?.errors) && json.errors.length > 0) return null;
+    if (Array.isArray(json?.errors) && json.errors.length > 0) {
+      return await getShopifyOrdersCountByPagination(admin, query);
+    }
 
     if (typeof raw === "number") return raw;
     if (raw && typeof raw.count === "number") return raw.count;
-    return 0;
+    const fallback = await getShopifyOrdersCountByPagination(admin, query);
+    return fallback == null ? 0 : fallback;
+  } catch {
+    return await getShopifyOrdersCountByPagination(admin, query);
+  }
+}
+
+async function getShopifyOrdersCountByPagination(admin, query) {
+  const ORDERS_PAGE_QUERY = `#graphql
+    query OrdersPage($query: String!, $after: String) {
+      orders(first: 250, query: $query, after: $after, sortKey: CREATED_AT, reverse: true) {
+        pageInfo { hasNextPage endCursor }
+        nodes { id }
+      }
+    }
+  `;
+
+  try {
+    let total = 0;
+    let after = null;
+    let safety = 0;
+
+    do {
+      const response = await admin.graphql(ORDERS_PAGE_QUERY, {
+        variables: { query, after },
+      });
+      const json = await response.json();
+      if (Array.isArray(json?.errors) && json.errors.length > 0) return null;
+      const nodes = json?.data?.orders?.nodes || [];
+      const pageInfo = json?.data?.orders?.pageInfo;
+
+      total += nodes.length;
+      after = pageInfo?.endCursor || null;
+      safety += 1;
+
+      if (!pageInfo?.hasNextPage) break;
+      if (!after) break;
+      if (safety > 40) break; // Hard cap: 10k orders for dashboard KPI.
+    } while (true);
+
+    return total;
   } catch {
     return null;
   }
@@ -292,12 +334,23 @@ export default function DashboardPage() {
   const navigation = useNavigation();
   const [showCreateBoxModal, setShowCreateBoxModal] = useState(false);
   const [pendingCreateAction, setPendingCreateAction] = useState(null);
+  const navInFlightRef = useRef(false);
 
   const justSubscribed = new URLSearchParams(location.search).get("subscribed") === "1";
   const isPageLoading = navigation.state !== "idle";
 
   function navigateTo(path) {
-    navigate(withEmbeddedAppParams(path, location.search));
+    if (navInFlightRef.current || navigation.state !== "idle") return;
+    const target = withEmbeddedAppParams(path, location.search);
+    const current = `${location.pathname}${location.search}`;
+    if (target === current) return;
+
+    navInFlightRef.current = true;
+    try {
+      navigate(target);
+    } finally {
+      setTimeout(() => { navInFlightRef.current = false; }, 500);
+    }
   }
 
   function closeCreateBoxModal() {
@@ -353,7 +406,7 @@ export default function DashboardPage() {
 
   return (
     <Page
-      title={`Welcome To '${storeOwnerName}'`}
+      title={`Welcome To ${storeOwnerName}`}
       primaryAction={{
         content: "Create Bundle Box",
         onAction: () => setShowCreateBoxModal(true),

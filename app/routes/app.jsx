@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Outlet, useFetcher, useLoaderData, useLocation, useNavigate, useRouteError } from "react-router";
+import { Outlet, useFetcher, useLoaderData, useLocation, useNavigate, useRevalidator, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider as ShopifyAppProvider } from "@shopify/shopify-app-react-router/react";
 import { AppProvider as PolarisAppProvider } from "@shopify/polaris";
@@ -19,6 +19,7 @@ import { showPolarisToast } from "../utils/polaris-toast";
 import { sendMail } from "../utils/mailer.server";
 import { installedEmailHtml } from "../emails/app-installed";
 import { ownerInstallNotifyHtml } from "../emails/owner-notify";
+import { buildEmbedBlockUrl, getEmbedBlockStatus } from "../utils/theme-editor.server";
 
 export const loader = async ({ request }) => {
   const { session, admin } = await authenticate.admin(request);
@@ -60,11 +61,20 @@ export const loader = async ({ request }) => {
   }
 
   const reviewPrompt = await getShopReviewPromptState(session.shop);
+  const [embedBlockUrl, embedBlockEnabled] = await Promise.all([
+    buildEmbedBlockUrl({ shop: session.shop, admin }),
+    getEmbedBlockStatus({ shop: session.shop, admin, session }),
+  ]);
 
   // eslint-disable-next-line no-undef
   return {
     apiKey: process.env.SHOPIFY_API_KEY || "",
     reviewPrompt,
+    supportContactEmail: process.env.APP_OWNER_EMAIL || process.env.SUPPORT_EMAIL || "support@example.com",
+    appDisplayName: process.env.APP_NAME || "MixBox - Box & Bundle Builder",
+    reviewLink: process.env.REVIEW_LINK || process.env.APP_REVIEW_URL || null,
+    embedBlockUrl,
+    embedBlockEnabled,
   };
 };
 
@@ -86,19 +96,56 @@ export const action = async ({ request }) => {
     return { ok: true, submitted: true };
   }
 
+  if (intent === "submit_support_message") {
+    const message = String(formData.get("message") || "").trim();
+    if (message.length < 30) {
+      return { ok: false, supportError: "Please enter at least 30 characters." };
+    }
+
+    const supportEmail = process.env.APP_OWNER_EMAIL || process.env.SUPPORT_EMAIL;
+    if (!supportEmail) {
+      return { ok: false, supportError: "Support email is not configured." };
+    }
+
+    await sendMail(
+      supportEmail,
+      `Support message from ${session.shop}`,
+      `
+        <h2>Support message</h2>
+        <p><strong>Shop:</strong> ${session.shop}</p>
+        <p><strong>Message:</strong></p>
+        <pre style="white-space: pre-wrap; font-family: inherit;">${message}</pre>
+      `,
+    );
+
+    return { ok: true, supportSubmitted: true };
+  }
+
   return { ok: false };
 };
 
 export default function App() {
-  const { apiKey, reviewPrompt } = useLoaderData();
+  const {
+    apiKey,
+    reviewPrompt,
+    supportContactEmail,
+    appDisplayName,
+    reviewLink,
+    embedBlockUrl,
+    embedBlockEnabled,
+  } = useLoaderData();
   const location = useLocation();
   const navigate = useNavigate();
+  const revalidator = useRevalidator();
   const reviewFetcher = useFetcher();
+  const supportFetcher = useFetcher();
   const reviewActionUrl = withEmbeddedAppParams("/app", location.search);
 
   const [showReviewPopup, setShowReviewPopup] = useState(() => Boolean(reviewPrompt?.shouldShow));
+  const [showSupportPopup, setShowSupportPopup] = useState(false);
   const [rating, setRating] = useState(5);
   const [feedback, setFeedback] = useState("");
+  const [supportMessage, setSupportMessage] = useState("");
 
   useEffect(() => {
     if (reviewFetcher.state !== "idle" || !reviewFetcher.data?.ok) return;
@@ -108,12 +155,31 @@ export default function App() {
   }, [reviewFetcher.state, reviewFetcher.data]);
 
   useEffect(() => {
+    if (supportFetcher.state !== "idle") return;
+    if (supportFetcher.data?.ok && supportFetcher.data?.supportSubmitted) {
+      setShowSupportPopup(false);
+      setSupportMessage("");
+      showPolarisToast("Support message sent successfully.");
+    } else if (supportFetcher.data?.supportError) {
+      showPolarisToast(supportFetcher.data.supportError, { isError: true });
+    }
+  }, [supportFetcher.state, supportFetcher.data]);
+
+  useEffect(() => {
+    if (reviewPrompt?.shouldShow) {
+      setShowReviewPopup(true);
+    }
+  }, [reviewPrompt?.shouldShow]);
+
+  useEffect(() => {
     const params = new URLSearchParams(location.search);
     const message = params.get("toast");
     if (!message) return;
 
     const tone = params.get("toastTone");
     showPolarisToast(message, { isError: tone === "error" });
+    // Ensure root loader gets fresh reviewPrompt immediately after actions with toast redirects.
+    revalidator.revalidate();
 
     params.delete("toast");
     params.delete("toastTone");
@@ -122,7 +188,7 @@ export default function App() {
       { pathname: location.pathname, search: nextSearch ? `?${nextSearch}` : "" },
       { replace: true },
     );
-  }, [location.pathname, location.search, navigate]);
+  }, [location.pathname, location.search, navigate, revalidator]);
 
   function dismissPopup() {
     if (reviewFetcher.state !== "idle") return;
@@ -133,8 +199,34 @@ export default function App() {
     );
   }
 
+  function openSupportPopup() {
+    setShowReviewPopup(false);
+    setShowSupportPopup(true);
+  }
+
+  function closeSupportPopup() {
+    if (supportFetcher.state !== "idle") return;
+    setShowSupportPopup(false);
+  }
+
+  function submitSupportMessage() {
+    if (supportFetcher.state !== "idle") return;
+    supportFetcher.submit(
+      {
+        _action: "submit_support_message",
+        message: supportMessage,
+      },
+      { method: "post", action: reviewActionUrl },
+    );
+  }
+
   function submitReview() {
     if (reviewFetcher.state !== "idle") return;
+    if (reviewLink) {
+      try {
+        window.open(reviewLink, "_blank", "noopener,noreferrer");
+      } catch {}
+    }
     reviewFetcher.submit(
       {
         _action: "submit_review_popup",
@@ -196,6 +288,17 @@ export default function App() {
         <s-link href={withEmbeddedAppParams("/app/widget-settings", location.search)}>Widget Settings</s-link>
         <s-link href={withEmbeddedAppParams("/app/pricing", location.search)}>Price Plan</s-link>
       </s-app-nav>
+      {!embedBlockEnabled && (
+        <Box padding="400">
+          <Banner
+            tone="warning"
+            title="Embed block not active"
+            action={{ content: "Activate now", url: embedBlockUrl, target: "_blank" }}
+          >
+            <p>Enable the Combo Builder embed block so it can load scripts on your storefront.</p>
+          </Banner>
+        </Box>
+      )}
       <Outlet />
 
       <Modal
@@ -279,10 +382,18 @@ export default function App() {
             <Text as="p" tone="subdued" variant="bodySm">
               If your review is published on the Shopify App Store, we'll include some details about your store.
             </Text>
+            {reviewLink ? (
+              <Text as="p" tone="subdued" variant="bodySm">
+                Submitting opens the Shopify App Store review page directly.
+              </Text>
+            ) : null}
 
             <Box borderBlockStartWidth="025" borderColor="border">
               <InlineStack align="end" gap="200">
                 <Button onClick={dismissPopup} disabled={reviewFetcher.state !== "idle"}>
+                  Remind me tomorrow
+                </Button>
+                <Button onClick={openSupportPopup} disabled={reviewFetcher.state !== "idle"}>
                   Get support
                 </Button>
                 <Button
@@ -292,6 +403,56 @@ export default function App() {
                   disabled={rating < 1}
                 >
                   Submit
+                </Button>
+              </InlineStack>
+            </Box>
+          </BlockStack>
+        </Modal.Section>
+      </Modal>
+
+      <Modal
+        open={showSupportPopup}
+        onClose={closeSupportPopup}
+        title={appDisplayName}
+        size="large"
+      >
+        <Modal.Section>
+          <BlockStack gap="400">
+            <Text as="h3" variant="headingMd">Send a message to the developer.</Text>
+
+            <TextField
+              label="Support message"
+              labelHidden
+              value={supportMessage}
+              onChange={setSupportMessage}
+              name="supportMessage"
+              maxLength={2000}
+              autoComplete="off"
+              multiline={6}
+              placeholder="Minimum 30 characters"
+              disabled={supportFetcher.state !== "idle"}
+            />
+            <InlineStack align="space-between" blockAlign="center">
+              <Text as="p" tone="subdued">
+                Replies will be sent to {supportContactEmail}.
+              </Text>
+              <Text as="p" tone="subdued">
+                {supportMessage.length}
+              </Text>
+            </InlineStack>
+
+            <Box borderBlockStartWidth="025" borderColor="border">
+              <InlineStack align="end" gap="200">
+                <Button onClick={closeSupportPopup} disabled={supportFetcher.state !== "idle"}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={submitSupportMessage}
+                  loading={supportFetcher.state !== "idle"}
+                  disabled={supportMessage.trim().length < 30}
+                >
+                  Send
                 </Button>
               </InlineStack>
             </Box>

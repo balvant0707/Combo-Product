@@ -7,7 +7,9 @@ import { getAnalytics } from "../models/orders.server";
 import { getShopCurrencyCode } from "../models/shop.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 import { formatCurrencyAmount } from "../utils/currency";
+import { buildEmbedBlockUrl, getEmbedBlockStatus } from "../utils/theme-editor.server";
 import {
+  Banner,
   BlockStack,
   Card,
   InlineGrid,
@@ -17,7 +19,7 @@ import {
 } from "@shopify/polaris";
 
 export const loader = async ({ request }) => {
-  const { session } = await authenticate.admin(request);
+  const { session, admin } = await authenticate.admin(request);
   const url = new URL(request.url);
   const period = url.searchParams.get("period") || "30";
   const customFrom = url.searchParams.get("from") || null;
@@ -37,13 +39,17 @@ export const loader = async ({ request }) => {
     toDate = toD.toISOString().slice(0, 10);
   }
 
-  const [analytics, currencyCode] = await Promise.all([
+  const [analytics, currencyCode, embedBlockUrl, embedBlockEnabled] = await Promise.all([
     getAnalytics(session.shop, fromDate, toDate, { comboTypeFilter: comboType }),
     getShopCurrencyCode(session.shop),
+    buildEmbedBlockUrl({ shop: session.shop, admin }),
+    getEmbedBlockStatus({ shop: session.shop, admin, session }),
   ]);
   return {
     analytics,
     currencyCode,
+    embedBlockUrl,
+    embedBlockEnabled,
     period: customFrom ? "custom" : period,
     fromDate,
     toDate,
@@ -1294,7 +1300,16 @@ function SyncOrdersButton() {
 
 // ─── Main Analytics Page ──────────────────────────────────────────────────────
 export default function AnalyticsPage() {
-  const { analytics, period, fromDate, toDate, comboType, currencyCode } = useLoaderData();
+  const {
+    analytics,
+    period,
+    fromDate,
+    toDate,
+    comboType,
+    currencyCode,
+    embedBlockUrl,
+    embedBlockEnabled,
+  } = useLoaderData();
   const {
     totalOrders,
     totalRevenue,
@@ -1343,6 +1358,15 @@ export default function AnalyticsPage() {
         }
       `}</style>
       <BlockStack gap="500">
+        {!embedBlockEnabled && (
+          <Banner
+            tone="warning"
+            title="Embed block not active"
+            action={{ content: "Activate now", url: embedBlockUrl, target: "_blank" }}
+          >
+            <p>Enable the Combo Builder embed block so it can load scripts on your storefront.</p>
+          </Banner>
+        )}
         {/* ── Period Selector + Comparison Banner ── */}
         <Card>
           <BlockStack gap="300">

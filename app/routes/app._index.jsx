@@ -452,17 +452,6 @@ export default function DashboardPage() {
           </Banner>
         )}
 
-        {!embedBlockEnabled && (
-          <Banner
-            tone="warning"
-            title="Embed block not active"
-            action={{ content: "Activate now", url: embedBlockUrl, target: "_blank" }}
-          >
-            <p>
-              Enable the Combo Builder embed block so it can load scripts on your storefront.
-            </p>
-          </Banner>
-        )}
 
         {/* ── Stats row ── */}
         <InlineGrid columns={{ xs: 2, md: 4 }} gap="400">

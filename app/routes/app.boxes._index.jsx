@@ -17,8 +17,10 @@ import { getShopCurrencyCode } from "../models/shop.server";
 import { AdminIcon } from "../components/admin-icons";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 import { formatCurrencyAmount, getCurrencySymbol } from "../utils/currency";
+import { buildEmbedBlockUrl, getEmbedBlockStatus } from "../utils/theme-editor.server";
 import {
   Badge,
+  Banner,
   BlockStack,
   Box,
   Button,
@@ -92,9 +94,15 @@ export const loader = async ({ request }) => {
     boxes = await listBoxes(session.shop, false, true);
   }
   activateAllBundleProducts(session.shop, admin).catch(() => {});
-  const currencyCode = await getShopCurrencyCode(session.shop);
+  const [currencyCode, embedBlockUrl, embedBlockEnabled] = await Promise.all([
+    getShopCurrencyCode(session.shop),
+    buildEmbedBlockUrl({ shop: session.shop, admin }),
+    getEmbedBlockStatus({ shop: session.shop, admin, session }),
+  ]);
   return {
     currencyCode,
+    embedBlockUrl,
+    embedBlockEnabled,
     boxes: boxes.map((b) => ({
       id: b.id,
       boxCode: b.boxCode || null,
@@ -228,7 +236,7 @@ function CopyCodeBtn({ code }) {
 }
 
 export default function ManageBoxesPage() {
-  const { boxes, currencyCode } = useLoaderData();
+  const { boxes, currencyCode, embedBlockUrl, embedBlockEnabled } = useLoaderData();
   const location = useLocation();
   const navigate = useNavigate();
   const navigation = useNavigation();
@@ -367,6 +375,15 @@ export default function ManageBoxesPage() {
       </ui-title-bar> */}
 
       <BlockStack gap="400">
+        {!embedBlockEnabled && (
+          <Banner
+            tone="warning"
+            title="Embed block not active"
+            action={{ content: "Activate now", url: embedBlockUrl, target: "_blank" }}
+          >
+            <p>Enable the Combo Builder embed block so it can load scripts on your storefront.</p>
+          </Banner>
+        )}
         {/* Stats row */}
         <InlineGrid columns={{ xs: 2, md: 4 }} gap="400">
           {statCards.map((s) => (

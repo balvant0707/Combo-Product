@@ -376,7 +376,7 @@ export default function DashboardPage() {
       value: bundleConversionRate == null ? "—" : `${Number(bundleConversionRate).toFixed(1)}%`,
       sub: totalStoreOrdersLast30Days == null
         ? "Unavailable (orders permission/query)"
-        : `Calculation: (${bundlesSold} / ${totalStoreOrdersLast30Days}) × 100`,
+        : "Last 30 days",
     },
   ];
 

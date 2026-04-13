@@ -227,6 +227,16 @@ export async function getShopCurrencyCode(shop) {
   return row?.currency || "USD";
 }
 
+export async function getShopOwnerDisplayName(shop) {
+  const row = await db.shop.findUnique({
+    where: { shop },
+    select: { ownerName: true, name: true },
+  });
+  const owner = typeof row?.ownerName === "string" ? row.ownerName.trim() : "";
+  const shopName = typeof row?.name === "string" ? row.name.trim() : "";
+  return owner || shopName || shop;
+}
+
 export async function markShopUninstalled(shop) {
   console.info("[DB Sync] markShopUninstalled", { shop });
 

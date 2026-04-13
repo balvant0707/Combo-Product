@@ -21,7 +21,7 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { AdminIcon } from "../components/admin-icons";
 import { getActiveBoxCount } from "../models/boxes.server";
-import { getShopCurrencyCode } from "../models/shop.server";
+import { getShopCurrencyCode, getShopOwnerDisplayName } from "../models/shop.server";
 import {
   getBundlesSoldCount,
   getBundleRevenue,
@@ -79,14 +79,15 @@ async function getShopifyOrdersCount(admin, fromIso, toIso) {
     }
   `;
 
-  const from = new Date(fromIso).toISOString();
-  const to = new Date(toIso).toISOString();
-  const query = `created_at:>=${from} created_at:<=${to}`;
+  const fromDate = new Date(fromIso).toISOString().slice(0, 10);
+  const toDate = new Date(toIso).toISOString().slice(0, 10);
+  const query = `status:any created_at:>=${fromDate} created_at:<=${toDate}`;
 
   try {
     const response = await admin.graphql(ORDERS_COUNT_QUERY, { variables: { query } });
     const json = await response.json();
     const raw = json?.data?.ordersCount;
+    if (Array.isArray(json?.errors) && json.errors.length > 0) return null;
 
     if (typeof raw === "number") return raw;
     if (raw && typeof raw.count === "number") return raw.count;
@@ -126,7 +127,7 @@ export const loader = async ({ request }) => {
   const now = new Date();
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  const [activeBoxCount, bundlesSold, bundleRevenue, recentOrders, currencyCode, totalStoreOrdersLast30Days] =
+  const [activeBoxCount, bundlesSold, bundleRevenue, recentOrders, currencyCode, totalStoreOrdersLast30Days, storeOwnerName] =
     await Promise.all([
       getActiveBoxCount(shop),
       getBundlesSoldCount(shop),
@@ -134,6 +135,7 @@ export const loader = async ({ request }) => {
       getRecentOrders(shop, 10),
       getShopCurrencyCode(shop),
       getShopifyOrdersCount(admin, thirtyDaysAgo.toISOString(), now.toISOString()),
+      getShopOwnerDisplayName(shop),
     ]);
 
   const [themeEditorUrl, embedBlockUrl, embedBlockEnabled] = await Promise.all([
@@ -186,6 +188,7 @@ export const loader = async ({ request }) => {
     currencyCode,
     totalStoreOrdersLast30Days,
     bundleConversionRate,
+    storeOwnerName,
     recentOrders: recentOrders.map((order) => ({
       id: order.id,
       orderId: order.orderId,
@@ -281,6 +284,7 @@ export default function DashboardPage() {
     currencyCode,
     totalStoreOrdersLast30Days,
     bundleConversionRate,
+    storeOwnerName,
   } = useLoaderData();
 
   const location = useLocation();
@@ -319,7 +323,7 @@ export default function DashboardPage() {
       value: bundleConversionRate == null ? "—" : `${Number(bundleConversionRate).toFixed(1)}%`,
       sub: totalStoreOrdersLast30Days == null
         ? "Unavailable (orders permission/query)"
-        : `${bundlesSold}/${totalStoreOrdersLast30Days} orders (last 30 days)`,
+        : `Calculation: (${bundlesSold} / ${totalStoreOrdersLast30Days}) × 100`,
     },
   ];
 
@@ -349,7 +353,7 @@ export default function DashboardPage() {
 
   return (
     <Page
-      title="Dashboard"
+      title={`Welcome To '${storeOwnerName}'`}
       primaryAction={{
         content: "Create Bundle Box",
         onAction: () => setShowCreateBoxModal(true),

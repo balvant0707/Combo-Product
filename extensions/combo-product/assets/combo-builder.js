@@ -243,6 +243,15 @@
     return label || 'ADD TO BOX';
   }
 
+  function resolveStepSelectionButtonLabel(stepCfg, box, settings) {
+    var label = '';
+    if (stepCfg && stepCfg.popup && stepCfg.popup.btn != null) {
+      label = String(stepCfg.popup.btn).trim();
+    }
+    if (label) return label;
+    return resolveProductGridButtonLabel(box, settings);
+  }
+
   function resolveStepCartButtonLabel(box, ctx) {
     var label = resolveProductGridButtonLabel(box, ctx && ctx.settings);
     if (label && String(label).trim()) return String(label).trim();
@@ -2121,7 +2130,10 @@
 
         // ADD TO BOX / REMOVE FROM BOX button
         var addBtn = document.createElement('button');
-        var productGridBtnLabel = resolveProductGridButtonLabel(box, ctx.settings);
+        var stepCfg = box && box.comboConfig && Array.isArray(box.comboConfig.steps)
+          ? (box.comboConfig.steps[activeSlotIndex] || null)
+          : null;
+        var productGridBtnLabel = resolveStepSelectionButtonLabel(stepCfg, box, ctx.settings);
         addBtn.type = 'button';
         if (isCurrentSlot || isUsed) {
           addBtn.className = 'cb-add-btn cb-add-btn--remove';
@@ -3096,7 +3108,8 @@
 
         // ADD TO BOX / REMOVE FROM BOX button
         var addBtn = document.createElement('button');
-        var productGridBtnLabel = resolveProductGridButtonLabel(box, ctx.settings);
+        var stepCfg = steps[activeSlotIndex] || null;
+        var productGridBtnLabel = resolveStepSelectionButtonLabel(stepCfg, box, ctx.settings);
         addBtn.type = 'button';
         if (isCurrentSlot || isUsed) {
           addBtn.className = 'cb-add-btn cb-add-btn--remove';
@@ -4024,4 +4037,3 @@
   }
 
 })();
-

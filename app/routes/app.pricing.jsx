@@ -386,6 +386,7 @@ export default function PricingPage() {
     <Page
       title="Plans & Pricing"
       subtitle="Choose the plan that fits your store's growth"
+      fullWidth
     >
       <BlockStack gap="500">
 
@@ -466,7 +467,7 @@ export default function PricingPage() {
         </Banner>
 
         {/* ── Plan cards ── */}
-        <InlineGrid columns={{ xs: 1, sm: 1, md: 1, lg: 1 }} gap="400">
+        <InlineGrid columns={{ xs: 1, sm: 2, md: 4, lg: 4 }} gap="400">
           {PLAN_UI.map((plan) => (
             <PlanCard
               key={plan.key}

@@ -374,7 +374,11 @@ export default function CreateSpecificComboBoxPage() {
   /* -- Combo Config state -- */
   const [comboConfig, setComboConfig] = useState(DEFAULT_COMBO);
   const [comboActiveStep, setComboActiveStep] = useState(0);
+  const [stepLabelDrafts, setStepLabelDrafts] = useState(
+    Array.from({ length: MAX_COMBO_STEPS }, (_, i) => DEFAULT_COMBO.steps[i]?.label || "")
+  );
   const [stepProducts, setStepProducts] = useState(Array(MAX_COMBO_STEPS).fill(null));
+  const [inlineToast, setInlineToast] = useState(null);
 
   useEffect(() => { if (collProdsFetcher0.data?.collectionProducts) setStepProducts((p) => { const n = [...p]; n[0] = collProdsFetcher0.data.collectionProducts; return n; }); }, [collProdsFetcher0.data]);
   useEffect(() => { if (collProdsFetcher1.data?.collectionProducts) setStepProducts((p) => { const n = [...p]; n[1] = collProdsFetcher1.data.collectionProducts; return n; }); }, [collProdsFetcher1.data]);
@@ -435,6 +439,11 @@ export default function CreateSpecificComboBoxPage() {
       }
       return { ...prev, type: clampedN, steps: newSteps.slice(0, clampedN) };
     });
+    setStepLabelDrafts((prev) => {
+      const next = [...prev];
+      while (next.length < clampedN) next.push("");
+      return next.slice(0, clampedN);
+    });
     setComboActiveStep((prev) => Math.min(prev, clampedN - 1));
   }
 
@@ -454,6 +463,40 @@ export default function CreateSpecificComboBoxPage() {
         return { ...st, scope: nextScope, collections: [], selectedProducts: [] };
       }),
     }));
+  }
+
+  function showValidationToast(message) {
+    if (!message) return;
+    try {
+      if (typeof window !== "undefined" && window.shopify?.toast?.show) {
+        window.shopify.toast.show(message, { isError: true });
+        return;
+      }
+    } catch {}
+    setInlineToast({ message });
+    setTimeout(() => setInlineToast(null), 3200);
+  }
+
+  function validateStepBeforeSave(step, stepIndex) {
+    if (!step) return `Step ${stepIndex + 1}: configuration is missing`;
+    const stepName = String(step.label || "").trim();
+    if (!stepName) return `Step ${stepIndex + 1}: Step Name is required`;
+
+    const scope = step.scope === "product" || step.scope === "wholestore" ? "product" : "collection";
+    if (scope === "collection" && (!Array.isArray(step.collections) || step.collections.length === 0)) {
+      return `Step ${stepIndex + 1}: select at least one collection`;
+    }
+    if (scope === "product" && (!Array.isArray(step.selectedProducts) || step.selectedProducts.length === 0)) {
+      return `Step ${stepIndex + 1}: select at least one product`;
+    }
+
+    const popupTitle = String(step.popup?.title || "").trim();
+    const popupDesc = String(step.popup?.desc || "").trim();
+    const popupBtn = String(step.popup?.btn || "").trim();
+    if (!popupTitle || !popupDesc || !popupBtn) {
+      return `Step ${stepIndex + 1}: fill Step Heading, Step Description and Step Selection Button Text`;
+    }
+    return "";
   }
 
   function confirmColl() {
@@ -498,8 +541,16 @@ export default function CreateSpecificComboBoxPage() {
   ]);
   const comboDynamicPrice = comboDynamicDiscountBreakdown.discountedTotal;
 
-  const comboConfigJson = JSON.stringify(sanitizeSpecificComboPricing({
+  const comboConfigForSubmit = useMemo(() => ({
     ...comboConfig,
+    steps: (comboConfig.steps || []).map((step, index) => ({
+      ...step,
+      label: stepLabelDrafts[index] != null ? stepLabelDrafts[index] : (step?.label || ""),
+    })),
+  }), [comboConfig, stepLabelDrafts]);
+
+  const comboConfigJson = JSON.stringify(sanitizeSpecificComboPricing({
+    ...comboConfigForSubmit,
     bundlePrice: comboConfig.bundlePriceType === "dynamic"
       ? comboDynamicPrice
       : parseFloat(comboConfig.bundlePrice) || 0,
@@ -541,6 +592,16 @@ export default function CreateSpecificComboBoxPage() {
     navigate(withEmbeddedAppParams("/app/boxes", location.search));
   }
 
+  function handleFormSubmit(e) {
+    const activeIdx = Math.max(0, Math.min(comboActiveStep, (comboConfigForSubmit.steps || []).length - 1));
+    const selectedStep = comboConfigForSubmit.steps?.[activeIdx];
+    const validationMessage = validateStepBeforeSave(selectedStep, activeIdx);
+    if (!validationMessage) return;
+
+    e.preventDefault();
+    showValidationToast(validationMessage);
+  }
+
   return (
     <Page
       title="Create Specific Combo Bundle"
@@ -569,7 +630,35 @@ export default function CreateSpecificComboBoxPage() {
         </div>
       )}
 
-      <Form id="specific-combo-form" method="POST" encType="multipart/form-data" action={`/app/boxes/specific-combo${location.search}`}>
+      {inlineToast?.message && (
+        <div
+          role="alert"
+          style={{
+            position: "fixed",
+            right: "18px",
+            bottom: "18px",
+            zIndex: 10020,
+            background: "#111827",
+            color: "#ffffff",
+            padding: "10px 14px",
+            borderRadius: "8px",
+            fontSize: "13px",
+            fontWeight: "600",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+            maxWidth: "520px",
+          }}
+        >
+          {inlineToast.message}
+        </div>
+      )}
+
+      <Form
+        id="specific-combo-form"
+        method="POST"
+        encType="multipart/form-data"
+        action={`/app/boxes/specific-combo${location.search}`}
+        onSubmit={handleFormSubmit}
+      >
         <input type="hidden" name="comboStepsConfig" value={comboConfigJson} />
         <input type="hidden" name="stepCount" value={comboConfig.type} />
 
@@ -906,8 +995,16 @@ export default function CreateSpecificComboBoxPage() {
                                 <Text as="label" variant="bodySm" fontWeight="semibold">Step Name</Text>
                                 <input
                                   type="text"
-                                  value={activeStepData.label}
-                                  onChange={(e) => updateComboStep(comboActiveStep, "label", e.target.value)}
+                                  value={stepLabelDrafts[comboActiveStep] ?? activeStepData.label}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    setStepLabelDrafts((prev) => {
+                                      const next = [...prev];
+                                      next[comboActiveStep] = value;
+                                      return next;
+                                    });
+                                  }}
+                                  onBlur={() => updateComboStep(comboActiveStep, "label", stepLabelDrafts[comboActiveStep] ?? "")}
                                   style={inputStyle}
                                   placeholder="e.g. Main Product"
                                 />
@@ -1308,4 +1405,3 @@ export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
 export const headers = (headersArgs) => boundary.headers(headersArgs);
-

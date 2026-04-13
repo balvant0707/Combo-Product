@@ -157,7 +157,8 @@ export const loader = async ({ request }) => {
       orderId: order.orderId,
       boxTitle: order.box?.displayTitle || "Unknown Box",
       itemCount: order.box?.itemCount || 0,
-      comboType: isSpecificComboFromBox(order.box) ? "Specific Bundle Product" : "Simple Bundle Product",
+      comboType: isSpecificComboFromBox(order.box) ? "specific" : "simple",
+      comboTypeLabel: isSpecificComboFromBox(order.box) ? "Specific Bundle Product" : "Simple Bundle Product",
       selectedProducts: parseOrderSelectedProducts(order.selectedProducts),
       bundlePrice: parseFloat(order.bundlePrice),
       orderDate: order.orderDate.toISOString(),
@@ -286,7 +287,7 @@ export default function DashboardPage() {
     <Badge
       tone={order.comboType === "specific" ? "info" : "success"}
     >
-      {order.comboType === "specific" ? "Specific" : "Simple"}
+      {order.comboTypeLabel || (order.comboType === "specific" ? "Specific Bundle Product" : "Simple Bundle Product")}
     </Badge>,
     order.itemCount,
     formatCurrencyAmount(Number(order.bundlePrice || 0), currencyCode),

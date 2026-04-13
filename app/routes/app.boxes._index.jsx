@@ -35,6 +35,48 @@ import {
   TextField,
 } from "@shopify/polaris";
 
+const BUNDLE_PREVIEW_PRODUCTS_QUERY = `#graphql
+  query BundlePreviewProducts($ids: [ID!]!) {
+    nodes(ids: $ids) {
+      ... on Product {
+        id
+        handle
+        onlineStoreUrl
+      }
+    }
+  }
+`;
+
+async function getBundlePreviewUrlByProductId(admin, shop, productIds = []) {
+  const uniqueIds = Array.from(
+    new Set(
+      (Array.isArray(productIds) ? productIds : [])
+        .map((id) => (typeof id === "string" ? id.trim() : ""))
+        .filter(Boolean),
+    ),
+  );
+  if (uniqueIds.length === 0) return new Map();
+
+  try {
+    const response = await admin.graphql(BUNDLE_PREVIEW_PRODUCTS_QUERY, {
+      variables: { ids: uniqueIds },
+    });
+    const json = await response.json();
+    const nodes = Array.isArray(json?.data?.nodes) ? json.data.nodes : [];
+
+    const map = new Map();
+    for (const node of nodes) {
+      if (!node?.id || !node?.handle) continue;
+      const fallbackUrl = `https://${shop}/products/${node.handle}`;
+      map.set(node.id, node.onlineStoreUrl || fallbackUrl);
+    }
+    return map;
+  } catch (error) {
+    console.error("[app.boxes._index] Failed to resolve bundle preview URLs", error);
+    return new Map();
+  }
+}
+
 function getDiscountSummary(box) {
   // Always read from comboStepsConfig JSON — works for both regular and specific combo boxes
   const src = box.comboStepsConfig;
@@ -93,6 +135,11 @@ export const loader = async ({ request }) => {
   }
   activateAllBundleProducts(session.shop, admin).catch(() => {});
   const currencyCode = await getShopCurrencyCode(session.shop);
+  const previewUrlByProductId = await getBundlePreviewUrlByProductId(
+    admin,
+    session.shop,
+    boxes.map((b) => b.shopifyProductId),
+  );
   return {
     currencyCode,
     boxes: boxes.map((b) => ({
@@ -110,6 +157,7 @@ export const loader = async ({ request }) => {
       comboConfig: getComboConfigSummary(b),
       discount: getDiscountSummary(b),
       listImageSrc: getBoxListImageSrc(b),
+      previewUrl: b.shopifyProductId ? previewUrlByProductId.get(b.shopifyProductId) || null : null,
     })),
   };
 };
@@ -171,6 +219,28 @@ function CopyCodeIcon({ size = 16 }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+}
+
+function EyeIcon({ size = 16 }) {
+  return (
+    <svg
+      width={`${size}px`}
+      height={`${size}px`}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M1.5 12s3.75-6.75 10.5-6.75S22.5 12 22.5 12s-3.75 6.75-10.5 6.75S1.5 12 1.5 12Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="3.25" stroke="currentColor" strokeWidth="2" />
     </svg>
   );
 }
@@ -625,6 +695,16 @@ export default function ManageBoxesPage() {
                       {/* Actions */}
                       <IndexTable.Cell>
                         <InlineStack gap="100">
+                          <Button
+                            size="slim"
+                            url={box.previewUrl || undefined}
+                            target="_blank"
+                            disabled={!box.previewUrl}
+                            icon={<EyeIcon size={16} />}
+                            accessibilityLabel="Preview on storefront"
+                            tooltipContent={box.previewUrl ? "Preview on storefront" : "Preview unavailable"}
+                          >
+                          </Button>
                           <Button
                             size="slim"
                             onClick={() => navigateTo(box.comboConfig ? `/app/boxes/${box.id}/combo` : `/app/boxes/${box.id}`)}

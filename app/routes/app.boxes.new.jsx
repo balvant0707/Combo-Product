@@ -404,15 +404,38 @@ export default function CreateBoxPage() {
           <input type="hidden" name="isActive" value={String(options.isActive)} />
 
           <BlockStack gap="400">
-            {/* Card 1 — Status */}
+            {/* Card 1 — Status + Title */}
             <Card>
-              <InlineStack gap="200" blockAlign="start">
-                <ToggleSwitch checked={options.isActive} onChange={() => toggleOption("isActive")} showStateText={false} />
-                <BlockStack gap="100">
-                  <Text as="p" variant="bodySm" fontWeight="semibold">Publish on Storefront</Text>
-                  <Text as="p" variant="bodySm" tone="subdued">Uncheck to hide this box from customers</Text>
+              <InlineGrid columns={{ xs: "1fr", sm: "1fr auto" }} gap="400">
+                {/* Left: section info + title input */}
+                <BlockStack gap="300">
+                  <BlockStack gap="050">
+                    <Text as="h2" variant="headingMd">Specific Combo Bundle Setup</Text>
+                    <Text as="p" variant="bodySm" tone="subdued">Create and configure your specific combo experience</Text>
+                  </BlockStack>
+                  <BlockStack gap="100">
+                    <label htmlFor="new-boxName" style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
+                      Combo Product Title
+                    </label>
+                    <input
+                      id="new-boxName"
+                      type="text"
+                      name="boxName"
+                      placeholder="e.g. Summer Snack Box"
+                      aria-label="Internal name for this combo product"
+                      style={nativeInputStyle}
+                    />
+                  </BlockStack>
                 </BlockStack>
-              </InlineStack>
+                {/* Right: Publish toggle */}
+                <InlineStack gap="200" blockAlign="start">
+                  <ToggleSwitch checked={options.isActive} onChange={() => toggleOption("isActive")} showStateText={false} />
+                  <BlockStack gap="100">
+                    <Text as="p" variant="bodySm" fontWeight="semibold">Publish on Storefront</Text>
+                    <Text as="p" variant="bodySm" tone="subdued">Uncheck to hide this box from customers</Text>
+                  </BlockStack>
+                </InlineStack>
+              </InlineGrid>
             </Card>
 
             {/* Card 2 — Basic Information */}

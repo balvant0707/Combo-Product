@@ -72,6 +72,30 @@ function isSpecificComboFromBox(box) {
   return false;
 }
 
+async function getShopifyOrdersCount(admin, fromIso, toIso) {
+  const ORDERS_COUNT_QUERY = `#graphql
+    query OrdersCount($query: String!) {
+      ordersCount(query: $query)
+    }
+  `;
+
+  const from = new Date(fromIso).toISOString();
+  const to = new Date(toIso).toISOString();
+  const query = `created_at:>=${from} created_at:<=${to}`;
+
+  try {
+    const response = await admin.graphql(ORDERS_COUNT_QUERY, { variables: { query } });
+    const json = await response.json();
+    const raw = json?.data?.ordersCount;
+
+    if (typeof raw === "number") return raw;
+    if (raw && typeof raw.count === "number") return raw.count;
+    return 0;
+  } catch {
+    return null;
+  }
+}
+
 export const loader = async ({ request }) => {
   const { session, admin, billing } = await authenticate.admin(request);
   const shop = session.shop;
@@ -99,13 +123,17 @@ export const loader = async ({ request }) => {
     }
   }
 
-  const [activeBoxCount, bundlesSold, bundleRevenue, recentOrders, currencyCode] =
+  const now = new Date();
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+  const [activeBoxCount, bundlesSold, bundleRevenue, recentOrders, currencyCode, totalStoreOrdersLast30Days] =
     await Promise.all([
       getActiveBoxCount(shop),
       getBundlesSoldCount(shop),
       getBundleRevenue(shop),
       getRecentOrders(shop, 10),
       getShopCurrencyCode(shop),
+      getShopifyOrdersCount(admin, thirtyDaysAgo.toISOString(), now.toISOString()),
     ]);
 
   const [themeEditorUrl, embedBlockUrl, embedBlockEnabled] = await Promise.all([
@@ -122,7 +150,6 @@ export const loader = async ({ request }) => {
   const orderLimit = currentPlan.orderLimit;
 
   // Count orders in the current calendar month
-  const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const { getAnalytics } = await import("../models/orders.server.js");
   const monthlyAnalytics = await getAnalytics(
@@ -133,6 +160,9 @@ export const loader = async ({ request }) => {
   const monthlyOrderCount = monthlyAnalytics.totalOrders;
   const orderLimitReached = isFinite(orderLimit) && monthlyOrderCount >= orderLimit;
   const orderLimitWarning = isFinite(orderLimit) && !orderLimitReached && monthlyOrderCount >= orderLimit * 0.8;
+  const bundleConversionRate = totalStoreOrdersLast30Days > 0
+    ? (bundlesSold / totalStoreOrdersLast30Days) * 100
+    : 0;
 
   return {
     activeBoxCount,
@@ -152,6 +182,8 @@ export const loader = async ({ request }) => {
     orderLimitReached,
     orderLimitWarning,
     currencyCode,
+    totalStoreOrdersLast30Days,
+    bundleConversionRate,
     recentOrders: recentOrders.map((order) => ({
       id: order.id,
       orderId: order.orderId,
@@ -245,6 +277,8 @@ export default function DashboardPage() {
     orderLimitReached,
     orderLimitWarning,
     currencyCode,
+    totalStoreOrdersLast30Days,
+    bundleConversionRate,
   } = useLoaderData();
 
   const location = useLocation();
@@ -278,7 +312,13 @@ export default function DashboardPage() {
       value: formatCurrencyAmount(Number(bundleRevenue || 0), currencyCode),
       sub: "Last 30 days",
     },
-    { label: "Bundle Conversion Rate", value: "—", sub: "Coming soon" },
+    {
+      label: "Bundle Conversion Rate",
+      value: `${Number(bundleConversionRate || 0).toFixed(1)}%`,
+      sub: totalStoreOrdersLast30Days == null
+        ? "Unavailable (orders permission/query)"
+        : `${bundlesSold}/${totalStoreOrdersLast30Days} orders (last 30 days)`,
+    },
   ];
 
   const orderTableRows = recentOrders.map((order, index) => [

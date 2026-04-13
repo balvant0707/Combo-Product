@@ -237,7 +237,7 @@ function CopyCodeIcon({ size = 16 }) {
   );
 }
 
-function EyeIcon({ size = 16 }) {
+function EyeIcon({ size = 16, color = "#ffffff" }) {
   return (
     <svg
       width={`${size}px`}
@@ -249,12 +249,12 @@ function EyeIcon({ size = 16 }) {
     >
       <path
         d="M1.5 12s3.75-6.75 10.5-6.75S22.5 12 22.5 12s-3.75 6.75-10.5 6.75S1.5 12 1.5 12Z"
-        stroke="currentColor"
+        stroke={color}
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <circle cx="12" cy="12" r="3.25" stroke="currentColor" strokeWidth="2" />
+      <circle cx="12" cy="12" r="3.25" stroke={color} strokeWidth="2" />
     </svg>
   );
 }

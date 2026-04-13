@@ -282,7 +282,7 @@ export const action = async ({ request, params }) => {
 /* ─────────────────────────── Styles ─────────────────────────── */
 const inputStyle = {
   width: "100%", padding: "8px 12px", border: "1.5px solid #e5e7eb",
-  borderRadius: "6px", fontSize: "14px", boxSizing: "border-box",
+  borderRadius: "6px", fontSize: "12px", boxSizing: "border-box",
 };
 
 /* ─────────────────────────── Component ─────────────────────────── */

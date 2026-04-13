@@ -716,7 +716,7 @@ export default function CreateSpecificComboBoxPage() {
                           borderRadius: mode === "manual" ? "5px 0 0 5px" : "0 5px 5px 0",
                         }}
                       >
-                        {mode === "manual" ? "Fixed Bundle Price" : "Auto Calculated Bundle Price"}
+                        {mode === "manual" ? "Fixed Price" : "Dynamic Price"}
                       </button>
                     ))}
                   </InlineStack>
@@ -915,7 +915,7 @@ export default function CreateSpecificComboBoxPage() {
                               </BlockStack>
 
                               <BlockStack gap="200">
-                                <Text as="label" variant="bodySm" fontWeight="semibold">Step Product Source</Text>
+                                <Text as="label" variant="bodySm" fontWeight="semibold">Step Scope</Text>
                                 <InlineGrid columns={2} gap="200">
                                   {[
                                     { value: "collection", label: "Use Selected Collections" },

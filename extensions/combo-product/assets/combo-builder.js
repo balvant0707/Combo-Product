@@ -736,8 +736,11 @@
     var hideSelectors = [
       '.product__info-wrapper',
       '.product__info-container',
+      '.product__column-sticky',
+      '.product-main__info',
       '.product-form',
       '[data-product-blocks]',
+      '[data-product-information]',
       '.product-single__meta',
       '.productView-details',
       '.product-info',
@@ -753,7 +756,19 @@
         if (el.closest && el.closest('.combo-builder-root')) continue;
         if (el.getAttribute('data-cb-preview-hidden') === '1') continue;
         el.setAttribute('data-cb-preview-hidden', '1');
-        el.style.display = 'none';
+        el.style.setProperty('display', 'none', 'important');
+      }
+    }
+
+    // If theme layout is two-column product media/info, hide the sibling info column too.
+    var productContainers = document.querySelectorAll('.product, .main-product, [data-section-type="product"]');
+    for (var pi = 0; pi < productContainers.length; pi++) {
+      var pc = productContainers[pi];
+      if (!pc || !pc.contains(root)) continue;
+      var infoSibling = pc.querySelector('.product__info-wrapper, .product__info-container, .product-main__info, .product-info');
+      if (infoSibling && !infoSibling.contains(root)) {
+        infoSibling.setAttribute('data-cb-preview-hidden', '1');
+        infoSibling.style.setProperty('display', 'none', 'important');
       }
     }
   }

@@ -278,7 +278,6 @@ function CopyCodeBtn({ code }) {
     <InlineStack gap="100" blockAlign="center">
       <span
         style={{
-          fontFamily: "monospace",
           fontSize: "12px",
           fontWeight: 700,
           letterSpacing: "0.1em",

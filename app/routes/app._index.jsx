@@ -591,7 +591,7 @@ export default function DashboardPage() {
             <InlineStack gap="200" blockAlign="center">
               <AdminIcon type="collection-list" size="base" style={{ color: "#111827" }} />
               <Text as="h2" variant="headingMd">
-                Recommended Ours Growth Apps
+                Recommended Our Growth Apps
               </Text>
             </InlineStack>
             <Text as="p" tone="subdued" variant="bodySm">

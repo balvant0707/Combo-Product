@@ -40,7 +40,6 @@ import {
   BASIC_PRICE,
   ADVANCE_PRICE,
   PLUS_PRICE,
-  TRIAL_DAYS,
   ORDER_LIMITS,
 } from "../config/billing";
 
@@ -72,7 +71,6 @@ export const loader = async ({ request }) => {
     isDevMode,
     subscribed: url.searchParams.get("subscribed") === "1",
     cancelled: url.searchParams.get("cancelled") === "1",
-    trialDays: TRIAL_DAYS,
   };
 };
 
@@ -232,7 +230,7 @@ function currentPlanKey(subscription) {
 
 /* ── Plan Card ───────────────────────────────────────────────────── */
 
-function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan, trialDays }) {
+function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan }) {
   const isActive   = activePlanKey === plan.key;
   const isFree     = plan.key === "FREE";
 
@@ -316,9 +314,6 @@ function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan, trialDays
                 ${plan.price}
               </Text>
               <Text as="p" tone="subdued">{plan.priceLabel}</Text>
-              {trialDays > 0 && !isActive && (
-                <Badge tone="info">{trialDays}-day free trial</Badge>
-              )}
             </>
           )}
 
@@ -355,7 +350,6 @@ export default function PricingPage() {
     isDevMode,
     subscribed,
     cancelled,
-    trialDays,
   } = useLoaderData();
 
   const actionData  = useActionData();
@@ -472,7 +466,7 @@ export default function PricingPage() {
         </Banner>
 
         {/* ── Plan cards ── */}
-        <InlineGrid columns={{ xs: 1, sm: 2, md: 2, lg: 4 }} gap="400">
+        <InlineGrid columns={{ xs: 1, sm: 1, md: 1, lg: 1 }} gap="400">
           {PLAN_UI.map((plan) => (
             <PlanCard
               key={plan.key}
@@ -480,7 +474,6 @@ export default function PricingPage() {
               activePlanKey={activePlanKey}
               isSubmitting={isSubmitting}
               submittingPlan={submittingPlan}
-              trialDays={trialDays}
             />
           ))}
         </InlineGrid>

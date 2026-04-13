@@ -1331,6 +1331,17 @@ export default function AnalyticsPage() {
       title="Bundle Analytics Dashboard"
       subtitle="Bundle sales and revenue overview"
     >
+      <style>{`
+        .Polaris-InlineGrid {
+          z-index: 0;
+        }
+        .Polaris-ShadowBevel {
+          z-index: 1;
+        }
+        .Polaris-BlockStack {
+          z-index: 0;
+        }
+      `}</style>
       <BlockStack gap="500">
         {/* ── Period Selector + Comparison Banner ── */}
         <Card>

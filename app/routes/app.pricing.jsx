@@ -532,10 +532,6 @@ export default function PricingPage() {
                       values: ["✓", "✓", "✓", "✓"],
                     },
                     {
-                      label: "Multi-currency discounts",
-                      values: ["✓", "—", "—", "—"],
-                    },
-                    {
                       label: "Support",
                       values: [
                         "Basic email",

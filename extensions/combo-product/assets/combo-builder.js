@@ -723,6 +723,41 @@
     _stickyTotalEl = null;
   }
 
+  function applyProductPagePreviewMode(root) {
+    if (!root) return;
+
+    try {
+      root.classList.add('cb-preview-mode');
+      if (document && document.documentElement) document.documentElement.classList.add('cb-preview-mode');
+      if (document && document.body) document.body.classList.add('cb-preview-mode');
+    } catch (_) {}
+
+    // Hide common product info containers only in preview mode.
+    var hideSelectors = [
+      '.product__info-wrapper',
+      '.product__info-container',
+      '.product-form',
+      '[data-product-blocks]',
+      '.product-single__meta',
+      '.productView-details',
+      '.product-info',
+      '.main-product__info',
+      '.product-page-info'
+    ];
+
+    for (var i = 0; i < hideSelectors.length; i++) {
+      var nodes = document.querySelectorAll(hideSelectors[i]);
+      for (var j = 0; j < nodes.length; j++) {
+        var el = nodes[j];
+        if (!el || el.contains(root) || root.contains(el)) continue;
+        if (el.closest && el.closest('.combo-builder-root')) continue;
+        if (el.getAttribute('data-cb-preview-hidden') === '1') continue;
+        el.setAttribute('data-cb-preview-hidden', '1');
+        el.style.display = 'none';
+      }
+    }
+  }
+
   function ensurePageLoader() {
     if (_pageLoaderEl) return _pageLoaderEl;
 
@@ -1011,6 +1046,10 @@
         // Admin eye-preview mode: render only the requested combo box.
         boxes = [previewBox];
       }
+      var isPreviewMode = !!(previewBox && previewBoxToken);
+      if (isPreviewMode) {
+        applyProductPagePreviewMode(root);
+      }
 
       var resolvedHeading = root.dataset.heading || config.heading || (settings && settings.widgetHeadingText) || 'Build Your Own Box!';
       if (settings && settings.presetTheme) applyPresetTheme(root, settings.presetTheme);
@@ -1049,7 +1088,7 @@
       var step2Heading = root.dataset.step2Heading || config.step2Heading || 'Step 2: Select your products';
       var step3Heading = root.dataset.step3Heading || config.step3Heading || 'Step 3: Complete your order';
       var step3Buttons = root.dataset.step3Buttons || config.step3Buttons || 'both';
-      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, currencyCode: currencyCode, layout: layout, layoutMode: layoutMode, enableStickyCart: enableStickyCart, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root, step1Label: step1Label, step2Label: step2Label, step3Label: step3Label, cartBtnLabel: cartBtnLabel, checkoutBtnLabel: checkoutBtnLabel, step1Heading: step1Heading, step2Heading: step2Heading, step3Heading: step3Heading, step3Buttons: step3Buttons, previewBoxId: previewBoxId });
+      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, currencyCode: currencyCode, layout: layout, layoutMode: layoutMode, enableStickyCart: enableStickyCart, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root, step1Label: step1Label, step2Label: step2Label, step3Label: step3Label, cartBtnLabel: cartBtnLabel, checkoutBtnLabel: checkoutBtnLabel, step1Heading: step1Heading, step2Heading: step2Heading, step3Heading: step3Heading, step3Buttons: step3Buttons, previewBoxId: previewBoxId, isPreviewMode: isPreviewMode });
     });
   }
 
@@ -1321,8 +1360,10 @@
 
     // Single box visible: skip Step 1 entirely — hide heading + grid and auto-select
     if (ctx.boxes.length === 1) {
-      step1Head.style.display = 'none';
-      boxGrid.style.display = 'none';
+      if (ctx.isPreviewMode) {
+        step1Head.style.display = 'none';
+        boxGrid.style.display = 'none';
+      }
       var onlyCard = boxGrid.firstElementChild;
       if (onlyCard) onlyCard.click();
       return;

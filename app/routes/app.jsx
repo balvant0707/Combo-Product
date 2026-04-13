@@ -3,7 +3,7 @@ import { Outlet, useFetcher, useLoaderData, useLocation, useNavigate, useRevalid
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider as ShopifyAppProvider } from "@shopify/shopify-app-react-router/react";
 import { AppProvider as PolarisAppProvider } from "@shopify/polaris";
-import { Banner, BlockStack, Box, Button, InlineStack, Modal, Text, TextField } from "@shopify/polaris";
+import { Banner, BlockStack, Box, Button, InlineStack, Modal, Page, Text, TextField } from "@shopify/polaris";
 import enTranslations from "@shopify/polaris/locales/en.json";
 import "@shopify/polaris/build/esm/styles.css";
 import { authenticate } from "../shopify.server";
@@ -289,7 +289,7 @@ export default function App() {
         <s-link href={withEmbeddedAppParams("/app/pricing", location.search)}>Price Plan</s-link>
       </s-app-nav>
       {!embedBlockEnabled && (
-        <Box padding="400">
+        <Page>
           <Banner
             tone="warning"
             title="Embed block not active"
@@ -297,7 +297,7 @@ export default function App() {
           >
             <p>Enable the Combo Builder embed block so it can load scripts on your storefront.</p>
           </Banner>
-        </Box>
+        </Page>
       )}
       <Outlet />
 

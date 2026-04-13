@@ -3,7 +3,7 @@ import { Outlet, useFetcher, useLoaderData, useLocation, useNavigate, useRouteEr
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider as ShopifyAppProvider } from "@shopify/shopify-app-react-router/react";
 import { AppProvider as PolarisAppProvider } from "@shopify/polaris";
-import { BlockStack, Box, Button, InlineStack, Modal, Text, TextField } from "@shopify/polaris";
+import { Banner, BlockStack, Box, Button, InlineStack, Modal, Text, TextField } from "@shopify/polaris";
 import enTranslations from "@shopify/polaris/locales/en.json";
 import "@shopify/polaris/build/esm/styles.css";
 import { authenticate } from "../shopify.server";
@@ -201,67 +201,101 @@ export default function App() {
       <Modal
         open={showReviewPopup}
         onClose={dismissPopup}
-        title="Enjoying MixBox - Box & Bundle Builder?"
-        size="small"
+        title="Review this app"
+        size="large"
       >
         <Modal.Section>
           <BlockStack gap="400">
-            <Text as="p" variant="bodyMd">
-              It has been {reviewPrompt?.daysSinceInstall ?? 0} days since app install. Please share a quick review.
-              Closing this popup snoozes it for {reviewPrompt?.snoozeDays ?? 1} day.
-            </Text>
+            <Banner tone="info">
+              <p>Development stores aren't eligible to review apps. This is for testing purposes only.</p>
+            </Banner>
 
             <BlockStack gap="200">
-              <Text as="p" variant="bodyMd" fontWeight="semibold">Rating</Text>
-              <InlineStack gap="200" wrap>
-                {[1, 2, 3, 4, 5].map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setRating(value)}
-                    disabled={reviewFetcher.state !== "idle"}
-                    aria-label={`Rate ${value} star${value > 1 ? "s" : ""}`}
-                    style={{
-                      width: "44px",
-                      height: "40px",
-                      borderRadius: "8px",
-                      border: "1px solid #f59e0b",
-                      background: value <= rating ? "#fffbeb" : "#ffffff",
-                      color: "#f59e0b",
-                      fontWeight: "700",
-                      fontSize: "20px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    ★
-                  </button>
-                ))}
+              <InlineStack gap="300" blockAlign="start">
+                <Box
+                  as="div"
+                  style={{
+                    width: "52px",
+                    height: "52px",
+                    borderRadius: "10px",
+                    background: "linear-gradient(135deg, #f97316 0%, #fb7185 100%)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#ffffff",
+                    fontSize: "26px",
+                    flexShrink: 0,
+                  }}
+                >
+                  ⬢
+                </Box>
+                <BlockStack gap="100">
+                  <Text as="p" variant="headingMd" fontWeight="semibold">
+                    How would you rate MixBox - Box & Bundle Builder?
+                  </Text>
+                  <InlineStack gap="100" wrap>
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setRating(value)}
+                        disabled={reviewFetcher.state !== "idle"}
+                        aria-label={`Rate ${value} star${value > 1 ? "s" : ""}`}
+                        style={{
+                          width: "28px",
+                          height: "28px",
+                          border: "none",
+                          background: "transparent",
+                          color: value <= rating ? "#f59e0b" : "#9ca3af",
+                          fontWeight: "700",
+                          fontSize: "22px",
+                          lineHeight: 1,
+                          cursor: "pointer",
+                          padding: 0,
+                        }}
+                      >
+                        ★
+                      </button>
+                    ))}
+                  </InlineStack>
+                </BlockStack>
               </InlineStack>
             </BlockStack>
 
-            <TextField
-              label="Feedback (optional)"
-              value={feedback}
-              onChange={setFeedback}
-              name="feedback"
-              maxLength={2000}
-              autoComplete="off"
-              multiline={4}
-              placeholder="What can we improve?"
-              disabled={reviewFetcher.state !== "idle"}
-            />
+            <BlockStack gap="100">
+              <Text as="p" variant="headingMd">
+                Describe your experience (optional)
+              </Text>
+              <TextField
+                label="Review details"
+                labelHidden
+                value={feedback}
+                onChange={setFeedback}
+                name="feedback"
+                maxLength={2000}
+                autoComplete="off"
+                multiline={6}
+                placeholder="What should other merchants know about this app?"
+                disabled={reviewFetcher.state !== "idle"}
+              />
+            </BlockStack>
 
-            <Box>
+            <Text as="p" tone="subdued" variant="bodySm">
+              If your review is published on the Shopify App Store, we'll include some details about your store.
+            </Text>
+
+            <Box borderBlockStartWidth="025" borderColor="border">
               <InlineStack align="end" gap="200">
                 <Button onClick={dismissPopup} disabled={reviewFetcher.state !== "idle"}>
-                  Remind me tomorrow
+                  Get support
                 </Button>
                 <Button
                   variant="primary"
                   onClick={submitReview}
                   loading={reviewFetcher.state !== "idle"}
+                  disabled={rating < 1}
                 >
-                  Submit review
+                  Submit
                 </Button>
               </InlineStack>
             </Box>

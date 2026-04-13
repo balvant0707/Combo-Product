@@ -8,7 +8,7 @@ import {
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { Buffer } from "node:buffer";
-import { getBox, upsertComboConfig, saveComboStepImages, getComboStepImages, syncShopifyBundleProduct, syncSpecificComboProductMedia } from "../models/boxes.server";
+import { getBox, upsertComboConfig, saveComboStepImages, getComboStepImages, deleteComboStepImage, syncShopifyBundleProduct, syncSpecificComboProductMedia } from "../models/boxes.server";
 import { getShopCurrencyCode } from "../models/shop.server";
 import { withEmbeddedAppParams, withEmbeddedAppToastFromRequest } from "../utils/embedded-app";
 import { formatCurrencyAmount, getCurrencySymbol } from "../utils/currency";
@@ -368,6 +368,7 @@ export const action = async ({ request, params }) => {
     const comboStepsConfig = JSON.stringify(sanitizeSpecificComboPricing(parsedConfig));
     const errors = {};
     const comboImage = await parseComboImage(formData, errors);
+    const removeComboImage = formData.get("removeComboImage") === "true" && !comboImage;
     if (Object.keys(errors).length > 0) {
       return { ok: false, errors };
     }
@@ -377,6 +378,13 @@ export const action = async ({ request, params }) => {
     } catch (e) {
       console.error("[app.boxes.$id.combo] upsertComboConfig error:", e);
       return { ok: false, errors: { _global: "Failed to save combo configuration. Please try again." } };
+    }
+
+    // Remove image if requested
+    if (removeComboImage) {
+      try { await deleteComboStepImage(params.id, 0); } catch (e) {
+        console.error("[app.boxes.$id.combo] deleteComboStepImage error:", e);
+      }
     }
 
     // Save uploaded combo image
@@ -539,6 +547,7 @@ export default function SpecificComboBoxPage() {
   }, []);
 
   /* Single combo image preview (existing image or newly selected file) */
+  const [removeComboImage, setRemoveComboImage] = useState(false);
   const [comboImagePreview, setComboImagePreview] = useState(() => {
     const stepZeroImage = (stepImagesBase64 || []).find((img) => img.stepIndex === 0 && img.src);
     if (stepZeroImage?.src) return stepZeroImage.src;
@@ -714,6 +723,46 @@ export default function SpecificComboBoxPage() {
   const isLoadingStepProds = stepProdModalIdx !== null && collProdsFetchers[stepProdModalIdx]?.state === "loading";
   const filteredStepProds = activeScopedProducts.filter((p) => !stepProdSearch || p.title.toLowerCase().includes(stepProdSearch.toLowerCase()));
 
+  const [stepErrors, setStepErrors] = useState({});
+
+  function validateStepBeforeSave(step, stepIndex) {
+    if (!step) return `Step ${stepIndex + 1}: configuration is missing`;
+    if (!String(step.label || "").trim()) return `Step ${stepIndex + 1}: Step Name is required`;
+    const scope = step.scope === "product" ? "product" : "collection";
+    if (scope === "collection" && (!Array.isArray(step.collections) || step.collections.length === 0)) {
+      return `Step ${stepIndex + 1}: select at least one collection`;
+    }
+    if (scope === "product" && (!Array.isArray(step.selectedProducts) || step.selectedProducts.length === 0)) {
+      return `Step ${stepIndex + 1}: select at least one product`;
+    }
+    if (!String(step.popup?.title || "").trim() || !String(step.popup?.desc || "").trim() || !String(step.popup?.btn || "").trim()) {
+      return `Step ${stepIndex + 1}: fill Step Heading, Step Description and Step Selection Button Text`;
+    }
+    return "";
+  }
+
+  function validateAndSave() {
+    const steps = comboConfig.steps || [];
+    const allStepErrors = {};
+    for (let i = 0; i < steps.length; i++) {
+      const msg = validateStepBeforeSave(steps[i], i);
+      if (msg) allStepErrors[i] = msg;
+    }
+    if (!String(comboConfig.listingTitle || "").trim()) allStepErrors._title = "Bundle title is required";
+
+    if (Object.keys(allStepErrors).length > 0) {
+      setStepErrors(allStepErrors);
+      const firstNumericErr = Object.keys(allStepErrors).find((k) => !isNaN(Number(k)));
+      if (firstNumericErr !== undefined) setComboActiveStep(Number(firstNumericErr));
+      const firstMsg = allStepErrors._title || allStepErrors[firstNumericErr] || Object.values(allStepErrors)[0];
+      setToast({ type: "error", message: firstMsg });
+      setTimeout(() => setToast(null), 4500);
+    } else {
+      setStepErrors({});
+      document.getElementById("combo-config-form")?.requestSubmit();
+    }
+  }
+
   function handleBackAction() {
     setIsBackNavigating(true);
     navigate(withEmbeddedAppParams("/app/boxes", location.search));
@@ -722,17 +771,18 @@ export default function SpecificComboBoxPage() {
   /* ─────────────── Render ─────────────── */
   return (
     <Page
-      title="Edit Specific Combo Bundle"
+      title={`Edit: ${box.displayTitle || box.boxName || "Specific Combo"}`}
       backAction={{ content: "Boxes", onAction: handleBackAction }}
       primaryAction={{
         content: isSaving ? "Saving..." : "Save & Publish",
         loading: isSaving,
-        onAction: () => document.getElementById("combo-config-form")?.requestSubmit(),
+        onAction: validateAndSave,
       }}
     >
       {/* Hidden form for saving (encType for file uploads) */}
       <comboFetcher.Form id="combo-config-form" method="POST" encType="multipart/form-data" action={`/app/boxes/${box.id}/combo${location.search}`}>
         <input type="hidden" name="_action" value="save_combo" />
+        <input type="hidden" name="removeComboImage" value={String(removeComboImage)} />
         <input
           type="hidden"
           name="comboStepsConfig"
@@ -780,10 +830,11 @@ export default function SpecificComboBoxPage() {
                 <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Title *</Text>
                 <input
                   value={comboConfig.listingTitle || ""}
-                  onChange={(e) => updateComboField("listingTitle", e.target.value)}
+                  onChange={(e) => { updateComboField("listingTitle", e.target.value); if (stepErrors._title) setStepErrors((p) => ({ ...p, _title: "" })); }}
                   placeholder="e.g. Premium Bundle"
-                  style={inputStyle}
+                  style={{ ...inputStyle, borderColor: stepErrors._title ? "#e11d48" : "#e5e7eb" }}
                 />
+                {stepErrors._title && <Text as="p" variant="bodySm" tone="critical">{stepErrors._title}</Text>}
               </BlockStack>
 
               <BlockStack gap="100">
@@ -853,7 +904,7 @@ export default function SpecificComboBoxPage() {
                     {comboImageHover && (
                       <button
                         type="button"
-                        onClick={() => { setComboImagePreview(null); if (comboImageRef.current) comboImageRef.current.value = ""; }}
+                        onClick={() => { setComboImagePreview(null); setRemoveComboImage(true); if (comboImageRef.current) comboImageRef.current.value = ""; }}
                         style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(0,0,0,0.65)", border: "none", borderRadius: "50%", width: "22px", height: "22px", cursor: "pointer", color: "#fff", fontSize: "14px", lineHeight: "22px", textAlign: "center", padding: 0 }}
                         aria-label="Remove image"
                       >×</button>
@@ -991,23 +1042,14 @@ export default function SpecificComboBoxPage() {
           <BlockStack gap="400">
             <InlineStack align="space-between" blockAlign="center">
               <Text as="h2" variant="headingMd">Bundle Steps Configuration ({comboConfig.type} total)</Text>
-              <InlineStack gap="200">
-                <Button
-                  onClick={() => setStepCount(comboConfig.type - 1)}
-                  disabled={comboConfig.type <= MIN_COMBO_STEPS}
-                  size="slim"
-                >
-                  Delete Selected Step
-                </Button>
-                <Button
-                  onClick={() => setStepCount(comboConfig.type + 1)}
-                  disabled={comboConfig.type >= MAX_COMBO_STEPS}
-                  size="slim"
-                  variant="primary"
-                >
-                  Add New Step
-                </Button>
-              </InlineStack>
+              <Button
+                onClick={() => setStepCount(comboConfig.type + 1)}
+                disabled={comboConfig.type >= MAX_COMBO_STEPS}
+                size="slim"
+                variant="primary"
+              >
+                Add New Step
+              </Button>
             </InlineStack>
 
             <Tabs
@@ -1024,6 +1066,12 @@ export default function SpecificComboBoxPage() {
                 const stepScope = step.scope === "product" || step.scope === "wholestore" ? "product" : "collection";
                 return (
                   <BlockStack gap="400">
+                    {/* Step-level error */}
+                    {stepErrors[ai] && (
+                      <Banner tone="critical">
+                        <p>{stepErrors[ai]}</p>
+                      </Banner>
+                    )}
                     {/* Picker setup */}
                     <BlockStack gap="300">
                       <Text as="h3" variant="headingSm">Step Product Picker Setup</Text>

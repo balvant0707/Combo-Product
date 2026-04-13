@@ -592,14 +592,33 @@ export default function CreateSpecificComboBoxPage() {
     navigate(withEmbeddedAppParams("/app/boxes", location.search));
   }
 
-  function handleFormSubmit(e) {
-    const activeIdx = Math.max(0, Math.min(comboActiveStep, (comboConfigForSubmit.steps || []).length - 1));
-    const selectedStep = comboConfigForSubmit.steps?.[activeIdx];
-    const validationMessage = validateStepBeforeSave(selectedStep, activeIdx);
-    if (!validationMessage) return;
+  const [stepErrors, setStepErrors] = useState({});
 
-    e.preventDefault();
-    showValidationToast(validationMessage);
+  function handleFormSubmit(e) {
+    const steps = comboConfigForSubmit.steps || [];
+    const allStepErrors = {};
+
+    // Validate combo name
+    const comboNameInput = document.querySelector("#specific-combo-form input[name='comboName']");
+    const comboNameVal = comboNameInput ? comboNameInput.value.trim() : "";
+    if (!comboNameVal) allStepErrors._name = "Bundle title is required";
+
+    // Validate ALL steps
+    for (let i = 0; i < steps.length; i++) {
+      const msg = validateStepBeforeSave(steps[i], i);
+      if (msg) allStepErrors[i] = msg;
+    }
+
+    if (Object.keys(allStepErrors).length > 0) {
+      e.preventDefault();
+      setStepErrors(allStepErrors);
+      const firstNumericErr = Object.keys(allStepErrors).find((k) => !isNaN(Number(k)));
+      if (firstNumericErr !== undefined) setComboActiveStep(Number(firstNumericErr));
+      const firstMsg = allStepErrors._name || allStepErrors[firstNumericErr] || Object.values(allStepErrors)[0];
+      showValidationToast(firstMsg);
+    } else {
+      setStepErrors({});
+    }
   }
 
   return (
@@ -711,10 +730,11 @@ export default function CreateSpecificComboBoxPage() {
                     type="text"
                     name="comboName"
                     placeholder="e.g. Beauty Bundle - 10% Discount"
-                    style={{ ...inputStyle, borderColor: errors.comboName ? "#e11d48" : "#e5e7eb" }}
+                    onChange={() => { if (stepErrors._name) setStepErrors((p) => ({ ...p, _name: "" })); }}
+                    style={{ ...inputStyle, borderColor: (errors.comboName || stepErrors._name) ? "#e11d48" : "#e5e7eb" }}
                   />
-                  {errors.comboName && (
-                    <Text as="p" variant="bodySm" tone="critical">{errors.comboName}</Text>
+                  {(errors.comboName || stepErrors._name) && (
+                    <Text as="p" variant="bodySm" tone="critical">{errors.comboName || stepErrors._name}</Text>
                   )}
                 </BlockStack>
 
@@ -950,23 +970,14 @@ export default function CreateSpecificComboBoxPage() {
             <BlockStack gap="400">
               <InlineStack align="space-between" blockAlign="center">
                 <Text as="h2" variant="headingMd">Bundle Steps Configuration ({comboConfig.type} total)</Text>
-                <InlineStack gap="200">
-                  <Button
-                    onClick={() => setStepCount(comboConfig.type - 1)}
-                    disabled={comboConfig.type <= MIN_COMBO_STEPS}
-                    size="slim"
-                  >
-                    Delete Selected Step
-                  </Button>
-                  <Button
-                    onClick={() => setStepCount(comboConfig.type + 1)}
-                    disabled={comboConfig.type >= MAX_COMBO_STEPS}
-                    size="slim"
-                    variant="primary"
-                  >
-                    Add New Step
-                  </Button>
-                </InlineStack>
+                <Button
+                  onClick={() => setStepCount(comboConfig.type + 1)}
+                  disabled={comboConfig.type >= MAX_COMBO_STEPS}
+                  size="slim"
+                  variant="primary"
+                >
+                  Add New Step
+                </Button>
               </InlineStack>
 
               <Tabs
@@ -983,9 +994,9 @@ export default function CreateSpecificComboBoxPage() {
                           <Text as="h3" variant="headingSm">Step Product Picker Setup</Text>
                           <Text as="p" variant="bodySm" tone="subdued">Each step has its own independent collection and product selector</Text>
 
-                          {comboStepErrors[comboActiveStep] && (
+                          {(comboStepErrors[comboActiveStep] || stepErrors[comboActiveStep]) && (
                             <Banner tone="critical">
-                              <p>{comboStepErrors[comboActiveStep]}</p>
+                              <p>{comboStepErrors[comboActiveStep] || stepErrors[comboActiveStep]}</p>
                             </Banner>
                           )}
 

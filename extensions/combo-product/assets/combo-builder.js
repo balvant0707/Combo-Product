@@ -361,7 +361,7 @@
     style.id = styleId;
     style.textContent = '[data-cb-instance="' + instance + '"] {' +
       '--cb-primary:' + primaryColor + ';' +
-      '--cb-primary-hover:' + primaryColor + ';' +
+      '--cb-primary-hover:' + activeSlotColor + ';' +
       '--cb-primary-glow:' + primaryColor + '33;' +
       '--cb-active-slot:' + activeSlotColor + ';' +
       '--cb-product-card-bg:' + cardBgColor + ';' +

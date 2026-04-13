@@ -162,10 +162,9 @@ const PLAN_UI = [
     orderLimit: ORDER_LIMITS.BASIC,
     features: [
       `${ORDER_LIMITS.BASIC} orders/month`,
-      "Email & live support",
-      "Onboarding chat support",
       "Unlimited Single Bundle product",
       "Unlimited specific Bundle product",
+      "Email & live support",
     ],
     cta: "Start Basic",
     badge: null,
@@ -247,25 +246,34 @@ function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan }) {
       </button>
     );
   } else if (isFree) {
-    const busy = isSubmitting && submittingPlan === "free";
-    btn = (
-      <form method="post" aria-label="Select Free plan">
-        <input type="hidden" name="intent" value="free" />
-        <button
-          type="submit"
-          disabled={busy}
-          aria-label="Start free plan"
-          style={{
-            width: "100%", padding: "14px", borderRadius: "0", border: "none",
-            fontSize: "14px", fontWeight: "700", textAlign: "center",
-            cursor: busy ? "wait" : "pointer", background: "#111827",
-            color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",
-          }}
-        >
-          {busy ? "Starting…" : plan.cta}
+    const onPaidPlan = activePlanKey && activePlanKey !== "FREE";
+    if (onPaidPlan) {
+      btn = (
+        <button disabled aria-label="Free plan not available on paid plans" style={{ ...disabledBtnStyle }}>
+          Not available
         </button>
-      </form>
-    );
+      );
+    } else {
+      const busy = isSubmitting && submittingPlan === "free";
+      btn = (
+        <form method="post" aria-label="Select Free plan">
+          <input type="hidden" name="intent" value="free" />
+          <button
+            type="submit"
+            disabled={busy}
+            aria-label="Start free plan"
+            style={{
+              width: "100%", padding: "14px", borderRadius: "0", border: "none",
+              fontSize: "14px", fontWeight: "700", textAlign: "center",
+              cursor: busy ? "wait" : "pointer", background: "#111827",
+              color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",
+            }}
+          >
+            {busy ? "Starting…" : plan.cta}
+          </button>
+        </form>
+      );
+    }
   } else {
     const busy = isSubmitting && submittingPlan === plan.key;
     btn = (
@@ -537,10 +545,6 @@ export default function PricingPage() {
                         "Priority & developer",
                         "Highest-priority",
                       ],
-                    },
-                    {
-                      label: "Onboarding chat",
-                      values: ["-", "✓", "✓", "✓"],
                     },
                     {
                       label: "Guided bundles",

@@ -296,6 +296,7 @@ export default function BoxSettingsPage() {
   const isPageLoading = navigation.state !== "idle";
   const currencySymbol = getCurrencySymbol(currencyCode);
   const [isBackNavigating, setIsBackNavigating] = useState(false);
+  const [clientErrors, setClientErrors] = useState({});
 
   const errors = actionData?.errors || {};
 
@@ -376,15 +377,32 @@ export default function BoxSettingsPage() {
     navigate(withEmbeddedAppParams("/app/boxes", location.search));
   }
 
+  function validateAndSubmit() {
+    const errs = {};
+    const titleEl = document.querySelector("#edit-box-form input[name='displayTitle']");
+    const titleVal = titleEl ? titleEl.value.trim() : (box.displayTitle || "").trim();
+    if (!titleVal) errs.displayTitle = "Bundle title is required";
+    const ic = parseInt(itemCount);
+    if (!itemCount || isNaN(ic) || ic < 1 || ic > 20) errs.itemCount = "Item count must be between 1 and 20";
+    if (priceMode === "manual" && (!manualPrice || parseFloat(manualPrice) <= 0)) errs.bundlePrice = "Bundle price is required";
+    if ((scope === "specific_collections" || scope === "specific_products") && scopeItems.length === 0) {
+      errs.scopeItems = "Please select at least one " + (scope === "specific_collections" ? "collection" : "product");
+    }
+    setClientErrors(errs);
+    if (Object.keys(errs).length === 0) {
+      document.getElementById("edit-box-form")?.requestSubmit();
+    }
+  }
+
   /* ─────────────── Render ─────────────── */
   return (
     <Page
-      title="Edit Box"
+      title={`Edit: ${box.displayTitle || box.boxName || "Box"}`}
       backAction={{ content: "Boxes", onAction: handleBackAction }}
       primaryAction={{
         content: isSaving ? "Saving..." : "Save Changes",
         loading: isSaving,
-        onAction: () => document.getElementById("edit-box-form")?.requestSubmit(),
+        onAction: validateAndSubmit,
       }}
       secondaryActions={[
         {
@@ -595,11 +613,12 @@ export default function BoxSettingsPage() {
                       type="text"
                       name="displayTitle"
                       defaultValue={box.displayTitle}
+                      onChange={() => { if (clientErrors.displayTitle) setClientErrors((p) => ({ ...p, displayTitle: "" })); }}
                       placeholder="e.g. Build Your Perfect Snack Box"
-                      style={{ ...inputStyle, borderColor: errors.displayTitle ? "#e11d48" : "#e5e7eb" }}
+                      style={{ ...inputStyle, borderColor: (clientErrors.displayTitle || errors.displayTitle) ? "#e11d48" : "#e5e7eb" }}
                     />
-                    {errors.displayTitle && (
-                      <Text tone="critical" variant="bodySm">{errors.displayTitle}</Text>
+                    {(clientErrors.displayTitle || errors.displayTitle) && (
+                      <Text tone="critical" variant="bodySm">{clientErrors.displayTitle || errors.displayTitle}</Text>
                     )}
                   </BlockStack>
                   <BlockStack gap="100">
@@ -632,11 +651,11 @@ export default function BoxSettingsPage() {
                       min="1"
                       max="20"
                       value={itemCount}
-                      onChange={(e) => setItemCount(e.target.value)}
-                      style={{ ...inputStyle, borderColor: errors.itemCount ? "#e11d48" : "#e5e7eb" }}
+                      onChange={(e) => { setItemCount(e.target.value); if (clientErrors.itemCount) setClientErrors((p) => ({ ...p, itemCount: "" })); }}
+                      style={{ ...inputStyle, borderColor: (clientErrors.itemCount || errors.itemCount) ? "#e11d48" : "#e5e7eb" }}
                     />
-                    {errors.itemCount && (
-                      <Text tone="critical" variant="bodySm">{errors.itemCount}</Text>
+                    {(clientErrors.itemCount || errors.itemCount) && (
+                      <Text tone="critical" variant="bodySm">{clientErrors.itemCount || errors.itemCount}</Text>
                     )}
                   </BlockStack>
 
@@ -651,7 +670,7 @@ export default function BoxSettingsPage() {
                         <button
                           key={mode}
                           type="button"
-                          onClick={() => setPriceMode(mode)}
+                          onClick={() => { setPriceMode(mode); if (clientErrors.bundlePrice) setClientErrors((p) => ({ ...p, bundlePrice: "" })); }}
                           style={{
                             flex: 1,
                             padding: "7px 0",
@@ -669,15 +688,18 @@ export default function BoxSettingsPage() {
                       ))}
                     </div>
                     {priceMode === "manual" && (
+                      <>
                       <input
                         type="number"
                         placeholder="e.g. 1200"
                         min="0"
                         step="0.01"
                         value={manualPrice}
-                        onChange={(e) => setManualPrice(e.target.value)}
-                        style={inputStyle}
+                        onChange={(e) => { setManualPrice(e.target.value); if (clientErrors.bundlePrice) setClientErrors((p) => ({ ...p, bundlePrice: "" })); }}
+                        style={{ ...inputStyle, borderColor: clientErrors.bundlePrice ? "#e11d48" : "#e5e7eb" }}
                       />
+                      {clientErrors.bundlePrice && <Text tone="critical" variant="bodySm">{clientErrors.bundlePrice}</Text>}
+                      </>
                     )}
                     {priceMode === "dynamic" && (
                       <div style={{ border: "1px solid #d1d5db", borderRadius: "6px", padding: "12px", background: "#ffffff" }}>
@@ -833,7 +855,7 @@ export default function BoxSettingsPage() {
                 ) : (
                   <>
                     <Button
-                      onClick={() => { setScopeSearch(""); setShowScopePicker(true); }}
+                      onClick={() => { setScopeSearch(""); setShowScopePicker(true); if (clientErrors.scopeItems) setClientErrors((p) => ({ ...p, scopeItems: "" })); }}
                     >
                       {scope === "specific_collections" ? "Choose Collections" : "Show on Selected Products"}
                     </Button>
@@ -841,6 +863,10 @@ export default function BoxSettingsPage() {
                   </>
                 )}
               </InlineStack>
+
+              {clientErrors.scopeItems && (
+                <Text tone="critical" variant="bodySm" role="alert">{clientErrors.scopeItems}</Text>
+              )}
 
               {scope !== "wholestore" && scopeItems.length > 0 && (
                 <Box padding="300" background="bg-surface-secondary" borderRadius="200">

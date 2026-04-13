@@ -556,8 +556,8 @@ function ComboTypeFilter({ value = "all" }) {
         }}
       >
         <option value="all">All Bundle Products</option>
-        <option value="simple">Simple Bundle Product</option>
-        <option value="specific">Specific Bundle Product</option>
+        <option value="simple">Simple Bundle</option>
+        <option value="specific">Specific Bundle</option>
       </select>
     </div>
   );

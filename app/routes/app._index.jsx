@@ -237,7 +237,7 @@ export const loader = async ({ request }) => {
       boxTitle: order.box?.displayTitle || "Unknown Box",
       itemCount: order.box?.itemCount || 0,
       comboType: isSpecificComboFromBox(order.box) ? "specific" : "simple",
-      comboTypeLabel: isSpecificComboFromBox(order.box) ? "Specific Bundle Product" : "Simple Bundle Product",
+      comboTypeLabel: isSpecificComboFromBox(order.box) ? "Specific Bundle" : "Simple Bundle",
       selectedProducts: parseOrderSelectedProducts(order.selectedProducts),
       bundlePrice: parseFloat(order.bundlePrice),
       orderDate: order.orderDate.toISOString(),
@@ -364,7 +364,7 @@ export default function DashboardPage() {
   }
 
   const stats = [
-    { label: "Live Bundle Boxes", value: activeBoxCount, sub: "Live combo box types" },
+    { label: "Live Bundle", value: activeBoxCount, sub: "" },
     { label: "Bundle Orders", value: bundlesSold, sub: "Last 30 days" },
     {
       label: "Total Bundle Revenue",
@@ -386,7 +386,7 @@ export default function DashboardPage() {
     <Badge
       tone={order.comboType === "specific" ? "info" : "success"}
     >
-      {order.comboTypeLabel || (order.comboType === "specific" ? "Specific Bundle Product" : "Simple Bundle Product")}
+      {order.comboTypeLabel || (order.comboType === "specific" ? "Specific Bundle" : "Simple Bundle")}
     </Badge>,
     order.itemCount,
     formatCurrencyAmount(Number(order.bundlePrice || 0), currencyCode),

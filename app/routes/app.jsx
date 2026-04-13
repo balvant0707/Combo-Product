@@ -292,10 +292,10 @@ export default function App() {
         <Page>
           <Banner
             tone="warning"
-            title="Embed block not active"
+            title="Theme App Embed not active"
             action={{ content: "Activate now", url: embedBlockUrl, target: "_blank" }}
           >
-            <p>Enable the Combo Builder embed block so it can load scripts on your storefront.</p>
+            <p>Enable the MixBox – Box & Bundle Builder app embed in Theme Customize.</p>
           </Banner>
         </Page>
       )}

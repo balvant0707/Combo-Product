@@ -899,6 +899,11 @@
       removeStickyFooter();
     }
     var apiBase = root.dataset.apiBase || config.apiBase || DEFAULT_API_BASE;
+    var previewBoxToken = null;
+    try {
+      var previewParams = new URLSearchParams(window.location.search || '');
+      previewBoxToken = (previewParams.get('cb_preview_box') || '').trim();
+    } catch (_) {}
 
     var boxIdsFilter = null;
     var rawBoxIds = root.dataset.boxIds || config.boxIds || null;
@@ -978,6 +983,20 @@
         });
       }
       if (boxes.length === 0) { root.innerHTML = ''; return; }
+      var previewBoxId = null;
+      if (previewBoxToken) {
+        var tokLower = String(previewBoxToken).toLowerCase();
+        for (var bi = 0; bi < boxes.length; bi++) {
+          var pb = boxes[bi] || {};
+          var pbCode = pb.boxCode ? String(pb.boxCode).toLowerCase() : '';
+          var pbId = pb.id != null ? String(pb.id) : '';
+          var pbName = String(pb.boxName || pb.displayTitle || '').trim().toLowerCase();
+          if (pbCode === tokLower || pbId === previewBoxToken || pbName === tokLower) {
+            previewBoxId = pb.id;
+            break;
+          }
+        }
+      }
 
       var resolvedHeading = root.dataset.heading || config.heading || (settings && settings.widgetHeadingText) || 'Build Your Own Box!';
       if (settings && settings.presetTheme) applyPresetTheme(root, settings.presetTheme);
@@ -1016,7 +1035,7 @@
       var step2Heading = root.dataset.step2Heading || config.step2Heading || 'Step 2: Select your products';
       var step3Heading = root.dataset.step3Heading || config.step3Heading || 'Step 3: Complete your order';
       var step3Buttons = root.dataset.step3Buttons || config.step3Buttons || 'both';
-      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, currencyCode: currencyCode, layout: layout, layoutMode: layoutMode, enableStickyCart: enableStickyCart, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root, step1Label: step1Label, step2Label: step2Label, step3Label: step3Label, cartBtnLabel: cartBtnLabel, checkoutBtnLabel: checkoutBtnLabel, step1Heading: step1Heading, step2Heading: step2Heading, step3Heading: step3Heading, step3Buttons: step3Buttons });
+      renderWidget(root, { shop: shop, boxes: boxes, currencySymbol: currencySymbol, currencyCode: currencyCode, layout: layout, layoutMode: layoutMode, enableStickyCart: enableStickyCart, heading: resolvedHeading, apiBase: apiBase, settings: settings || {}, rootEl: root, step1Label: step1Label, step2Label: step2Label, step3Label: step3Label, cartBtnLabel: cartBtnLabel, checkoutBtnLabel: checkoutBtnLabel, step1Heading: step1Heading, step2Heading: step2Heading, step3Heading: step3Heading, step3Buttons: step3Buttons, previewBoxId: previewBoxId });
     });
   }
 
@@ -1295,6 +1314,11 @@
       return;
     }
 
+    // Preview mode from admin eye action: auto-open requested box in both grid and steps layouts
+    if (tryAutoSelectPreviewBox(boxGrid, ctx)) {
+      return;
+    }
+
     // Multiple boxes: auto-select first in grid mode; steps mode waits for user click
     if (ctx.layoutMode !== 'steps') {
       var firstCard = boxGrid.firstElementChild;
@@ -1325,6 +1349,7 @@
     card.className = 'cb-box-card';
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
+    card.setAttribute('data-box-id', String(box.id));
 
     // Banner image (no overlay title)
     var banner = document.createElement('div');
@@ -1418,6 +1443,14 @@
     });
 
     return card;
+  }
+
+  function tryAutoSelectPreviewBox(boxGrid, ctx) {
+    if (!ctx || !ctx.previewBoxId || !boxGrid) return false;
+    var previewCard = boxGrid.querySelector('.cb-box-card[data-box-id="' + String(ctx.previewBoxId) + '"]');
+    if (!previewCard) return false;
+    previewCard.click();
+    return true;
   }
 
   // ─── Open Builder ─────────────────────────────────────────────────────────────

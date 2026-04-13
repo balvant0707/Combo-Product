@@ -77,6 +77,17 @@ async function getBundlePreviewUrlByProductId(admin, shop, productIds = []) {
   }
 }
 
+function buildBundlePreviewUrl(baseUrl, previewToken) {
+  if (!baseUrl || !previewToken) return baseUrl || null;
+  try {
+    const url = new URL(baseUrl);
+    url.searchParams.set("cb_preview_box", String(previewToken));
+    return url.toString();
+  } catch {
+    return baseUrl;
+  }
+}
+
 function getDiscountSummary(box) {
   // Always read from comboStepsConfig JSON — works for both regular and specific combo boxes
   const src = box.comboStepsConfig;
@@ -157,7 +168,10 @@ export const loader = async ({ request }) => {
       comboConfig: getComboConfigSummary(b),
       discount: getDiscountSummary(b),
       listImageSrc: getBoxListImageSrc(b),
-      previewUrl: b.shopifyProductId ? previewUrlByProductId.get(b.shopifyProductId) || null : null,
+      previewUrl: buildBundlePreviewUrl(
+        b.shopifyProductId ? previewUrlByProductId.get(b.shopifyProductId) || null : null,
+        b.boxCode || b.id,
+      ),
     })),
   };
 };

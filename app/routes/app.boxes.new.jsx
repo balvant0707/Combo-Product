@@ -404,30 +404,13 @@ export default function CreateBoxPage() {
           <input type="hidden" name="isActive" value={String(options.isActive)} />
 
           <BlockStack gap="400">
-            {/* Card 1 — Status + Title */}
+            {/* Card 1 — Status */}
             <Card>
               <InlineGrid columns={{ xs: "1fr", sm: "1fr auto" }} gap="400">
-                {/* Left: section info + title input */}
-                <BlockStack gap="300">
-                  <BlockStack gap="050">
-                    <Text as="h2" variant="headingMd">Specific Combo Bundle Setup</Text>
-                    <Text as="p" variant="bodySm" tone="subdued">Create and configure your specific combo experience</Text>
-                  </BlockStack>
-                  <BlockStack gap="100">
-                    <label htmlFor="new-boxName" style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
-                      Combo Product Title
-                    </label>
-                    <input
-                      id="new-boxName"
-                      type="text"
-                      name="boxName"
-                      placeholder="e.g. Summer Snack Box"
-                      aria-label="Internal name for this combo product"
-                      style={nativeInputStyle}
-                    />
-                  </BlockStack>
+                <BlockStack gap="050">
+                  <Text as="h2" variant="headingMd">Simple Bundle Product</Text>
+                  <Text as="p" variant="bodySm" tone="subdued">Create and configure your specific combo experience</Text>
                 </BlockStack>
-                {/* Right: Publish toggle */}
                 <InlineStack gap="200" blockAlign="start">
                   <ToggleSwitch checked={options.isActive} onChange={() => toggleOption("isActive")} showStateText={false} />
                   <BlockStack gap="100">

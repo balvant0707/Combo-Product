@@ -180,15 +180,29 @@
 
   function renderStickyTotal(totalEl, amount, currencySymbol) {
     if (!totalEl) return;
+    var parsedAmount = parseFloat(amount);
+    var hasAmount = !isNaN(parsedAmount);
     totalEl.innerHTML =
       'Total <span class="cb-sticky-price">' +
-      formatPrice(amount || 0, currencySymbol, null) +
-      '/-</span>';
+      (hasAmount ? (formatPrice(parsedAmount, currencySymbol, null) + '/-') : '') +
+      '</span>';
   }
 
   function setBoxCardPrice(box, amount, currencySymbol) {
     if (!box || !box._priceTextEl) return;
-    box._priceTextEl.textContent = formatPrice(amount || 0, currencySymbol, null);
+    var parsedAmount = parseFloat(amount);
+    if (isDynamicBundlePrice(box) && !(parsedAmount > 0)) {
+      box._priceTextEl.textContent = '';
+      box._priceTextEl.style.display = 'none';
+      return;
+    }
+    box._priceTextEl.style.display = '';
+    box._priceTextEl.textContent = formatPrice(parsedAmount || 0, currencySymbol, null);
+  }
+
+  function getDynamicDisplayPrice(amount) {
+    var parsedAmount = parseFloat(amount);
+    return parsedAmount > 0 ? parsedAmount : null;
   }
 
   function setWizardStep2Preview(ctx, slots) {
@@ -227,6 +241,30 @@
       label = String(settings.addToCartLabel).trim();
     }
     return label || 'ADD TO BOX';
+  }
+
+  function resolveStepCartButtonLabel(box, ctx) {
+    var label = resolveProductGridButtonLabel(box, ctx && ctx.settings);
+    if (label && String(label).trim()) return String(label).trim();
+    return resolveAddToCartLabel(ctx && ctx.settings, ctx && ctx.cartBtnLabel);
+  }
+
+  function setWizardSelectedPrice(ctx, box, amount) {
+    if (!ctx || ctx.layoutMode !== 'steps' || !ctx._wizardSelectedPriceEl) return;
+    var el = ctx._wizardSelectedPriceEl;
+    var parsedAmount = parseFloat(amount);
+    var shouldHide = isNaN(parsedAmount) || (isDynamicBundlePrice(box) && !(parsedAmount > 0));
+
+    if (shouldHide) {
+      el.style.display = 'none';
+      el.innerHTML = '';
+      return;
+    }
+
+    el.innerHTML = 'Selected Combo Price: <span class="cb-wizard-selected-price-value">' +
+      formatPrice(parsedAmount, ctx.currencySymbol, ctx.currencyCode) +
+      '</span>';
+    el.style.display = 'flex';
   }
 
   // ─── Preset Theme Palettes ────────────────────────────────────────────────────
@@ -754,7 +792,7 @@
     totalRow.className = 'cb-sticky-total';
     renderStickyTotal(
       totalRow,
-      isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0),
+      isDynamicBundlePrice(box) ? null : (parseFloat(box.bundlePrice) || 0),
       ctx.currencySymbol
     );
     center.appendChild(totalRow);
@@ -1198,12 +1236,19 @@
       });
 
       wizardEl.appendChild(stepsRow);
+
+      var wizardSelectedPrice = document.createElement('div');
+      wizardSelectedPrice.className = 'cb-wizard-selected-price';
+      wizardSelectedPrice.style.display = 'none';
+      wizardEl.appendChild(wizardSelectedPrice);
+
       wrapper.appendChild(wizardEl);
       ctx._wizardDots = wizardDots;
       ctx._wizardLines = wizardLines;
       ctx._wizardDotEls = wizardDotEls;
       ctx._wizardLabelEls = wizardLabelEls;
       ctx._wizardStepDefs = WIZARD_STEP_DEFS;
+      ctx._wizardSelectedPriceEl = wizardSelectedPrice;
     }
 
     // Step 1 Heading
@@ -1335,9 +1380,12 @@
 
     var priceText = document.createElement('div');
     priceText.className = 'cb-box-price-text';
-    var _initPrice = isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0);
-    priceText.textContent = formatPrice(_initPrice, ctx.currencySymbol, ctx.currencyCode);
     box._priceTextEl = priceText;
+    setBoxCardPrice(
+      box,
+      isDynamicBundlePrice(box) ? null : (parseFloat(box.bundlePrice) || 0),
+      ctx.currencySymbol
+    );
     body.appendChild(priceText);
 
     // CTA button
@@ -1396,6 +1444,7 @@
           ctx._productSection = null;
           ctx._openBoxId = null;
           _cbBtn.style.visibility = 'hidden';
+          setWizardSelectedPrice(ctx, null, null);
           if (ctx._wizardStep1Content) ctx._wizardStep1Content.style.display = 'none';
           if (ctx._wizardDots) {
             ctx._wizardDots[0].className = 'cb-wizard-step cb-wizard-step--active';
@@ -1439,10 +1488,11 @@
           ctx._wizardStep1Content.style.display = 'flex';
         }
       }
+      setWizardSelectedPrice(ctx, box, parseFloat(box.bundlePrice) || 0);
     }
 
     if (isDynamicBundlePrice(box)) {
-      setBoxCardPrice(box, 0, ctx.currencySymbol);
+      setBoxCardPrice(box, null, ctx.currencySymbol);
     }
 
     ctx._openBoxId = box.id;
@@ -1649,7 +1699,7 @@
         step3CartBtn = document.createElement('button');
         step3CartBtn.type = 'button';
         step3CartBtn.className = 'cb-step3-cart-btn';
-        step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
+        step3CartBtn.textContent = resolveStepCartButtonLabel(box, ctx);
         step3Btns.appendChild(step3CartBtn);
       }
 
@@ -1707,6 +1757,7 @@
       var remaining = box.itemCount - filled;
       var allFilled = remaining === 0;
       var addLabel = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
+      var stepAddLabel = resolveStepCartButtonLabel(box, ctx);
 
       // Inline button
       inlineCartBtn.disabled = !allFilled;
@@ -1747,14 +1798,20 @@
       if (_stickyTotalEl) {
         renderStickyTotal(
           _stickyTotalEl,
-          isDynamic ? dynamicEffectivePrice : (parseFloat(box.bundlePrice) || 0),
+          isDynamic ? getDynamicDisplayPrice(dynamicEffectivePrice) : (parseFloat(box.bundlePrice) || 0),
           ctx.currencySymbol
         );
       }
 
       if (isDynamic) {
-        setBoxCardPrice(box, dynamicEffectivePrice, ctx.currencySymbol);
+        setBoxCardPrice(box, getDynamicDisplayPrice(dynamicEffectivePrice), ctx.currencySymbol);
       }
+
+      setWizardSelectedPrice(
+        ctx,
+        box,
+        isDynamic ? getDynamicDisplayPrice(dynamicEffectivePrice) : (parseFloat(box.bundlePrice) || 0)
+      );
 
       if (_stickySavingsEl) {
         if (isDynamic) {
@@ -1804,7 +1861,7 @@
           step3CartBtn.disabled = !allFilled;
           if (!allFilled) {
             step3CartBtn.classList.remove('cb-step3-cart-btn--loading');
-            step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
+            step3CartBtn.textContent = stepAddLabel;
           }
         }
         if (step3CheckoutBtn) {
@@ -2207,7 +2264,7 @@
 
         setBoxCardPrice(
           box,
-          isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0),
+          isDynamicBundlePrice(box) ? null : (parseFloat(box.bundlePrice) || 0),
           ctx.currencySymbol
         );
 
@@ -2572,7 +2629,7 @@
         step3CartBtn = document.createElement('button');
         step3CartBtn.type = 'button';
         step3CartBtn.className = 'cb-step3-cart-btn';
-        step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
+        step3CartBtn.textContent = resolveStepCartButtonLabel(box, ctx);
         step3Btns.appendChild(step3CartBtn);
       }
 
@@ -2656,6 +2713,7 @@
       var allFilled = filled === numSteps;
       var cartReady = areRequiredStepsFilled();
       var addLabel = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
+      var stepAddLabel = resolveStepCartButtonLabel(box, ctx);
 
       inlineCartBtn.disabled = !cartReady;
       if (cartReady) inlineCartBtn.classList.add('cb-inline-cart-btn--ready');
@@ -2679,9 +2737,22 @@
         ? dynamicBreakdown.discountedTotal
         : bundlePriceRaw;
       if (_stickyTotalEl) {
-        renderStickyTotal(_stickyTotalEl, effectivePrice, ctx.currencySymbol);
+        renderStickyTotal(
+          _stickyTotalEl,
+          isDynamic ? getDynamicDisplayPrice(effectivePrice) : effectivePrice,
+          ctx.currencySymbol
+        );
       }
-      setBoxCardPrice(box, effectivePrice, ctx.currencySymbol);
+      setBoxCardPrice(
+        box,
+        isDynamic ? getDynamicDisplayPrice(effectivePrice) : effectivePrice,
+        ctx.currencySymbol
+      );
+      setWizardSelectedPrice(
+        ctx,
+        box,
+        isDynamic ? getDynamicDisplayPrice(effectivePrice) : effectivePrice
+      );
 
       // Savings / MRP row for specific combo
       if (_stickySavingsEl) {
@@ -2720,7 +2791,7 @@
           step3CartBtn.disabled = !cartReady;
           if (!cartReady) {
             step3CartBtn.classList.remove('cb-step3-cart-btn--loading');
-            step3CartBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
+            step3CartBtn.textContent = stepAddLabel;
           }
         }
         if (step3CheckoutBtn) {
@@ -3165,7 +3236,11 @@
         for (var i = 0; i < slots.length; i++) slots[i] = null;
         activeSlotIndex = 0;
         if (giftInput) giftInput.value = '';
-        setBoxCardPrice(box, isDynamicBundlePrice(box) ? 0 : (parseFloat(box.bundlePrice) || 0), ctx.currencySymbol);
+        setBoxCardPrice(
+          box,
+          isDynamicBundlePrice(box) ? null : (parseFloat(box.bundlePrice) || 0),
+          ctx.currencySymbol
+        );
         renderSlots();
         loadAndRenderGrid();
         updateCartButton();
@@ -3949,6 +4024,4 @@
   }
 
 })();
-
-
 

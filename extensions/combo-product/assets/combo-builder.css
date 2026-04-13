@@ -1855,6 +1855,26 @@
   color: var(--cb-heading-color, #1f2937) !important;
 }
 
+.cb-wizard-selected-price {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--cb-border);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cb-text-muted, #4b5563);
+  text-align: center;
+}
+
+.cb-wizard-selected-price-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--cb-text, #111827);
+}
+
 /* Hidden — kept for JS reference compatibility */
 .cb-wizard-label        { display: none; }
 .cb-wizard-dot          { display: none; }

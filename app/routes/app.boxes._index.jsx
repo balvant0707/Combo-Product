@@ -652,9 +652,9 @@ export default function ManageBoxesPage() {
                       {/* Type */}
                       <IndexTable.Cell>
                         {box.comboConfig && box.comboConfig.comboType > 0 ? (
-                          <Badge tone="info">Specific Bundle</Badge>
+                          <Badge tone="success">Specific Bundle</Badge>
                         ) : (
-                          <Badge>Simple Bundle</Badge>
+                          <Badge tone="success">Simple Bundle</Badge>
                         )}
                       </IndexTable.Cell>
 

@@ -384,7 +384,7 @@ export default function DashboardPage() {
     String(index + 1),
     order.boxTitle,
     <Badge
-      tone={order.comboType === "specific" ? "info" : "success"}
+      tone={order.comboType === "specific" ? "success" : "success"}
     >
       {order.comboTypeLabel || (order.comboType === "specific" ? "Specific Bundle" : "Simple Bundle")}
     </Badge>,

@@ -1123,7 +1123,9 @@
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 1;
+  z-index: 9999;
+  width: 100%;
+  box-sizing: border-box;
   background: rgba(255,255,255,0.98);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -1134,6 +1136,23 @@
   padding: 12px 28px;
   gap: 16px;
   min-height: 64px;
+}
+
+/* Large desktop polish: keep sticky bar visible and properly spaced on ultra-wide screens */
+@media (min-width: 1700px) {
+  .cb-sticky-footer {
+    padding-left: clamp(28px, 6vw, 170px);
+    padding-right: clamp(28px, 6vw, 170px);
+    min-height: 70px;
+  }
+
+  .cb-sticky-center {
+    gap: 10px;
+  }
+
+  .cb-sticky-btn {
+    padding: 14px 40px;
+  }
 }
 
 .cb-sticky-left {

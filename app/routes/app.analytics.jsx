@@ -399,7 +399,7 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
           style={{
             position: "fixed",
             top: `${popoverStyle.top}px`,
-            left: `${popoverStyle.left}px`,
+            left: `25%`,
             width: `${popoverStyle.width}px`,
             maxWidth: "calc(100vw - 32px)",
           }}

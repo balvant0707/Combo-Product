@@ -202,14 +202,10 @@ export default function App() {
         open={showReviewPopup}
         onClose={dismissPopup}
         title="Review this app"
-        size="large"
+        size="medium"
       >
         <Modal.Section>
           <BlockStack gap="400">
-            <Banner tone="info">
-              <p>Development stores aren't eligible to review apps. This is for testing purposes only.</p>
-            </Banner>
-
             <BlockStack gap="200">
               <InlineStack gap="300" blockAlign="start">
                 <Box
@@ -227,7 +223,7 @@ export default function App() {
                     flexShrink: 0,
                   }}
                 >
-                  ⬢
+                  <image src="/images/Bluk Bundle products 1.jpg" alt="Star icon" width="24" height="24" />
                 </Box>
                 <BlockStack gap="100">
                   <Text as="p" variant="headingMd" fontWeight="semibold">

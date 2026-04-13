@@ -984,6 +984,7 @@
       }
       if (boxes.length === 0) { root.innerHTML = ''; return; }
       var previewBoxId = null;
+      var previewBox = null;
       if (previewBoxToken) {
         var tokLower = String(previewBoxToken).toLowerCase();
         for (var bi = 0; bi < boxes.length; bi++) {
@@ -993,9 +994,14 @@
           var pbName = String(pb.boxName || pb.displayTitle || '').trim().toLowerCase();
           if (pbCode === tokLower || pbId === previewBoxToken || pbName === tokLower) {
             previewBoxId = pb.id;
+            previewBox = pb;
             break;
           }
         }
+      }
+      if (previewBox) {
+        // Admin eye-preview mode: render only the requested combo box.
+        boxes = [previewBox];
       }
 
       var resolvedHeading = root.dataset.heading || config.heading || (settings && settings.widgetHeadingText) || 'Build Your Own Box!';

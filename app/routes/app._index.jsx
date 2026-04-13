@@ -157,7 +157,7 @@ export const loader = async ({ request }) => {
       orderId: order.orderId,
       boxTitle: order.box?.displayTitle || "Unknown Box",
       itemCount: order.box?.itemCount || 0,
-      comboType: isSpecificComboFromBox(order.box) ? "specific" : "simple",
+      comboType: isSpecificComboFromBox(order.box) ? "Specific Bundle Product" : "Simple Bundle Product",
       selectedProducts: parseOrderSelectedProducts(order.selectedProducts),
       bundlePrice: parseFloat(order.bundlePrice),
       orderDate: order.orderDate.toISOString(),
@@ -502,7 +502,7 @@ export default function DashboardPage() {
             <InlineStack gap="200" blockAlign="center">
               <AdminIcon type="collection-list" size="base" style={{ color: "#111827" }} />
               <Text as="h2" variant="headingMd">
-                Recommended Shopify Growth Apps
+                Recommended Ours Growth Apps
               </Text>
             </InlineStack>
             <Text as="p" tone="subdued" variant="bodySm">

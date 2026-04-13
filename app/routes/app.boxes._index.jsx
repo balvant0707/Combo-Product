@@ -562,9 +562,9 @@ export default function ManageBoxesPage() {
                       {/* Type */}
                       <IndexTable.Cell>
                         {box.comboConfig && box.comboConfig.comboType > 0 ? (
-                          <Badge tone="info">{box.comboConfig.comboType}-Step Bundle</Badge>
+                          <Badge tone="info">Specific Bundle Product</Badge>
                         ) : (
-                          <Badge>Fixed Bundle</Badge>
+                          <Badge>Simple Bundle Product</Badge>
                         )}
                       </IndexTable.Cell>
 
@@ -693,6 +693,7 @@ export default function ManageBoxesPage() {
         onClose={closeCreateBoxModal}
         title="Choose Bundle Type"
         size="medium"
+        style={{ borderRadius: "0px !important", maxWidth: "30rem !important" }}
       >
         <Modal.Section>
           <BlockStack gap="300">
@@ -700,7 +701,7 @@ export default function ManageBoxesPage() {
               <BlockStack gap="200">
                 <InlineStack gap="200" blockAlign="center">
                   <AdminIcon type="package" size="base" />
-                  <Text as="h3" variant="headingSm">Create Fixed Bundle Box</Text>
+                  <Text as="h3" variant="headingSm">Create Simple Bundle Product</Text>
                 </InlineStack>
                 <Text as="p" tone="subdued" variant="bodySm">
                   Preconfigured Shopify product bundle to increase average order value faster.

@@ -812,9 +812,9 @@ export default function BoxSettingsPage() {
                 <Text as="label" variant="bodySm" fontWeight="semibold">Choose Display Scope</Text>
                 <InlineStack gap="200" wrap={false}>
                   {[
-                    { value: "specific_collections", label: "Show on Selected Collections" },
-                    { value: "specific_products", label: "Show on Selected Products" },
-                    { value: "wholestore", label: "Show Storewide" },
+                    { value: "specific_collections", label: "Selected Collections" },
+                    { value: "specific_products", label: "Selected Products" },
+                    { value: "wholestore", label: "Whole Store" },
                   ].map((opt) => (
                     <Button
                       key={opt.value}

@@ -222,9 +222,9 @@ const nativeInputStyle = {
 };
 
 const scopeOptions = [
-  { value: "specific_collections", label: "Show on Selected Collections" },
-  { value: "specific_products", label: "Show on Selected Products" },
-  { value: "wholestore", label: "Show Storewide" },
+  { value: "specific_collections", label: "Selected Collections" },
+  { value: "specific_products", label: "Selected Products" },
+  { value: "wholestore", label: "Whole Store" },
 ];
 
 export default function CreateBoxPage() {
@@ -640,7 +640,7 @@ export default function CreateBoxPage() {
                     <Button
                       onClick={() => { setScopeSearch(""); setShowScopePicker(true); }}
                     >
-                      {scope === "specific_collections" ? "Choose Collections" : "Show on Selected Products"}
+                      {scope === "specific_collections" ? "Choose Collections" : "Selected Products"}
                     </Button>
                   )}
                   {scope !== "wholestore" && (
@@ -674,7 +674,7 @@ export default function CreateBoxPage() {
           <Modal
             open={showScopePicker}
             onClose={() => setShowScopePicker(false)}
-            title={isCollections ? "Choose Collections" : "Show on Selected Products"}
+            title={isCollections ? "Choose Collections" : "Choose Products"}
             primaryAction={{
               content: `Done${scopeItems.length > 0 ? ` (${scopeItems.length} selected)` : ""}`,
               onAction: () => setShowScopePicker(false),

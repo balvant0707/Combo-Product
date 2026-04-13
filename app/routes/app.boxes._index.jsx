@@ -77,14 +77,18 @@ async function getBundlePreviewUrlByProductId(admin, shop, productIds = []) {
   }
 }
 
-function buildBundlePreviewUrl(baseUrl, previewToken) {
-  if (!baseUrl || !previewToken) return baseUrl || null;
+function buildBundlePreviewUrl(shopDomain, previewToken, fallbackBaseUrl) {
+  if (!previewToken) return fallbackBaseUrl || null;
+  const safeToken = String(previewToken).trim();
+  if (!safeToken) return fallbackBaseUrl || null;
+
   try {
-    const url = new URL(baseUrl);
-    url.searchParams.set("cb_preview_box", String(previewToken));
+    const url = new URL(`https://${shopDomain}/${encodeURIComponent(safeToken)}`);
+    // Keep query fallback for compatibility.
+    url.searchParams.set("cb_preview_box", safeToken);
     return url.toString();
   } catch {
-    return baseUrl;
+    return fallbackBaseUrl || null;
   }
 }
 
@@ -169,8 +173,9 @@ export const loader = async ({ request }) => {
       discount: getDiscountSummary(b),
       listImageSrc: getBoxListImageSrc(b),
       previewUrl: buildBundlePreviewUrl(
-        b.shopifyProductId ? previewUrlByProductId.get(b.shopifyProductId) || null : null,
+        session.shop,
         b.boxCode || b.id,
+        b.shopifyProductId ? previewUrlByProductId.get(b.shopifyProductId) || null : null,
       ),
     })),
   };

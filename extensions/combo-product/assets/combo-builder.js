@@ -903,6 +903,14 @@
     try {
       var previewParams = new URLSearchParams(window.location.search || '');
       previewBoxToken = (previewParams.get('cb_preview_box') || '').trim();
+      if (!previewBoxToken) {
+        var pathname = String(window.location.pathname || '/');
+        var segments = pathname.split('/').filter(Boolean);
+        // Support direct preview URL format: https://store-domain/{boxCodeOrId}
+        if (segments.length === 1) {
+          previewBoxToken = decodeURIComponent(segments[0] || '').trim();
+        }
+      }
     } catch (_) {}
 
     var boxIdsFilter = null;

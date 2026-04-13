@@ -271,8 +271,6 @@ const OLD_LABEL_CSS = `/* STEP labels — bottom-left, next to indicator */
   bottom: 12px;
   font-size: 10px;
   font-weight: 800 !important;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
   color: #b5a898 !important;
   line-height: 1.25;
   transition: color 0.25s;
@@ -285,8 +283,6 @@ const NEW_LABEL_CSS = `/* STEP labels — below the steps row, one per step */
   text-align: center;
   font-size: 10px;
   font-weight: 800 !important;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
   color: #b5a898 !important;
   line-height: 1.25;
   padding-top: 8px;
@@ -380,8 +376,8 @@ css = css.replace(
 
 // 6. Mobile: update label responsive (no longer absolute)
 css = css.replace(
-  `  .cb-wizard-step-label { font-size: 8px; letter-spacing: 1px; left: 26px; bottom: 8px; }`,
-  `  .cb-wizard-step-label { font-size: 8px; letter-spacing: 1px; padding-top: 6px; }`
+  `  .cb-wizard-step-label { font-size: 8px;  left: 26px; bottom: 8px; }`,
+  `  .cb-wizard-step-label { font-size: 8px; padding-top: 6px; }`
 );
 // Remove content/thumb responsive rules that referenced old absolute label context
 css = css.replace(

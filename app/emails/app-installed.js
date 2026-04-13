@@ -41,7 +41,7 @@ export function installedEmailHtml({ ownerName, shopName, shopDomain }) {
           <tr>
             <td style="background:linear-gradient(135deg,#2A7A4F 0%,#1b5c38 100%);
                        padding:36px 48px 32px;text-align:center;">
-              <h1 style="margin:0 0 8px;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.4px;
+              <h1 style="margin:0 0 8px;color:#ffffff;font-size:26px;font-weight:700;
                          text-shadow:0 1px 3px rgba(0,0,0,0.2);">
                 Welcome to ${APP_NAME}!
               </h1>

@@ -1356,7 +1356,7 @@ export default function AnalyticsPage() {
             <InlineStack align="space-between" blockAlign="center" wrap>
               <BlockStack gap="100">
                 <Text as="h2" variant="headingMd">Bundle Performance Overview</Text>
-                <Text as="p" tone="subdued" variant="bodySm">Bundle analytics · period-over-period comparison</Text>
+                <Text as="p" tone="subdued" variant="bodySm"></Text>
               </BlockStack>
               <InlineStack gap="300" wrap>
                 <ComboTypeFilter value={comboType} />

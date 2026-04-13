@@ -83,8 +83,10 @@ function buildBundlePreviewUrl(shopDomain, previewToken, fallbackBaseUrl) {
   if (!safeToken) return fallbackBaseUrl || null;
 
   try {
-    const url = new URL(`https://${shopDomain}/${encodeURIComponent(safeToken)}`);
-    // Keep query fallback for compatibility.
+    // Use a real storefront page (bundle product URL when available), then pass preview token.
+    // Direct /{boxId} paths can 404 on themes without that route.
+    const baseUrl = fallbackBaseUrl || `https://${shopDomain}/`;
+    const url = new URL(baseUrl);
     url.searchParams.set("cb_preview_box", safeToken);
     return url.toString();
   } catch {

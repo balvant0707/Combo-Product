@@ -314,7 +314,10 @@ export const loader = async ({ request, params }) => {
       discountValue:     rawDiscountValue,
       buyQuantity:       rawBuyQuantity,
       getQuantity:       rawGetQuantity,
-      isActive:          cfg.isActive,
+      isActive:          box.isActive !== false,
+      isGiftBox:         box.isGiftBox === true,
+      giftMessageEnabled: box.giftMessageEnabled === true,
+      allowDuplicates:   box.allowDuplicates === true,
       steps,
     });
   } else if (box.comboStepsConfig) {
@@ -502,6 +505,11 @@ export default function SpecificComboBoxPage() {
         return {
           ...DEFAULT_COMBO_CONFIG,
           ...normalizedPricing,
+          // Always use ComboBox model fields as source of truth — JSON blob may be stale
+          isActive:          box.isActive !== false,
+          isGiftBox:         box.isGiftBox === true,
+          giftMessageEnabled: box.giftMessageEnabled === true,
+          allowDuplicates:   box.allowDuplicates === true,
           listingTitle: typeof parsed.listingTitle === "string" && parsed.listingTitle.trim()
             ? parsed.listingTitle.trim()
             : (box.boxName || box.displayTitle || ""),
@@ -523,12 +531,16 @@ export default function SpecificComboBoxPage() {
           subtitle:         box.config.subtitle           ?? DEFAULT_COMBO_CONFIG.subtitle,
           bundlePrice:      box.config.bundlePrice != null ? parseFloat(box.config.bundlePrice) : DEFAULT_COMBO_CONFIG.bundlePrice,
           bundlePriceType:  box.config.bundlePriceType    ?? DEFAULT_COMBO_CONFIG.bundlePriceType,
-          isActive:         box.config.isActive,
+          // Always use ComboBox model fields as source of truth
+          isActive:          box.isActive !== false,
+          isGiftBox:         box.isGiftBox === true,
+          giftMessageEnabled: box.giftMessageEnabled === true,
+          allowDuplicates:   box.allowDuplicates === true,
           steps: mergeSteps(rawSteps, type),
         };
       } catch {}
     }
-    return DEFAULT_COMBO_CONFIG;
+    return { ...DEFAULT_COMBO_CONFIG, isActive: box.isActive !== false };
   });
   const [comboActiveStep, setComboActiveStep] = useState(0);
 
@@ -802,20 +814,15 @@ export default function SpecificComboBoxPage() {
           </Banner>
         )}
 
-        {/* ── Box info + Active toggle ── */}
+        {/* ── Status ── */}
         <Card>
-          <BlockStack gap="400">
-            <InlineStack align="space-between" blockAlign="center">
-              <BlockStack gap="100">
-                <Text as="h2" variant="headingMd">Specific Combo Bundle Setup</Text>
-                <Text as="p" variant="bodySm" tone="subdued">{box.boxName}</Text>
-              </BlockStack>
-              <InlineStack gap="200" blockAlign="center">
-                <ToggleSwitch checked={comboConfig.isActive !== false} onChange={() => updateComboField("isActive", !(comboConfig.isActive !== false))} showStateText={false} />
-                <Text as="p" variant="bodySm" tone="subdued">Publish on Storefront</Text>
-              </InlineStack>
-            </InlineStack>
-          </BlockStack>
+          <InlineStack gap="200" blockAlign="start">
+            <ToggleSwitch checked={comboConfig.isActive !== false} onChange={() => updateComboField("isActive", !(comboConfig.isActive !== false))} showStateText={false} />
+            <BlockStack gap="100">
+              <Text as="p" variant="bodySm" fontWeight="semibold">Publish on Storefront</Text>
+              <Text as="p" variant="bodySm" tone="subdued">Uncheck to hide this box from customers</Text>
+            </BlockStack>
+          </InlineStack>
         </Card>
 
         {/* ── Combo Configuration ── */}

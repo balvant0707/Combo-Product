@@ -6,6 +6,7 @@ import {
   listBoxes,
   deleteBox,
   toggleBoxStatus,
+  toggleComboConfigStatus,
   reorderBoxes,
   activateAllBundleProducts,
   repairMissingShopifyProducts,
@@ -202,6 +203,7 @@ export const action = async ({ request }) => {
     const id = formData.get("id");
     const isActive = formData.get("isActive") === "true";
     await toggleBoxStatus(id, shop, isActive);
+    await toggleComboConfigStatus(id, isActive).catch(() => {});
     return { ok: true };
   }
   return { ok: false };

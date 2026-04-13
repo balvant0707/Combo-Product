@@ -703,17 +703,14 @@ export default function CreateSpecificComboBoxPage() {
             </Banner>
           )}
 
-          {/* ── Specific Combo Box Header ── */}
+          {/* ── Status ── */}
           <Card>
-            <InlineStack align="space-between" blockAlign="center">
+            <InlineStack gap="200" blockAlign="start">
+              <ToggleSwitch checked={comboConfig.isActive} onChange={() => updateComboField("isActive", !comboConfig.isActive)} showStateText={false} />
               <BlockStack gap="100">
-                <Text as="h2" variant="headingMd">Specific Combo Bundle Setup</Text>
-                <Text as="p" variant="bodySm" tone="subdued">Create and configure your specific combo experience</Text>
+                <Text as="p" variant="bodySm" fontWeight="semibold">Publish on Storefront</Text>
+                <Text as="p" variant="bodySm" tone="subdued">Uncheck to hide this box from customers</Text>
               </BlockStack>
-              <InlineStack gap="200" blockAlign="center">
-                <ToggleSwitch checked={comboConfig.isActive} onChange={() => updateComboField("isActive", !comboConfig.isActive)} showStateText={false} />
-                <Text as="p" variant="bodySm" tone="subdued">Publish on Storefront</Text>
-              </InlineStack>
             </InlineStack>
           </Card>
 

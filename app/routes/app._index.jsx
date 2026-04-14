@@ -158,10 +158,18 @@ export const loader = async ({ request }) => {
 
   if (url.searchParams.get("subscribed") === "1") {
     const { syncSubscription } = await import("../models/billing.server.js");
+    const { activatePaidPlan } = await import("../models/subscription.server.js");
     const { setShopPlanStatus } = await import("../models/shop.server.js");
     const { subscription } = await syncSubscription(billing, shop);
 
     if (subscription?.subscriptionId || process.env.SKIP_BILLING === "true") {
+      // Explicitly mark the plan ACTIVE in DB so hasPlanAccess works for all
+      // subsequent requests (without ?subscribed=1 in the URL).
+      await activatePaidPlan(shop, {
+        plan:            subscription?.plan || "PLUS",
+        subscriptionId:  subscription?.subscriptionId || `gid://shopify/AppSubscription/dev-${Date.now()}`,
+        currentPeriodEnd: subscription?.currentPeriodEnd ?? null,
+      }).catch(() => {});
       await setShopPlanStatus(shop, "active").catch(() => {});
     }
   }

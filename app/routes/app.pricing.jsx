@@ -99,7 +99,7 @@ export const action = async ({ request }) => {
     }
     await activateFreePlan(shop);
     await setShopPlanStatus(shop, "free");
-    return rrRedirect(withEmbeddedAppParamsFromRequest("/app/boxes", request));
+    return rrRedirect(withEmbeddedAppParamsFromRequest("/app", request));
   }
 
   if (intent === "subscribe") {

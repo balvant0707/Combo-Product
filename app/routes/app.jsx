@@ -26,12 +26,14 @@ export const loader = async ({ request }) => {
   const url = new URL(request.url);
   const pathname = url.pathname;
   const subscribedCallback = url.searchParams.get("subscribed") === "1";
+  // Routes that are always allowed regardless of subscription state
   const isPricingRoute = pathname === "/app/pricing" || pathname === "/app/plan";
+  const isBillingCallback = pathname === "/app/billing-success" || subscribedCallback;
 
   const { getSubscription, hasPlanAccess } = await import("../models/subscription.server.js");
   const subscription = await getSubscription(session.shop);
   const hasAccess = hasPlanAccess(subscription);
-  if (!hasAccess && !isPricingRoute && !subscribedCallback) {
+  if (!hasAccess && !isPricingRoute && !isBillingCallback) {
     throw redirect(withEmbeddedAppParamsFromRequest("/app/pricing", request));
   }
 

@@ -13,6 +13,15 @@ export default function App() {
         />
         <Meta />
         <Links />
+        <style>{`
+          body,
+          button,
+          input,
+          select,
+          textarea {
+            font-family: var(--p-font-family-sans);
+          }
+        `}</style>
       </head>
       <body>
         <Outlet />

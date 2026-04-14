@@ -383,11 +383,27 @@ export default function DashboardPage() {
   const orderTableRows = recentOrders.map((order, index) => [
     String(index + 1),
     order.boxTitle,
-    <Badge
-      tone={order.comboType === "specific" ? "success" : "success"}
-    >
-      {order.comboTypeLabel || (order.comboType === "specific" ? "Specific Bundle" : "Simple Bundle")}
-    </Badge>,
+    (() => {
+      const isSpecific = order.comboType === "specific";
+      return (
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            padding: "6px 12px",
+            borderRadius: "8px",
+            border: `1px solid ${isSpecific ? "#c7d2fe" : "#bbf7d0"}`,
+            background: isSpecific ? "#eef2ff" : "#ecfdf3",
+            color: isSpecific ? "#4f46e5" : "#166534",
+            fontSize: "13px",
+            fontWeight: 600,
+            lineHeight: 1.1,
+          }}
+        >
+          {isSpecific ? "Specific Product" : "Simple Bundle"}
+        </span>
+      );
+    })(),
     order.itemCount,
     formatCurrencyAmount(Number(order.bundlePrice || 0), currencyCode),
     new Date(order.orderDate).toLocaleDateString(undefined, {

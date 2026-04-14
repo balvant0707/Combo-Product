@@ -653,11 +653,27 @@ export default function ManageBoxesPage() {
 
                       {/* Type */}
                       <IndexTable.Cell>
-                        {box.comboConfig && box.comboConfig.comboType > 0 ? (
-                          <Badge tone="success">Specific Bundle</Badge>
-                        ) : (
-                          <Badge tone="success">Simple Bundle</Badge>
-                        )}
+                        {(() => {
+                          const isSpecific = box.comboConfig && box.comboConfig.comboType > 0;
+                          return (
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                padding: "6px 12px",
+                                borderRadius: "8px",
+                                border: `1px solid ${isSpecific ? "#c7d2fe" : "#bbf7d0"}`,
+                                background: isSpecific ? "#eef2ff" : "#ecfdf3",
+                                color: isSpecific ? "#4f46e5" : "#166534",
+                                fontSize: "13px",
+                                fontWeight: 600,
+                                lineHeight: 1.1,
+                              }}
+                            >
+                              {isSpecific ? "Specific Product" : "Simple Bundle"}
+                            </span>
+                          );
+                        })()}
                       </IndexTable.Cell>
 
                       {/* Orders */}

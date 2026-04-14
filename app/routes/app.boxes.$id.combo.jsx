@@ -823,7 +823,7 @@ export default function SpecificComboBoxPage() {
           <InlineGrid columns={{ xs: "1fr", sm: "1fr auto" }} gap="400">
             <BlockStack gap="050">
               <Text as="h2" variant="headingMd">Specific Combo Bundle Setup</Text>
-              <Text as="p" variant="bodySm" tone="subdued">Create and configure your specific combo experience</Text>
+              <Text as="p" variant="bodySm" tone="subdued">Create and configure your Specific Bundle experience</Text>
             </BlockStack>
             <InlineStack gap="200" blockAlign="start">
               <ToggleSwitch checked={comboConfig.isActive !== false} onChange={() => updateComboField("isActive", !(comboConfig.isActive !== false))} showStateText={false} />

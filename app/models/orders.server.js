@@ -38,7 +38,7 @@ function matchesComboTypeFilter(box, comboTypeFilter) {
 }
 
 function getComboTypeLabel(box) {
-  return isSpecificComboBoxRecord(box) ? "specific Bundle product" : "Simple Combo Product";
+  return isSpecificComboBoxRecord(box) ? "Specific Bundle" : "Simple Bundle";
 }
 
 function buildDailySkeleton(fromDate, toDate) {

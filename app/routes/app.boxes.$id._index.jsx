@@ -795,55 +795,7 @@ export default function BoxSettingsPage() {
                       <Text tone="critical" variant="bodySm">{errors.bannerImage}</Text>
                     )}
                   </BlockStack>
-                </FormLayout.Group>
-              </FormLayout>
-            </BlockStack>
-          </Card>
-
-          {/* Card 3 — Options */}
-          <Card>
-            <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">Bundle Options</Text>
-              <InlineGrid columns={{ xs: 1, sm: 3 }} gap="300">
-                <Card>
-                  <InlineStack gap="200" blockAlign="start">
-                    <ToggleSwitch checked={options.isGiftBox} onChange={() => toggleOption("isGiftBox")} showStateText={false} />
-                    <BlockStack gap="100">
-                      <Text as="p" variant="bodySm" fontWeight="semibold">Enable Gift Box Option</Text>
-                      <Text as="p" variant="bodySm" tone="subdued">Enables gift packaging option</Text>
-                    </BlockStack>
-                  </InlineStack>
-                </Card>
-                <Card>
-                  <InlineStack gap="200" blockAlign="start">
-                    <ToggleSwitch checked={options.isGiftBox && options.giftMessageEnabled} onChange={() => toggleOption("giftMessageEnabled")} disabled={!options.isGiftBox} showStateText={false} />
-                    <BlockStack gap="100">
-                      <Text as="p" variant="bodySm" fontWeight="semibold">Enable Gift Message Field</Text>
-                      <Text as="p" variant="bodySm" tone="subdued">Show text area for gift message</Text>
-                    </BlockStack>
-                  </InlineStack>
-                </Card>
-                <Card>
-                  <InlineStack gap="200" blockAlign="start">
-                    <ToggleSwitch checked={options.allowDuplicates} onChange={() => toggleOption("allowDuplicates")} showStateText={false} />
-                    <BlockStack gap="100">
-                      <Text as="p" variant="bodySm" fontWeight="semibold">Allow Duplicate Products</Text>
-                      <Text as="p" variant="bodySm" tone="subdued">Same product in multiple slots</Text>
-                    </BlockStack>
-                  </InlineStack>
-                </Card>
-              </InlineGrid>
-              {(optionValidationMessage || errors.giftMessageEnabled) && (
-                <Text tone="critical" variant="bodySm">
-                  {errors.giftMessageEnabled || optionValidationMessage}
-                </Text>
-              )}
-            </BlockStack>
-          </Card>
-
-          {/* Card 4 — Scope */}
-          <Card>
-            <BlockStack gap="400">
+                    <BlockStack gap="400">
               <Text as="h2" variant="headingMd">Bundle Setup</Text>
               <InlineGrid columns={{ xs: 1, md: 2 }} gap="300">
                 <BlockStack gap="100">
@@ -897,6 +849,50 @@ export default function BoxSettingsPage() {
                     ))}
                   </div>
                 </Box>
+              )}
+            </BlockStack>
+                </FormLayout.Group>
+              </FormLayout>
+            </BlockStack>
+          </Card>
+
+          {/* Card 3 — Options */}
+          <Card>
+            <BlockStack gap="400">
+              <Text as="h2" variant="headingMd">Bundle Options</Text>
+              <InlineGrid columns={{ xs: 1, sm: 3 }} gap="300">
+                <Card>
+                  <InlineStack gap="200" blockAlign="start">
+                    <ToggleSwitch checked={options.isGiftBox} onChange={() => toggleOption("isGiftBox")} showStateText={false} />
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Enable Gift Box Option</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">Enables gift packaging option</Text>
+                    </BlockStack>
+                  </InlineStack>
+                </Card>
+                <Card>
+                  <InlineStack gap="200" blockAlign="start">
+                    <ToggleSwitch checked={options.isGiftBox && options.giftMessageEnabled} onChange={() => toggleOption("giftMessageEnabled")} disabled={!options.isGiftBox} showStateText={false} />
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Enable Gift Message Field</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">Show text area for gift message</Text>
+                    </BlockStack>
+                  </InlineStack>
+                </Card>
+                <Card>
+                  <InlineStack gap="200" blockAlign="start">
+                    <ToggleSwitch checked={options.allowDuplicates} onChange={() => toggleOption("allowDuplicates")} showStateText={false} />
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodySm" fontWeight="semibold">Allow Duplicate Products</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">Same product in multiple slots</Text>
+                    </BlockStack>
+                  </InlineStack>
+                </Card>
+              </InlineGrid>
+              {(optionValidationMessage || errors.giftMessageEnabled) && (
+                <Text tone="critical" variant="bodySm">
+                  {errors.giftMessageEnabled || optionValidationMessage}
+                </Text>
               )}
             </BlockStack>
           </Card>

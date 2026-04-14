@@ -592,7 +592,7 @@ export default function BoxSettingsPage() {
           <Card>
             <InlineGrid columns={{ xs: "1fr", sm: "1fr auto" }} gap="400">
               <BlockStack gap="050">
-                <Text as="h2" variant="headingMd">Simple Bundle</Text>
+                <Text as="h2" variant="headingMd">${box.displayTitle || box.boxName || "Simple Bundle"}</Text>
                 <Text as="p" variant="bodySm" tone="subdued">Create and configure your Simple Bundle experience</Text>
               </BlockStack>
               <InlineStack gap="200" blockAlign="start">
@@ -646,7 +646,7 @@ export default function BoxSettingsPage() {
                     />
                   </BlockStack>
                 </InlineGrid>
-                <InlineGrid columns={{ xs: 1, md: 4 }} gap="300">
+                <InlineGrid columns={{ xs: 1, md: 3 }} gap="300">
                   <BlockStack gap="100">
                     <Text as="label" variant="bodySm" fontWeight="semibold">Items Required in Bundle *</Text>
                     <input

@@ -485,7 +485,7 @@ export default function CreateBoxPage() {
                     </BlockStack>
                   </InlineGrid>
 
-                  <InlineGrid columns={{ xs: 1, md: 4 }} gap="300">
+                  <InlineGrid columns={{ xs: 1, md: 3 }} gap="300">
                     {/* Item Count */}
                     <BlockStack gap="100">
                       <label htmlFor="new-itemCount" style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
@@ -622,7 +622,7 @@ export default function CreateBoxPage() {
                   <FormLayout.Group>
                      <BlockStack gap="200">
                       <Text as="h3" variant="headingSm">Bundle Setup</Text>
-                      <InlineGrid columns={2} gap="200">
+                      <InlineGrid columns={scope === "wholestore" ? 1 : 2} gap="200">
                         <BlockStack gap="100">
                           <Text as="label" variant="bodySm" fontWeight="semibold">Choose Display Scope</Text>
                           <Select
@@ -633,21 +633,23 @@ export default function CreateBoxPage() {
                             onChange={selectScope}
                           />
                         </BlockStack>
-                        <BlockStack gap="100">
-                          <Text as="label" variant="bodySm" fontWeight="semibold">
-                            {scope === "specific_collections" ? "Select Collections" : "Select Products"}
-                          </Text>
-                          <Button
-                            disabled={scope === "wholestore"}
-                            onClick={() => {
-                              setScopeSearch("");
-                              setShowScopePicker(true);
-                              if (clientErrors.scopeItems) setClientErrors((p) => ({ ...p, scopeItems: "" }));
-                            }}
-                          >
-                            {scope === "specific_collections" ? "Choose Collections" : "Select Products"}
-                          </Button>
-                        </BlockStack>
+                        {scope !== "wholestore" && (
+                          <BlockStack gap="100">
+                            <Text as="label" variant="bodySm" fontWeight="semibold">
+                              {scope === "specific_collections" ? "Select Collections" : "Select Products"}
+                            </Text>
+                            <Button
+                              variant="primary"
+                              onClick={() => {
+                                setScopeSearch("");
+                                setShowScopePicker(true);
+                                if (clientErrors.scopeItems) setClientErrors((p) => ({ ...p, scopeItems: "" }));
+                              }}
+                            >
+                              {scope === "specific_collections" ? "Choose Collections" : "Select Products"}
+                            </Button>
+                          </BlockStack>
+                        )}
                       </InlineGrid>
 
                       {scope === "wholestore" ? (

@@ -833,7 +833,7 @@ export default function SpecificComboBoxPage() {
         <Card>
           <InlineGrid columns={{ xs: "1fr", sm: "1fr auto" }} gap="400">
             <BlockStack gap="050">
-              <Text as="h2" variant="headingMd">Specific Bundle</Text>
+              <Text as="h2" variant="headingMd">${box.displayTitle || box.boxName || "Specific Combo"}</Text>
               <Text as="p" variant="bodySm" tone="subdued">Create and configure your Specific Bundle experience</Text>
             </BlockStack>
             <InlineStack gap="200" blockAlign="start">
@@ -1188,7 +1188,7 @@ export default function SpecificComboBoxPage() {
                                     style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", padding: "0 2px", lineHeight: 1, fontSize: "12px" }}
                                     aria-label={`Remove ${c.title}`}
                                   >
-                                    ×
+                                    ï¿½
                                   </button>
                                 </div>
                               ))}
@@ -1218,7 +1218,7 @@ export default function SpecificComboBoxPage() {
                                     style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", padding: "0 2px", lineHeight: 1, fontSize: "12px" }}
                                     aria-label={`Remove ${p.title}`}
                                   >
-                                    ×
+                                    ï¿½
                                   </button>
                                 </div>
                               ))}

@@ -820,13 +820,19 @@ export default function SpecificComboBoxPage() {
 
         {/* ── Status ── */}
         <Card>
-          <InlineStack gap="200" blockAlign="start">
-            <ToggleSwitch checked={comboConfig.isActive !== false} onChange={() => updateComboField("isActive", !(comboConfig.isActive !== false))} showStateText={false} />
-            <BlockStack gap="100">
-              <Text as="p" variant="bodySm" fontWeight="semibold">Publish on Storefront</Text>
-              <Text as="p" variant="bodySm" tone="subdued">Uncheck to hide this box from customers</Text>
+          <InlineGrid columns={{ xs: "1fr", sm: "1fr auto" }} gap="400">
+            <BlockStack gap="050">
+              <Text as="h2" variant="headingMd">Specific Combo Bundle Setup</Text>
+              <Text as="p" variant="bodySm" tone="subdued">Create and configure your specific combo experience</Text>
             </BlockStack>
-          </InlineStack>
+            <InlineStack gap="200" blockAlign="start">
+              <ToggleSwitch checked={comboConfig.isActive !== false} onChange={() => updateComboField("isActive", !(comboConfig.isActive !== false))} showStateText={false} />
+              <BlockStack gap="100">
+                <Text as="p" variant="bodySm" fontWeight="semibold">Publish on Storefront</Text>
+                <Text as="p" variant="bodySm" tone="subdued">Uncheck to hide this box from customers</Text>
+              </BlockStack>
+            </InlineStack>
+          </InlineGrid>
         </Card>
 
         {/* ── Combo Configuration ── */}
@@ -1463,5 +1469,4 @@ export default function SpecificComboBoxPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
-
 

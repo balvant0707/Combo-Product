@@ -158,8 +158,8 @@ export const action = async ({ request }) => {
   };
 
   if (!data.displayTitle?.trim()) errors.displayTitle = "Display title is required";
-  if (!data.itemCount || parseInt(data.itemCount) < 1 || parseInt(data.itemCount) > 20)
-    errors.itemCount = "Item count must be between 1 and 20";
+  if (!data.itemCount || parseInt(data.itemCount, 10) < 1 || parseInt(data.itemCount, 10) > 8)
+    errors.itemCount = "Item count must be between 1 and 8";
   if (data.giftMessageEnabled && !data.isGiftBox) {
     errors.giftMessageEnabled = "Enable Gift Box Mode to use Gift Message Field.";
   }
@@ -214,6 +214,7 @@ const nativeInputStyle = {
   padding: "8px 12px",
   border: "1.5px solid #e5e7eb",
   borderRadius: "6px",
+  fontFamily: "inherit",
   fontSize: "12px",
   boxSizing: "border-box",
   outline: "none",
@@ -270,7 +271,7 @@ export default function CreateBoxPage() {
 
   const errors = actionData?.errors || {};
 
-  const numItemCount = Math.max(1, parseInt(itemCount) || 1);
+  const numItemCount = Math.min(8, Math.max(1, parseInt(itemCount, 10) || 1));
   const estimatedTotal = 0;
   const dynamicPrice = (() => {
     if (estimatedTotal <= 0) return 0;
@@ -287,7 +288,7 @@ export default function CreateBoxPage() {
     const errs = {};
     if (!displayTitleValue.trim()) errs.displayTitle = "Bundle title is required";
     const ic = parseInt(itemCount);
-    if (!itemCount || isNaN(ic) || ic < 1 || ic > 20) errs.itemCount = "Item count must be between 1 and 20";
+    if (!itemCount || isNaN(ic) || ic < 1 || ic > 8) errs.itemCount = "Item count must be between 1 and 8";
     if (priceMode === "manual" && (!manualPrice || parseFloat(manualPrice) <= 0)) errs.bundlePrice = "Bundle price is required";
     if ((scope === "specific_collections" || scope === "specific_products") && scopeItems.length === 0) errs.scopeItems = "Please select at least one " + (scope === "specific_collections" ? "collection" : "product");
     setClientErrors(errs);
@@ -496,10 +497,18 @@ export default function CreateBoxPage() {
                         type="number"
                         placeholder="e.g. 4"
                         min="1"
-                        max="20"
+                        max="8"
+                        step="1"
                         value={itemCount}
                         onChange={(e) => {
-                          setItemCount(e.target.value);
+                          const raw = e.target.value;
+                          if (raw === "") {
+                            setItemCount("");
+                          } else {
+                            const parsed = parseInt(raw, 10);
+                            if (Number.isNaN(parsed)) return;
+                            setItemCount(String(Math.min(8, Math.max(1, parsed))));
+                          }
                           if (clientErrors.itemCount) setClientErrors((p) => ({ ...p, itemCount: "" }));
                         }}
                         style={{
@@ -804,4 +813,3 @@ export const headers = (headersArgs) => {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
-

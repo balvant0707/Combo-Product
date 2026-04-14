@@ -231,7 +231,9 @@ export const action = async ({ request, params }) => {
     scopeItems,
   };
   if (!data.displayTitle?.trim()) errors.displayTitle = "Display title is required";
-  if (!data.itemCount || parseInt(data.itemCount) < 1) errors.itemCount = "Invalid item count";
+  if (!data.itemCount || parseInt(data.itemCount, 10) < 1 || parseInt(data.itemCount, 10) > 8) {
+    errors.itemCount = "Item count must be between 1 and 8";
+  }
   if (data.giftMessageEnabled && !data.isGiftBox) errors.giftMessageEnabled = "Enable Gift Box Mode to use Gift Message Field.";
 
   if (Object.keys(errors).length > 0) return { errors };
@@ -282,7 +284,7 @@ export const action = async ({ request, params }) => {
 /* ─────────────────────────── Styles ─────────────────────────── */
 const inputStyle = {
   width: "100%", padding: "8px 12px", border: "1.5px solid #e5e7eb",
-  borderRadius: "6px", fontSize: "12px", boxSizing: "border-box",
+  borderRadius: "6px", fontFamily: "inherit", fontSize: "12px", boxSizing: "border-box",
 };
 
 /* ─────────────────────────── Component ─────────────────────────── */
@@ -348,7 +350,7 @@ export default function BoxSettingsPage() {
     setRemoveBannerImage(false);
   }, []);
 
-  const numItemCount = Math.max(1, parseInt(itemCount) || 1);
+  const numItemCount = Math.min(8, Math.max(1, parseInt(itemCount, 10) || 1));
   const dynamicPrice = 0;
   const bundlePrice = priceMode === "manual" ? parseFloat(manualPrice) || 0 : dynamicPrice;
 
@@ -383,7 +385,7 @@ export default function BoxSettingsPage() {
     const titleVal = titleEl ? titleEl.value.trim() : (box.displayTitle || "").trim();
     if (!titleVal) errs.displayTitle = "Bundle title is required";
     const ic = parseInt(itemCount);
-    if (!itemCount || isNaN(ic) || ic < 1 || ic > 20) errs.itemCount = "Item count must be between 1 and 20";
+    if (!itemCount || isNaN(ic) || ic < 1 || ic > 8) errs.itemCount = "Item count must be between 1 and 8";
     if (priceMode === "manual" && (!manualPrice || parseFloat(manualPrice) <= 0)) errs.bundlePrice = "Bundle price is required";
     if ((scope === "specific_collections" || scope === "specific_products") && scopeItems.length === 0) {
       errs.scopeItems = "Please select at least one " + (scope === "specific_collections" ? "collection" : "product");
@@ -652,9 +654,20 @@ export default function BoxSettingsPage() {
                       type="number"
                       placeholder="e.g. 4"
                       min="1"
-                      max="20"
+                      max="8"
+                      step="1"
                       value={itemCount}
-                      onChange={(e) => { setItemCount(e.target.value); if (clientErrors.itemCount) setClientErrors((p) => ({ ...p, itemCount: "" })); }}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        if (raw === "") {
+                          setItemCount("");
+                        } else {
+                          const parsed = parseInt(raw, 10);
+                          if (Number.isNaN(parsed)) return;
+                          setItemCount(String(Math.min(8, Math.max(1, parsed))));
+                        }
+                        if (clientErrors.itemCount) setClientErrors((p) => ({ ...p, itemCount: "" }));
+                      }}
                       style={{ ...inputStyle, borderColor: (clientErrors.itemCount || errors.itemCount) ? "#e11d48" : "#e5e7eb" }}
                     />
                     {(clientErrors.itemCount || errors.itemCount) && (
@@ -897,6 +910,5 @@ export default function BoxSettingsPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
-
 
 

@@ -117,6 +117,9 @@ function normalizeSpecificDiscountType(discountType) {
 function sanitizeSpecificComboPricing(config) {
   const safeConfig = config && typeof config === "object" ? config : {};
   const listingTitle = typeof safeConfig.listingTitle === "string" ? safeConfig.listingTitle.trim() : "";
+  const title = typeof safeConfig.title === "string" && safeConfig.title.trim()
+    ? safeConfig.title.trim()
+    : listingTitle;
   const ctaButtonLabel = typeof safeConfig.ctaButtonLabel === "string" && safeConfig.ctaButtonLabel.trim()
     ? safeConfig.ctaButtonLabel.trim()
     : (typeof safeConfig.comboButtonTitle === "string" ? safeConfig.comboButtonTitle.trim() : DEFAULT_COMBO_CONFIG.ctaButtonLabel);
@@ -139,6 +142,7 @@ function sanitizeSpecificComboPricing(config) {
   return {
     ...safeConfig,
     listingTitle,
+    title,
     ctaButtonLabel,
     addToCartLabel,
     bundlePriceType,
@@ -1459,6 +1463,5 @@ export default function SpecificComboBoxPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
-
 
 

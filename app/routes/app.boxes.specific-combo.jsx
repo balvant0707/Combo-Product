@@ -258,16 +258,24 @@ export const action = async ({ request }) => {
   const formData = await request.formData();
 
   const rawComboStepsConfig = formData.get("comboStepsConfig");
+  const comboName = formData.get("comboName")?.trim() || "";
   let parsedCombo = {};
   try { parsedCombo = JSON.parse(rawComboStepsConfig || "{}"); } catch {}
-  const normalizedCombo = sanitizeSpecificComboPricing(parsedCombo);
+  const normalizedCombo = sanitizeSpecificComboPricing({
+    ...parsedCombo,
+    title: typeof parsedCombo?.title === "string" && parsedCombo.title.trim()
+      ? parsedCombo.title.trim()
+      : comboName,
+    listingTitle: typeof parsedCombo?.listingTitle === "string" && parsedCombo.listingTitle.trim()
+      ? parsedCombo.listingTitle.trim()
+      : comboName,
+  });
   const comboStepsConfig = JSON.stringify(normalizedCombo);
   const errors = {};
   const bannerImage = await parseBannerImage(formData, errors);
   const comboImage = await parseComboImage(formData, errors);
   const comboValidation = validateComboConfig(comboStepsConfig);
 
-  const comboName = formData.get("comboName")?.trim() || "";
   if (!comboName) errors.comboName = "Combo name is required";
   if (comboValidation) {
     errors.comboConfig = comboValidation.form;
@@ -727,7 +735,11 @@ export default function CreateSpecificComboBoxPage() {
                     type="text"
                     name="comboName"
                     placeholder="e.g. Beauty Bundle - 10% Discount"
-                    onChange={() => { if (stepErrors._name) setStepErrors((p) => ({ ...p, _name: "" })); }}
+                    value={comboConfig.title}
+                    onChange={(e) => {
+                      updateComboField("title", e.target.value);
+                      if (stepErrors._name) setStepErrors((p) => ({ ...p, _name: "" }));
+                    }}
                     style={{ ...inputStyle, borderColor: (errors.comboName || stepErrors._name) ? "#e11d48" : "#e5e7eb" }}
                   />
                   {(errors.comboName || stepErrors._name) && (

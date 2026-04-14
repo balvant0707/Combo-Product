@@ -140,7 +140,7 @@ export const loader = async ({ request }) => {
             const steps = attachStepImages(Array.isArray(parsed.steps) ? parsed.steps : []);
             return {
               comboType: parseInt(parsed.type) || 0,
-              title: parsed.title || null,
+              title: parsed.title || parsed.listingTitle || null,
               subtitle: parsed.subtitle || null,
               highlightText: typeof parsed.highlightText === "string" ? parsed.highlightText : "",
               supportText: typeof parsed.supportText === "string" ? parsed.supportText : "",

@@ -409,7 +409,7 @@ export default function CreateBoxPage() {
               <InlineGrid columns={{ xs: "1fr", sm: "1fr auto" }} gap="400">
                 <BlockStack gap="050">
                   <Text as="h2" variant="headingMd">Simple Bundle Product</Text>
-                  <Text as="p" variant="bodySm" tone="subdued">Create and configure your specific combo experience</Text>
+                  <Text as="p" variant="bodySm" tone="subdued">Create and configure your Simple Bundle experience</Text>
                 </BlockStack>
                 <InlineStack gap="200" blockAlign="start">
                   <ToggleSwitch checked={options.isActive} onChange={() => toggleOption("isActive")} showStateText={false} />

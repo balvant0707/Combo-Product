@@ -20,7 +20,7 @@ export const PLUS_YEARLY_PRICE = 249.99;
 export const MONTHLY_PRICE = PLUS_PRICE;
 export const YEARLY_PRICE  = PLUS_YEARLY_PRICE;
 
-export const TRIAL_DAYS = 7;
+export const TRIAL_DAYS = 0;
 export const BILLING_CURRENCY_CODE = "USD";
 export const BILLING_IS_TEST = process.env.BILLING_TEST !== "false";
 

@@ -271,11 +271,10 @@ function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan, freePlanL
       </button>
     );
   } else if (isFree) {
-    const onPaidPlan = activePlanKey && activePlanKey !== "FREE";
-    // Free plan is one-time only — disable if already used OR on a paid plan
-    if (onPaidPlan || freePlanLimitReached) {
+    // Free plan button availability is based on monthly free limit only
+    if (freePlanLimitReached) {
       btn = (
-        <button disabled aria-label="Free plan already used" style={{ ...disabledBtnStyle }}>
+        <button disabled aria-label="Free plan not available after limit reached" style={{ ...disabledBtnStyle }}>
           Not available
         </button>
       );
@@ -394,7 +393,7 @@ export default function PricingPage() {
     ? navigation.formData?.get("planKey")
     : submittingIntent === "free" ? "free" : null;
 
-  const activePlanKey = currentPlanKey(subscription) || (!freePlanLimitReached ? "FREE" : null);
+  const activePlanKey = currentPlanKey(subscription);
   const isPaid = activePlanKey && activePlanKey !== "FREE";
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useRef, useState } from "react";
 import { useLoaderData, useLocation, useNavigate, useRevalidator } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -51,7 +51,7 @@ export const loader = async ({ request }) => {
   };
 };
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function fmtCurrency(val, currencyCode) {
   const numericValue = Number(val) || 0;
   try {
@@ -79,12 +79,12 @@ function fmtDate(isoStr) {
   return new Date(isoStr).toLocaleDateString(undefined, { day: "2-digit", month: "short" });
 }
 
-// ─── Date Range Picker ────────────────────────────────────────────────────────
+// â”€â”€â”€ Date Range Picker â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const MONTH_NAMES = [
-  "January","February","March","April","May","June",
-  "July","August","September","October","November","December",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
-const DAY_LABELS = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+const DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 function toISO(year, month, day) {
   return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -248,7 +248,7 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
 
   const activeLabel = (() => {
     if (period === "custom") {
-      if (initFrom && initTo) return `${fmtShortDate(initFrom)} – ${fmtShortDate(initTo)}`;
+      if (initFrom && initTo) return `${fmtShortDate(initFrom)} â€“ ${fmtShortDate(initTo)}`;
     }
     return presets.find((p) => p.key === period)?.label || "Last 30 Days";
   })();
@@ -391,7 +391,7 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
         <AdminIcon type="chevron-down" size="small" style={{ color: "#6b7280" }} />
       </button>
 
-      {/* Popover — fixed so it escapes any overflow:hidden parent */}
+      {/* Popover â€” fixed so it escapes any overflow:hidden parent */}
       {open && (
         <div
           ref={popoverRef}
@@ -517,7 +517,7 @@ function ComboTypeFilter({ value = "all" }) {
     const params = new URLSearchParams(location.search);
     if (normalized === "all") params.delete("comboType");
     else params.set("comboType", normalized);
-    // Remove embedded-only params — withEmbeddedAppParams will re-add them
+    // Remove embedded-only params â€” withEmbeddedAppParams will re-add them
     for (const key of ["embedded", "host", "shop", "locale"]) {
       if (params.has(key)) params.delete(key);
     }
@@ -562,7 +562,7 @@ function ComboTypeFilter({ value = "all" }) {
   );
 }
 
-// ─── KPI Card ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ KPI Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function KpiCard({ label, value, subLabel, change, accentColor, iconType, subtitle }) {
   const isUp = change === null ? null : change >= 0;
   return (
@@ -633,7 +633,7 @@ function KpiCard({ label, value, subLabel, change, accentColor, iconType, subtit
   );
 }
 
-// ─── White Interactive Line Chart ─────────────────────────────────────────────
+// â”€â”€â”€ White Interactive Line Chart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function LineChart({
   title,
   totalValue,
@@ -853,7 +853,7 @@ function LineChart({
             );
           })}
 
-          {/* ── Hover elements ── */}
+          {/* â”€â”€ Hover elements â”€â”€ */}
           {hoverIdx !== null && data[hoverIdx] && (
             <g>
               {/* Vertical crosshair */}
@@ -901,7 +901,7 @@ function LineChart({
                       stroke="#374151"
                       strokeWidth="1"
                     />
-                    <text x={tx + 10} y={ty + 18} fontSize="10" fill="#ffffff"  fontWeight="600">
+                    <text x={tx + 10} y={ty + 18} fontSize="10" fill="#ffffff" fontWeight="600">
                       {fmtShortDate(data[hoverIdx].date)}
                     </text>
                     <circle cx={tx + 10} cy={ty + 32} r="3.5" fill={color} />
@@ -957,7 +957,7 @@ function LineChart({
   );
 }
 
-// ─── Top Products Horizontal Bar Chart ───────────────────────────────────────
+// â”€â”€â”€ Top Products Horizontal Bar Chart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function TopProductsChart({ data }) {
   if (!data || data.length === 0) {
     return (
@@ -997,7 +997,7 @@ function TopProductsChart({ data }) {
           <div key={p.productId} style={{ display: "grid", gridTemplateColumns: "28px 1fr 130px 48px", gap: "8px", alignItems: "center", marginBottom: "10px" }}>
             <div style={{ fontSize: "11px", fontWeight: "700", color: "#d1d5db", textAlign: "right" }}>{i + 1}</div>
             <div
-              style={{ fontSize: "11px", color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}
+              style={{ fontSize: "11px", color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
               title={p.productId}
             >
               #{shortId}
@@ -1018,11 +1018,11 @@ function TopProductsChart({ data }) {
                 }}
               >
                 {pct > 22 && (
-                  <span style={{ color: "#fff", fontSize: "9px", fontWeight: "700" }}>{p.count}×</span>
+                  <span style={{ color: "#fff", fontSize: "9px", fontWeight: "700" }}>{p.count}Ã—</span>
                 )}
               </div>
             </div>
-            <div style={{ fontSize: "11px", fontWeight: "700", color, textAlign: "right"}}>{sharePct}%</div>
+            <div style={{ fontSize: "11px", fontWeight: "700", color, textAlign: "right" }}>{sharePct}%</div>
           </div>
         );
       })}
@@ -1030,7 +1030,7 @@ function TopProductsChart({ data }) {
   );
 }
 
-// ─── Box Performance Chart ────────────────────────────────────────────────────
+// â”€â”€â”€ Box Performance Chart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function BoxPerformanceChart({ data, currencyCode }) {
   if (!data || data.length === 0) {
     return (
@@ -1057,7 +1057,7 @@ function BoxPerformanceChart({ data, currencyCode }) {
           <div key={b.boxId} style={{ marginBottom: "18px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "7px" }}>
               <div style={{ fontSize: "13px", fontWeight: "700", color: "#111827" }}>{b.boxTitle}</div>
-              <div style={{ display: "flex", gap: "10px", fontSize: "11px", color: "#000000"}}>
+              <div style={{ display: "flex", gap: "10px", fontSize: "11px", color: "#000000" }}>
                 <span style={{ color: "#2A7A4F", fontWeight: "700" }}>{shareRev}% rev</span>
                 <span>{b.orders} orders</span>
               </div>
@@ -1074,7 +1074,7 @@ function BoxPerformanceChart({ data, currencyCode }) {
                 }}
               />
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#9ca3af"}}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#9ca3af" }}>
               <span>{fmtCurrency(b.revenue, currencyCode)}</span>
               <span>{shareOrders}% of orders</span>
             </div>
@@ -1132,7 +1132,7 @@ function RecentOrdersTable({ data, currencyCode }) {
                 style={{ background: index % 2 === 0 ? "#fff" : "#fafafa" }}
               >
                 <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6" }}>
-                  <span style={{fontWeight: "700", color: "#111827", background: "#f3f4f6", padding: "2px 8px", borderRadius: "5px" }}>
+                  <span style={{ fontWeight: "700", color: "#111827", background: "#f3f4f6", padding: "2px 8px", borderRadius: "5px" }}>
                     {index + 1}
                   </span>
                 </td>
@@ -1171,11 +1171,11 @@ function RecentOrdersTable({ data, currencyCode }) {
                   {detailsText}
                 </td>
                 <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6" }}>
-                  <span style={{fontWeight: "800", color: "#2A7A4F", background: "#f0fdf4", padding: "2px 8px", borderRadius: "5px" }}>
+                  <span style={{ fontWeight: "800", color: "#2A7A4F", background: "#f0fdf4", padding: "2px 8px", borderRadius: "5px" }}>
                     {formatCurrencyAmount(Number(order.bundlePrice || 0), currencyCode)}
                   </span>
                 </td>
-                <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6", color: "#9ca3af", fontSize: "12px"}}>
+                <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6", color: "#9ca3af", fontSize: "12px" }}>
                   {new Date(order.orderDate).toLocaleDateString(undefined)}
                 </td>
               </tr>
@@ -1187,7 +1187,7 @@ function RecentOrdersTable({ data, currencyCode }) {
   );
 }
 
-// ─── Comparison Period Banner ─────────────────────────────────────────────────
+// â”€â”€â”€ Comparison Period Banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ComparisonBanner({ period, prevPeriod }) {
   if (!period || !prevPeriod) return null;
   return (
@@ -1209,16 +1209,16 @@ function ComparisonBanner({ period, prevPeriod }) {
       <AdminIcon type="calendar" size="base" />
       <div style={{ lineHeight: 1.6 }}>
         <span style={{ fontWeight: "700", color: "#1d4ed8" }}>Current: </span>
-        <span style={{ color: "#374151" }}>{fmtDate(period.from)} → {fmtDate(period.to)}</span>
+        <span style={{ color: "#374151" }}>{fmtDate(period.from)} â†’ {fmtDate(period.to)}</span>
         <span style={{ margin: "0 14px", color: "#d1d5db" }}>vs</span>
         <span style={{ fontWeight: "700", color: "#000000" }}>Previous: </span>
-        <span style={{ color: "#000000" }}>{fmtDate(prevPeriod.from)} → {fmtDate(prevPeriod.to)}</span>
+        <span style={{ color: "#000000" }}>{fmtDate(prevPeriod.from)} â†’ {fmtDate(prevPeriod.to)}</span>
       </div>
     </div>
   );
 }
 
-// ─── Sync Orders Button ───────────────────────────────────────────────────────
+// â”€â”€â”€ Sync Orders Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SyncOrdersButton() {
   const { revalidate } = useRevalidator();
   const [state, setState] = useState("idle"); // idle | loading | success | error
@@ -1267,7 +1267,7 @@ function SyncOrdersButton() {
         {isLoading ? (
           <>
             <span style={{ width: "12px", height: "12px", border: "2px solid #d1d5db", borderTopColor: "#2A7A4F", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />
-            Syncing…
+            Syncingâ€¦
           </>
         ) : (
           <>
@@ -1291,7 +1291,7 @@ function SyncOrdersButton() {
   );
 }
 
-// ─── Main Analytics Page ──────────────────────────────────────────────────────
+// â”€â”€â”€ Main Analytics Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function AnalyticsPage() {
   const {
     analytics,
@@ -1319,8 +1319,19 @@ export default function AnalyticsPage() {
     prevPeriod,
   } = analytics;
 
-  const periodLabel = periodRange ? `${fmtDate(periodRange.from)} – ${fmtDate(periodRange.to)}` : "Current";
+  const periodLabel = periodRange ? `${fmtDate(periodRange.from)} â€“ ${fmtDate(periodRange.to)}` : "Current";
   const prevPeriodLabel = prevPeriod ? `${fmtDate(prevPeriod.from)} – ${fmtDate(prevPeriod.to)}` : "Previous";
+
+  const analyticsScopeLabel = comboType === "simple"
+    ? "Simple Bundle"
+    : comboType === "specific"
+      ? "Specific Bundle"
+      : "Bundle";
+  const analyticsScopePluralLabel = comboType === "simple"
+    ? "Simple Bundles"
+    : comboType === "specific"
+      ? "Specific Bundles"
+      : "Bundles";
 
   const revData = (dailyTrend || []).map((d) => ({ date: d.date, value: d.revenue }));
   const prevRevData = (prevDailyTrend || []).map((d) => ({ date: d.date, value: d.revenue }));
@@ -1335,7 +1346,7 @@ export default function AnalyticsPage() {
   return (
     <Page
       title="Bundle Analytics Dashboard"
-      subtitle="Bundle sales and revenue overview"
+      subtitle={`${analyticsScopeLabel} sales and revenue overview`}
     >
       <style>{`
         .Polaris-InlineGrid {
@@ -1349,12 +1360,12 @@ export default function AnalyticsPage() {
         }
       `}</style>
       <BlockStack gap="500">
-        {/* ── Period Selector + Comparison Banner ── */}
+        {/* â”€â”€ Period Selector + Comparison Banner â”€â”€ */}
         <Card>
           <BlockStack gap="300">
             <InlineStack align="space-between" blockAlign="center" wrap>
               <BlockStack gap="100">
-                <Text as="h2" variant="headingMd">Bundle Performance Overview</Text>
+                <Text as="h2" variant="headingMd">{analyticsScopeLabel} Performance Overview</Text>
                 <Text as="p" tone="subdued" variant="bodySm"></Text>
               </BlockStack>
               <InlineStack gap="300" wrap>
@@ -1367,10 +1378,10 @@ export default function AnalyticsPage() {
           </BlockStack>
         </Card>
 
-        {/* ── KPI Cards ── */}
+        {/* â”€â”€ KPI Cards â”€â”€ */}
         <InlineGrid columns={{ xs: 2, md: 4 }} gap="400">
           <KpiCard
-            label="Total Bundle Revenue"
+            label={`Total ${analyticsScopeLabel} Revenue`}
             value={formatCurrencyAmount(totalRevenue, currencyCode)}
             subLabel={prevTotalRevenue ? `prev ${formatCurrencyAmount(prevTotalRevenue || 0, currencyCode)}` : null}
             change={revenueChange}
@@ -1378,7 +1389,7 @@ export default function AnalyticsPage() {
             iconType="money"
           />
           <KpiCard
-            label="Total Bundles Sold"
+            label={`Total ${analyticsScopePluralLabel} Sold`}
             value={totalOrders}
             subLabel={prevTotalOrders ? `prev ${prevTotalOrders}` : null}
             change={ordersChange}
@@ -1386,7 +1397,7 @@ export default function AnalyticsPage() {
             iconType="package"
           />
           <KpiCard
-            label="Average Bundle Order Value"
+            label={`Average ${analyticsScopeLabel} Order Value`}
             value={formatCurrencyAmount(avgBundleValue, currencyCode)}
             subLabel={null}
             change={avgChange}
@@ -1394,24 +1405,40 @@ export default function AnalyticsPage() {
             iconType="chart-line"
           />
           <KpiCard
-            label="Active Bundle Types"
+            label={`Active ${analyticsScopePluralLabel}`}
             value={activeBoxCount}
             subLabel={null}
             change={null}
             accentColor="#f59e0b"
             iconType="collection-list"
-            subtitle="Total live combo boxes"
+            subtitle={`Total live ${analyticsScopePluralLabel.toLowerCase()}`}
           />
         </InlineGrid>
 
-        {/* ── Revenue & Orders Charts ── */}
+        {/* â”€â”€ Top Products + Box Performance â”€â”€ */}
+        <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
+          <Card>
+            <BlockStack gap="300">
+              <Text as="h2" variant="headingMd">Most Picked {analyticsScopeLabel} Products</Text>
+              <TopProductsChart data={topProducts} />
+            </BlockStack>
+          </Card>
+          <Card>
+            <BlockStack gap="300">
+              <Text as="h2" variant="headingMd">{analyticsScopeLabel} Box Performance</Text>
+              <BoxPerformanceChart data={boxPerformance} currencyCode={currencyCode} />
+            </BlockStack>
+          </Card>
+        </InlineGrid>
+
+        {/* â”€â”€ Revenue & Orders Charts â”€â”€ */}
         <BlockStack gap="400">
           <Card>
             <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">Bundle Revenue Over Time</Text>
+              <Text as="h2" variant="headingMd">{analyticsScopeLabel} Revenue Over Time</Text>
               <div style={{ height: "1px", background: "#e5e7eb", width: "100%" }} />
               <LineChart
-                title="Total Revenue from Bundles"
+                title={`Total Revenue from ${analyticsScopePluralLabel}`}
                 totalValue={formatCurrencyAmount(totalRevenue, currencyCode)}
                 change={revenueChange}
                 data={revData}
@@ -1427,10 +1454,10 @@ export default function AnalyticsPage() {
           </Card>
           <Card>
             <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">Bundle Orders Over Time</Text>
+              <Text as="h2" variant="headingMd">{analyticsScopeLabel} Orders Over Time</Text>
               <div style={{ height: "1px", background: "#e5e7eb", width: "100%" }} />
               <LineChart
-                title="Bundle Orders Over Time"
+                title={`${analyticsScopeLabel} Orders Over Time`}
                 totalValue={String(totalOrders)}
                 change={ordersChange}
                 data={ordData}
@@ -1446,26 +1473,10 @@ export default function AnalyticsPage() {
           </Card>
         </BlockStack>
 
-        {/* ── Top Products + Box Performance ── */}
-        <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
-          <Card>
-            <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">Most Picked Bundle Products</Text>
-              <TopProductsChart data={topProducts} />
-            </BlockStack>
-          </Card>
-          <Card>
-            <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">Bundle Box Performance</Text>
-              <BoxPerformanceChart data={boxPerformance} currencyCode={currencyCode} />
-            </BlockStack>
-          </Card>
-        </InlineGrid>
-
-        {/* ── Recent Orders ── */}
+        {/* â”€â”€ Recent Orders â”€â”€ */}
         <Card>
           <BlockStack gap="300">
-            <Text as="h2" variant="headingMd">Recent Bundle Orders</Text>
+            <Text as="h2" variant="headingMd">Recent {analyticsScopeLabel} Orders</Text>
             <RecentOrdersTable data={recentOrders} currencyCode={currencyCode} />
           </BlockStack>
         </Card>
@@ -1477,8 +1488,4 @@ export default function AnalyticsPage() {
 export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
-
-
-
-
 

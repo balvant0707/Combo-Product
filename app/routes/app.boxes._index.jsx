@@ -537,10 +537,10 @@ export default function ManageBoxesPage() {
             <EmptyState
               heading="No combo boxes yet"
               action={{ content: "Create Bundle Box", onAction: openCreateBoxModal }}
-              secondaryAction={{ content: "Create Specific Combo Bundle", onAction: () => navigateTo("/app/boxes/specific-combo") }}
+              secondaryAction={{ content: "Create Specific Bundle", onAction: () => navigateTo("/app/boxes/specific-combo") }}
               image=""
             >
-              <p>Create your first box to let customers build custom combos on your storefront.</p>
+              <p>Create your first box to let customers build custom bundles on your storefront.</p>
             </EmptyState>
           ) : filteredBoxes.length === 0 ? (
             /* No search/filter results */

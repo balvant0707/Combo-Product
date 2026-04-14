@@ -865,7 +865,7 @@ export default function SpecificComboBoxPage() {
               </BlockStack>
 
               <BlockStack gap="100">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Start Bundle Button Text</Text>
+                <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Button Text</Text>
                 <input
                   value={comboConfig.ctaButtonLabel ?? comboConfig.comboButtonTitle ?? ""}
                   onChange={(e) => updateComboField("ctaButtonLabel", e.target.value)}

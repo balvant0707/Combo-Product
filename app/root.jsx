@@ -21,6 +21,20 @@ export default function App() {
           textarea {
             font-family: var(--p-font-family-sans);
           }
+
+          input,
+          select,
+          textarea,
+          .Polaris-TextField__Input,
+          .Polaris-Select__Input {
+            font-size: 12px !important;
+          }
+
+          input::placeholder,
+          textarea::placeholder,
+          .Polaris-TextField__Input::placeholder {
+            text-transform: capitalize;
+          }
         `}</style>
       </head>
       <body>

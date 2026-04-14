@@ -631,7 +631,7 @@ export default function CreateSpecificComboBoxPage() {
 
   return (
     <Page
-      title="Create Specific Combo Bundle"
+      title="Create Specific Bundle"
       backAction={{ content: "Boxes", onAction: handleBackAction }}
       primaryAction={{
         content: isSaving ? "Saving..." : "Save & Publish",
@@ -765,7 +765,7 @@ export default function CreateSpecificComboBoxPage() {
                 </BlockStack>
 
                 <BlockStack gap="100">
-                  <Text as="label" variant="bodySm" fontWeight="semibold">Start Bundle Button Text</Text>
+                  <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Button Text</Text>
                   <input
                     type="text"
                     style={inputStyle}

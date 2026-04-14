@@ -554,6 +554,14 @@ export default function ManageBoxesPage() {
             </Box>
           ) : (
             <>
+              <style>{`
+                .Polaris-IndexTable__TableHeading,
+                .Polaris-IndexTable__TableCell,
+                .Polaris-IndexTable__TableHeading *,
+                .Polaris-IndexTable__TableCell * {
+                  font-size: 12px !important;
+                }
+              `}</style>
               <IndexTable
                 resourceName={{ singular: "box", plural: "boxes" }}
                 itemCount={displayBoxes.length}
@@ -606,7 +614,7 @@ export default function ManageBoxesPage() {
                           </div>
                           <BlockStack gap="050">
                             <InlineStack gap="150" blockAlign="center">
-                              <Text variant="bodyMd" fontWeight="semibold" as="span">{box.boxName}</Text>
+                              <Text variant="bodySm" fontWeight="semibold" as="span">{box.boxName}</Text>
                               <Badge tone={box.isActive ? "success" : "enabled"}>
                                 {box.isActive ? "Live" : "Draft"}
                               </Badge>
@@ -645,7 +653,7 @@ export default function ManageBoxesPage() {
                             )}
                           </BlockStack>
                         ) : (
-                          <Text as="span" fontWeight="bold" variant="bodyMd">
+                          <Text as="span" fontWeight="bold" variant="bodySm">
                             {formatCurrencyAmount(Number(box.bundlePrice || 0), currencyCode)}
                           </Text>
                         )}
@@ -665,7 +673,7 @@ export default function ManageBoxesPage() {
                                 border: `1px solid ${isSpecific ? "#c7d2fe" : "#bbf7d0"}`,
                                 background: isSpecific ? "#eef2ff" : "#ecfdf3",
                                 color: isSpecific ? "#4f46e5" : "#166534",
-                                fontSize: "13px",
+                                fontSize: "12px",
                                 fontWeight: 600,
                                 lineHeight: 1.1,
                               }}

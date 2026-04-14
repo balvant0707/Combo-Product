@@ -425,8 +425,8 @@ export default function CreateBoxPage() {
             <Card>
               <BlockStack gap="400">
                 <Text as="h2" variant="headingMd">Bundle Setup</Text>
-                <FormLayout>
-                  <FormLayout.Group>
+                <BlockStack gap="300">
+                  <InlineGrid columns={{ xs: 1, md: 3 }} gap="300">
                     {/* Display Title */}
                     <BlockStack gap="100">
                       <label htmlFor="new-displayTitle" style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
@@ -483,9 +483,9 @@ export default function CreateBoxPage() {
                         style={nativeInputStyle}
                       />
                     </BlockStack>
-                  </FormLayout.Group>
+                  </InlineGrid>
 
-                  <FormLayout.Group>
+                  <InlineGrid columns={{ xs: 1, md: 4 }} gap="300">
                     {/* Item Count */}
                     <BlockStack gap="100">
                       <label htmlFor="new-itemCount" style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
@@ -618,7 +618,9 @@ export default function CreateBoxPage() {
                       )}
                     </BlockStack>
 
-                    <BlockStack gap="200">
+                  </InlineGrid>
+                  <FormLayout.Group>
+                     <BlockStack gap="200">
                       <Text as="h3" variant="headingSm">Bundle Setup</Text>
                       <InlineGrid columns={2} gap="200">
                         <BlockStack gap="100">
@@ -687,7 +689,7 @@ export default function CreateBoxPage() {
                       )}
                     </BlockStack>
                   </FormLayout.Group>
-                </FormLayout>
+                </BlockStack>
               </BlockStack>
             </Card>
 
@@ -822,4 +824,5 @@ export const headers = (headersArgs) => {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
+
 

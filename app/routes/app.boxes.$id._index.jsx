@@ -609,8 +609,8 @@ export default function BoxSettingsPage() {
           <Card>
             <BlockStack gap="400">
               <Text as="h2" variant="headingMd">Bundle Setup</Text>
-              <FormLayout>
-                <FormLayout.Group>
+              <BlockStack gap="300">
+                <InlineGrid columns={{ xs: 1, md: 3 }} gap="300">
                   <BlockStack gap="100">
                     <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Title *</Text>
                     <input
@@ -645,8 +645,8 @@ export default function BoxSettingsPage() {
                       style={inputStyle}
                     />
                   </BlockStack>
-                </FormLayout.Group>
-                <FormLayout.Group>
+                </InlineGrid>
+                <InlineGrid columns={{ xs: 1, md: 4 }} gap="300">
                   <BlockStack gap="100">
                     <Text as="label" variant="bodySm" fontWeight="semibold">Items Required in Bundle *</Text>
                     <input
@@ -795,7 +795,9 @@ export default function BoxSettingsPage() {
                       <Text tone="critical" variant="bodySm">{errors.bannerImage}</Text>
                     )}
                   </BlockStack>
-                  <BlockStack gap="200">
+                </InlineGrid>
+                <InlineGrid>
+                      <BlockStack gap="200">
                     <Text as="h3" variant="headingSm">Bundle Setup</Text>
                     <InlineGrid columns={2} gap="200">
                       <BlockStack gap="100">
@@ -867,8 +869,8 @@ export default function BoxSettingsPage() {
                       </InlineStack>
                     )}
                   </BlockStack>
-                </FormLayout.Group>
-              </FormLayout>
+                </InlineGrid>
+              </BlockStack>
             </BlockStack>
           </Card>
 
@@ -921,4 +923,5 @@ export default function BoxSettingsPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
+
 

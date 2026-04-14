@@ -863,7 +863,7 @@ export default function BoxSettingsPage() {
 
               <InlineStack gap="300" blockAlign="center">
                 {scope === "wholestore" ? (
-                  <Text variant="bodySm">All store products will be available in this combo.</Text>
+                  <Text variant="bodySm">All store products will be available in this bundle.</Text>
                 ) : (
                   <>
                     <Button

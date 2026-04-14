@@ -202,6 +202,7 @@ model Subscription {
   subscriptionId   String?   @db.VarChar(255)
   trialEndsAt      DateTime?
   currentPeriodEnd DateTime?
+  freeActivatedAt  DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 

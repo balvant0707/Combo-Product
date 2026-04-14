@@ -65,10 +65,14 @@ export const loader = async ({ request }) => {
     return rrRedirect(withEmbeddedAppParamsFromRequest("/app?subscribed=1", request));
   }
 
+  // True once the shop has ever activated the free plan (never cleared on upgrade/cancel)
+  const hasUsedFreePlan = !!subscription?.freeActivatedAt;
+
   return {
     subscription,
     billingUnavailable: !isDevMode && billingUnavailable,
     isDevMode,
+    hasUsedFreePlan,
     subscribed: url.searchParams.get("subscribed") === "1",
     cancelled: url.searchParams.get("cancelled") === "1",
   };
@@ -87,6 +91,12 @@ export const action = async ({ request }) => {
   const { setShopPlanStatus } = await import("../models/shop.server.js");
 
   if (intent === "free") {
+    // One-time only: refuse if the shop has already used the free plan
+    const { getSubscription } = await import("../models/subscription.server.js");
+    const existing = await getSubscription(shop);
+    if (existing?.freeActivatedAt) {
+      return { error: "The free plan can only be used once per store." };
+    }
     await activateFreePlan(shop);
     await setShopPlanStatus(shop, "free");
     return rrRedirect(withEmbeddedAppParamsFromRequest("/app/boxes", request));
@@ -227,7 +237,7 @@ function currentPlanKey(subscription) {
 
 /* ── Plan Card ───────────────────────────────────────────────────── */
 
-function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan }) {
+function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan, hasUsedFreePlan }) {
   const isActive   = activePlanKey === plan.key;
   const isFree     = plan.key === "FREE";
 
@@ -247,10 +257,11 @@ function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan }) {
     );
   } else if (isFree) {
     const onPaidPlan = activePlanKey && activePlanKey !== "FREE";
-    if (onPaidPlan) {
+    // Free plan is one-time only — disable if already used OR on a paid plan
+    if (onPaidPlan || hasUsedFreePlan) {
       btn = (
-        <button disabled aria-label="Free plan not available on paid plans" style={{ ...disabledBtnStyle }}>
-          Not available
+        <button disabled aria-label="Free plan already used" style={{ ...disabledBtnStyle }}>
+          {hasUsedFreePlan ? "Already used" : "Not available"}
         </button>
       );
     } else {
@@ -354,6 +365,7 @@ export default function PricingPage() {
     subscription,
     billingUnavailable,
     isDevMode,
+    hasUsedFreePlan,
     subscribed,
     cancelled,
   } = useLoaderData();
@@ -481,6 +493,7 @@ export default function PricingPage() {
               activePlanKey={activePlanKey}
               isSubmitting={isSubmitting}
               submittingPlan={submittingPlan}
+              hasUsedFreePlan={hasUsedFreePlan}
             />
           ))}
         </InlineGrid>

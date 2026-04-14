@@ -135,14 +135,15 @@ export async function saveSubscription(shop, data) {
   });
 }
 
-/** Mark a shop as on the Free plan (ACTIVE, no Shopify subscription ID) */
+/** Mark a shop as on the Free plan (ACTIVE, no Shopify subscription ID).
+ *  freeActivatedAt is set on the very first activation and never overwritten. */
 export async function activateFreePlan(shop) {
-  return saveSubscription(shop, {
-    plan:           "FREE",
-    status:         "ACTIVE",
-    subscriptionId: null,
-    trialEndsAt:    null,
-    currentPeriodEnd: null,
+  const existing = await db.subscription.findUnique({ where: { shop } });
+  const freeActivatedAt = existing?.freeActivatedAt ?? new Date();
+  return db.subscription.upsert({
+    where:  { shop },
+    create: { shop, plan: "FREE", status: "ACTIVE", subscriptionId: null, trialEndsAt: null, currentPeriodEnd: null, freeActivatedAt },
+    update: {       plan: "FREE", status: "ACTIVE", subscriptionId: null, trialEndsAt: null, currentPeriodEnd: null, freeActivatedAt },
   });
 }
 

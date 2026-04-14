@@ -1011,6 +1011,29 @@
 
     fetchBoxes(shop, apiBase, function (err, boxes, settings) {
       root.innerHTML = '';
+
+      // Order limit reached — show a notice and block the widget entirely
+      if (settings && settings.orderLimitReached) {
+        var limitBanner = document.createElement('div');
+        limitBanner.style.cssText = [
+          'padding:20px 24px',
+          'text-align:center',
+          'border:1px solid #fcd34d',
+          'border-radius:8px',
+          'background:#fffbeb',
+          'font-family:inherit',
+          'margin:8px 0',
+        ].join(';');
+        limitBanner.innerHTML =
+          '<p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#92400e;">' +
+          'Bundle Builder Temporarily Unavailable</p>' +
+          '<p style="margin:0;font-size:13px;color:#78350f;">' +
+          'This store\u2019s monthly bundle order limit has been reached. ' +
+          'Please contact the store owner for assistance.</p>';
+        root.appendChild(limitBanner);
+        return;
+      }
+
       if (err || !boxes || boxes.length === 0) { return; }
       if (boxIdsFilter && boxIdsFilter.length > 0) {
         boxes = boxes.filter(function (b) { return boxIdsFilter.indexOf(b.id) !== -1; });

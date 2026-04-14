@@ -398,7 +398,7 @@ export default function BoxSettingsPage() {
   /* ─────────────── Render ─────────────── */
   return (
     <Page
-      title={`Edit: "Simple Bundle"`}
+      title={`Edit: Simple Bundle Configuration`}
       backAction={{ content: "Boxes", onAction: handleBackAction }}
       primaryAction={{
         content: isSaving ? "Saving..." : "Save Changes",

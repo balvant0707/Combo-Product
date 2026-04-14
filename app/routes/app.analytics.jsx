@@ -248,7 +248,7 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
 
   const activeLabel = (() => {
     if (period === "custom") {
-      if (initFrom && initTo) return `${fmtShortDate(initFrom)} â€“ ${fmtShortDate(initTo)}`;
+      if (initFrom && initTo) return `${fmtShortDate(initFrom)} - ${fmtShortDate(initTo)}`;
     }
     return presets.find((p) => p.key === period)?.label || "Last 30 Days";
   })();
@@ -540,7 +540,7 @@ function ComboTypeFilter({ value = "all" }) {
       </label>
       <select
         id="combo-type-filter"
-        aria-label="Filter analytics by combo product type"
+        aria-label="Filter analytics by Bundle type"
         value={value}
         onChange={(e) => handleChange(e.target.value)}
         style={{
@@ -1018,7 +1018,7 @@ function TopProductsChart({ data }) {
                 }}
               >
                 {pct > 22 && (
-                  <span style={{ color: "#fff", fontSize: "9px", fontWeight: "700" }}>{p.count}Ã—</span>
+                  <span style={{ color: "#fff", fontSize: "9px", fontWeight: "700" }}>{p.count}x</span>
                 )}
               </div>
             </div>
@@ -1319,8 +1319,8 @@ export default function AnalyticsPage() {
     prevPeriod,
   } = analytics;
 
-  const periodLabel = periodRange ? `${fmtDate(periodRange.from)} â€“ ${fmtDate(periodRange.to)}` : "Current";
-  const prevPeriodLabel = prevPeriod ? `${fmtDate(prevPeriod.from)} – ${fmtDate(prevPeriod.to)}` : "Previous";
+  const periodLabel = periodRange ? `${fmtDate(periodRange.from)} - ${fmtDate(periodRange.to)}` : "Current";
+  const prevPeriodLabel = prevPeriod ? `${fmtDate(prevPeriod.from)} - ${fmtDate(prevPeriod.to)}` : "Previous";
 
   const analyticsScopeLabel = comboType === "simple"
     ? "Simple Bundle"

@@ -797,9 +797,8 @@ export default function BoxSettingsPage() {
                   </BlockStack>
                 </InlineGrid>
                 <InlineGrid>
-                      <BlockStack gap="200">
-                    <Text as="h3" variant="headingSm">Bundle Setup</Text>
-                    <InlineGrid columns={2} gap="200">
+                  <BlockStack gap="200">
+                    <InlineGrid columns={scope === "wholestore" ? 1 : 2} gap="200">
                       <BlockStack gap="100">
                         <Text as="label" variant="bodySm" fontWeight="semibold">Choose Display Scope</Text>
                         <Select
@@ -814,21 +813,23 @@ export default function BoxSettingsPage() {
                           onChange={selectScope}
                         />
                       </BlockStack>
-                      <BlockStack gap="100">
-                        <Text as="label" variant="bodySm" fontWeight="semibold">
-                          {scope === "specific_collections" ? "Select Collections" : "Select Products"}
-                        </Text>
-                        <Button
-                          disabled={scope === "wholestore"}
-                          onClick={() => {
-                            setScopeSearch("");
-                            setShowScopePicker(true);
-                            if (clientErrors.scopeItems) setClientErrors((p) => ({ ...p, scopeItems: "" }));
-                          }}
-                        >
-                          {scope === "specific_collections" ? "Choose Collections" : "Select Products"}
-                        </Button>
-                      </BlockStack>
+                      {scope !== "wholestore" && (
+                        <BlockStack gap="100">
+                          <Text as="label" variant="bodySm" fontWeight="semibold">
+                            {scope === "specific_collections" ? "Select Collections" : "Select Products"}
+                          </Text>
+                          <Button
+                            variant="primary"
+                            onClick={() => {
+                              setScopeSearch("");
+                              setShowScopePicker(true);
+                              if (clientErrors.scopeItems) setClientErrors((p) => ({ ...p, scopeItems: "" }));
+                            }}
+                          >
+                            {scope === "specific_collections" ? "Choose Collections" : "Select Products"}
+                          </Button>
+                        </BlockStack>
+                      )}
                     </InlineGrid>
 
                     {scope === "wholestore" ? (

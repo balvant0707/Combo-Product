@@ -430,17 +430,19 @@
 .cb-slot-wrapper {
   display: flex;
   align-items: flex-start;
-  justify-content: center;
+  justify-content: flex-start;
   top: -5px !important;
   z-index: 30;
   background: rgba(255,255,255,0.97);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   overflow-x: auto;
-  padding: 16px 8px 24px;
+  padding: 16px 0 24px;
   margin-bottom: 8px;
   gap: 14px;
   scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 
 .cb-slot-steps {
@@ -448,8 +450,9 @@
   align-items: flex-start;
   position: relative;
   gap: 0;
-  padding: 8px 0 4px;
+  padding: 8px 12px 4px;
   flex-wrap: nowrap;
+  min-width: max-content;
 }
 
 /* Dashed connector line through the centre of all boxes */
@@ -859,34 +862,12 @@
 
 /* Checkmark overlay on used-product images */
 .cb-product-card--used .cb-product-img-wrap::after {
-  content: '\2713';
-  position: absolute;
-  inset: 0;
-  background: rgba(42, 122, 79, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 48px;
-  font-weight: 900;
-  pointer-events: none;
-  z-index: 2;
+  display: none;
 }
 
 /* Checkmark overlay on current-slot images (lighter, primary tint) */
 .cb-product-card--current .cb-product-img-wrap::after {
-  content: '\2713';
-  position: absolute;
-  inset: 0;
-  background: rgba(42, 122, 79, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 48px;
-  font-weight: 900;
-  pointer-events: none;
-  z-index: 2;
+  display: none;
 }
 
 .cb-product-img-wrap {
@@ -921,16 +902,7 @@
 }
 
 .cb-product-used-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(42,122,79,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  color: #fff;
-  font-weight: 700;
-  backdrop-filter: blur(2px);
+  display: none !important;
 }
 
 .cb-product-info {
@@ -1511,6 +1483,15 @@
 
 /* ── Mobile ≤ 768px ─────────────────────────────────── */
 @media (max-width: 768px) {
+  .cb-slot-wrapper {
+    justify-content: flex-start;
+    padding: 12px 0 20px;
+  }
+  .cb-slot-steps {
+    padding: 6px 10px 2px;
+    min-width: max-content;
+  }
+
   .cb-wrapper {
     padding-left: 16px;
     padding-right: 16px;

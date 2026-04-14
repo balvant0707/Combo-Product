@@ -670,7 +670,6 @@ export default function CreateBoxPage() {
                   </InlineGrid>
                   <FormLayout.Group>
                      <BlockStack gap="200">
-                      <Text as="h3" variant="headingSm">Bundle Setup</Text>
                       <InlineGrid columns={scope === "wholestore" ? 1 : 2} gap="200">
                         <BlockStack gap="100">
                           <Text as="label" variant="bodySm" fontWeight="semibold">Choose Display Scope</Text>

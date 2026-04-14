@@ -1809,6 +1809,9 @@
     }
     slotWrapper.appendChild(inlineCartBtn);
     container.appendChild(slotWrapper);
+    requestAnimationFrame(function () {
+      slotWrapper.scrollLeft = 0;
+    });
 
     // ── Steps Mode: Step 3 cart section (hidden until all slots filled) ──
     var step3CartBtn = null;
@@ -2100,14 +2103,6 @@
           ph.className = 'cb-product-img-placeholder';
           ph.textContent = (product.productTitle || '?').charAt(0).toUpperCase();
           imgWrap.appendChild(ph);
-        }
-
-        // "Used" overlay when added
-        if (isUsed) {
-          var usedOverlay = document.createElement('div');
-          usedOverlay.className = 'cb-product-used-overlay';
-          usedOverlay.innerHTML = '<span>&#10003;</span>';
-          imgWrap.appendChild(usedOverlay);
         }
 
         card.appendChild(imgWrap);
@@ -2741,6 +2736,9 @@
     }
     slotWrapper.appendChild(inlineCartBtn);
     container.appendChild(slotWrapper);
+    requestAnimationFrame(function () {
+      slotWrapper.scrollLeft = 0;
+    });
 
     // ── Step 3: Cart section (steps mode only, hidden until all slots filled) ──
     // Placed immediately after slotWrapper so buttons appear below selected products

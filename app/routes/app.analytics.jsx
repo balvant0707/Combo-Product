@@ -548,7 +548,6 @@ function ComboTypeFilter({ value = "all" }) {
           padding: "7px 12px",
           borderRadius: "5px",
           border: "1.5px solid #e5e7eb",
-          background: "#d1fae5",
           fontSize: "13px",
           fontWeight: "600",
           color: "#374151",

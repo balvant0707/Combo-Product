@@ -167,6 +167,7 @@ const PLAN_UI = [
     name:     "Free",
     price:    0,
     priceLabel: "Forever free",
+    paymentMethod: "No payment required",
     highlight: false,
     orderLimit: ORDER_LIMITS.FREE,
     features: [
@@ -183,6 +184,7 @@ const PLAN_UI = [
     name:     "Basic",
     price:    BASIC_PRICE,
     priceLabel: "/month",
+    paymentMethod: "Shopify Billing (card on file)",
     highlight: false,
     orderLimit: ORDER_LIMITS.BASIC,
     features: [
@@ -199,6 +201,7 @@ const PLAN_UI = [
     name:     "Advance",
     price:    ADVANCE_PRICE,
     priceLabel: "/month",
+    paymentMethod: "Shopify Billing (card on file)",
     highlight: true,
     orderLimit: ORDER_LIMITS.ADVANCE,
     features: [
@@ -215,6 +218,7 @@ const PLAN_UI = [
     name:     "Plus",
     price:    PLUS_PRICE,
     priceLabel: "/month",
+    paymentMethod: "Shopify Billing (card on file)",
     highlight: false,
     orderLimit: ORDER_LIMITS.PLUS,
     features: [
@@ -356,6 +360,15 @@ function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan, freePlanL
         </BlockStack>
 
         <Divider />
+
+        <BlockStack gap="050">
+          <Text as="p" tone="subdued" variant="bodySm" fontWeight="semibold">
+            Payment method
+          </Text>
+          <Text as="p" variant="bodySm">
+            {plan.paymentMethod}
+          </Text>
+        </BlockStack>
 
         <BlockStack gap="200">
           {plan.features.map((f) => (

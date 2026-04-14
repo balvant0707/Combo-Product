@@ -10,7 +10,7 @@ import { ToggleSwitch } from "../components/toggle-switch";
 import {
   Badge, Banner, BlockStack, Box, Button, Card, Checkbox,
   DropZone, FormLayout, InlineGrid, InlineStack, Layout, Modal, Page,
-  Spinner, Text, TextField
+  Select, Spinner, Text, TextField
 } from "@shopify/polaris";
 
 /* ─────────────────────────── GraphQL ─────────────────────────── */
@@ -196,7 +196,7 @@ export const action = async ({ request, params }) => {
   const errors = {};
   const bannerImage = await parseBannerImage(formData, errors);
   const removeBannerImage = formData.get("removeBannerImage") === "true" && !bannerImage;
-  const scopeType = formData.get("scope") || "specific_collections";
+  const scopeType = formData.get("scope") || "wholestore";
   const bundlePriceType = formData.get("bundlePriceType") === "dynamic" ? "dynamic" : "manual";
   const requestedDiscountType = bundlePriceType === "dynamic" ? (formData.get("discountType") || "none") : "none";
   const discountType = requestedDiscountType === "buy_x_get_y" ? "none" : requestedDiscountType;
@@ -314,7 +314,7 @@ export default function BoxSettingsPage() {
   const [discountValue, setDiscountValue] = useState(box.discountValue || "10");
   const [buyQuantity, setBuyQuantity] = useState(box.buyQuantity || "1");
   const [getQuantity, setGetQuantity] = useState(box.getQuantity || "1");
-  const [scope, setScope] = useState(box.scopeType || "specific_collections");
+  const [scope, setScope] = useState(box.scopeType || "wholestore");
   const [scopeItems, setScopeItems] = useState(() => {
     // For specific_products: initialize from ComboBoxProduct records (full data) if available
     if ((box.scopeType || "specific_collections") === "specific_products" && Array.isArray(box.products) && box.products.length > 0) {
@@ -593,7 +593,7 @@ export default function BoxSettingsPage() {
           <Card>
             <InlineGrid columns={{ xs: "1fr", sm: "1fr auto" }} gap="400">
               <BlockStack gap="050">
-                <Text as="h2" variant="headingMd">Simple Bundle Product</Text>
+                <Text as="h2" variant="headingMd">Simple Bundle</Text>
                 <Text as="p" variant="bodySm" tone="subdued">Create and configure your Simple Bundle experience</Text>
               </BlockStack>
               <InlineStack gap="200" blockAlign="start">
@@ -637,7 +637,7 @@ export default function BoxSettingsPage() {
                     />
                   </BlockStack>
                   <BlockStack gap="100">
-                    <Text as="label" variant="bodySm" fontWeight="semibold">Add Bundle to Cart Button Text</Text>
+                    <Text as="label" variant="bodySm" fontWeight="semibold">Add Bundle Button Text</Text>
                     <input
                       type="text"
                       name="productButtonTitle"
@@ -848,21 +848,17 @@ export default function BoxSettingsPage() {
               <Text as="h2" variant="headingMd">Display Scope</Text>
               <BlockStack gap="200">
                 <Text as="label" variant="bodySm" fontWeight="semibold">Choose Display Scope</Text>
-                <InlineStack gap="200" wrap={false}>
-                  {[
-                    { value: "specific_collections", label: "Selected Collections" },
-                    { value: "specific_products", label: "Selected Products" },
-                    { value: "wholestore", label: "Whole Store" },
-                  ].map((opt) => (
-                    <Button
-                      key={opt.value}
-                      variant={scope === opt.value ? "primary" : "secondary"}
-                      onClick={() => selectScope(opt.value)}
-                    >
-                      {opt.label}
-                    </Button>
-                  ))}
-                </InlineStack>
+                <Select
+                  label="Choose Display Scope"
+                  labelHidden
+                  options={[
+                    { value: "wholestore", label: "HolaStore" },
+                    { value: "specific_collections", label: "Select Collections" },
+                    { value: "specific_products", label: "Select Products" },
+                  ]}
+                  value={scope}
+                  onChange={selectScope}
+                />
               </BlockStack>
 
               <InlineStack gap="300" blockAlign="center">
@@ -873,7 +869,7 @@ export default function BoxSettingsPage() {
                     <Button
                       onClick={() => { setScopeSearch(""); setShowScopePicker(true); if (clientErrors.scopeItems) setClientErrors((p) => ({ ...p, scopeItems: "" })); }}
                     >
-                      {scope === "specific_collections" ? "Choose Collections" : "Show on Selected Products"}
+                      {scope === "specific_collections" ? "Choose Collections" : "Select Products"}
                     </Button>
                     <Text variant="bodySm" tone="subdued">{scopeItems.length} selected</Text>
                   </>
@@ -910,5 +906,4 @@ export default function BoxSettingsPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
-
 

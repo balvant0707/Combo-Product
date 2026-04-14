@@ -3,7 +3,7 @@ import { useFetcher, useLoaderData, useLocation, useNavigate, useNavigation, use
 import {
   Badge, Banner, BlockStack, Box, Button, Card, Checkbox,
   Divider, DropZone, FormLayout, InlineGrid, InlineStack, Modal, Page,
-  Spinner, Tabs, Text, TextField
+  Select, Spinner, Tabs, Text, TextField
 } from "@shopify/polaris";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -822,7 +822,7 @@ export default function SpecificComboBoxPage() {
         <Card>
           <InlineGrid columns={{ xs: "1fr", sm: "1fr auto" }} gap="400">
             <BlockStack gap="050">
-              <Text as="h2" variant="headingMd">Specific Combo Bundle Setup</Text>
+              <Text as="h2" variant="headingMd">Specific Bundle</Text>
               <Text as="p" variant="bodySm" tone="subdued">Create and configure your Specific Bundle experience</Text>
             </BlockStack>
             <InlineStack gap="200" blockAlign="start">
@@ -1110,39 +1110,16 @@ export default function SpecificComboBoxPage() {
                         {/* Scope selector */}
                         <BlockStack gap="200">
                           <Text as="label" variant="bodySm" fontWeight="semibold">Step Scope</Text>
-                          <InlineGrid columns={2} gap="200">
-                            {[
-                              { value: "collection", label: "Use Selected Collections" },
-                              { value: "product", label: "Use Selected Products" },
-                            ].map((opt) => (
-                              <label
-                                key={opt.value}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "8px",
-                                  padding: "0 10px",
-                                  minHeight: "40px",
-                                  border: `1.5px solid ${stepScope === opt.value ? "#000000" : "#d1d5db"}`,
-                                  borderRadius: "6px",
-                                  background: stepScope === opt.value ? "#f9fafb" : "#fff",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                <input
-                                  type="radio"
-                                  name={`step-scope-${ai}`}
-                                  value={opt.value}
-                                  checked={stepScope === opt.value}
-                                  onChange={() => updateStepScope(ai, opt.value)}
-                                  style={{ width: "16px", height: "16px", cursor: "pointer", margin: 0, flexShrink: 0 }}
-                                />
-                                <span style={{ fontSize: "12px", color: "#4b5563", fontWeight: stepScope === opt.value ? "700" : "600" }}>
-                                  {opt.label}
-                                </span>
-                              </label>
-                            ))}
-                          </InlineGrid>
+                          <Select
+                            label="Step Scope"
+                            labelHidden
+                            options={[
+                              { value: "collection", label: "Select Collections" },
+                              { value: "product", label: "Select Products" },
+                            ]}
+                            value={stepScope}
+                            onChange={(value) => updateStepScope(ai, value)}
+                          />
 
                           <InlineStack gap="300" blockAlign="center">
                             {stepScope === "collection" ? (
@@ -1469,4 +1446,3 @@ export default function SpecificComboBoxPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
-

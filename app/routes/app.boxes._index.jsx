@@ -826,7 +826,7 @@ export default function ManageBoxesPage() {
               <BlockStack gap="200">
                 <InlineStack gap="200" blockAlign="center">
                   <AdminIcon type="package" size="base" />
-                  <Text as="h3" variant="headingSm">Create Simple Bundle Product</Text>
+                  <Text as="h3" variant="headingSm">Create Simple Bundle</Text>
                 </InlineStack>
                 <Text as="p" tone="subdued" variant="bodySm">
                   Preconfigured Shopify product bundle to increase average order value faster.

@@ -123,7 +123,7 @@ export const action = async ({ request }) => {
 
   const errors = {};
   const bannerImage = await parseBannerImage(formData, errors);
-  const scopeType = formData.get("scope") || "specific_collections";
+  const scopeType = formData.get("scope") || "wholestore";
   const bundlePriceType = formData.get("bundlePriceType") === "dynamic" ? "dynamic" : "manual";
   const requestedDiscountType = bundlePriceType === "dynamic" ? (formData.get("discountType") || "none") : "none";
   const discountType = requestedDiscountType === "buy_x_get_y" ? "none" : requestedDiscountType;
@@ -223,9 +223,9 @@ const nativeInputStyle = {
 };
 
 const scopeOptions = [
-  { value: "specific_collections", label: "Selected Collections" },
-  { value: "specific_products", label: "Selected Products" },
-  { value: "wholestore", label: "Whole Store" },
+  { value: "wholestore", label: "HolaStore" },
+  { value: "specific_collections", label: "Select Collections" },
+  { value: "specific_products", label: "Select Products" },
 ];
 
 export default function CreateBoxPage() {
@@ -240,7 +240,7 @@ export default function CreateBoxPage() {
   const [isBackNavigating, setIsBackNavigating] = useState(false);
   const [clientErrors, setClientErrors] = useState({});
 
-  const [scope, setScope] = useState("specific_collections");
+  const [scope, setScope] = useState("wholestore");
   const [scopeItems, setScopeItems] = useState([]);
   const [showScopePicker, setShowScopePicker] = useState(false);
   const [scopeSearch, setScopeSearch] = useState("");
@@ -409,7 +409,7 @@ export default function CreateBoxPage() {
             <Card>
               <InlineGrid columns={{ xs: "1fr", sm: "1fr auto" }} gap="400">
                 <BlockStack gap="050">
-                  <Text as="h2" variant="headingMd">Simple Bundle Product</Text>
+                  <Text as="h2" variant="headingMd">Simple Bundle</Text>
                   <Text as="p" variant="bodySm" tone="subdued">Create and configure your Simple Bundle experience</Text>
                 </BlockStack>
                 <InlineStack gap="200" blockAlign="start">
@@ -473,7 +473,7 @@ export default function CreateBoxPage() {
                     {/* Add Bundle to Cart Button Text */}
                     <BlockStack gap="100">
                       <label htmlFor="new-productBtn" style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
-                        Add Bundle to Cart Button Text
+                        Add Bundle Button Text
                       </label>
                       <input
                         id="new-productBtn"
@@ -665,18 +665,13 @@ export default function CreateBoxPage() {
 
                 <BlockStack gap="200">
                   <Text as="label" variant="bodySm" fontWeight="semibold">Choose Display Scope</Text>
-                  <InlineStack gap="200">
-                    {scopeOptions.map((opt) => (
-                      <Button
-                        key={opt.value}
-                        variant={scope === opt.value ? "primary" : "secondary"}
-                        onClick={() => selectScope(opt.value)}
-                        size="slim"
-                      >
-                        {opt.label}
-                      </Button>
-                    ))}
-                  </InlineStack>
+                  <Select
+                    label="Choose Display Scope"
+                    labelHidden
+                    options={scopeOptions}
+                    value={scope}
+                    onChange={selectScope}
+                  />
                 </BlockStack>
 
                 <InlineStack gap="300" blockAlign="center">
@@ -686,7 +681,7 @@ export default function CreateBoxPage() {
                     <Button
                       onClick={() => { setScopeSearch(""); setShowScopePicker(true); if (clientErrors.scopeItems) setClientErrors((p) => ({ ...p, scopeItems: "" })); }}
                     >
-                      {scope === "specific_collections" ? "Choose Collections" : "Selected Products"}
+                      {scope === "specific_collections" ? "Choose Collections" : "Select Products"}
                     </Button>
                   )}
                   {scope !== "wholestore" && (

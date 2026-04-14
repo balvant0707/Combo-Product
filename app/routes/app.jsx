@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Outlet, useFetcher, useLoaderData, useLocation, useNavigate, useRevalidator, useRouteError } from "react-router";
+import { Outlet, redirect, useFetcher, useLoaderData, useLocation, useNavigate, useRevalidator, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider as ShopifyAppProvider } from "@shopify/shopify-app-react-router/react";
 import { AppProvider as PolarisAppProvider } from "@shopify/polaris";
@@ -14,7 +14,7 @@ import {
   upsertSessionFromAuth,
   upsertShopFromAdmin,
 } from "../models/shop.server";
-import { withEmbeddedAppParams } from "../utils/embedded-app";
+import { withEmbeddedAppParams, withEmbeddedAppParamsFromRequest } from "../utils/embedded-app";
 import { showPolarisToast } from "../utils/polaris-toast";
 import { sendMail } from "../utils/mailer.server";
 import { installedEmailHtml } from "../emails/app-installed";
@@ -23,6 +23,17 @@ import { buildEmbedBlockUrl, getEmbedBlockStatus } from "../utils/theme-editor.s
 
 export const loader = async ({ request }) => {
   const { session, admin } = await authenticate.admin(request);
+  const url = new URL(request.url);
+  const pathname = url.pathname;
+  const subscribedCallback = url.searchParams.get("subscribed") === "1";
+  const isPricingRoute = pathname === "/app/pricing" || pathname === "/app/plan";
+
+  const { getSubscription, hasPlanAccess } = await import("../models/subscription.server.js");
+  const subscription = await getSubscription(session.shop);
+  const hasAccess = hasPlanAccess(subscription);
+  if (!hasAccess && !isPricingRoute && !subscribedCallback) {
+    throw redirect(withEmbeddedAppParamsFromRequest("/app/pricing", request));
+  }
 
   await upsertSessionFromAuth(session);
   const installInfo = await upsertShopFromAdmin(session, admin);

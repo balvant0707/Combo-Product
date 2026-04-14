@@ -231,6 +231,7 @@ export const loader = async ({ request }) => {
     totalStoreOrdersLast30Days,
     bundleConversionRate,
     storeOwnerName,
+    shopDomain: shop,
     recentOrders: recentOrders.map((order) => ({
       id: order.id,
       orderId: order.orderId,
@@ -305,6 +306,33 @@ function StatCard({ label, value, sub }) {
   );
 }
 
+function formatRecentOrderItems(selectedProducts) {
+  const items = Array.isArray(selectedProducts)
+    ? selectedProducts.map((entry) => String(entry || "").trim()).filter(Boolean)
+    : [];
+  if (items.length === 0) return "—";
+  if (items.length === 1) return items[0];
+  if (items.length === 2) return `${items[0]}, ${items[1]}`;
+  return `${items[0]}, ${items[1]} +${items.length - 2} more`;
+}
+
+function buildAdminProductLink(shopDomain, itemLabel) {
+  const shop = String(shopDomain || "").trim();
+  const label = String(itemLabel || "").trim();
+  if (!shop || !label) return null;
+
+  const gidMatch = label.match(/gid:\/\/shopify\/Product\/(\d+)/i);
+  if (gidMatch?.[1]) {
+    return `https://${shop}/admin/products/${gidMatch[1]}`;
+  }
+
+  if (/^\d{8,}$/.test(label)) {
+    return `https://${shop}/admin/products/${label}`;
+  }
+
+  return `https://${shop}/admin/products?query=${encodeURIComponent(label)}`;
+}
+
 export default function DashboardPage() {
   const {
     activeBoxCount,
@@ -327,6 +355,7 @@ export default function DashboardPage() {
     totalStoreOrdersLast30Days,
     bundleConversionRate,
     storeOwnerName,
+    shopDomain,
   } = useLoaderData();
 
   const location = useLocation();
@@ -334,6 +363,11 @@ export default function DashboardPage() {
   const navigation = useNavigation();
   const [showCreateBoxModal, setShowCreateBoxModal] = useState(false);
   const [pendingCreateAction, setPendingCreateAction] = useState(null);
+  const [itemsPopup, setItemsPopup] = useState({
+    open: false,
+    boxTitle: "",
+    items: [],
+  });
   const navInFlightRef = useRef(false);
 
   const justSubscribed = new URLSearchParams(location.search).get("subscribed") === "1";
@@ -363,6 +397,17 @@ export default function DashboardPage() {
     navigateTo(action.href);
   }
 
+  function openItemsPopup(order) {
+    const items = Array.isArray(order?.selectedProducts)
+      ? order.selectedProducts.map((entry) => String(entry || "").trim()).filter(Boolean)
+      : [];
+    setItemsPopup({
+      open: true,
+      boxTitle: order?.boxTitle || "Bundle",
+      items,
+    });
+  }
+
   const stats = [
     { label: "Live Bundle", value: activeBoxCount, sub: "" },
     { label: "Bundle Orders", value: bundlesSold, sub: "Last 30 days" },
@@ -381,7 +426,23 @@ export default function DashboardPage() {
   ];
 
   const orderTableRows = recentOrders.map((order, index) => [
-    String(index + 1),
+    <span
+      style={{
+        display: "inline-flex",
+        minWidth: "28px",
+        height: "26px",
+        borderRadius: "8px",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#f3f4f6",
+        color: "#111827",
+        fontSize: "12px",
+        fontWeight: 700,
+        lineHeight: 1,
+      }}
+    >
+      {index + 1}
+    </span>,
     order.boxTitle,
     (() => {
       const isSpecific = order.comboType === "specific";
@@ -400,12 +461,52 @@ export default function DashboardPage() {
             lineHeight: 1.1,
           }}
         >
-          {isSpecific ? "Specific Product" : "Simple Bundle"}
+          {isSpecific ? "Specific Bundle" : "Simple Bundle"}
         </span>
       );
     })(),
-    order.itemCount,
-    formatCurrencyAmount(Number(order.bundlePrice || 0), currencyCode),
+    (() => {
+      const items = Array.isArray(order.selectedProducts)
+        ? order.selectedProducts.map((entry) => String(entry || "").trim()).filter(Boolean)
+        : [];
+      const previewText = formatRecentOrderItems(items);
+      const moreCount = Math.max(0, items.length - 2);
+
+      return (
+        <InlineStack gap="100" blockAlign="center">
+          <span
+            style={{
+              display: "inline-block",
+              maxWidth: "360px",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+            title={items.join(", ")}
+          >
+            {previewText}
+          </span>
+          {moreCount > 0 && (
+            <Button variant="plain" onClick={() => openItemsPopup(order)}>
+              +{moreCount} more
+            </Button>
+          )}
+        </InlineStack>
+      );
+    })(),
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        padding: "6px 12px",
+        borderRadius: "8px",
+        background: "#ecfdf3",
+        color: "#15803d",
+        fontWeight: 700,
+      }}
+    >
+      {formatCurrencyAmount(Number(order.bundlePrice || 0), currencyCode)}
+    </span>,
     new Date(order.orderDate).toLocaleDateString(undefined, {
       day: "2-digit",
       month: "short",
@@ -574,12 +675,22 @@ export default function DashboardPage() {
                 </BlockStack>
               </Box>
             ) : (
-              <DataTable
-                columnContentTypes={["text", "text", "text", "numeric", "numeric", "text"]}
-                headings={["No", "Box", "Type", "Items", "Revenue", "Date"]}
-                rows={orderTableRows}
-                hoverable
-              />
+              <>
+                <style>{`
+                  .cb-recent-orders .Polaris-DataTable__Cell,
+                  .cb-recent-orders .Polaris-DataTable__Heading {
+                    font-size: 12px !important;
+                  }
+                `}</style>
+                <div className="cb-recent-orders">
+                  <DataTable
+                    columnContentTypes={["text", "text", "text", "text", "text", "text"]}
+                    headings={["NO", "BUNDLE PRODUCT", "TYPE", "BUNDLE ITEMS", "ORDER REVENUE", "DATE"]}
+                    rows={orderTableRows}
+                    hoverable
+                  />
+                </div>
+              </>
             )}
           </BlockStack>
         </Card>
@@ -647,6 +758,45 @@ export default function DashboardPage() {
       </BlockStack>
 
       {/* ── Create Box Modal ── */}
+      <Modal
+        open={itemsPopup.open}
+        onClose={() => setItemsPopup({ open: false, boxTitle: "", items: [] })}
+        title={`All Bundle Items — ${itemsPopup.boxTitle}`}
+        primaryAction={{
+          content: "Close",
+          onAction: () => setItemsPopup({ open: false, boxTitle: "", items: [] }),
+        }}
+      >
+        <Modal.Section>
+          <BlockStack gap="200">
+            <Text as="p" variant="bodySm" tone="subdued">
+              {itemsPopup.items.length} item{itemsPopup.items.length === 1 ? "" : "s"} in this order
+            </Text>
+            {itemsPopup.items.length === 0 ? (
+              <Text as="p" variant="bodySm" tone="subdued">No items found for this order.</Text>
+            ) : (
+              <BlockStack gap="100">
+                {itemsPopup.items.map((item, idx) => {
+                  const productUrl = buildAdminProductLink(shopDomain, item);
+                  return (
+                    <InlineStack key={`${item}-${idx}`} align="space-between" blockAlign="center" wrap={false}>
+                      <Text as="span" variant="bodySm">{item}</Text>
+                      {productUrl ? (
+                        <Button url={productUrl} target="_blank" variant="plain">
+                          Open product
+                        </Button>
+                      ) : (
+                        <Text as="span" variant="bodySm" tone="subdued">No link</Text>
+                      )}
+                    </InlineStack>
+                  );
+                })}
+              </BlockStack>
+            )}
+          </BlockStack>
+        </Modal.Section>
+      </Modal>
+
       <Modal
         open={showCreateBoxModal}
         onClose={closeCreateBoxModal}

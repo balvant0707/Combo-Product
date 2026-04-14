@@ -356,18 +356,17 @@ export default function BoxSettingsPage() {
 
   /* ── Box Settings helpers ── */
   function toggleOption(name) {
-    let validationMessage = "";
     setOptions((prev) => {
-      if (name === "giftMessageEnabled" && !prev.isGiftBox) {
-        validationMessage = "Enable Gift Box Mode to use Gift Message Field.";
-        return prev;
+      if (name === "isGiftBox") {
+        const nextIsGiftBox = !prev.isGiftBox;
+        return { ...prev, isGiftBox: nextIsGiftBox, giftMessageEnabled: nextIsGiftBox };
       }
-      if (name === "isGiftBox" && prev.isGiftBox) {
-        return { ...prev, isGiftBox: false, giftMessageEnabled: false };
+      if (name === "giftMessageEnabled") {
+        return { ...prev, giftMessageEnabled: !!prev.isGiftBox };
       }
       return { ...prev, [name]: !prev[name] };
     });
-    setOptionValidationMessage(validationMessage);
+    setOptionValidationMessage("");
   }
   function selectScope(nextScope) {
     if (!nextScope || nextScope === scope) return;
@@ -563,7 +562,7 @@ export default function BoxSettingsPage() {
         <input type="hidden" name="itemCount" value={itemCount} />
         <input type="hidden" name="isGiftBox" value={String(options.isGiftBox)} />
         <input type="hidden" name="allowDuplicates" value={String(options.allowDuplicates)} />
-        <input type="hidden" name="giftMessageEnabled" value={String(options.giftMessageEnabled)} />
+        <input type="hidden" name="giftMessageEnabled" value={String(options.isGiftBox && options.giftMessageEnabled)} />
         <input type="hidden" name="isActive" value={String(options.isActive)} />
         <input type="hidden" name="scope" value={scope} />
         <input type="hidden" name="removeBannerImage" value={String(removeBannerImage)} />
@@ -817,7 +816,7 @@ export default function BoxSettingsPage() {
                 </Card>
                 <Card>
                   <InlineStack gap="200" blockAlign="start">
-                    <ToggleSwitch checked={options.giftMessageEnabled} onChange={() => toggleOption("giftMessageEnabled")} disabled={!options.isGiftBox} showStateText={false} />
+                    <ToggleSwitch checked={options.isGiftBox && options.giftMessageEnabled} onChange={() => toggleOption("giftMessageEnabled")} disabled={!options.isGiftBox} showStateText={false} />
                     <BlockStack gap="100">
                       <Text as="p" variant="bodySm" fontWeight="semibold">Enable Gift Message Field</Text>
                       <Text as="p" variant="bodySm" tone="subdued">Show text area for gift message</Text>
@@ -845,36 +844,40 @@ export default function BoxSettingsPage() {
           {/* Card 4 — Scope */}
           <Card>
             <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">Display Scope</Text>
-              <BlockStack gap="200">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Choose Display Scope</Text>
-                <Select
-                  label="Choose Display Scope"
-                  labelHidden
-                  options={[
-                    { value: "wholestore", label: "Whole Store" },
-                    { value: "specific_collections", label: "Select Collections" },
-                    { value: "specific_products", label: "Select Products" },
-                  ]}
-                  value={scope}
-                  onChange={selectScope}
-                />
-              </BlockStack>
+              <Text as="h2" variant="headingMd">Bundle Setup</Text>
+              <InlineGrid columns={{ xs: 1, md: 2 }} gap="300">
+                <BlockStack gap="100">
+                  <Text as="label" variant="bodySm" fontWeight="semibold">Choose Display Scope</Text>
+                  <Select
+                    label="Choose Display Scope"
+                    labelHidden
+                    options={[
+                      { value: "wholestore", label: "Whole Store" },
+                      { value: "specific_collections", label: "Select Collections" },
+                      { value: "specific_products", label: "Select Products" },
+                    ]}
+                    value={scope}
+                    onChange={selectScope}
+                  />
+                </BlockStack>
+                <BlockStack gap="100">
+                  <Text as="label" variant="bodySm" fontWeight="semibold">
+                    {scope === "specific_collections" ? "Select Collections" : "Select Products"}
+                  </Text>
+                  <Button
+                    disabled={scope === "wholestore"}
+                    onClick={() => { setScopeSearch(""); setShowScopePicker(true); if (clientErrors.scopeItems) setClientErrors((p) => ({ ...p, scopeItems: "" })); }}
+                  >
+                    {scope === "specific_collections" ? "Choose Collections" : "Select Products"}
+                  </Button>
+                </BlockStack>
+              </InlineGrid>
 
-              <InlineStack gap="300" blockAlign="center">
-                {scope === "wholestore" ? (
-                  <Text variant="bodySm">All store products will be available in this bundle.</Text>
-                ) : (
-                  <>
-                    <Button
-                      onClick={() => { setScopeSearch(""); setShowScopePicker(true); if (clientErrors.scopeItems) setClientErrors((p) => ({ ...p, scopeItems: "" })); }}
-                    >
-                      {scope === "specific_collections" ? "Choose Collections" : "Select Products"}
-                    </Button>
-                    <Text variant="bodySm" tone="subdued">{scopeItems.length} selected</Text>
-                  </>
-                )}
-              </InlineStack>
+              {scope === "wholestore" ? (
+                <Text variant="bodySm">All store products will be available in this bundle.</Text>
+              ) : (
+                <Text variant="bodySm" tone="subdued">{scopeItems.length} selected</Text>
+              )}
 
               {clientErrors.scopeItems && (
                 <Text tone="critical" variant="bodySm" role="alert">{clientErrors.scopeItems}</Text>
@@ -906,4 +909,3 @@ export default function BoxSettingsPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
-

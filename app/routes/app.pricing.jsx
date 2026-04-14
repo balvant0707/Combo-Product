@@ -65,14 +65,23 @@ export const loader = async ({ request }) => {
     return rrRedirect(withEmbeddedAppParamsFromRequest("/app?subscribed=1", request));
   }
 
-  // True once the shop has ever activated the free plan (never cleared on upgrade/cancel)
-  const hasUsedFreePlan = !!subscription?.freeActivatedAt;
+  const { getAnalytics } = await import("../models/orders.server.js");
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthlyAnalytics = await getAnalytics(
+    shop,
+    monthStart.toISOString().slice(0, 10),
+    now.toISOString().slice(0, 10),
+  );
+  const monthlyOrderCount = monthlyAnalytics.totalOrders || 0;
+  const freePlanLimitReached = monthlyOrderCount >= ORDER_LIMITS.FREE;
 
   return {
     subscription,
     billingUnavailable: !isDevMode && billingUnavailable,
     isDevMode,
-    hasUsedFreePlan,
+    monthlyOrderCount,
+    freePlanLimitReached,
     subscribed: url.searchParams.get("subscribed") === "1",
     cancelled: url.searchParams.get("cancelled") === "1",
   };
@@ -91,11 +100,17 @@ export const action = async ({ request }) => {
   const { setShopPlanStatus } = await import("../models/shop.server.js");
 
   if (intent === "free") {
-    // One-time only: refuse if the shop has already used the free plan
-    const { getSubscription } = await import("../models/subscription.server.js");
-    const existing = await getSubscription(shop);
-    if (existing?.freeActivatedAt) {
-      return { error: "The free plan can only be used once per store." };
+    const { getAnalytics } = await import("../models/orders.server.js");
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthlyAnalytics = await getAnalytics(
+      shop,
+      monthStart.toISOString().slice(0, 10),
+      now.toISOString().slice(0, 10),
+    );
+    const monthlyOrderCount = monthlyAnalytics.totalOrders || 0;
+    if (monthlyOrderCount >= ORDER_LIMITS.FREE) {
+      return { error: `Free plan is not available after ${ORDER_LIMITS.FREE} orders/month. Please upgrade your plan.` };
     }
     await activateFreePlan(shop);
     await setShopPlanStatus(shop, "free");
@@ -237,7 +252,7 @@ function currentPlanKey(subscription) {
 
 /* ── Plan Card ───────────────────────────────────────────────────── */
 
-function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan, hasUsedFreePlan }) {
+function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan, freePlanLimitReached }) {
   const isActive   = activePlanKey === plan.key;
   const isFree     = plan.key === "FREE";
 
@@ -258,10 +273,10 @@ function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan, hasUsedFr
   } else if (isFree) {
     const onPaidPlan = activePlanKey && activePlanKey !== "FREE";
     // Free plan is one-time only — disable if already used OR on a paid plan
-    if (onPaidPlan || hasUsedFreePlan) {
+    if (onPaidPlan || freePlanLimitReached) {
       btn = (
         <button disabled aria-label="Free plan already used" style={{ ...disabledBtnStyle }}>
-          {hasUsedFreePlan ? "Already used" : "Not available"}
+          Not available
         </button>
       );
     } else {
@@ -365,7 +380,8 @@ export default function PricingPage() {
     subscription,
     billingUnavailable,
     isDevMode,
-    hasUsedFreePlan,
+    monthlyOrderCount,
+    freePlanLimitReached,
     subscribed,
     cancelled,
   } = useLoaderData();
@@ -378,7 +394,7 @@ export default function PricingPage() {
     ? navigation.formData?.get("planKey")
     : submittingIntent === "free" ? "free" : null;
 
-  const activePlanKey = currentPlanKey(subscription);
+  const activePlanKey = currentPlanKey(subscription) || (!freePlanLimitReached ? "FREE" : null);
   const isPaid = activePlanKey && activePlanKey !== "FREE";
 
   useEffect(() => {
@@ -483,6 +499,15 @@ export default function PricingPage() {
             appears automatically. Upgrade anytime to increase your limit.
           </p>
         </Banner>
+        {!isPaid && (
+          <Banner tone={freePlanLimitReached ? "warning" : "info"} title="Free plan status">
+            <p>
+              {freePlanLimitReached
+                ? `Free plan limit reached (${monthlyOrderCount}/${ORDER_LIMITS.FREE} orders this month).`
+                : `Free plan selected (${monthlyOrderCount}/${ORDER_LIMITS.FREE} orders this month).`}
+            </p>
+          </Banner>
+        )}
 
         {/* ── Plan cards ── */}
         <InlineGrid columns={{ xs: 1, sm: 2, md: 4, lg: 4 }} gap="400">
@@ -493,7 +518,7 @@ export default function PricingPage() {
               activePlanKey={activePlanKey}
               isSubmitting={isSubmitting}
               submittingPlan={submittingPlan}
-              hasUsedFreePlan={hasUsedFreePlan}
+              freePlanLimitReached={freePlanLimitReached}
             />
           ))}
         </InlineGrid>
@@ -597,7 +622,3 @@ export function ErrorBoundary() {
 }
 
 export const headers = (h) => boundary.headers(h);
-
-
-
-

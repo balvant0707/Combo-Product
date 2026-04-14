@@ -81,9 +81,11 @@ export const BILLING_PLANS = {
 export const BILLING_PLAN_KEYS = [BASIC_PLAN, ADVANCE_PLAN, PLUS_PLAN, YEARLY_PLAN];
 
 export function getPlanNameForBillingCycle(billingCycle = "monthly", planKey = "PLUS") {
-  if (billingCycle === "yearly") return YEARLY_PLAN;
-  if (planKey === "BASIC") return BASIC_PLAN;
-  if (planKey === "ADVANCE") return ADVANCE_PLAN;
+  const normalizedCycle = String(billingCycle || "monthly").trim().toLowerCase();
+  const normalizedKey = String(planKey || "PLUS").trim().toUpperCase();
+  if (normalizedCycle === "yearly") return YEARLY_PLAN;
+  if (normalizedKey === "BASIC") return BASIC_PLAN;
+  if (normalizedKey === "ADVANCE") return ADVANCE_PLAN;
   return PLUS_PLAN;
 }
 
@@ -94,9 +96,11 @@ export function getBillingCycleForPlanName(planName) {
 
 export function getPlanKeyFromName(planName) {
   if (!planName) return "FREE";
-  if (planName === BASIC_PLAN)   return "BASIC";
-  if (planName === ADVANCE_PLAN) return "ADVANCE";
-  if (planName === PLUS_PLAN || planName === YEARLY_PLAN) return "PLUS";
+  const normalized = String(planName).trim().toLowerCase();
+  if (normalized.includes("basic")) return "BASIC";
+  if (normalized.includes("advance")) return "ADVANCE";
+  if (normalized.includes("plus")) return "PLUS";
+  if (normalized === String(YEARLY_PLAN).trim().toLowerCase()) return "PLUS";
   return "FREE";
 }
 

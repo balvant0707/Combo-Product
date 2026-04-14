@@ -307,18 +307,17 @@ export default function CreateBoxPage() {
   }
 
   function toggleOption(name) {
-    let validationMessage = "";
     setOptions((prev) => {
-      if (name === "giftMessageEnabled" && !prev.isGiftBox) {
-        validationMessage = "Enable Gift Box Mode to use Gift Message Field.";
-        return prev;
+      if (name === "isGiftBox") {
+        const nextIsGiftBox = !prev.isGiftBox;
+        return { ...prev, isGiftBox: nextIsGiftBox, giftMessageEnabled: nextIsGiftBox };
       }
-      if (name === "isGiftBox" && prev.isGiftBox) {
-        return { ...prev, isGiftBox: false, giftMessageEnabled: false };
+      if (name === "giftMessageEnabled") {
+        return { ...prev, giftMessageEnabled: !!prev.isGiftBox };
       }
       return { ...prev, [name]: !prev[name] };
     });
-    setOptionValidationMessage(validationMessage);
+    setOptionValidationMessage("");
   }
 
   function selectScope(nextScope) {
@@ -401,7 +400,7 @@ export default function CreateBoxPage() {
           )}
           <input type="hidden" name="isGiftBox" value={String(options.isGiftBox)} />
           <input type="hidden" name="allowDuplicates" value={String(options.allowDuplicates)} />
-          <input type="hidden" name="giftMessageEnabled" value={String(options.giftMessageEnabled)} />
+          <input type="hidden" name="giftMessageEnabled" value={String(options.isGiftBox && options.giftMessageEnabled)} />
           <input type="hidden" name="isActive" value={String(options.isActive)} />
 
           <BlockStack gap="400">
@@ -636,7 +635,7 @@ export default function CreateBoxPage() {
                     </BlockStack>
                   </InlineStack>
                   <InlineStack gap="200" blockAlign="start">
-                    <ToggleSwitch checked={options.giftMessageEnabled} onChange={() => toggleOption("giftMessageEnabled")} disabled={!options.isGiftBox} showStateText={false} />
+                    <ToggleSwitch checked={options.isGiftBox && options.giftMessageEnabled} onChange={() => toggleOption("giftMessageEnabled")} disabled={!options.isGiftBox} showStateText={false} />
                     <BlockStack gap="100">
                       <Text as="p" variant="bodySm" fontWeight="semibold">Enable Gift Message Field</Text>
                       <Text as="p" variant="bodySm" tone="subdued">Show text area for gift message</Text>
@@ -661,33 +660,37 @@ export default function CreateBoxPage() {
             {/* Card 4 — Scope */}
             <Card>
               <BlockStack gap="400">
-                <Text as="h2" variant="headingMd">Display Scope</Text>
+                <Text as="h2" variant="headingMd">Bundle Setup</Text>
 
-                <BlockStack gap="200">
-                  <Text as="label" variant="bodySm" fontWeight="semibold">Choose Display Scope</Text>
-                  <Select
-                    label="Choose Display Scope"
-                    labelHidden
-                    options={scopeOptions}
-                    value={scope}
-                    onChange={selectScope}
-                  />
-                </BlockStack>
-
-                <InlineStack gap="300" blockAlign="center">
-                  {scope === "wholestore" ? (
-                    <Text variant="bodySm">All store products will be available in this bundle.</Text>
-                  ) : (
+                <InlineGrid columns={{ xs: 1, md: 2 }} gap="300">
+                  <BlockStack gap="100">
+                    <Text as="label" variant="bodySm" fontWeight="semibold">Choose Display Scope</Text>
+                    <Select
+                      label="Choose Display Scope"
+                      labelHidden
+                      options={scopeOptions}
+                      value={scope}
+                      onChange={selectScope}
+                    />
+                  </BlockStack>
+                  <BlockStack gap="100">
+                    <Text as="label" variant="bodySm" fontWeight="semibold">
+                      {scope === "specific_collections" ? "Select Collections" : "Select Products"}
+                    </Text>
                     <Button
+                      disabled={scope === "wholestore"}
                       onClick={() => { setScopeSearch(""); setShowScopePicker(true); if (clientErrors.scopeItems) setClientErrors((p) => ({ ...p, scopeItems: "" })); }}
                     >
                       {scope === "specific_collections" ? "Choose Collections" : "Select Products"}
                     </Button>
-                  )}
-                  {scope !== "wholestore" && (
-                    <Text variant="bodySm" tone="subdued">{scopeItems.length} selected</Text>
-                  )}
-                </InlineStack>
+                  </BlockStack>
+                </InlineGrid>
+
+                {scope === "wholestore" ? (
+                  <Text variant="bodySm">All store products will be available in this bundle.</Text>
+                ) : (
+                  <Text variant="bodySm" tone="subdued">{scopeItems.length} selected</Text>
+                )}
 
                 {clientErrors.scopeItems && (
                   <Text tone="critical" variant="bodySm" role="alert">{clientErrors.scopeItems}</Text>

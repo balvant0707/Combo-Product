@@ -320,7 +320,7 @@ export const loader = async ({ request, params }) => {
       getQuantity:       rawGetQuantity,
       isActive:          box.isActive !== false,
       isGiftBox:         box.isGiftBox === true,
-      giftMessageEnabled: box.giftMessageEnabled === true,
+      giftMessageEnabled: box.isGiftBox === true && box.giftMessageEnabled === true,
       allowDuplicates:   box.allowDuplicates === true,
       steps,
     });
@@ -512,7 +512,7 @@ export default function SpecificComboBoxPage() {
           // Always use ComboBox model fields as source of truth — JSON blob may be stale
           isActive:          box.isActive !== false,
           isGiftBox:         box.isGiftBox === true,
-          giftMessageEnabled: box.giftMessageEnabled === true,
+          giftMessageEnabled: box.isGiftBox === true && box.giftMessageEnabled === true,
           allowDuplicates:   box.allowDuplicates === true,
           listingTitle: typeof parsed.listingTitle === "string" && parsed.listingTitle.trim()
             ? parsed.listingTitle.trim()
@@ -538,7 +538,7 @@ export default function SpecificComboBoxPage() {
           // Always use ComboBox model fields as source of truth
           isActive:          box.isActive !== false,
           isGiftBox:         box.isGiftBox === true,
-          giftMessageEnabled: box.giftMessageEnabled === true,
+          giftMessageEnabled: box.isGiftBox === true && box.giftMessageEnabled === true,
           allowDuplicates:   box.allowDuplicates === true,
           steps: mergeSteps(rawSteps, type),
         };
@@ -627,7 +627,18 @@ export default function SpecificComboBoxPage() {
   const [tempStepProds, setTempStepProds] = useState([]);
 
   /* ── Combo Config helpers ── */
-  function updateComboField(field, value) { setComboConfig((prev) => ({ ...prev, [field]: value })); }
+  function updateComboField(field, value) {
+    setComboConfig((prev) => {
+      if (field === "isGiftBox") {
+        const nextIsGiftBox = !!value;
+        return { ...prev, isGiftBox: nextIsGiftBox, giftMessageEnabled: nextIsGiftBox };
+      }
+      if (field === "giftMessageEnabled") {
+        return { ...prev, giftMessageEnabled: !!prev.isGiftBox };
+      }
+      return { ...prev, [field]: value };
+    });
+  }
   function setStepCount(nextCount) {
     const clamped = Math.max(MIN_COMBO_STEPS, Math.min(MAX_COMBO_STEPS, nextCount));
     setComboConfig((prev) => {
@@ -1032,7 +1043,7 @@ export default function SpecificComboBoxPage() {
                 </BlockStack>
               </InlineStack>
               <InlineStack gap="200" blockAlign="start">
-                <ToggleSwitch checked={!!comboConfig.giftMessageEnabled} onChange={() => updateComboField("giftMessageEnabled", !comboConfig.giftMessageEnabled)} disabled={!comboConfig.isGiftBox} showStateText={false} />
+                <ToggleSwitch checked={!!comboConfig.isGiftBox && !!comboConfig.giftMessageEnabled} onChange={() => updateComboField("giftMessageEnabled", !comboConfig.giftMessageEnabled)} disabled={!comboConfig.isGiftBox} showStateText={false} />
                 <BlockStack gap="100">
                   <Text as="p" variant="bodySm" fontWeight="semibold">Enable Gift Note Field</Text>
                   <Text as="p" variant="bodySm" tone="subdued">Show text area for gift message</Text>
@@ -1048,7 +1059,7 @@ export default function SpecificComboBoxPage() {
             </InlineGrid>
             {/* Hidden inputs for boolean values */}
             <input type="hidden" name="isGiftBox" value={String(!!comboConfig.isGiftBox)} />
-            <input type="hidden" name="giftMessageEnabled" value={String(!!comboConfig.giftMessageEnabled)} />
+            <input type="hidden" name="giftMessageEnabled" value={String(!!comboConfig.isGiftBox && !!comboConfig.giftMessageEnabled)} />
             <input type="hidden" name="allowDuplicates" value={String(!!comboConfig.allowDuplicates)} />
             <input type="hidden" name="isActive" value={String(comboConfig.isActive !== false)} />
           </BlockStack>

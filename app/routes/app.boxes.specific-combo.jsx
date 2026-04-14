@@ -456,7 +456,18 @@ export default function CreateSpecificComboBoxPage() {
   }
 
   /* -- Combo helpers -- */
-  function updateComboField(field, value) { setComboConfig((prev) => ({ ...prev, [field]: value })); }
+  function updateComboField(field, value) {
+    setComboConfig((prev) => {
+      if (field === "isGiftBox") {
+        const nextIsGiftBox = !!value;
+        return { ...prev, isGiftBox: nextIsGiftBox, giftMessageEnabled: nextIsGiftBox };
+      }
+      if (field === "giftMessageEnabled") {
+        return { ...prev, giftMessageEnabled: !!prev.isGiftBox };
+      }
+      return { ...prev, [field]: value };
+    });
+  }
   function updateComboStep(stepIdx, field, value) {
     setComboConfig((prev) => ({ ...prev, steps: prev.steps.map((s, i) => i === stepIdx ? { ...s, [field]: value } : s) }));
   }
@@ -956,7 +967,7 @@ export default function CreateSpecificComboBoxPage() {
                     </BlockStack>
                   </InlineStack>
                   <InlineStack gap="200" blockAlign="start">
-                    <ToggleSwitch checked={comboConfig.giftMessageEnabled} onChange={() => updateComboField("giftMessageEnabled", !comboConfig.giftMessageEnabled)} disabled={!comboConfig.isGiftBox} showStateText={false} />
+                    <ToggleSwitch checked={comboConfig.isGiftBox && comboConfig.giftMessageEnabled} onChange={() => updateComboField("giftMessageEnabled", !comboConfig.giftMessageEnabled)} disabled={!comboConfig.isGiftBox} showStateText={false} />
                     <BlockStack gap="100">
                       <Text as="p" variant="bodySm" fontWeight="semibold">Enable Gift Note Field</Text>
                       <Text as="p" variant="bodySm" tone="subdued">Show text area for gift message</Text>
@@ -974,7 +985,7 @@ export default function CreateSpecificComboBoxPage() {
 
               {/* Hidden inputs for boolean options */}
               <input type="hidden" name="isGiftBox" value={String(comboConfig.isGiftBox)} />
-              <input type="hidden" name="giftMessageEnabled" value={String(comboConfig.giftMessageEnabled)} />
+              <input type="hidden" name="giftMessageEnabled" value={String(comboConfig.isGiftBox && comboConfig.giftMessageEnabled)} />
               <input type="hidden" name="allowDuplicates" value={String(comboConfig.allowDuplicates)} />
               <input type="hidden" name="isActive" value={String(comboConfig.isActive)} />
             </BlockStack>

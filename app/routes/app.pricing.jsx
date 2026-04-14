@@ -146,8 +146,8 @@ const PLAN_UI = [
     orderLimit: ORDER_LIMITS.FREE,
     features: [
       `${ORDER_LIMITS.FREE} orders/month`,
-      "Unlimited single Bundle",
-      "Unlimited specific Bundle",
+      "Unlimited Simple Bundle",
+      "Unlimited Specific Bundle",
       "Basic email support",
     ],
     cta: "Start free",
@@ -162,8 +162,8 @@ const PLAN_UI = [
     orderLimit: ORDER_LIMITS.BASIC,
     features: [
       `${ORDER_LIMITS.BASIC} orders/month`,
-      "Unlimited Single Bundle product",
-      "Unlimited specific Bundle product",
+      "Unlimited Simple Bundle",
+      "Unlimited Specific Bundle",
       "Email & live support",
     ],
     cta: "Start Basic",
@@ -194,7 +194,7 @@ const PLAN_UI = [
     orderLimit: ORDER_LIMITS.PLUS,
     features: [
       "Unlimited orders",
-      "Unlimited Single Bundle",
+      "Unlimited Simple Bundle",
       "Unlimited Specific Bundle",
       "Highest-priority support",
       "Guided bundles",
@@ -530,11 +530,11 @@ export default function PricingPage() {
                       ],
                     },
                     {
-                      label: "Single Bundle product",
+                      label: "Simple Bundle",
                       values: ["✓", "✓", "✓", "✓"],
                     },
                     {
-                      label: "specific Bundle product",
+                      label: "Specific Bundle",
                       values: ["✓", "✓", "✓", "✓"],
                     },
                     {

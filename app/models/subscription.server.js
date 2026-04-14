@@ -23,10 +23,9 @@ export const PLANS = {
     boxLimit: Infinity,
     features: [
       "10 orders/month",
+      "Unlimited Simple Bundle",
+      "Unlimited Specific Bundle",
       "Basic email support",
-      "Unlimited Single Bundle product",
-      "Unlimited specific Bundle product",
-      "Multi-currency support for discounts",
     ],
   },
   BASIC: {
@@ -40,10 +39,9 @@ export const PLANS = {
     boxLimit: Infinity,
     features: [
       "50 orders/month",
+      "Unlimited Simple Bundle",
+      "Unlimited Specific Bundle",
       "Email & live support",
-      "Onboarding chat support",
-      "Unlimited Single Bundle product",
-      "Unlimited specific Bundle product",
     ],
   },
   ADVANCE: {
@@ -57,10 +55,9 @@ export const PLANS = {
     boxLimit: Infinity,
     features: [
       "100 orders/month",
-      "Email support",
+      "Unlimited Simple Bundle",
+      "Unlimited Specific Bundle",
       "Priority & developer support",
-      "Unlimited Single Bundle product",
-      "Unlimited specific Bundle product",
     ],
   },
   PLUS: {
@@ -74,9 +71,9 @@ export const PLANS = {
     boxLimit: Infinity,
     features: [
       "Unlimited orders",
+      "Unlimited Simple Bundle",
+      "Unlimited Specific Bundle",
       "Highest-priority support",
-      "Unlimited Single Bundle product",
-      "Unlimited specific Bundle product",
       "Guided bundles",
     ],
   },
@@ -92,9 +89,9 @@ export const PLANS = {
     boxLimit: Infinity,
     features: [
       "Unlimited orders",
+      "Unlimited Simple Bundle",
+      "Unlimited Specific Bundle",
       "Highest-priority support",
-      "Unlimited Single Bundle product",
-      "Unlimited specific Bundle product",
       "Guided bundles",
     ],
   },

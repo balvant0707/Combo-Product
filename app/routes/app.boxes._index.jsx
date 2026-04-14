@@ -501,7 +501,11 @@ export default function ManageBoxesPage() {
                   onChange={(val) => setSearch(val)}
                   clearButton
                   onClearButtonClick={() => setSearch("")}
-                  prefix={<AdminIcon type="search" size="small" style={{ color: "#9ca3af" }} />}
+                  prefix={(
+                    <span style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+                      <AdminIcon type="search" size="small" style={{ color: "#9ca3af" }} />
+                    </span>
+                  )}
                   autoComplete="off"
                 />
               </Box>

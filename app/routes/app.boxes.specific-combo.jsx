@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Form, useActionData, useFetcher, useLoaderData, useLocation, useNavigate, useNavigation, useRouteError } from "react-router";
 import {
-  Badge, Banner, BlockStack, Box, Button, Card, Checkbox,
+  Banner, BlockStack, Box, Button, Card, Checkbox,
   DropZone, FormLayout, InlineGrid, InlineStack, Modal, Page,
   Select, Spinner, Text, TextField, Tabs
 } from "@shopify/polaris";
@@ -1110,17 +1110,17 @@ export default function CreateSpecificComboBoxPage() {
                                     alignItems: "center",
                                     gap: "6px",
                                     padding: "4px 10px",
-                                    background: "#f9fafb",
-                                    border: "1.5px solid #000",
+                                    background: "#e5e7eb",
+                                    border: "1px solid #d1d5db",
                                     borderRadius: "5px",
                                   }}
                                 >
-                                  <Text as="span" variant="bodySm" fontWeight="semibold">{c.title}</Text>
+                                  <Text as="span" variant="bodySm" fontWeight="semibold" style={{ color: "#374151" }}>{c.title}</Text>
                                   <button
                                     type="button"
                                     aria-label={`Remove ${c.title}`}
                                     onClick={() => updateComboStep(comboActiveStep, "collections", activeStepData.collections.filter((x) => x.id !== c.id))}
-                                    style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", display: "inline-flex", alignItems: "center", padding: "0 2px" }}
+                                    style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", display: "inline-flex", alignItems: "center", padding: "0 2px" }}
                                   >
                                     ×
                                   </button>
@@ -1140,19 +1140,19 @@ export default function CreateSpecificComboBoxPage() {
                                     alignItems: "center",
                                     justifyContent: "space-between",
                                     padding: "6px 10px",
-                                    background: "#f9fafb",
-                                    border: "1.5px solid #000",
+                                    background: "#e5e7eb",
+                                    border: "1px solid #d1d5db",
                                     borderRadius: "5px",
                                   }}
                                 >
-                                  <Text as="span" variant="bodySm" fontWeight="semibold">
+                                  <Text as="span" variant="bodySm" fontWeight="semibold" style={{ color: "#374151" }}>
                                     {p.title} - {formatCurrencyAmount(parseFloat(p.price || 0), currencyCode)}
                                   </Text>
                                   <button
                                     type="button"
                                     aria-label={`Remove ${p.title}`}
                                     onClick={() => updateComboStep(comboActiveStep, "selectedProducts", activeStepData.selectedProducts.filter((x) => x.id !== p.id))}
-                                    style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", display: "inline-flex", alignItems: "center", padding: "0 2px" }}
+                                    style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", display: "inline-flex", alignItems: "center", padding: "0 2px" }}
                                   >
                                     ×
                                   </button>

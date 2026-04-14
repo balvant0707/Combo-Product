@@ -465,16 +465,39 @@ export default function SpecificComboBoxPage() {
 
   // Toast state
   const [toast, setToast] = useState(null); // { type: "success"|"error", message: string }
+  function showValidationToast(message, isError = true) {
+    if (!message) return;
+    try {
+      if (typeof window !== "undefined" && window.shopify?.toast?.show) {
+        window.shopify.toast.show(message, { isError });
+        return;
+      }
+    } catch {}
+    setToast({ type: isError ? "error" : "success", message });
+    setTimeout(() => setToast(null), isError ? 4500 : 3500);
+  }
+
+  const firstFetcherErrorMessage = (errs) => {
+    if (!errs || typeof errs !== "object") return "";
+    if (typeof errs._global === "string") return errs._global;
+    for (const value of Object.values(errs)) {
+      if (typeof value === "string" && value.trim()) return value;
+      if (value && typeof value === "object") {
+        const nested = Object.values(value).find((v) => typeof v === "string" && v.trim());
+        if (nested) return nested;
+      }
+    }
+    return "";
+  };
+
   useEffect(() => {
     if (comboFetcher.data?.comboSaved) {
-      setToast({ type: "success", message: "Combo configuration saved successfully." });
-      const t = setTimeout(() => setToast(null), 3500);
-      return () => clearTimeout(t);
+      showValidationToast("Combo configuration saved successfully.", false);
+      return;
     }
-    if (comboFetcher.data?.errors?._global) {
-      setToast({ type: "error", message: comboFetcher.data.errors._global });
-      const t = setTimeout(() => setToast(null), 4500);
-      return () => clearTimeout(t);
+    if (comboFetcher.data?.errors) {
+      const msg = firstFetcherErrorMessage(comboFetcher.data.errors);
+      if (msg) showValidationToast(msg, true);
     }
   }, [comboFetcher.data]);
 
@@ -782,8 +805,7 @@ export default function SpecificComboBoxPage() {
       const firstNumericErr = Object.keys(allStepErrors).find((k) => !isNaN(Number(k)));
       if (firstNumericErr !== undefined) setComboActiveStep(Number(firstNumericErr));
       const firstMsg = allStepErrors._title || allStepErrors[firstNumericErr] || Object.values(allStepErrors)[0];
-      setToast({ type: "error", message: firstMsg });
-      setTimeout(() => setToast(null), 4500);
+      showValidationToast(firstMsg, true);
     } else {
       setStepErrors({});
       document.getElementById("combo-config-form")?.requestSubmit();
@@ -798,7 +820,7 @@ export default function SpecificComboBoxPage() {
   /* ─────────────── Render ─────────────── */
   return (
     <Page
-      title={`Edit: ${box.displayTitle || box.boxName || "Specific Combo"}`}
+      title={`Edit: "Specific Bundle"}`}
       backAction={{ content: "Boxes", onAction: handleBackAction }}
       primaryAction={{
         content: isSaving ? "Saving..." : "Save & Publish",
@@ -806,6 +828,27 @@ export default function SpecificComboBoxPage() {
         onAction: validateAndSave,
       }}
     >
+      {toast?.message && (
+        <div
+          role="alert"
+          style={{
+            position: "fixed",
+            right: "18px",
+            bottom: "18px",
+            zIndex: 10020,
+            background: toast.type === "error" ? "#111827" : "#065f46",
+            color: "#ffffff",
+            padding: "10px 14px",
+            borderRadius: "8px",
+            fontSize: "13px",
+            fontWeight: "600",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+            maxWidth: "520px",
+          }}
+        >
+          {toast.message}
+        </div>
+      )}
       {/* Hidden form for saving (encType for file uploads) */}
       <comboFetcher.Form id="combo-config-form" method="POST" encType="multipart/form-data" action={`/app/boxes/${box.id}/combo${location.search}`}>
         <input type="hidden" name="_action" value="save_combo" />
@@ -833,7 +876,7 @@ export default function SpecificComboBoxPage() {
         <Card>
           <InlineGrid columns={{ xs: "1fr", sm: "1fr auto" }} gap="400">
             <BlockStack gap="050">
-              <Text as="h2" variant="headingMd">${box.displayTitle || box.boxName || "Specific Combo"}</Text>
+              <Text as="h2" variant="headingMd">{box.displayTitle || box.boxName || "Specific Combo"}</Text>
               <Text as="p" variant="bodySm" tone="subdued">Create and configure your Specific Bundle experience</Text>
             </BlockStack>
             <InlineStack gap="200" blockAlign="start">
@@ -1471,5 +1514,3 @@ export default function SpecificComboBoxPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
-
-

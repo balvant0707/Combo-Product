@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Form, useActionData, useLoaderData, useLocation, useNavigate, useNavigation, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -239,6 +239,7 @@ export default function CreateBoxPage() {
   const currencySymbol = getCurrencySymbol(currencyCode);
   const [isBackNavigating, setIsBackNavigating] = useState(false);
   const [clientErrors, setClientErrors] = useState({});
+  const [inlineToast, setInlineToast] = useState(null);
 
   const [scope, setScope] = useState("wholestore");
   const [scopeItems, setScopeItems] = useState([]);
@@ -284,6 +285,32 @@ export default function CreateBoxPage() {
 
   const [displayTitleValue, setDisplayTitleValue] = useState("");
 
+  function showValidationToast(message) {
+    if (!message) return;
+    try {
+      if (typeof window !== "undefined" && window.shopify?.toast?.show) {
+        window.shopify.toast.show(message, { isError: true });
+        return;
+      }
+    } catch {}
+    setInlineToast({ message });
+    setTimeout(() => setInlineToast(null), 3200);
+  }
+
+  useEffect(() => {
+    const serverErrors = actionData?.errors || {};
+    const firstServerMsg =
+      serverErrors._global ||
+      serverErrors.displayTitle ||
+      serverErrors.itemCount ||
+      serverErrors.bundlePrice ||
+      serverErrors.scopeItems ||
+      serverErrors.giftMessageEnabled ||
+      serverErrors.bannerImage ||
+      Object.values(serverErrors).find((v) => typeof v === "string");
+    if (firstServerMsg) showValidationToast(firstServerMsg);
+  }, [actionData]);
+
   function validateAndSubmit() {
     const errs = {};
     if (!displayTitleValue.trim()) errs.displayTitle = "Bundle title is required";
@@ -296,6 +323,7 @@ export default function CreateBoxPage() {
       document.getElementById("create-box-form")?.requestSubmit();
     } else {
       const firstErrKey = Object.keys(errs)[0];
+      showValidationToast(errs[firstErrKey]);
       const fieldMap = { displayTitle: "new-displayTitle", itemCount: "new-itemCount" };
       if (fieldMap[firstErrKey]) document.getElementById(fieldMap[firstErrKey])?.focus();
     }
@@ -365,6 +393,27 @@ export default function CreateBoxPage() {
           }}
         >
           <Spinner accessibilityLabel="Loading page" size="large" />
+        </div>
+      )}
+      {inlineToast?.message && (
+        <div
+          role="alert"
+          style={{
+            position: "fixed",
+            right: "18px",
+            bottom: "18px",
+            zIndex: 10020,
+            background: "#111827",
+            color: "#ffffff",
+            padding: "10px 14px",
+            borderRadius: "8px",
+            fontSize: "13px",
+            fontWeight: "600",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+            maxWidth: "520px",
+          }}
+        >
+          {inlineToast.message}
         </div>
       )}
       <BlockStack gap="500">

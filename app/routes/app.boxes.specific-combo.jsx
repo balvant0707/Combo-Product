@@ -496,6 +496,23 @@ export default function CreateSpecificComboBoxPage() {
     setTimeout(() => setInlineToast(null), 3200);
   }
 
+  useEffect(() => {
+    const findFirstMessage = (obj) => {
+      if (!obj || typeof obj !== "object") return "";
+      if (typeof obj._global === "string") return obj._global;
+      for (const value of Object.values(obj)) {
+        if (typeof value === "string" && value.trim()) return value;
+        if (value && typeof value === "object") {
+          const nested = Object.values(value).find((v) => typeof v === "string" && v.trim());
+          if (nested) return nested;
+        }
+      }
+      return "";
+    };
+    const msg = findFirstMessage(errors);
+    if (msg) showValidationToast(msg);
+  }, [actionData]);
+
   function validateStepBeforeSave(step, stepIndex) {
     if (!step) return `Step ${stepIndex + 1}: configuration is missing`;
     const stepName = String(step.label || "").trim();

@@ -398,7 +398,7 @@ export default function BoxSettingsPage() {
   /* ─────────────── Render ─────────────── */
   return (
     <Page
-      title={`Edit: ${box.displayTitle || box.boxName || "Box"}`}
+      title={`Edit: "Simple Bundle"`}
       backAction={{ content: "Boxes", onAction: handleBackAction }}
       primaryAction={{
         content: isSaving ? "Saving..." : "Save Changes",
@@ -592,7 +592,7 @@ export default function BoxSettingsPage() {
           <Card>
             <InlineGrid columns={{ xs: "1fr", sm: "1fr auto" }} gap="400">
               <BlockStack gap="050">
-                <Text as="h2" variant="headingMd">${box.displayTitle || box.boxName || "Simple Bundle"}</Text>
+                <Text as="h2" variant="headingMd">{box.displayTitle || box.boxName || "Simple Bundle"}</Text>
                 <Text as="p" variant="bodySm" tone="subdued">Create and configure your Simple Bundle experience</Text>
               </BlockStack>
               <InlineStack gap="200" blockAlign="start">
@@ -923,5 +923,3 @@ export default function BoxSettingsPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
-
-

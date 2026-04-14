@@ -852,7 +852,7 @@ export default function BoxSettingsPage() {
                   label="Choose Display Scope"
                   labelHidden
                   options={[
-                    { value: "wholestore", label: "HolaStore" },
+                    { value: "wholestore", label: "Whole Store" },
                     { value: "specific_collections", label: "Select Collections" },
                     { value: "specific_products", label: "Select Products" },
                   ]}

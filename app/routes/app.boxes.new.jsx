@@ -223,7 +223,7 @@ const nativeInputStyle = {
 };
 
 const scopeOptions = [
-  { value: "wholestore", label: "HolaStore" },
+  { value: "wholestore", label: "Whole Store" },
   { value: "specific_collections", label: "Select Collections" },
   { value: "specific_products", label: "Select Products" },
 ];

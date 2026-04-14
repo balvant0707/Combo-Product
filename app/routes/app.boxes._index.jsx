@@ -678,7 +678,7 @@ export default function ManageBoxesPage() {
                                 lineHeight: 1.1,
                               }}
                             >
-                              {isSpecific ? "Specific Product" : "Simple Bundle"}
+                              {isSpecific ? "Specific Bundle" : "Simple Bundle"}
                             </span>
                           );
                         })()}

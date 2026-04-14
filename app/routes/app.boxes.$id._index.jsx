@@ -8,7 +8,7 @@ import { withEmbeddedAppParams, withEmbeddedAppToastFromRequest } from "../utils
 import { getCurrencySymbol } from "../utils/currency";
 import { ToggleSwitch } from "../components/toggle-switch";
 import {
-  Badge, Banner, BlockStack, Box, Button, Card, Checkbox,
+  Banner, BlockStack, Box, Button, Card, Checkbox,
   DropZone, FormLayout, InlineGrid, InlineStack, Layout, Modal, Page,
   Select, Spinner, Text, TextField
 } from "@shopify/polaris";
@@ -795,62 +795,78 @@ export default function BoxSettingsPage() {
                       <Text tone="critical" variant="bodySm">{errors.bannerImage}</Text>
                     )}
                   </BlockStack>
-                    <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">Bundle Setup</Text>
-              <InlineGrid columns={{ xs: 1, md: 2 }} gap="300">
-                <BlockStack gap="100">
-                  <Text as="label" variant="bodySm" fontWeight="semibold">Choose Display Scope</Text>
-                  <Select
-                    label="Choose Display Scope"
-                    labelHidden
-                    options={[
-                      { value: "wholestore", label: "Whole Store" },
-                      { value: "specific_collections", label: "Select Collections" },
-                      { value: "specific_products", label: "Select Products" },
-                    ]}
-                    value={scope}
-                    onChange={selectScope}
-                  />
-                </BlockStack>
-                <BlockStack gap="100">
-                  <Text as="label" variant="bodySm" fontWeight="semibold">
-                    {scope === "specific_collections" ? "Select Collections" : "Select Products"}
-                  </Text>
-                  <Button
-                    disabled={scope === "wholestore"}
-                    onClick={() => { setScopeSearch(""); setShowScopePicker(true); if (clientErrors.scopeItems) setClientErrors((p) => ({ ...p, scopeItems: "" })); }}
-                  >
-                    {scope === "specific_collections" ? "Choose Collections" : "Select Products"}
-                  </Button>
-                </BlockStack>
-              </InlineGrid>
+                  <BlockStack gap="200">
+                    <Text as="h3" variant="headingSm">Bundle Setup</Text>
+                    <InlineGrid columns={2} gap="200">
+                      <BlockStack gap="100">
+                        <Text as="label" variant="bodySm" fontWeight="semibold">Choose Display Scope</Text>
+                        <Select
+                          label="Choose Display Scope"
+                          labelHidden
+                          options={[
+                            { value: "wholestore", label: "Whole Store" },
+                            { value: "specific_collections", label: "Select Collections" },
+                            { value: "specific_products", label: "Select Products" },
+                          ]}
+                          value={scope}
+                          onChange={selectScope}
+                        />
+                      </BlockStack>
+                      <BlockStack gap="100">
+                        <Text as="label" variant="bodySm" fontWeight="semibold">
+                          {scope === "specific_collections" ? "Select Collections" : "Select Products"}
+                        </Text>
+                        <Button
+                          disabled={scope === "wholestore"}
+                          onClick={() => {
+                            setScopeSearch("");
+                            setShowScopePicker(true);
+                            if (clientErrors.scopeItems) setClientErrors((p) => ({ ...p, scopeItems: "" }));
+                          }}
+                        >
+                          {scope === "specific_collections" ? "Choose Collections" : "Select Products"}
+                        </Button>
+                      </BlockStack>
+                    </InlineGrid>
 
-              {scope === "wholestore" ? (
-                <Text variant="bodySm">All store products will be available in this bundle.</Text>
-              ) : (
-                <Text variant="bodySm" tone="subdued">{scopeItems.length} selected</Text>
-              )}
+                    {scope === "wholestore" ? (
+                      <Text variant="bodySm" tone="subdued">All store products will be available in this bundle.</Text>
+                    ) : (
+                      <Text variant="bodySm" tone="subdued">{scopeItems.length} selected</Text>
+                    )}
 
-              {clientErrors.scopeItems && (
-                <Text tone="critical" variant="bodySm" role="alert">{clientErrors.scopeItems}</Text>
-              )}
+                    {clientErrors.scopeItems && (
+                      <Text tone="critical" variant="bodySm" role="alert">{clientErrors.scopeItems}</Text>
+                    )}
 
-              {scope !== "wholestore" && scopeItems.length > 0 && (
-                <Box padding="300" background="bg-surface-secondary" borderRadius="200">
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                    {scopeItems.map((item) => (
-                      <div
-                        key={item.id}
-                        onClick={() => setScopeItems((prev) => prev.filter((i) => i.id !== item.id))}
-                        style={{ cursor: "pointer" }}
-                      >
-                        <Badge>{item.title} ×</Badge>
-                      </div>
-                    ))}
-                  </div>
-                </Box>
-              )}
-            </BlockStack>
+                    {scope !== "wholestore" && scopeItems.length > 0 && (
+                      <InlineStack gap="150" wrap>
+                        {scopeItems.map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => setScopeItems((prev) => prev.filter((i) => i.id !== item.id))}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              padding: "4px 10px",
+                              background: "#e5e7eb",
+                              border: "1px solid #d1d5db",
+                              borderRadius: "5px",
+                              color: "#374151",
+                              cursor: "pointer",
+                              fontSize: "12px",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {item.title}
+                            <span style={{ color: "#6b7280" }}>x</span>
+                          </button>
+                        ))}
+                      </InlineStack>
+                    )}
+                  </BlockStack>
                 </FormLayout.Group>
               </FormLayout>
             </BlockStack>
@@ -905,3 +921,4 @@ export default function BoxSettingsPage() {
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
+

@@ -1392,6 +1392,18 @@ export async function upsertComboConfig(boxId, config, admin = null) {
   });
   const stepsJson = JSON.stringify(activeSteps);
   const rawJson = JSON.stringify({ ...parsed, type: comboType, steps: activeSteps });
+  const hasIsGiftBox = parsed?.isGiftBox !== undefined;
+  const hasGiftMessageEnabled = parsed?.giftMessageEnabled !== undefined;
+  const hasAllowDuplicates = parsed?.allowDuplicates !== undefined;
+  const parsedIsGiftBox = hasIsGiftBox
+    ? parsed.isGiftBox === true || String(parsed.isGiftBox).toLowerCase() === "true"
+    : undefined;
+  const parsedGiftMessageEnabled = hasGiftMessageEnabled
+    ? parsed.giftMessageEnabled === true || String(parsed.giftMessageEnabled).toLowerCase() === "true"
+    : undefined;
+  const parsedAllowDuplicates = hasAllowDuplicates
+    ? parsed.allowDuplicates === true || String(parsed.allowDuplicates).toLowerCase() === "true"
+    : undefined;
 
   const payload = {
     comboType,
@@ -1400,6 +1412,9 @@ export async function upsertComboConfig(boxId, config, admin = null) {
     bundlePrice:       parsed.bundlePrice != null ? parseFloat(parsed.bundlePrice) : null,
     bundlePriceType:   parsed.bundlePriceType  ?? "manual",
     isActive:          parsed.isActive         !== false,
+    ...(hasIsGiftBox ? { isGiftBox: parsedIsGiftBox } : {}),
+    ...(hasAllowDuplicates ? { allowDuplicates: parsedAllowDuplicates } : {}),
+    ...(hasGiftMessageEnabled ? { giftMessageEnabled: parsedGiftMessageEnabled } : {}),
     showProductImages: parsed.showProductImages !== false,
     showProgressBar:   parsed.showProgressBar  !== false,
     allowReselection:  parsed.allowReselection !== false,
@@ -1413,11 +1428,9 @@ export async function upsertComboConfig(boxId, config, admin = null) {
     bundlePriceType: payload.bundlePriceType,
     isActive: payload.isActive,
   };
-  if (parsed?.giftMessageEnabled !== undefined) {
-    comboBoxUpdate.giftMessageEnabled =
-      parsed.giftMessageEnabled === true ||
-      String(parsed.giftMessageEnabled).toLowerCase() === "true";
-  }
+  if (hasIsGiftBox) comboBoxUpdate.isGiftBox = parsedIsGiftBox;
+  if (hasAllowDuplicates) comboBoxUpdate.allowDuplicates = parsedAllowDuplicates;
+  if (hasGiftMessageEnabled) comboBoxUpdate.giftMessageEnabled = parsedGiftMessageEnabled;
   const listingTitle = typeof parsed?.listingTitle === "string" ? parsed.listingTitle.trim() : "";
   if (listingTitle) {
     comboBoxUpdate.boxName = listingTitle;

@@ -1209,10 +1209,10 @@ function ComparisonBanner({ period, prevPeriod }) {
       <AdminIcon type="calendar" size="base" />
       <div style={{ lineHeight: 1.6 }}>
         <span style={{ fontWeight: "700", color: "#1d4ed8" }}>Current: </span>
-        <span style={{ color: "#374151" }}>{fmtDate(period.from)} â†’ {fmtDate(period.to)}</span>
+        <span style={{ color: "#374151" }}>{fmtDate(period.from)} - {fmtDate(period.to)}</span>
         <span style={{ margin: "0 14px", color: "#d1d5db" }}>vs</span>
         <span style={{ fontWeight: "700", color: "#000000" }}>Previous: </span>
-        <span style={{ color: "#000000" }}>{fmtDate(prevPeriod.from)} â†’ {fmtDate(prevPeriod.to)}</span>
+        <span style={{ color: "#000000" }}>{fmtDate(prevPeriod.from)} - {fmtDate(prevPeriod.to)}</span>
       </div>
     </div>
   );

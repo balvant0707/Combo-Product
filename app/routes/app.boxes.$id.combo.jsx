@@ -1231,7 +1231,7 @@ export default function SpecificComboBoxPage() {
                                     style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", padding: "0 2px", lineHeight: 1, fontSize: "12px" }}
                                     aria-label={`Remove ${c.title}`}
                                   >
-                                    �
+                                    x
                                   </button>
                                 </div>
                               ))}
@@ -1261,7 +1261,7 @@ export default function SpecificComboBoxPage() {
                                     style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", padding: "0 2px", lineHeight: 1, fontSize: "12px" }}
                                     aria-label={`Remove ${p.title}`}
                                   >
-                                    �
+                                    x
                                   </button>
                                 </div>
                               ))}

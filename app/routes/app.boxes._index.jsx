@@ -538,9 +538,9 @@ export default function ManageBoxesPage() {
           {baseBoxes.length === 0 ? (
             /* Empty state — no boxes at all */
             <EmptyState
-              heading="No combo boxes yet"
-              action={{ content: "Create Bundle Box", onAction: openCreateBoxModal }}
-              secondaryAction={{ content: "Create Specific Bundle", onAction: () => navigateTo("/app/boxes/specific-combo") }}
+              heading="No Boxes yet"
+              action={{ content: "Create Box", onAction: openCreateBoxModal }}
+              secondaryAction={{ content: "Create Specific", onAction: () => navigateTo("/app/boxes/specific-combo") }}
               image=""
             >
               <p>Create your first box to let customers build custom bundles on your storefront.</p>
@@ -694,7 +694,7 @@ export default function ManageBoxesPage() {
                                 lineHeight: 1.1,
                               }}
                             >
-                              {isSpecific ? "Specific Bundle" : "Simple Bundle"}
+                              {isSpecific ? "Specific" : "Simple"}
                             </span>
                           );
                         })()}
@@ -830,7 +830,7 @@ export default function ManageBoxesPage() {
       <Modal
         open={showCreateBoxModal}
         onClose={closeCreateBoxModal}
-        title="Choose Bundle Type"
+        title="Choose Type"
         size="medium"
       >
         <Modal.Section  style={{ borderRadius: "0px !important", maxWidth: "30rem !important" }}>
@@ -839,7 +839,7 @@ export default function ManageBoxesPage() {
               <BlockStack gap="200">
                 <InlineStack gap="200" blockAlign="center">
                   <AdminIcon type="package" size="base" />
-                  <Text as="h3" variant="headingSm">Create Simple Bundle</Text>
+                  <Text as="h3" variant="headingSm">Create Simple</Text>
                 </InlineStack>
                 <Text as="p" tone="subdued" variant="bodySm">
                   Preconfigured Shopify product bundle to increase average order value faster.
@@ -867,7 +867,7 @@ export default function ManageBoxesPage() {
                   }}
                 >
                   {pendingCreateRoute === "/app/boxes/new" && <Spinner accessibilityLabel="Loading" size="small" />}
-                  Create Bundle Box
+                  Create Box
                 </button>
               </BlockStack>
             </div>
@@ -876,7 +876,7 @@ export default function ManageBoxesPage() {
               <BlockStack gap="200">
                 <InlineStack gap="200" blockAlign="center">
                   <AdminIcon type="target" size="base" />
-                  <Text as="h3" variant="headingSm">Create Build-Your-Own Bundle Box</Text>
+                  <Text as="h3" variant="headingSm">Create Build-Your-Own Box</Text>
                 </InlineStack>
                 <Text as="p" tone="subdued" variant="bodySm">
                   Step-by-step bundle builder that lets shoppers create a personalized product box.
@@ -904,7 +904,7 @@ export default function ManageBoxesPage() {
                   }}
                 >
                   {pendingCreateRoute === "/app/boxes/specific-combo" && <Spinner accessibilityLabel="Loading" size="small" />}
-                  Create Bundle Box
+                  Create Box
                 </button>
               </BlockStack>
             </div>

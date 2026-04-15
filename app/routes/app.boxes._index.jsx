@@ -267,6 +267,27 @@ function EyeIcon({ size = 16, color = "#ffffff" }) {
   );
 }
 
+function GiftIcon({ size = 14, color = "#b45309" }) {
+  return (
+    <svg
+      width={`${size}px`}
+      height={`${size}px`}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M12 7.5V21M4.5 10.5H19.5V21H4.5V10.5ZM3 7.5H21V10.5H3V7.5ZM12 7.5H8.625C7.58947 7.5 6.75 6.66053 6.75 5.625C6.75 4.58947 7.58947 3.75 8.625 3.75C11.25 3.75 12 7.5 12 7.5ZM12 7.5H15.375C16.4105 7.5 17.25 6.66053 17.25 5.625C17.25 4.58947 16.4105 3.75 15.375 3.75C12.75 3.75 12 7.5 12 7.5Z"
+        stroke={color}
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function CopyCodeBtn({ code }) {
   const [copied, setCopied] = useState(false);
   function handleCopy() {
@@ -564,6 +585,17 @@ export default function ManageBoxesPage() {
                 .Polaris-IndexTable__TableCell * {
                   font-size: 12px !important;
                 }
+                .cb-action-buttons .Polaris-Button,
+                .cb-action-buttons .Polaris-Button__Content,
+                .cb-action-buttons .Polaris-Button__Icon {
+                  display: inline-flex !important;
+                  align-items: center !important;
+                  justify-content: center !important;
+                }
+                .cb-action-buttons .Polaris-Button__Icon {
+                  margin: 0 !important;
+                  line-height: 0 !important;
+                }
               `}</style>
               <IndexTable
                 resourceName={{ singular: "box", plural: "boxes" }}
@@ -634,7 +666,7 @@ export default function ManageBoxesPage() {
                                     border: "1px solid #fde68a",
                                   }}
                                 >
-                                  <AdminIcon type="gift" size="small" style={{ color: "#b45309" }} />
+                                  <GiftIcon size={14} color="#b45309" />
                                 </span>
                               )}
                             </InlineStack>
@@ -753,13 +785,13 @@ export default function ManageBoxesPage() {
 
                       {/* Actions */}
                       <IndexTable.Cell>
-                        <InlineStack gap="100" align="center" blockAlign="center">
+                        <InlineStack gap="100" align="center" blockAlign="center" className="cb-action-buttons">
                           <Button
                             size="slim"
                             url={box.previewUrl || undefined}
                             target="_blank"
                             disabled={!box.previewUrl}
-                            icon={<EyeIcon size={16} />}
+                            icon={<EyeIcon size={16} color="#6b7280" />}
                             accessibilityLabel="Preview on storefront"
                             tooltipContent={box.previewUrl ? "Preview on storefront" : "Preview unavailable"}
                           >

@@ -295,27 +295,6 @@ const promotedApps = [
     description: "Increase trust using real-time sales popups and conversion proof nudges.",
   },
 ];
-function EyeIcon({ size = 16, color = "#ffffff" }) {
-  return (
-    <svg
-      width={`${size}px`}
-      height={`${size}px`}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <path
-        d="M1.5 12s3.75-6.75 10.5-6.75S22.5 12 22.5 12s-3.75 6.75-10.5 6.75S1.5 12 1.5 12Z"
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx="12" cy="12" r="3.25" stroke={color} strokeWidth="2" />
-    </svg>
-  );
-}
 function StatCard({ label, value, sub }) {
   return (
     <Card>
@@ -807,16 +786,7 @@ export default function DashboardPage() {
                       <Text as="span" variant="bodySm">{item}</Text>
                       {productUrl ? (
                         <Button url={productUrl} target="_blank" variant="plain">
-                          <Button
-                            size="slim"
-                            url={box.previewUrl || undefined}
-                            target="_blank"
-                            disabled={!box.previewUrl}
-                            icon={<EyeIcon size={16} />}
-                            accessibilityLabel="Preview on storefront"
-                            tooltipContent={box.previewUrl ? "Preview on storefront" : "Preview unavailable"}
-                          >
-                          </Button>
+                          Open product
                         </Button>
                       ) : (
                         <Text as="span" variant="bodySm" tone="subdued">No link</Text>

@@ -259,6 +259,8 @@ export async function withDbRetry(fn, { retries = 3, delayMs = 500 } = {}) {
       })();
       const isTransient =
         errMessage.includes("Can't reach database") ||
+        errMessage.includes("Server has closed the connection") ||
+        errMessage.includes("Connection terminated unexpectedly") ||
         errMessage.includes("Connection refused") ||
         errMessage.includes("ECONNREFUSED") ||
         errMessage.includes("ETIMEDOUT") ||
@@ -266,26 +268,36 @@ export async function withDbRetry(fn, { retries = 3, delayMs = 500 } = {}) {
         errMessage.includes("Prisma session storage is not ready") ||
         errMessage.includes("Error obtaining session table") ||
         errMessage.includes("does not exist in the current database") ||
-        // MySQL 1205: lock wait timeout — concurrent upserts on the same row
+        // MySQL 1205: lock wait timeout - concurrent upserts on the same row
         errMessage.includes("Lock wait timeout exceeded") ||
         mysqlCode === 1205 ||
-        // MySQL 1213: deadlock — retry immediately resolves it
+        // MySQL 1213: deadlock - retry immediately resolves it
         errMessage.includes("Deadlock found when trying to get lock") ||
         mysqlCode === 1213 ||
         err?.code === "P1001" ||       // Prisma: unreachable
         err?.code === "P1002" ||       // Prisma: timed out
+        err?.code === "P1017" ||       // Prisma: connection closed by server
         err?.code === "P2024" ||       // Prisma: connection pool timeout
         err?.errorCode === "P1001" ||  // Prisma: unreachable
         err?.errorCode === "P1002" ||  // Prisma: timed out
+        err?.errorCode === "P1017" ||  // Prisma: connection closed by server
         err?.errorCode === "P2024";    // Prisma: connection pool timeout
       if (!isTransient || attempt === retries) break;
-      // Lock/deadlock errors resolve faster — use a short random jitter so
+      // Lock/deadlock errors resolve faster - use a short random jitter so
       // concurrent retries don't collide again on the exact same tick.
       const isLockError = mysqlCode === 1205 || mysqlCode === 1213 ||
         errMessage.includes("Lock wait timeout") || errMessage.includes("Deadlock");
       const baseWait = isLockError ? 100 : delayMs * 2 ** attempt;
       const wait = baseWait + Math.floor(Math.random() * 100);
-      console.warn(`[DB] transient error (attempt ${attempt + 1}/${retries + 1}), retrying in ${wait}ms…`, err?.message);
+      console.warn(`[DB] transient error (attempt ${attempt + 1}/${retries + 1}), retrying in ${wait}ms...`, err?.message);
+      if (!isLockError) {
+        try {
+          // Drop stale pooled connections before retrying.
+          await prisma.$disconnect();
+        } catch {
+          // Best effort reconnect hint only.
+        }
+      }
       await new Promise((r) => setTimeout(r, wait));
       // Reset the cached promise so ensureAppTables re-runs after reconnect
       if (!isLockError) globalThis.__ensureTablesPromise = null;

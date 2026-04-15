@@ -1100,7 +1100,7 @@ function RecentOrdersTable({ data, currencyCode }) {
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
         <thead>
           <tr>
-            {["No", "Bundle Product", "Type", "Bundle Items", "Order Revenue", "Date"].map((h) => (
+            {["Order ID", "Bundle Product", "Type", "Bundle Items", "Order Revenue", "Date"].map((h) => (
               <th
                 key={h}
                 style={{
@@ -1133,7 +1133,7 @@ function RecentOrdersTable({ data, currencyCode }) {
               >
                 <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6" }}>
                   <span style={{ fontWeight: "700", color: "#111827", background: "#f3f4f6", padding: "2px 8px", borderRadius: "5px" }}>
-                    {index + 1}
+                    {order.orderId ? `#${order.orderId}` : "-"}
                   </span>
                 </td>
                 <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6", color: "#374151", fontWeight: "600" }}>

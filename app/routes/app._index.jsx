@@ -246,7 +246,7 @@ export const loader = async ({ request }) => {
       boxTitle: order.box?.displayTitle || "Unknown Box",
       itemCount: order.box?.itemCount || 0,
       comboType: isSpecificComboFromBox(order.box) ? "specific" : "simple",
-      comboTypeLabel: isSpecificComboFromBox(order.box) ? "Specific Bundle" : "Simple Bundle",
+      comboTypeLabel: isSpecificComboFromBox(order.box) ? "Specific" : "Simple",
       selectedProducts: parseOrderSelectedProducts(order.selectedProducts),
       bundlePrice: parseFloat(order.bundlePrice),
       orderDate: order.orderDate.toISOString(),
@@ -258,23 +258,23 @@ const createBoxActions = [
   {
     key: "create-box",
     icon: "package",
-    label: "Create Fixed Bundle Box",
+    label: "Create Fixed Box",
     sub: "Preconfigured Shopify product bundle to increase average order value faster.",
     href: "/app/boxes/new",
   },
   {
     key: "create-specific-combo",
     icon: "target",
-    label: "Create Build-Your-Own Bundle Box",
+    label: "Create Build-Your-Own Box",
     sub: "Step-by-step bundle builder that lets shoppers create a personalized product box.",
     href: "/app/boxes/specific-combo",
   },
 ];
 
 const quickActions = [
-  { key: "manage-boxes", label: "Manage Bundle Boxes", sub: "Edit existing combos", href: "/app/boxes" },
-  { key: "analytics", label: "View Bundle Analytics", sub: "Sales and revenue", href: "/app/analytics" },
-  { key: "settings", label: "Bundle Widget Settings", sub: "Theme and appearance", href: "/app/settings" },
+  { key: "manage-boxes", label: "Manage Boxes", sub: "Edit existing combos", href: "/app/boxes" },
+  { key: "analytics", label: "View Analytics", sub: "Sales and revenue", href: "/app/analytics" },
+  { key: "settings", label: "Widget Settings", sub: "Theme and appearance", href: "/app/settings" },
 ];
 
 const promotedApps = [
@@ -417,15 +417,15 @@ export default function DashboardPage() {
   }
 
   const stats = [
-    { label: "Live Bundle", value: activeBoxCount, sub: "" },
-    { label: "Bundle Orders", value: bundlesSold, sub: "Last 30 days" },
+    { label: "Live", value: activeBoxCount, sub: "" },
+    { label: "Orders", value: bundlesSold, sub: "Last 30 days" },
     {
-      label: "Total Bundle Revenue",
+      label: "Total Revenue",
       value: formatCurrencyAmount(Number(bundleRevenue || 0), currencyCode),
       sub: "Last 30 days",
     },
     {
-      label: "Bundle Conversion Rate",
+      label: "Conversion Rate",
       value: bundleConversionRate == null ? "—" : `${Number(bundleConversionRate).toFixed(1)}%`,
       sub: totalStoreOrdersLast30Days == null
         ? "Unavailable (orders permission/query)"
@@ -433,23 +433,22 @@ export default function DashboardPage() {
     },
   ];
 
-  const orderTableRows = recentOrders.map((order, index) => [
+  const orderTableRows = recentOrders.map((order) => [
     <span
       style={{
-        display: "inline-flex",
-        minWidth: "28px",
+        display: "inline-block",
+        minWidth: "72px",
         height: "26px",
         borderRadius: "8px",
-        alignItems: "center",
-        justifyContent: "center",
+        textAlign: "center",
+        lineHeight: "26px",
         background: "#f3f4f6",
         color: "#111827",
         fontSize: "12px",
         fontWeight: 700,
-        lineHeight: 1,
       }}
     >
-      {index + 1}
+      {order.orderId ? `#${order.orderId}` : "-"}
     </span>,
     order.boxTitle,
     (() => {
@@ -591,7 +590,7 @@ export default function DashboardPage() {
             <BlockStack gap="300">
               <InlineStack align="space-between" blockAlign="center">
                 <Text as="h2" variant="headingMd">
-                  Bundle App Embed Status
+                  Theme App Embed Status
                 </Text>
                 {embedBlockEnabled ? (
                   <Badge tone="success">On</Badge>
@@ -610,7 +609,7 @@ export default function DashboardPage() {
           <Card>
             <BlockStack gap="300">
               <Text as="h2" variant="headingMd">
-                Bundle Widget Setup
+                Theme Widget Setup
               </Text>
 
               <BlockStack gap="150">
@@ -635,7 +634,7 @@ export default function DashboardPage() {
           <Card>
             <BlockStack gap="300">
               <Text as="h2" variant="headingMd">
-                Bundle Builder Quick Actions
+                Quick Actions
               </Text>
               <BlockStack gap="200">
                 <Button
@@ -664,7 +663,7 @@ export default function DashboardPage() {
           <BlockStack gap="400">
             <InlineStack align="space-between" blockAlign="center">
               <Text as="h2" variant="headingMd">
-                Recent Bundle Orders
+                Recent Orders
               </Text>
               <Button variant="plain" onClick={() => navigateTo("/app/analytics")}>
                 View all
@@ -693,7 +692,7 @@ export default function DashboardPage() {
                 <div className="cb-recent-orders">
                   <DataTable
                     columnContentTypes={["text", "text", "text", "text", "text", "text"]}
-                    headings={["NO", "BUNDLE PRODUCT", "TYPE", "BUNDLE ITEMS", "ORDER REVENUE", "DATE"]}
+                    headings={["Order ID", "Name", "TYPE", "PRODUCTS", "REVENUE", "DATE"]}
                     rows={orderTableRows}
                     hoverable
                   />

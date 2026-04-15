@@ -430,7 +430,7 @@
 .cb-slot-wrapper {
   display: flex;
   align-items: flex-start;
-  justify-content: flex-start;
+  justify-content: center;
   top: -5px !important;
   z-index: 30;
   background: rgba(255,255,255,0.97);

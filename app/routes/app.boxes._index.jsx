@@ -19,7 +19,6 @@ import { AdminIcon } from "../components/admin-icons";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 import { formatCurrencyAmount, getCurrencySymbol } from "../utils/currency";
 import {
-  Badge,
   BlockStack,
   Box,
   Button,
@@ -441,16 +440,16 @@ export default function ManageBoxesPage() {
   const inactiveCount = boxesWithPendingToggle.length - activeCount;
 
   const statCards = [
-    { label: "Total Bundle Boxes",  value: baseBoxes.length,  icon: "package",    iconBg: "#eff6ff", iconColor: "#2563eb" },
-    { label: "Active Bundle Boxes", value: activeCount,        icon: "check",      iconBg: "#f0fdf4", iconColor: "#16a34a" },
-    { label: "Inactive Bundle Boxes", value: inactiveCount,    icon: "hide",       iconBg: "#fafafa", iconColor: "#9ca3af" },
-    { label: "Total Bundle Orders", value: totalOrders,        icon: "order",      iconBg: "#fdf4ff", iconColor: "#9333ea" },
+    { label: "Total Boxes",  value: baseBoxes.length,  icon: "package",    iconBg: "#eff6ff", iconColor: "#2563eb" },
+    { label: "Active Boxes", value: activeCount,        icon: "check",      iconBg: "#f0fdf4", iconColor: "#16a34a" },
+    { label: "Inactive Boxes", value: inactiveCount,    icon: "hide",       iconBg: "#fafafa", iconColor: "#9ca3af" },
+    { label: "Total Orders", value: totalOrders,        icon: "order",      iconBg: "#fdf4ff", iconColor: "#9333ea" },
   ];
 
   return (
     <Page
-      title="Manage Bundle Boxes"
-      primaryAction={{ content: "+ Create Bundle Box", onAction: openCreateBoxModal }}
+      title="Manage Boxes"
+      primaryAction={{ content: "+ Create Box", onAction: openCreateBoxModal }}
     >
       {/* <ui-title-bar title="MixBox – Box & Bundle Builder">
         <button variant="primary" onClick={openCreateBoxModal}>
@@ -496,7 +495,7 @@ export default function ManageBoxesPage() {
                 <TextField
                   label=""
                   labelHidden
-                  placeholder="Search bundle box by name..."
+                  placeholder="Search box by name..."
                   value={search}
                   onChange={(val) => setSearch(val)}
                   clearButton
@@ -570,13 +569,13 @@ export default function ManageBoxesPage() {
                 resourceName={{ singular: "box", plural: "boxes" }}
                 itemCount={displayBoxes.length}
                 headings={[
-                  { title: "Bundle Name" },
-                  { title: "Bundle Code" },
-                  { title: "Bundle Price" },
-                  { title: "Bundle Type" },
-                  { title: "Bundle Orders" },
-                  { title: "Live Status" },
-                  { title: "Bundle Actions" },
+                  { title: "Name" },
+                  { title: "Code" },
+                  { title: "Price" },
+                  { title: "Type" },
+                  { title: "Orders" },
+                  { title: "Status" },
+                  { title: "Actions" },
                 ]}
                 selectable={false}
               >
@@ -619,11 +618,24 @@ export default function ManageBoxesPage() {
                           <BlockStack gap="050">
                             <InlineStack gap="150" blockAlign="center">
                               <Text variant="bodySm" fontWeight="semibold" as="span">{box.boxName}</Text>
-                              <Badge tone={box.isActive ? "success" : "enabled"}>
-                                {box.isActive ? "Live" : "Draft"}
-                              </Badge>
                               {box.isGiftBox && (
-                                <Badge tone="attention">Gift</Badge>
+                                <span
+                                  title="Gift bundle"
+                                  aria-label="Gift bundle"
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    width: "22px",
+                                    height: "22px",
+                                    borderRadius: "6px",
+                                    background: "#fef3c7",
+                                    color: "#b45309",
+                                    border: "1px solid #fde68a",
+                                  }}
+                                >
+                                  <AdminIcon type="gift" size="small" style={{ color: "#b45309" }} />
+                                </span>
                               )}
                             </InlineStack>
                           </BlockStack>
@@ -736,15 +748,12 @@ export default function ManageBoxesPage() {
                               }}
                             />
                           </button>
-                          {isRowTogglePending && (
-                            <Text as="span" variant="bodySm" tone="subdued">Updating...</Text>
-                          )}
                         </BlockStack>
                       </IndexTable.Cell>
 
                       {/* Actions */}
                       <IndexTable.Cell>
-                        <InlineStack gap="100">
+                        <InlineStack gap="100" align="center" blockAlign="center">
                           <Button
                             size="slim"
                             url={box.previewUrl || undefined}

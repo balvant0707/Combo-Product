@@ -267,22 +267,18 @@ function EyeIcon({ size = 16, color = "#ffffff" }) {
   );
 }
 
-function GiftIcon({ size = 14, color = "#b45309" }) {
+function GiftIcon({ size = 14, fill = "#ffffff" }) {
   return (
     <svg
       width={`${size}px`}
       height={`${size}px`}
       viewBox="0 0 24 24"
-      fill="none"
+      fill={fill}
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
       <path
-        d="M12 7.5V21M4.5 10.5H19.5V21H4.5V10.5ZM3 7.5H21V10.5H3V7.5ZM12 7.5H8.625C7.58947 7.5 6.75 6.66053 6.75 5.625C6.75 4.58947 7.58947 3.75 8.625 3.75C11.25 3.75 12 7.5 12 7.5ZM12 7.5H15.375C16.4105 7.5 17.25 6.66053 17.25 5.625C17.25 4.58947 16.4105 3.75 15.375 3.75C12.75 3.75 12 7.5 12 7.5Z"
-        stroke={color}
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        d="M20.5 7H17.86A2.99 2.99 0 0 0 18.5 5.2C18.5 3.44 17.06 2 15.3 2c-1.25 0-2.39.73-2.9 1.87L12 4.8l-.4-.93A3.16 3.16 0 0 0 8.7 2C6.94 2 5.5 3.44 5.5 5.2c0 .65.2 1.26.54 1.8H3.5A1.5 1.5 0 0 0 2 8.5v2c0 .83.67 1.5 1.5 1.5H4v7.5A2.5 2.5 0 0 0 6.5 22h11a2.5 2.5 0 0 0 2.5-2.5V12h.5a1.5 1.5 0 0 0 1.5-1.5v-2A1.5 1.5 0 0 0 20.5 7ZM15.3 4c.66 0 1.2.54 1.2 1.2S15.96 6.4 15.3 6.4H13.2l.38-.87c.3-.67.97-1.53 1.72-1.53ZM7.5 5.2C7.5 4.54 8.04 4 8.7 4c.75 0 1.43.86 1.72 1.53l.38.87H8.7c-.66 0-1.2-.54-1.2-1.2ZM4 10V9h7v1H4Zm2 2h5v8H6v-8Zm7 8v-8h5v8h-5Zm7-10h-7V9h7v1Z"
       />
     </svg>
   );
@@ -661,12 +657,11 @@ export default function ManageBoxesPage() {
                                     width: "22px",
                                     height: "22px",
                                     borderRadius: "6px",
-                                    background: "#fef3c7",
-                                    color: "#b45309",
-                                    border: "1px solid #fde68a",
+                                    background: "#f59e0b",
+                                    border: "1px solid #d97706",
                                   }}
                                 >
-                                  <GiftIcon size={14} color="#b45309" />
+                                  <GiftIcon size={12} fill="#ffffff" />
                                 </span>
                               )}
                             </InlineStack>

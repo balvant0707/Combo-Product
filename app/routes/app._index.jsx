@@ -691,7 +691,7 @@ export default function DashboardPage() {
                 <div className="cb-recent-orders">
                   <DataTable
                     columnContentTypes={["text", "text", "text", "text", "text", "text"]}
-                    headings={["Order ID", "Name", "TYPE", "PRODUCTS", "REVENUE", "DATE"]}
+                    headings={["Order ID", "Name", "Type", "Products", "Revenue", "Date"]}
                     rows={orderTableRows}
                     hoverable
                   />

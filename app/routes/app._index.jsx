@@ -284,7 +284,7 @@ const promotedApps = [
     tag: "Upsell",
     url: "https://apps.shopify.com/cartlift-cart-drawer-upsell",
     image: "/images/cartlift.png",
-    description: "Grow average order value with cart drawer upsells and smart cart offers.",
+    description: "Grow average order value with cart drawer Upsells,Shipping,Discounts and smart cart offers.",
   },
   {
     key: "fomoify",

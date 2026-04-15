@@ -166,11 +166,11 @@ export const loader = async ({ request }) => {
       // Explicitly mark the plan ACTIVE in DB so hasPlanAccess works for all
       // subsequent requests (without ?subscribed=1 in the URL).
       await activatePaidPlan(shop, {
-        plan:            subscription?.plan || "PLUS",
-        subscriptionId:  subscription?.subscriptionId || `gid://shopify/AppSubscription/dev-${Date.now()}`,
+        plan: subscription?.plan || "PLUS",
+        subscriptionId: subscription?.subscriptionId || `gid://shopify/AppSubscription/dev-${Date.now()}`,
         currentPeriodEnd: subscription?.currentPeriodEnd ?? null,
-      }).catch(() => {});
-      await setShopPlanStatus(shop, "active").catch(() => {});
+      }).catch(() => { });
+      await setShopPlanStatus(shop, "active").catch(() => { });
     }
   }
 
@@ -295,7 +295,27 @@ const promotedApps = [
     description: "Increase trust using real-time sales popups and conversion proof nudges.",
   },
 ];
-
+function EyeIcon({ size = 16, color = "#ffffff" }) {
+  return (
+    <svg
+      width={`${size}px`}
+      height={`${size}px`}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M1.5 12s3.75-6.75 10.5-6.75S22.5 12 22.5 12s-3.75 6.75-10.5 6.75S1.5 12 1.5 12Z"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="3.25" stroke={color} strokeWidth="2" />
+    </svg>
+  );
+}
 function StatCard({ label, value, sub }) {
   return (
     <Card>
@@ -468,7 +488,7 @@ export default function DashboardPage() {
             lineHeight: 1.1,
           }}
         >
-          {isSpecific ? "Specific Bundle" : "Simple Bundle"}
+          {isSpecific ? "Specific" : "Simple"}
         </span>
       );
     })(),
@@ -532,12 +552,12 @@ export default function DashboardPage() {
     <Page
       title={`Welcome To ${storeOwnerName}`}
       primaryAction={{
-        content: "Create Bundle Box",
+        content: "Create Box",
         onAction: () => setShowCreateBoxModal(true),
       }}
       secondaryActions={[
         {
-          content: "View Bundle Analytics",
+          content: "View Analytics",
           onAction: () => navigateTo("/app/analytics"),
         },
       ]}
@@ -728,9 +748,6 @@ export default function DashboardPage() {
                 Recommended Our Growth Apps
               </Text>
             </InlineStack>
-            <Text as="p" tone="subdued" variant="bodySm">
-              Recommended apps to grow revenue, improve trust, and increase store conversions.
-            </Text>
             <Divider />
             <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
               {promotedApps.map((appItem) => (
@@ -790,7 +807,16 @@ export default function DashboardPage() {
                       <Text as="span" variant="bodySm">{item}</Text>
                       {productUrl ? (
                         <Button url={productUrl} target="_blank" variant="plain">
-                          Open product
+                          <Button
+                            size="slim"
+                            url={box.previewUrl || undefined}
+                            target="_blank"
+                            disabled={!box.previewUrl}
+                            icon={<EyeIcon size={16} />}
+                            accessibilityLabel="Preview on storefront"
+                            tooltipContent={box.previewUrl ? "Preview on storefront" : "Preview unavailable"}
+                          >
+                          </Button>
                         </Button>
                       ) : (
                         <Text as="span" variant="bodySm" tone="subdued">No link</Text>
@@ -809,7 +835,7 @@ export default function DashboardPage() {
         onClose={closeCreateBoxModal}
         title="Choose Bundle Type"
         size="medium"
-        style={{ maxWidth: "30.75rem",borderRadius: "0px" }}
+        style={{ maxWidth: "30.75rem", borderRadius: "0px" }}
       >
         <Modal.Section>
           <BlockStack gap="300">
@@ -850,8 +876,7 @@ export default function DashboardPage() {
                       minHeight: "40px",
                     }}
                   >
-                    {pendingCreateAction === action.key && <Spinner accessibilityLabel="Loading" size="small" />}
-                    Create Bundle Box
+                    Create Box
                   </button>
                 </BlockStack>
               </div>

@@ -257,7 +257,7 @@ function EyeIcon({ size = 16, color = "#ffffff" }) {
     >
       <path
         d="M1.5 12s3.75-6.75 10.5-6.75S22.5 12 22.5 12s-3.75 6.75-10.5 6.75S1.5 12 1.5 12Z"
-        stroke={color}
+        stroke="#ffffff"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -591,6 +591,17 @@ export default function ManageBoxesPage() {
                 .cb-action-buttons .Polaris-Button__Icon {
                   margin: 0 !important;
                   line-height: 0 !important;
+                  height: 100% !important;
+                }
+                .cb-action-buttons .Polaris-Button__Icon svg {
+                  display: block !important;
+                }
+                  .Polaris-Button--textAlignCenter {
+                     justify-content: center;
+                      text-align: center;
+                      display: flex;
+                      align-items: end;
+                      font-size: 14px !important;
                 }
               `}</style>
               <IndexTable
@@ -661,7 +672,7 @@ export default function ManageBoxesPage() {
                                     border: "1px solid #d97706",
                                   }}
                                 >
-                                  <GiftIcon size={12} fill="#000000" />
+                                  <GiftIcon size={12} fill="#FFFFFF" />
                                 </span>
                               )}
                             </InlineStack>
@@ -786,7 +797,7 @@ export default function ManageBoxesPage() {
                             url={box.previewUrl || undefined}
                             target="_blank"
                             disabled={!box.previewUrl}
-                            icon={<EyeIcon size={16} color="#6b7280" />}
+                            icon={<EyeIcon size={16} color="#FFFFFF" />}
                             accessibilityLabel="Preview on storefront"
                             tooltipContent={box.previewUrl ? "Preview on storefront" : "Preview unavailable"}
                           >

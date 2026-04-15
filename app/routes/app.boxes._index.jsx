@@ -251,7 +251,7 @@ function EyeIcon({ size = 16, color = "#ffffff" }) {
       width={`${size}px`}
       height={`${size}px`}
       viewBox="0 0 24 24"
-      fill="none"
+      fill="#ffffff"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
@@ -661,7 +661,7 @@ export default function ManageBoxesPage() {
                                     border: "1px solid #d97706",
                                   }}
                                 >
-                                  <GiftIcon size={12} fill="#ffffff" />
+                                  <GiftIcon size={12} fill="#000000" />
                                 </span>
                               )}
                             </InlineStack>

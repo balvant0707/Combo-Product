@@ -11,8 +11,8 @@ import {
   BILLING_PLAN_KEYS,
   MONTHLY_PRICE,
   TRIAL_DAYS,
-  YEARLY_PLAN,
   YEARLY_PRICE,
+  getBillingCycleForPlanName,
   getBillingReplacementBehavior,
   getPlanNameForBillingCycle,
   getPlanKeyFromName,
@@ -248,6 +248,6 @@ export function toPlanPageSubscription(subscription) {
     currencyCode:
       subscription?.lineItems?.[0]?.plan?.pricingDetails?.price?.currencyCode ||
       BILLING_CURRENCY_CODE,
-    billingCycle: subscription.name === YEARLY_PLAN ? "yearly" : "monthly",
+    billingCycle: getBillingCycleForPlanName(subscription.name),
   };
 }

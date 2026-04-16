@@ -23,8 +23,8 @@ export const PLANS = {
     boxLimit: Infinity,
     features: [
       "10 orders/month",
-      "Unlimited Simple Bundle",
-      "Unlimited Specific Bundle",
+      "Unlimited Simple Box",
+      "Unlimited Specific Box",
       "Basic email support",
     ],
   },
@@ -39,8 +39,8 @@ export const PLANS = {
     boxLimit: Infinity,
     features: [
       "50 orders/month",
-      "Unlimited Simple Bundle",
-      "Unlimited Specific Bundle",
+      "Unlimited Simple Box",
+      "Unlimited Specific Box",
       "Email & live support",
     ],
   },
@@ -55,8 +55,8 @@ export const PLANS = {
     boxLimit: Infinity,
     features: [
       "100 orders/month",
-      "Unlimited Simple Bundle",
-      "Unlimited Specific Bundle",
+      "Unlimited Simple Box",
+      "Unlimited Specific Box",
       "Priority & developer support",
     ],
   },
@@ -71,10 +71,10 @@ export const PLANS = {
     boxLimit: Infinity,
     features: [
       "Unlimited orders",
-      "Unlimited Simple Bundle",
-      "Unlimited Specific Bundle",
+      "Unlimited Simple Box",
+      "Unlimited Specific Box",
+        "Setup Support",
       "Highest-priority support",
-      "Guided bundles",
     ],
   },
   // Legacy alias — maps old PRO subs to PLUS
@@ -89,10 +89,10 @@ export const PLANS = {
     boxLimit: Infinity,
     features: [
       "Unlimited orders",
-      "Unlimited Simple Bundle",
-      "Unlimited Specific Bundle",
-      "Highest-priority support",
-      "Guided bundles",
+      "Unlimited Simple Box",
+      "Unlimited Specific Box",
+      "Setup Support",
+      "Highest Priority support",
     ],
   },
 };

@@ -40,6 +40,9 @@ import {
   BASIC_PRICE,
   ADVANCE_PRICE,
   PLUS_PRICE,
+  BASIC_YEARLY_PRICE,
+  ADVANCE_YEARLY_PRICE,
+  PLUS_YEARLY_PRICE,
   ORDER_LIMITS,
 } from "../config/billing";
 
@@ -183,6 +186,7 @@ const PLAN_UI = [
     key:      "BASIC",
     name:     "Basic",
     price:    BASIC_PRICE,
+    yearlyPrice: BASIC_YEARLY_PRICE,
     priceLabel: "/month",
     paymentMethod: "Shopify Billing (card on file)",
     highlight: false,
@@ -200,6 +204,7 @@ const PLAN_UI = [
     key:      "ADVANCE",
     name:     "Advance",
     price:    ADVANCE_PRICE,
+    yearlyPrice: ADVANCE_YEARLY_PRICE,
     priceLabel: "/month",
     paymentMethod: "Shopify Billing (card on file)",
     highlight: true,
@@ -217,6 +222,7 @@ const PLAN_UI = [
     key:      "PLUS",
     name:     "Plus",
     price:    PLUS_PRICE,
+    yearlyPrice: PLUS_YEARLY_PRICE,
     priceLabel: "/month",
     paymentMethod: "Shopify Billing (card on file)",
     highlight: false,
@@ -225,8 +231,8 @@ const PLAN_UI = [
       "Unlimited orders",
       "Unlimited Simple Bundle",
       "Unlimited Specific Bundle",
-      "Highest-priority support",
-      "Guided bundles",
+      "Setup support",
+      "Highest priority support",
     ],
     cta: "Start Plus",
     badge: null,
@@ -256,9 +262,12 @@ function currentPlanKey(subscription) {
 
 /* ── Plan Card ───────────────────────────────────────────────────── */
 
-function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan, freePlanLimitReached }) {
+function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan, freePlanLimitReached, billingCycle }) {
   const isActive   = activePlanKey === plan.key;
   const isFree     = plan.key === "FREE";
+  const isYearly = billingCycle === "yearly";
+  const displayPrice = isYearly && !isFree ? plan.yearlyPrice : plan.price;
+  const displayPriceLabel = isYearly && !isFree ? "/year (2 months free)" : plan.priceLabel;
 
   const disabledBtnStyle = {
     width: "100%", padding: "14px", borderRadius: "10px", border: "none",
@@ -309,11 +318,11 @@ function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan, freePlanL
       <form method="post" aria-label={`Select ${plan.name} plan`}>
         <input type="hidden" name="intent"    value="subscribe" />
         <input type="hidden" name="planKey"   value={plan.key} />
-        <input type="hidden" name="billingCycle" value="monthly" />
+        <input type="hidden" name="billingCycle" value={billingCycle} />
         <button
           type="submit"
           disabled={busy}
-          aria-label={`Subscribe to ${plan.name} plan at $${plan.price}/month`}
+          aria-label={`Subscribe to ${plan.name} plan at $${displayPrice}/${isYearly ? "year" : "month"}`}
           style={{
             width: "100%", padding: "14px", borderRadius: "0", border: "none",
             fontSize: "14px", fontWeight: "700", textAlign: "center",
@@ -322,7 +331,7 @@ function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan, freePlanL
             color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",
           }}
         >
-          {busy ? "Preparing billing…" : plan.cta}
+          {busy ? "Preparing billing..." : `${plan.cta}${isYearly ? " (Yearly)" : ""}`}
         </button>
       </form>
     );
@@ -345,10 +354,10 @@ function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan, freePlanL
             </>
           ) : (
             <>
-              <Text as="p" variant="heading2xl" aria-label={`$${plan.price} per month`}>
-                ${plan.price}
+              <Text as="p" variant="heading2xl" aria-label={`$${displayPrice} per ${isYearly ? "year" : "month"}`}>
+                ${displayPrice}
               </Text>
-              <Text as="p" tone="subdued">{plan.priceLabel}</Text>
+              <Text as="p" tone="subdued">{displayPriceLabel}</Text>
             </>
           )}
 
@@ -408,6 +417,7 @@ export default function PricingPage() {
 
   const activePlanKey = currentPlanKey(subscription);
   const isPaid = activePlanKey && activePlanKey !== "FREE";
+  const [billingCycle, setBillingCycle] = useState("monthly");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -521,6 +531,25 @@ export default function PricingPage() {
           </Banner>
         )}
 
+        <Card>
+          <InlineStack align="space-between" blockAlign="center" wrap>
+            <Text as="h2" variant="headingMd">Billing cycle</Text>
+            <InlineStack gap="200">
+              <Button
+                variant={billingCycle === "monthly" ? "primary" : "secondary"}
+                onClick={() => setBillingCycle("monthly")}
+              >
+                Monthly
+              </Button>
+              <Button
+                variant={billingCycle === "yearly" ? "primary" : "secondary"}
+                onClick={() => setBillingCycle("yearly")}
+              >
+                Yearly (2 months free)
+              </Button>
+            </InlineStack>
+          </InlineStack>
+        </Card>
         {/* ── Plan cards ── */}
         <InlineGrid columns={{ xs: 1, sm: 2, md: 4, lg: 4 }} gap="400">
           {PLAN_UI.map((plan) => (
@@ -531,6 +560,7 @@ export default function PricingPage() {
               isSubmitting={isSubmitting}
               submittingPlan={submittingPlan}
               freePlanLimitReached={freePlanLimitReached}
+              billingCycle={billingCycle}
             />
           ))}
         </InlineGrid>
@@ -597,7 +627,7 @@ export default function PricingPage() {
                       ],
                     },
                     {
-                      label: "Guided bundles",
+                      label: "Setup Support",
                       values: ["—", "✓", "✓", "✓"],
                     },
                   ].map((row) => (

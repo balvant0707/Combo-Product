@@ -1190,6 +1190,9 @@ function RecentOrdersTable({ data, currencyCode, onOpenItemsPopup }) {
         <tbody>
           {data.map((order, index) => {
             const selected = parseOrderSelectedProducts(order.selectedProducts);
+            const comboTypeText = String(order.comboTypeLabel || order.comboType || "")
+              .replace(/\s*Bundle\b/gi, "")
+              .trim() || "—";
             const detailsText = selected.length > 0
               ? selected[0]
               : `${order.itemCount || 0} step${Number(order.itemCount || 0) === 1 ? "" : "s"}`;
@@ -1221,7 +1224,7 @@ function RecentOrdersTable({ data, currencyCode, onOpenItemsPopup }) {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {order.comboTypeLabel}
+                    {comboTypeText}
                   </span>
                 </td>
                 <td

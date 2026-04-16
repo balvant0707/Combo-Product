@@ -101,9 +101,6 @@ export default function SettingsPage() {
             <Card>
               <BlockStack gap="400">
                 <Text as="h2" variant="headingMd">Theme Customizer</Text>
-                <Text as="p" tone="subdued">
-                  Customize the primary and secondary widget colors for your storefront.
-                </Text>
                 <input type="hidden" name="presetTheme" value="custom" />
                 <BlockStack gap="200">
                   <Text as="p" variant="bodySm" tone="subdued">Recommended color combinations</Text>

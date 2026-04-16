@@ -8,6 +8,7 @@ import { getShopCurrencyCode } from "../models/shop.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 import { formatCurrencyAmount } from "../utils/currency";
 import { fetchOrderLabelsByOrderIds } from "../utils/shopify-orders.server";
+import { fetchProductIdsByLabels, normalizeProductLookupLabel } from "../utils/shopify-products.server";
 import {
   BlockStack,
   Button,
@@ -58,11 +59,25 @@ export const loader = async ({ request }) => {
       orderNumber: order.orderNumber ?? adminLabel?.orderNumber ?? null,
     };
   });
+  const selectedProductLabels = hydratedRecentOrders.flatMap((order) =>
+    parseOrderSelectedProducts(order.selectedProducts),
+  );
+  const productIdByLabel = await fetchProductIdsByLabels(admin, selectedProductLabels);
+  const enrichedRecentOrders = hydratedRecentOrders.map((order) => {
+    const selected = parseOrderSelectedProducts(order.selectedProducts);
+    return {
+      ...order,
+      selectedProductEntries: selected.map((label) => ({
+        label,
+        productId: productIdByLabel.get(normalizeProductLookupLabel(label)) || null,
+      })),
+    };
+  });
 
   return {
     analytics: {
       ...analytics,
-      recentOrders: hydratedRecentOrders,
+      recentOrders: enrichedRecentOrders,
     },
     currencyCode,
     shopDomain: session.shop,
@@ -142,28 +157,13 @@ function buildAdminOrderLink(shopDomain, orderId) {
   return `https://admin.shopify.com/store/${storeHandle}/orders/${rawOrderId}`;
 }
 
-function buildAdminProductLink(shopDomain, itemLabel) {
+function buildAdminProductLink(shopDomain, productId) {
   const shop = String(shopDomain || "").trim();
-  const label = String(itemLabel || "").trim();
-  if (!shop || !label) return null;
+  const numericProductId = String(productId || "").replace(/\D/g, "");
+  if (!shop || !numericProductId) return null;
   const storeHandle = shop.replace(/\.myshopify\.com$/i, "");
   if (!storeHandle) return null;
-
-  const gidMatch = label.match(/gid:\/\/shopify\/Product\/(\d+)/i);
-  if (gidMatch?.[1]) {
-    return `https://admin.shopify.com/store/${storeHandle}/products/${gidMatch[1]}`;
-  }
-
-  if (/^\d{8,}$/.test(label)) {
-    return `https://admin.shopify.com/store/${storeHandle}/products/${label}`;
-  }
-
-  const normalizedQuery = label
-    .replace(/\s*\([^)]*\)\s*$/g, "")
-    .replace(/\s{2,}/g, " ")
-    .trim();
-
-  return `https://admin.shopify.com/store/${storeHandle}/products?query=${encodeURIComponent(normalizedQuery || label)}`;
+  return `https://admin.shopify.com/store/${storeHandle}/products/${numericProductId}`;
 }
 
 function EyeIcon({ size = 16, color = "#000000", fill = "#ffffff" }) {
@@ -1502,7 +1502,12 @@ export default function AnalyticsPage() {
   });
 
   function openItemsPopup(order) {
-    const items = parseOrderSelectedProducts(order?.selectedProducts);
+    const items = Array.isArray(order?.selectedProductEntries)
+      ? order.selectedProductEntries
+      : parseOrderSelectedProducts(order?.selectedProducts).map((label) => ({
+        label,
+        productId: null,
+      }));
     setItemsPopup({
       open: true,
       boxTitle: order?.boxTitle || "Order",
@@ -1672,10 +1677,14 @@ export default function AnalyticsPage() {
             ) : (
               <BlockStack gap="100">
                 {itemsPopup.items.map((item, idx) => {
-                  const productUrl = buildAdminProductLink(shopDomain, item);
+                  const itemLabel = typeof item === "string" ? item : String(item?.label || "");
+                  const productUrl = buildAdminProductLink(
+                    shopDomain,
+                    typeof item === "string" ? null : item?.productId,
+                  );
                   return (
-                    <InlineStack key={`${item}-${idx}`} align="space-between" blockAlign="center" wrap={false}>
-                      <Text as="span" variant="bodySm">{item}</Text>
+                    <InlineStack key={`${itemLabel}-${idx}`} align="space-between" blockAlign="center" wrap={false}>
+                      <Text as="span" variant="bodySm">{itemLabel}</Text>
                       {productUrl ? (
                         <Button
                           size="slim"
@@ -1683,7 +1692,7 @@ export default function AnalyticsPage() {
                           target="_blank"
                           variant="plain"
                           icon={<EyeIcon size={16} color="#000000" fill="#ffffff" />}
-                          accessibilityLabel={`Open ${item} product`}
+                          accessibilityLabel={`Open ${itemLabel} product`}
                         />
                       ) : (
                         <Text as="span" variant="bodySm" tone="subdued">No link</Text>

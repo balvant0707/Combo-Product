@@ -41,7 +41,7 @@ export function installedEmailHtml({ ownerName, shopName, shopDomain }) {
           <tr>
             <td style="background:linear-gradient(135deg,#2A7A4F 0%,#1b5c38 100%);
                        padding:36px 48px 32px;text-align:center;">
-              <h1 style="margin:0 0 8px;color:#ffffff;font-size:26px;font-weight:700;
+              <h1 style="margin:0 0 8px;color:#000000;font-size:26px;font-weight:700;
                          text-shadow:0 1px 3px rgba(0,0,0,0.2);">
                 Welcome to ${APP_NAME}!
               </h1>
@@ -110,7 +110,7 @@ export function installedEmailHtml({ ownerName, shopName, shopDomain }) {
               <table cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:16px;">
                 <tr>
                   <td style="vertical-align:top;width:38px;padding-top:1px;">
-                    <div style="background:#2A7A4F;color:#fff;border-radius:50%;width:30px;height:30px;
+                    <div style="background:#2A7A4F;color:#000000;border-radius:50%;width:30px;height:30px;
                                 line-height:30px;text-align:center;font-size:13px;font-weight:700;">
                       ${num}
                     </div>
@@ -125,7 +125,7 @@ export function installedEmailHtml({ ownerName, shopName, shopDomain }) {
               <!-- CTA -->
               <div style="text-align:center;margin:36px 0 30px;">
                 <a href="${appUrl}"
-                  style="display:inline-block;background:#2A7A4F;color:#ffffff;text-decoration:none;
+                  style="display:inline-block;background:#2A7A4F;color:#000000;text-decoration:none;
                          padding:15px 40px;border-radius:10px;font-size:15px;font-weight:700;
                          letter-spacing:0.2px;box-shadow:0 4px 16px rgba(42,122,79,0.4);">
                   Open ${APP_NAME} →

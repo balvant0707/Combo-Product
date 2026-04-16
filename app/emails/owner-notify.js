@@ -45,7 +45,7 @@ export function ownerInstallNotifyHtml({ ownerName, shopName, shopDomain, email,
       <tr>
         <td style="background:linear-gradient(135deg,#2A7A4F,#1b5c38);padding:28px 40px;text-align:center;">
           <div style="font-size:40px;margin-bottom:10px;">🎉</div>
-          <h1 style="margin:0 0 6px;color:#fff;font-size:22px;font-weight:700;">New App Install!</h1>
+          <h1 style="margin:0 0 6px;color:#000000;font-size:22px;font-weight:700;">New App Install!</h1>
           <p style="margin:0;color:rgba(255,255,255,0.85);font-size:14px;">
             A new merchant just installed <strong>${APP_NAME}</strong>
           </p>
@@ -133,7 +133,7 @@ export function ownerUninstallNotifyHtml({ ownerName, shopName, shopDomain, emai
       <tr>
         <td style="background:linear-gradient(135deg,#dc2626,#991b1b);padding:28px 40px;text-align:center;">
           <div style="font-size:40px;margin-bottom:10px;">⚠️</div>
-          <h1 style="margin:0 0 6px;color:#fff;font-size:22px;font-weight:700;">App Uninstalled</h1>
+          <h1 style="margin:0 0 6px;color:#000000;font-size:22px;font-weight:700;">App Uninstalled</h1>
           <p style="margin:0;color:rgba(255,255,255,0.85);font-size:14px;">
             A merchant has uninstalled <strong>${APP_NAME}</strong>
           </p>

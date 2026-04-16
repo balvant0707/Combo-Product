@@ -42,7 +42,7 @@ export function uninstalledEmailHtml({ ownerName, shopName, shopDomain, feedback
             <td style="background:linear-gradient(135deg,#1f2937 0%,#374151 100%);
                        padding:36px 48px 32px;text-align:center;">
               <div style="font-size:44px;margin-bottom:12px;">😢</div>
-              <h1 style="margin:0 0 8px;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.4px;">
+              <h1 style="margin:0 0 8px;color:#000000;font-size:26px;font-weight:700;letter-spacing:-0.4px;">
                 We're sad to see you go
               </h1>
               <p style="margin:0;color:rgba(255,255,255,0.78);font-size:15px;">
@@ -123,7 +123,7 @@ export function uninstalledEmailHtml({ ownerName, shopName, shopDomain, feedback
                       configurations will still be saved and waiting for you.
                     </p>
                     <a href="${storeUrl}"
-                      style="display:inline-block;background:#2A7A4F;color:#ffffff;
+                      style="display:inline-block;background:#2A7A4F;color:#000000;
                              text-decoration:none;padding:13px 32px;border-radius:10px;
                              font-size:14px;font-weight:700;
                              box-shadow:0 4px 14px rgba(42,122,79,0.35);">

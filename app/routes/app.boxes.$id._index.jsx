@@ -398,7 +398,7 @@ export default function BoxSettingsPage() {
   /* ─────────────── Render ─────────────── */
   return (
     <Page
-      title={`Edit: Simple Bundle Configuration`}
+      title={`Edit: Simple Configuration`}
       backAction={{ content: "Boxes", onAction: handleBackAction }}
       primaryAction={{
         content: isSaving ? "Saving..." : "Save Changes",
@@ -592,8 +592,8 @@ export default function BoxSettingsPage() {
           <Card>
             <InlineGrid columns={{ xs: "1fr", sm: "1fr auto" }} gap="400">
               <BlockStack gap="050">
-                <Text as="h2" variant="headingMd">{box.displayTitle || box.boxName || "Simple Bundle"}</Text>
-                <Text as="p" variant="bodySm" tone="subdued">Create and configure your Simple Bundle experience</Text>
+                <Text as="h2" variant="headingMd">{box.displayTitle || box.boxName || "Simple Box"}</Text>
+                <Text as="p" variant="bodySm" tone="subdued">Create and configure your Simple Box experience</Text>
               </BlockStack>
               <InlineStack gap="200" blockAlign="start">
                 <ToggleSwitch checked={options.isActive} onChange={() => toggleOption("isActive")} showStateText={false} />
@@ -608,11 +608,11 @@ export default function BoxSettingsPage() {
           {/* Card 2 — Basic Information */}
           <Card>
             <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">Bundle Setup</Text>
+              <Text as="h2" variant="headingMd">General Configuration</Text>
               <BlockStack gap="300">
                 <InlineGrid columns={{ xs: 1, md: 3 }} gap="300">
                   <BlockStack gap="100">
-                    <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Title *</Text>
+                    <Text as="label" variant="bodySm" fontWeight="semibold">Title *</Text>
                     <input
                       type="text"
                       name="displayTitle"
@@ -626,7 +626,7 @@ export default function BoxSettingsPage() {
                     )}
                   </BlockStack>
                   <BlockStack gap="100">
-                    <Text as="label" variant="bodySm" fontWeight="semibold">Bundle CTA Button Text</Text>
+                    <Text as="label" variant="bodySm" fontWeight="semibold">CTA Button Text</Text>
                     <input
                       type="text"
                       name="comboProductButtonTitle"
@@ -636,7 +636,7 @@ export default function BoxSettingsPage() {
                     />
                   </BlockStack>
                   <BlockStack gap="100">
-                    <Text as="label" variant="bodySm" fontWeight="semibold">Add Bundle Button Text</Text>
+                    <Text as="label" variant="bodySm" fontWeight="semibold">Add Button Text</Text>
                     <input
                       type="text"
                       name="productButtonTitle"
@@ -648,11 +648,11 @@ export default function BoxSettingsPage() {
                 </InlineGrid>
                 <InlineGrid columns={{ xs: 1, md: 3 }} gap="300">
                   <BlockStack gap="100">
-                    <Text as="label" variant="bodySm" fontWeight="semibold">Items Required in Bundle *</Text>
+                    <Text as="label" variant="bodySm" fontWeight="semibold">Items Required *</Text>
                     <input
                       type="number"
                       placeholder="e.g. 4"
-                      min="1"
+                      min="2"
                       max="8"
                       step="1"
                       value={itemCount}
@@ -677,7 +677,7 @@ export default function BoxSettingsPage() {
                   {/* Bundle Price */}
                   <BlockStack gap="200">
                     <Text as="label" variant="bodySm" fontWeight="semibold">
-                      Bundle Pricing *
+                      Pricing *
                     </Text>
                     {/* Price mode toggle tabs */}
                     <div style={{ display: "flex", border: "1px solid #d1d5db", borderRadius: "6px", overflow: "hidden" }}>
@@ -757,7 +757,7 @@ export default function BoxSettingsPage() {
 
                   {/* Banner Image */}
                   <BlockStack gap="200">
-                    <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Banner Image</Text>
+                    <Text as="label" variant="bodySm" fontWeight="semibold">Image</Text>
                     <input type="file" ref={bannerImageRef} name="bannerImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ display: "none" }} />
                     {(box.bannerImageSrc && !removeBannerImage && !bannerImagePreview) ? (
                       <div
@@ -878,7 +878,7 @@ export default function BoxSettingsPage() {
           {/* Card 3 — Options */}
           <Card>
             <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">Bundle Options</Text>
+              <Text as="h2" variant="headingMd">Options</Text>
               <InlineGrid columns={{ xs: 1, sm: 3 }} gap="300">
                 <Card>
                   <InlineStack gap="200" blockAlign="start">

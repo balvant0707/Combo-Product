@@ -892,13 +892,13 @@ export default function SpecificComboBoxPage() {
         {/* ── Combo Configuration ── */}
         <Card>
           <BlockStack gap="400">
-            <Text as="h2" variant="headingMd">General Bundle Configuration</Text>
+            <Text as="h2" variant="headingMd">General Configuration</Text>
             <Divider />
 
             {/* Row 1: Title | Steps | Description | CTA Button */}
             <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="400">
               <BlockStack gap="100">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Title *</Text>
+                <Text as="label" variant="bodySm" fontWeight="semibold">Title *</Text>
                 <input
                   value={comboConfig.listingTitle || ""}
                   onChange={(e) => { updateComboField("listingTitle", e.target.value); if (stepErrors._title) setStepErrors((p) => ({ ...p, _title: "" })); }}
@@ -909,7 +909,7 @@ export default function SpecificComboBoxPage() {
               </BlockStack>
 
               <BlockStack gap="100">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Description</Text>
+                <Text as="label" variant="bodySm" fontWeight="semibold">Description</Text>
                 <input
                   value={comboConfig.subtitle}
                   onChange={(e) => updateComboField("subtitle", e.target.value)}
@@ -919,7 +919,7 @@ export default function SpecificComboBoxPage() {
               </BlockStack>
 
               <BlockStack gap="100">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Button Text</Text>
+                <Text as="label" variant="bodySm" fontWeight="semibold">Button Text</Text>
                 <input
                   value={comboConfig.ctaButtonLabel ?? comboConfig.comboButtonTitle ?? ""}
                   onChange={(e) => updateComboField("ctaButtonLabel", e.target.value)}
@@ -933,7 +933,7 @@ export default function SpecificComboBoxPage() {
             <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
               
               <BlockStack gap="100">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Steps</Text>
+                <Text as="label" variant="bodySm" fontWeight="semibold">Steps</Text>
                 <InlineStack gap="200" blockAlign="center">
                   <Button
                     onClick={() => setStepCount(comboConfig.type - 1)}
@@ -963,7 +963,7 @@ export default function SpecificComboBoxPage() {
 
               {/* Image uploader */}
               <BlockStack gap="100">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Image</Text>
+                <Text as="label" variant="bodySm" fontWeight="semibold">Image</Text>
                 <input type="file" ref={comboImageRef} name="comboImage" form="combo-config-form" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ display: "none" }} />
                 {comboImagePreview ? (
                   <div
@@ -994,7 +994,7 @@ export default function SpecificComboBoxPage() {
 
               {/* Bundle Price */}
               <BlockStack gap="200">
-                <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Price Type *</Text>
+                <Text as="label" variant="bodySm" fontWeight="semibold">Pricing Type *</Text>
                 <InlineStack gap="0">
                   {["manual", "dynamic"].map((mode) => (
                     <button
@@ -1033,7 +1033,7 @@ export default function SpecificComboBoxPage() {
                   <BlockStack gap="300">
                     <InlineGrid columns={2} gap="300">
                       <BlockStack gap="100">
-                        <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Discount Type</Text>
+                        <Text as="label" variant="bodySm" fontWeight="semibold">Discount Type</Text>
                         <select
                           value={normalizeSpecificDiscountType(comboConfig.discountType)}
                           onChange={(e) => updateComboField("discountType", normalizeSpecificDiscountType(e.target.value))}
@@ -1076,7 +1076,7 @@ export default function SpecificComboBoxPage() {
         {/* ── Options ── */}
         <Card>
           <BlockStack gap="400">
-            <Text as="h2" variant="headingMd">Additional Bundle Options</Text>
+            <Text as="h2" variant="headingMd">Additional Options</Text>
             <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
               <InlineStack gap="200" blockAlign="start">
                 <ToggleSwitch checked={!!comboConfig.isGiftBox} onChange={() => updateComboField("isGiftBox", !comboConfig.isGiftBox)} showStateText={false} />
@@ -1112,7 +1112,7 @@ export default function SpecificComboBoxPage() {
         <Card>
           <BlockStack gap="400">
             <InlineStack align="space-between" blockAlign="center">
-              <Text as="h2" variant="headingMd">Bundle Steps Configuration ({comboConfig.type} total)</Text>
+              <Text as="h2" variant="headingMd">Steps Configuration ({comboConfig.type} total)</Text>
               <Button
                 onClick={() => setStepCount(comboConfig.type + 1)}
                 disabled={comboConfig.type >= MAX_COMBO_STEPS}

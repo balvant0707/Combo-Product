@@ -370,7 +370,7 @@ export default function CreateBoxPage() {
 
   return (
     <Page
-      title="Create Simple Bundle Box"
+      title="Create Simple Box"
       backAction={{ content: "Boxes", onAction: handleBackAction }}
       primaryAction={{
         content: isSaving ? "Saving..." : "Save & Publish",
@@ -457,8 +457,8 @@ export default function CreateBoxPage() {
             <Card>
               <InlineGrid columns={{ xs: "1fr", sm: "1fr auto" }} gap="400">
                 <BlockStack gap="050">
-                  <Text as="h2" variant="headingMd">Simple Bundle</Text>
-                  <Text as="p" variant="bodySm" tone="subdued">Create and configure your Simple Bundle experience</Text>
+                  <Text as="h2" variant="headingMd">Simple Box</Text>
+                  <Text as="p" variant="bodySm" tone="subdued">Create and configure your Simple Box experience</Text>
                 </BlockStack>
                 <InlineStack gap="200" blockAlign="start">
                   <ToggleSwitch checked={options.isActive} onChange={() => toggleOption("isActive")} showStateText={false} />
@@ -473,7 +473,7 @@ export default function CreateBoxPage() {
             {/* Card 2 — Basic Information */}
             <Card>
               <BlockStack gap="400">
-                <Text as="h2" variant="headingMd">Bundle Setup</Text>
+                <Text as="h2" variant="headingMd">General Configuration</Text>
                 <BlockStack gap="300">
                   <InlineGrid columns={{ xs: 1, md: 3 }} gap="300">
                     {/* Display Title */}
@@ -506,7 +506,7 @@ export default function CreateBoxPage() {
                     {/* Bundle CTA Button Text */}
                     <BlockStack gap="100">
                       <label htmlFor="new-comboBtn" style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
-                        Bundle CTA Button Text
+                        CTA Button Text
                       </label>
                       <input
                         id="new-comboBtn"
@@ -521,7 +521,7 @@ export default function CreateBoxPage() {
                     {/* Add Bundle to Cart Button Text */}
                     <BlockStack gap="100">
                       <label htmlFor="new-productBtn" style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
-                        Add Bundle Button Text
+                        Add Button Text
                       </label>
                       <input
                         id="new-productBtn"
@@ -538,13 +538,13 @@ export default function CreateBoxPage() {
                     {/* Item Count */}
                     <BlockStack gap="100">
                       <label htmlFor="new-itemCount" style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
-                        Items Required in Bundle <span aria-hidden="true">*</span>
+                        Items Required <span aria-hidden="true">*</span>
                       </label>
                       <input
                         id="new-itemCount"
                         type="number"
                         placeholder="e.g. 4"
-                        min="1"
+                        min="2"
                         max="8"
                         step="1"
                         value={itemCount}
@@ -572,7 +572,7 @@ export default function CreateBoxPage() {
                     {/* Bundle Price */}
                     <BlockStack gap="100">
                       <span style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
-                        Bundle Pricing <span aria-hidden="true">*</span>
+                        Pricing <span aria-hidden="true">*</span>
                       </span>
                       <InlineStack gap="0">
                         {["manual", "dynamic"].map((mode) => (
@@ -644,7 +644,7 @@ export default function CreateBoxPage() {
 
                     {/* Banner Image */}
                     <BlockStack gap="100">
-                      <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Banner Image</Text>
+                      <Text as="label" variant="bodySm" fontWeight="semibold">Image</Text>
                       <input type="file" ref={bannerImageRef} name="bannerImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ display: "none" }} />
                       {bannerImagePreview ? (
                         <div style={{ position: "relative", display: "inline-block", width: "120px" }}>
@@ -746,7 +746,7 @@ export default function CreateBoxPage() {
             {/* Card 3 — Options */}
             <Card>
               <BlockStack gap="400">
-                <Text as="h2" variant="headingMd">Bundle Options</Text>
+                <Text as="h2" variant="headingMd">Options</Text>
                 <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
                   <InlineStack gap="200" blockAlign="start">
                     <ToggleSwitch checked={options.isGiftBox} onChange={() => toggleOption("isGiftBox")} showStateText={false} />

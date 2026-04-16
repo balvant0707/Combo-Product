@@ -759,16 +759,16 @@ export default function CreateSpecificComboBoxPage() {
           {/* ── Combo Configuration ── */}
           <Card>
             <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">General Bundle Configuration</Text>
+              <Text as="h2" variant="headingMd">General Configuration</Text>
               <div style={{ height: "1px", background: "#e5e7eb", width: "100%" }} />
 
               <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="400">
                 <BlockStack gap="100">
-                  <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Title *</Text>
+                  <Text as="label" variant="bodySm" fontWeight="semibold">Title *</Text>
                   <input
                     type="text"
                     name="comboName"
-                    placeholder="e.g. Beauty Bundle - 10% Discount"
+                    placeholder="e.g. Beauty - 10% Discount"
                     value={comboConfig.title}
                     onChange={(e) => {
                       updateComboField("title", e.target.value);
@@ -782,7 +782,7 @@ export default function CreateSpecificComboBoxPage() {
                 </BlockStack>
 
                 <BlockStack gap="100">
-                  <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Description</Text>
+                  <Text as="label" variant="bodySm" fontWeight="semibold">Description</Text>
                   <input
                     type="text"
                     style={inputStyle}
@@ -807,7 +807,7 @@ export default function CreateSpecificComboBoxPage() {
               <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
 
                 <BlockStack gap="100">
-                  <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Steps</Text>
+                  <Text as="label" variant="bodySm" fontWeight="semibold">Steps</Text>
                   <InlineStack gap="200" blockAlign="center">
                     <Button onClick={() => setStepCount(comboConfig.type - 1)} disabled={comboConfig.type <= MIN_COMBO_STEPS} size="slim">-</Button>
                     <input
@@ -824,7 +824,7 @@ export default function CreateSpecificComboBoxPage() {
                 </BlockStack>
 
                 <BlockStack gap="100">
-                  <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Image</Text>
+                  <Text as="label" variant="bodySm" fontWeight="semibold">Image</Text>
                   <input type="file" ref={comboImageRef} name="comboImage" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" style={{ display: "none" }} />
                   {comboImagePreview ? (
                     <div style={{ position: "relative", display: "inline-block", width: "120px" }}>
@@ -848,7 +848,7 @@ export default function CreateSpecificComboBoxPage() {
                 </BlockStack>
 
                 <BlockStack gap="200">
-                  <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Price Type *</Text>
+                  <Text as="label" variant="bodySm" fontWeight="semibold">Price Type *</Text>
                   <InlineStack gap="0">
                     {["manual", "dynamic"].map((mode) => (
                       <button
@@ -890,7 +890,7 @@ export default function CreateSpecificComboBoxPage() {
                       <BlockStack gap="300">
                         <InlineGrid columns={2} gap="300">
                           <BlockStack gap="100">
-                            <Text as="label" variant="bodySm" fontWeight="semibold">Bundle Discount Type</Text>
+                            <Text as="label" variant="bodySm" fontWeight="semibold">Discount Type</Text>
                             <select
                               value={normalizeSpecificDiscountType(comboConfig.discountType)}
                               onChange={(e) => updateComboField("discountType", normalizeSpecificDiscountType(e.target.value))}
@@ -973,7 +973,7 @@ export default function CreateSpecificComboBoxPage() {
 
              <Card>
             <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">Additional Bundle Options</Text>
+              <Text as="h2" variant="headingMd">Additional Options</Text>
               <FormLayout>
                 <FormLayout.Group>
                   <InlineStack gap="200" blockAlign="start">
@@ -1012,7 +1012,7 @@ export default function CreateSpecificComboBoxPage() {
           <Card>
             <BlockStack gap="400">
               <InlineStack align="space-between" blockAlign="center">
-                <Text as="h2" variant="headingMd">Bundle Steps Configuration ({comboConfig.type} total)</Text>
+                <Text as="h2" variant="headingMd">Steps Configuration ({comboConfig.type} total)</Text>
                 <Button
                   onClick={() => setStepCount(comboConfig.type + 1)}
                   disabled={comboConfig.type >= MAX_COMBO_STEPS}

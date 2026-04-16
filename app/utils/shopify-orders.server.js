@@ -22,7 +22,6 @@ const ORDER_LABELS_QUERY = `#graphql
       ... on Order {
         id
         name
-        orderNumber
       }
     }
   }
@@ -56,7 +55,10 @@ export async function fetchOrderLabelsByOrderIds(admin, orderIds = []) {
         const numericId = extractNumericIdFromGid(node?.id);
         if (!numericId) continue;
 
-        const parsedOrderNumber = Number.parseInt(String(node?.orderNumber), 10);
+        const parsedOrderNumber = Number.parseInt(
+          String(node?.name || "").replace(/\D/g, ""),
+          10,
+        );
         result.set(numericId, {
           orderName: typeof node?.name === "string" && node.name.trim() ? node.name.trim() : null,
           orderNumber: Number.isFinite(parsedOrderNumber) && parsedOrderNumber > 0 ? parsedOrderNumber : null,

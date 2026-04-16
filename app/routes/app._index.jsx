@@ -197,8 +197,11 @@ export const loader = async ({ request }) => {
   // Order limit tracking for upgrade prompt
   const { getSubscription } = await import("../models/subscription.server.js");
   const { PLANS } = await import("../models/subscription.server.js");
+  const { getActiveShopifySubscription } = await import("../models/billing.server.js");
   const subscription = await getSubscription(shop);
   const currentPlan = PLANS[subscription?.plan] ?? PLANS.FREE;
+  const activeShopifySubscription = await getActiveShopifySubscription(billing).catch(() => null);
+  const currentPlanDisplayName = activeShopifySubscription?.name || currentPlan.name;
   const orderLimit = currentPlan.orderLimit;
 
   // Count orders in the current calendar month
@@ -230,7 +233,7 @@ export const loader = async ({ request }) => {
     knowledgeBaseLink,
     reviewLink,
     reportIssueLink,
-    currentPlanName: currentPlan.name,
+    currentPlanName: currentPlanDisplayName,
     orderLimit: isFinite(orderLimit) ? orderLimit : null,
     monthlyOrderCount,
     orderLimitReached,

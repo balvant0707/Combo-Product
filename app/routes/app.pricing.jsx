@@ -43,6 +43,7 @@ import {
   BASIC_YEARLY_PRICE,
   ADVANCE_YEARLY_PRICE,
   PLUS_YEARLY_PRICE,
+  getBillingCycleForPlanName,
   ORDER_LIMITS,
 } from "../config/billing";
 
@@ -53,10 +54,14 @@ export const loader = async ({ request }) => {
   const shop = session.shop;
   const url = new URL(request.url);
 
-  const { syncSubscription } = await import("../models/billing.server.js");
+  const { syncSubscription, getActiveShopifySubscription } = await import("../models/billing.server.js");
   const { activatePaidPlan } = await import("../models/subscription.server.js");
 
   const { subscription, billingUnavailable } = await syncSubscription(billing, shop);
+  const activeShopifySubscription = await getActiveShopifySubscription(billing).catch(() => null);
+  const activeBillingCycle = activeShopifySubscription?.name
+    ? getBillingCycleForPlanName(activeShopifySubscription.name)
+    : "monthly";
   const isDevMode = process.env.SKIP_BILLING === "true";
 
   if (url.searchParams.get("subscribed") === "1" && subscription?.subscriptionId) {
@@ -85,6 +90,7 @@ export const loader = async ({ request }) => {
     isDevMode,
     monthlyOrderCount,
     freePlanLimitReached,
+    activeBillingCycle,
     subscribed: url.searchParams.get("subscribed") === "1",
     cancelled: url.searchParams.get("cancelled") === "1",
   };
@@ -262,8 +268,18 @@ function currentPlanKey(subscription) {
 
 /* ── Plan Card ───────────────────────────────────────────────────── */
 
-function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan, freePlanLimitReached, billingCycle }) {
-  const isActive   = activePlanKey === plan.key;
+function PlanCard({
+  plan,
+  activePlanKey,
+  activeBillingCycle,
+  isSubmitting,
+  submittingPlan,
+  freePlanLimitReached,
+  billingCycle,
+}) {
+  const isActive = plan.key === "FREE"
+    ? activePlanKey === plan.key
+    : activePlanKey === plan.key && activeBillingCycle === billingCycle;
   const isFree     = plan.key === "FREE";
   const isYearly = billingCycle === "yearly";
   const displayPrice = isYearly && !isFree ? plan.yearlyPrice : plan.price;
@@ -339,6 +355,7 @@ function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan, freePlanL
 
   return (
     <Card background={plan.highlight ? "bg-surface-active" : undefined}>
+      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <BlockStack gap="400">
         <BlockStack gap="200">
           <InlineStack align="space-between" blockAlign="center">
@@ -370,15 +387,6 @@ function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan, freePlanL
 
         <Divider />
 
-        <BlockStack gap="050">
-          <Text as="p" tone="subdued" variant="bodySm" fontWeight="semibold">
-            Payment method
-          </Text>
-          <Text as="p" variant="bodySm">
-            {plan.paymentMethod}
-          </Text>
-        </BlockStack>
-
         <BlockStack gap="200">
           {plan.features.map((f) => (
             <InlineStack key={f} gap="200" blockAlign="center">
@@ -388,8 +396,9 @@ function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan, freePlanL
           ))}
         </BlockStack>
 
-        <Box paddingBlockStart="200">{btn}</Box>
+        <Box paddingBlockStart="200" style={{ marginTop: "auto" }}>{btn}</Box>
       </BlockStack>
+      </div>
     </Card>
   );
 }
@@ -403,6 +412,7 @@ export default function PricingPage() {
     isDevMode,
     monthlyOrderCount,
     freePlanLimitReached,
+    activeBillingCycle,
     subscribed,
     cancelled,
   } = useLoaderData();
@@ -417,7 +427,10 @@ export default function PricingPage() {
 
   const activePlanKey = currentPlanKey(subscription);
   const isPaid = activePlanKey && activePlanKey !== "FREE";
-  const [billingCycle, setBillingCycle] = useState("monthly");
+  const [billingCycle, setBillingCycle] = useState(activeBillingCycle || "monthly");
+  const visiblePlans = billingCycle === "yearly"
+    ? PLAN_UI.filter((plan) => plan.key !== "FREE")
+    : PLAN_UI;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -490,7 +503,7 @@ export default function PricingPage() {
               {isPaid && (
                 <form method="post" style={{ display: "inline" }}>
                   <input type="hidden" name="intent" value="cancel" />
-                  <input type="hidden" name="subscriptionId" value={subscription?.subscriptionId || subscription?.id || ""} />
+                  <input type="hidden" name="subscriptionId" value={subscription?.subscriptionId || ""} />
                   <button
                     type="submit"
                     disabled={isSubmitting && submittingIntent === "cancel"}
@@ -552,11 +565,12 @@ export default function PricingPage() {
         </Card>
         {/* ── Plan cards ── */}
         <InlineGrid columns={{ xs: 1, sm: 2, md: 4, lg: 4 }} gap="400">
-          {PLAN_UI.map((plan) => (
+          {visiblePlans.map((plan) => (
             <PlanCard
               key={plan.key}
               plan={plan}
               activePlanKey={activePlanKey}
+              activeBillingCycle={activeBillingCycle}
               isSubmitting={isSubmitting}
               submittingPlan={submittingPlan}
               freePlanLimitReached={freePlanLimitReached}

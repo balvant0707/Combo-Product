@@ -176,7 +176,15 @@ export async function cancelSubscription(billing, shop, subscriptionId) {
   const { cancelPlan, getSubscription } = await import("./subscription.server.js");
   const existing = await getSubscription(shop);
   let currentPeriodEnd = existing?.currentPeriodEnd ?? null;
-  let effectiveSubscriptionId = subscriptionId || existing?.subscriptionId || null;
+  const normalizeShopifySubscriptionId = (value) => {
+    const raw = String(value || "").trim();
+    if (!raw) return null;
+    return raw.startsWith("gid://shopify/AppSubscription/") ? raw : null;
+  };
+  let effectiveSubscriptionId =
+    normalizeShopifySubscriptionId(subscriptionId) ||
+    normalizeShopifySubscriptionId(existing?.subscriptionId) ||
+    null;
 
   if (!SKIP_BILLING && !effectiveSubscriptionId) {
     const activeSubscription = await getActiveShopifySubscription(billing);

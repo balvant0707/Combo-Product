@@ -1,4 +1,5 @@
 import { authenticate } from "../shopify.server";
+import { randomUUID } from "node:crypto";
 import db from "../db.server";
 import { markShopUninstalled } from "../models/shop.server";
 import { sendMail } from "../utils/mailer.server";
@@ -22,6 +23,21 @@ export const action = async ({ request }) => {
     contactEmail: shopRecord?.contactEmail,
     ownerEmail:   process.env.APP_OWNER_EMAIL,
   });
+
+  // Keep a feedback row for each uninstall event so merchant response can be captured later.
+  try {
+    await db.uninstallfeedback.create({
+      data: {
+        shop,
+        ownerName: shopRecord?.ownerName || null,
+        email: shopRecord?.email || null,
+        contactEmail: shopRecord?.contactEmail || null,
+        feedbackToken: randomUUID().replace(/-/g, ""),
+      },
+    });
+  } catch (error) {
+    console.error("[uninstall webhook] failed to create uninstallfeedback row", error);
+  }
 
   await markShopUninstalled(shop);
 

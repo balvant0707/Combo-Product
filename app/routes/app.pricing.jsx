@@ -292,6 +292,7 @@ function PlanCard({
   submittingPlan,
   freePlanLimitReached,
   billingCycle,
+  maxFeatureCount,
 }) {
   const displayOrderLimit = getOrderLimitForPlan(plan.key, billingCycle);
   const isActive = plan.key === "FREE"
@@ -305,7 +306,7 @@ function PlanCard({
   const disabledBtnStyle = {
     width: "100%", padding: "14px", border: "none",
     fontSize: "14px", fontWeight: "700", textAlign: "center", cursor: "default",
-    borderRadius: "8px", background: "#e5e7eb", color: "#9ca3af", opacity: 0.85,
+    borderRadius: "0", background: "#e5e7eb", color: "#9ca3af", opacity: 0.85,
   };
 
   let btn;
@@ -334,7 +335,7 @@ function PlanCard({
             disabled={busy}
             aria-label="Start free plan"
             style={{
-              width: "100%", padding: "14px", borderRadius: "8px", border: "none",
+              width: "100%", padding: "14px", borderRadius: "0", border: "none",
               fontSize: "14px", fontWeight: "700", textAlign: "center",
               cursor: busy ? "wait" : "pointer", background: "#111827",
               color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",
@@ -357,7 +358,7 @@ function PlanCard({
           disabled={busy}
           aria-label={`Subscribe to ${plan.name} plan at $${displayPrice}/${isYearly ? "year" : "month"}`}
           style={{
-            width: "100%", padding: "14px", borderRadius: "8px", border: "none",
+            width: "100%", padding: "14px", borderRadius: "0", border: "none",
             fontSize: "14px", fontWeight: "700", textAlign: "center",
             cursor: busy ? "wait" : "pointer",
             background: plan.highlight ? "#2A7A4F" : "#111827",
@@ -415,6 +416,11 @@ function PlanCard({
                 <Text as="span" tone="success">✓</Text>
                 <Text as="p">{f}</Text>
               </InlineStack>
+            ))}            {Array.from({ length: Math.max(0, maxFeatureCount - plan.features.length) }).map((_, idx) => (
+              <InlineStack key={`spacer-${plan.key}-${idx}`} gap="200" blockAlign="center">
+                <Text as="span" tone="subdued" visuallyHidden>placeholder</Text>
+                <Text as="p" tone="subdued" visuallyHidden>placeholder</Text>
+              </InlineStack>
             ))}
           </BlockStack>
 
@@ -456,6 +462,7 @@ export default function PricingPage() {
   const visiblePlans = billingCycle === "yearly"
     ? PLAN_UI.filter((plan) => plan.key !== "FREE")
     : PLAN_UI;
+  const maxFeatureCount = Math.max(...visiblePlans.map((plan) => plan.features.length));
 
   useEffect(() => {
     if (actionData?.confirmationUrl) {
@@ -510,6 +517,7 @@ export default function PricingPage() {
         }
         .cb-plan-cta button {
           min-height: 46px;
+          border-radius: 0 !important;
         }
       `}</style>
       <BlockStack gap="500">
@@ -643,6 +651,7 @@ export default function PricingPage() {
               submittingPlan={submittingPlan}
               freePlanLimitReached={freePlanLimitReached}
               billingCycle={billingCycle}
+              maxFeatureCount={maxFeatureCount}
             />
           ))}
         </InlineGrid>
@@ -749,3 +758,5 @@ export function ErrorBoundary() {
 }
 
 export const headers = (h) => boundary.headers(h);
+
+

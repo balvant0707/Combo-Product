@@ -154,7 +154,7 @@ export async function createSubscription(
   const currentSubscription = await getActiveShopifySubscription(billing);
 
   try {
-    await billing.request({
+    return await billing.request({
       plan,
       isTest: BILLING_IS_TEST,
       returnUrl,

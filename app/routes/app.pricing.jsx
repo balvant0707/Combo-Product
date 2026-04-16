@@ -145,7 +145,18 @@ export const action = async ({ request }) => {
         path: "/app?subscribed=1",
         request,
       });
-      await createSubscription(billing, returnUrl, billingCycle, planKey);
+      const billingRequest = await createSubscription(billing, returnUrl, billingCycle, planKey);
+      if (billingRequest instanceof Response) return billingRequest;
+      if (typeof billingRequest === "string" && /^https?:\/\//i.test(billingRequest)) {
+        return { confirmationUrl: billingRequest };
+      }
+      if (
+        billingRequest &&
+        typeof billingRequest === "object" &&
+        typeof billingRequest.confirmationUrl === "string"
+      ) {
+        return { confirmationUrl: billingRequest.confirmationUrl };
+      }
       return null;
     } catch (e) {
       if (e instanceof Response) throw e;
@@ -434,6 +445,12 @@ export default function PricingPage() {
   const visiblePlans = billingCycle === "yearly"
     ? PLAN_UI.filter((plan) => plan.key !== "FREE")
     : PLAN_UI;
+
+  useEffect(() => {
+    if (actionData?.confirmationUrl) {
+      window.open(actionData.confirmationUrl, "_top");
+    }
+  }, [actionData?.confirmationUrl]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

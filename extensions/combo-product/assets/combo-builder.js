@@ -1019,6 +1019,16 @@
 
       // Order limit reached — show a notice and block the widget entirely
       if (settings && settings.orderLimitReached) {
+        var shopHost = String(shop || '')
+          .trim()
+          .toLowerCase()
+          .replace(/^https?:\/\//, '')
+          .replace(/\/.*$/, '');
+        var storeHandle = shopHost.replace(/\.myshopify\.com$/, '');
+        var upgradePlanUrl = storeHandle && storeHandle.indexOf('.') === -1
+          ? ('https://admin.shopify.com/store/' + encodeURIComponent(storeHandle) + '/apps/mixbox-box-bundle-builder/app/pricing')
+          : 'https://apps.shopify.com/mixbox/pricing';
+
         var limitBanner = document.createElement('div');
         limitBanner.style.cssText = [
           'padding:20px 24px',
@@ -1031,10 +1041,13 @@
         ].join(';');
         limitBanner.innerHTML =
           '<p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#92400e;">' +
-          'Bundle Builder Temporarily Unavailable</p>' +
+          'MixBox – Box & Bundle Builder Order Limit Reached</p>' +
           '<p style="margin:0;font-size:13px;color:#78350f;">' +
-          'This store\u2019s monthly bundle order limit has been reached. ' +
-          'Please contact the store owner for assistance.</p>';
+          'Your current plan limit has been reached. ' +
+          'Please upgrade your plan to continue using MixBox – Box & Bundle Builder.</p>' +
+          '<a href="' + upgradePlanUrl + '" target="_blank" ' +
+          'style="display:inline-block;margin-top:12px;padding:10px 16px;background:#f59e0b;color:#fff;text-decoration:none;border-radius:4px;font-size:14px;">' +
+          'Upgrade Plan</a>';
         root.appendChild(limitBanner);
         return;
       }

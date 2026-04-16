@@ -20,9 +20,24 @@ import { sendMail } from "../utils/mailer.server";
 import { installedEmailHtml } from "../emails/app-installed";
 import { ownerInstallNotifyHtml } from "../emails/owner-notify";
 import { buildEmbedBlockUrl, getEmbedBlockStatus } from "../utils/theme-editor.server";
+import db from "../db.server";
+
+function getOrderLimitWindow(billingCycle, now = new Date()) {
+  const cycle = String(billingCycle || "monthly").toLowerCase() === "yearly" ? "yearly" : "monthly";
+  if (cycle === "yearly") {
+    return {
+      label: "year",
+      start: new Date(now.getFullYear(), 0, 1),
+    };
+  }
+  return {
+    label: "month",
+    start: new Date(now.getFullYear(), now.getMonth(), 1),
+  };
+}
 
 export const loader = async ({ request }) => {
-  const { session, admin } = await authenticate.admin(request);
+  const { session, admin, billing } = await authenticate.admin(request);
   const url = new URL(request.url);
   const pathname = url.pathname;
   const subscribedCallback = url.searchParams.get("subscribed") === "1";
@@ -74,6 +89,24 @@ export const loader = async ({ request }) => {
   }
 
   const reviewPrompt = await getShopReviewPromptState(session.shop);
+  const { getActiveShopifySubscription } = await import("../models/billing.server.js");
+  const { getBillingCycleForPlanName, getOrderLimitForPlan } = await import("../config/billing.js");
+  const activeShopifySubscription = await getActiveShopifySubscription(billing).catch(() => null);
+  const activeBillingCycle = activeShopifySubscription?.name
+    ? getBillingCycleForPlanName(activeShopifySubscription.name)
+    : "monthly";
+  const orderLimit = getOrderLimitForPlan(subscription?.plan || "FREE", activeBillingCycle);
+
+  const now = new Date();
+  const orderLimitWindow = getOrderLimitWindow(activeBillingCycle, now);
+  const periodOrderCount = await db.bundleOrder.count({
+    where: {
+      shop: session.shop,
+      orderDate: { gte: orderLimitWindow.start, lte: now },
+    },
+  });
+  const orderLimitReached = Number.isFinite(orderLimit) && periodOrderCount >= orderLimit;
+
   const [embedBlockUrl, embedBlockEnabled] = await Promise.all([
     buildEmbedBlockUrl({ shop: session.shop, admin }),
     getEmbedBlockStatus({ shop: session.shop, admin, session }),
@@ -88,6 +121,10 @@ export const loader = async ({ request }) => {
     reviewLink: process.env.REVIEW_LINK || process.env.APP_REVIEW_URL || null,
     embedBlockUrl,
     embedBlockEnabled,
+    orderLimitReached,
+    orderLimit: Number.isFinite(orderLimit) ? orderLimit : null,
+    periodOrderCount,
+    orderLimitPeriodLabel: orderLimitWindow.label,
   };
 };
 
@@ -146,6 +183,10 @@ export default function App() {
     reviewLink,
     embedBlockUrl,
     embedBlockEnabled,
+    orderLimitReached,
+    orderLimit,
+    periodOrderCount,
+    orderLimitPeriodLabel,
   } = useLoaderData();
   const location = useLocation();
   const navigate = useNavigate();
@@ -309,6 +350,20 @@ export default function App() {
             action={{ content: "Activate now", url: embedBlockUrl, target: "_blank" }}
           >
             <p>Enable the MixBox – Box & Bundle Builder app embed in Theme Customize.</p>
+          </Banner>
+        </Page>
+      )}
+      {orderLimitReached && (
+        <Page>
+          <Banner
+            tone="critical"
+            title={`Plan order limit reached (${periodOrderCount}/${orderLimit} orders this ${orderLimitPeriodLabel})`}
+            action={{ content: "Upgrade plan", url: withEmbeddedAppParams("/app/pricing", location.search) }}
+          >
+            <p>
+              Your store has reached the {orderLimitPeriodLabel}ly order limit for the current plan.
+              Upgrade to continue tracking new bundle orders.
+            </p>
           </Banner>
         </Page>
       )}

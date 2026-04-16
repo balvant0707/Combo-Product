@@ -210,17 +210,18 @@ export const loader = async ({ request }) => {
     : "monthly";
   const orderLimit = getOrderLimitForPlan(subscription?.plan || "FREE", currentBillingCycle);
 
-  // Count orders in the current calendar month
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  // Count orders for the active billing window:
+  // monthly plans => current month, yearly plans => current year.
+  const orderLimitWindow = getOrderLimitWindow(currentBillingCycle, now);
   const { getAnalytics } = await import("../models/orders.server.js");
-  const monthlyAnalytics = await getAnalytics(
+  const limitWindowAnalytics = await getAnalytics(
     shop,
-    monthStart.toISOString().slice(0, 10),
+    orderLimitWindow.start.toISOString().slice(0, 10),
     now.toISOString().slice(0, 10),
   );
-  const monthlyOrderCount = monthlyAnalytics.totalOrders;
-  const orderLimitReached = isFinite(orderLimit) && monthlyOrderCount >= orderLimit;
-  const orderLimitWarning = isFinite(orderLimit) && !orderLimitReached && monthlyOrderCount >= orderLimit * 0.8;
+  const periodOrderCount = limitWindowAnalytics.totalOrders;
+  const orderLimitReached = isFinite(orderLimit) && periodOrderCount >= orderLimit;
+  const orderLimitWarning = isFinite(orderLimit) && !orderLimitReached && periodOrderCount >= orderLimit * 0.8;
   const bundleConversionRate = totalStoreOrdersLast30Days == null
     ? null
     : totalStoreOrdersLast30Days > 0
@@ -250,7 +251,8 @@ export const loader = async ({ request }) => {
     reportIssueLink,
     currentPlanName: currentPlanDisplayName,
     orderLimit: isFinite(orderLimit) ? orderLimit : null,
-    monthlyOrderCount,
+    periodOrderCount,
+    orderLimitPeriodLabel: orderLimitWindow.label,
     orderLimitReached,
     orderLimitWarning,
     currencyCode,
@@ -377,6 +379,22 @@ function formatRecentOrderItems(selectedProducts) {
   return items[0];
 }
 
+function getOrderLimitWindow(billingCycle, now = new Date()) {
+  const cycle = String(billingCycle || "monthly").toLowerCase() === "yearly" ? "yearly" : "monthly";
+  if (cycle === "yearly") {
+    return {
+      cycle,
+      label: "year",
+      start: new Date(now.getFullYear(), 0, 1),
+    };
+  }
+  return {
+    cycle: "monthly",
+    label: "month",
+    start: new Date(now.getFullYear(), now.getMonth(), 1),
+  };
+}
+
 function formatOrderPrefixLabel(orderName, orderNumber, orderId) {
   const name = String(orderName || "").trim();
   if (/^#\d+/.test(name)) return name;
@@ -422,7 +440,8 @@ export default function DashboardPage() {
     recentOrders,
     currentPlanName,
     orderLimit,
-    monthlyOrderCount,
+    periodOrderCount,
+    orderLimitPeriodLabel,
     orderLimitReached,
     orderLimitWarning,
     currencyCode,
@@ -652,11 +671,11 @@ export default function DashboardPage() {
         {orderLimitReached && (
           <Banner
             tone="critical"
-            title={`${currentPlanName} plan order limit reached (${monthlyOrderCount}/${orderLimit} orders this month)`}
+            title={`${currentPlanName} plan order limit reached (${periodOrderCount}/${orderLimit} orders this ${orderLimitPeriodLabel})`}
             action={{ content: "Upgrade plan", url: withEmbeddedAppParams("/app/pricing", location.search) }}
           >
             <p>
-              Your store has reached the monthly order limit for the <strong>{currentPlanName}</strong> plan.
+              Your store has reached the {orderLimitPeriodLabel}ly order limit for the <strong>{currentPlanName}</strong> plan.
               New bundle orders may not be tracked until you upgrade.
             </p>
           </Banner>
@@ -664,11 +683,11 @@ export default function DashboardPage() {
         {orderLimitWarning && !orderLimitReached && (
           <Banner
             tone="warning"
-            title={`Approaching ${currentPlanName} plan order limit (${monthlyOrderCount}/${orderLimit} orders this month)`}
+            title={`Approaching ${currentPlanName} plan order limit (${periodOrderCount}/${orderLimit} orders this ${orderLimitPeriodLabel})`}
             action={{ content: "View plans", url: withEmbeddedAppParams("/app/pricing", location.search) }}
           >
             <p>
-              You have used <strong>{monthlyOrderCount}</strong> of your <strong>{orderLimit}</strong> monthly
+              You have used <strong>{periodOrderCount}</strong> of your <strong>{orderLimit}</strong> {orderLimitPeriodLabel}ly
               orders on the <strong>{currentPlanName}</strong> plan. Upgrade to avoid interruption.
             </p>
           </Banner>

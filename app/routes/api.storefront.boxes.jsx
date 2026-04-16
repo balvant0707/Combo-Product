@@ -1,6 +1,7 @@
 import { Buffer } from "node:buffer";
 import { listBoxes, getComboStepImages } from "../models/boxes.server";
 import { getSettings } from "../models/settings.server";
+import { unauthenticated } from "../shopify.server";
 import db from "../db.server";
 
 const CORS_HEADERS = {
@@ -11,6 +12,47 @@ const CORS_HEADERS = {
   Pragma: "no-cache",
   Expires: "0",
 };
+
+function getOrderLimitWindow(billingCycle, now = new Date()) {
+  const cycle = String(billingCycle || "monthly").toLowerCase() === "yearly" ? "yearly" : "monthly";
+  if (cycle === "yearly") {
+    return {
+      cycle,
+      label: "year",
+      start: new Date(now.getFullYear(), 0, 1),
+    };
+  }
+  return {
+    cycle: "monthly",
+    label: "month",
+    start: new Date(now.getFullYear(), now.getMonth(), 1),
+  };
+}
+
+async function getActiveBillingCycleForShop(shop) {
+  try {
+    const { admin } = await unauthenticated.admin(shop);
+    const response = await admin.graphql(`#graphql
+      query ActiveSubscriptions {
+        currentAppInstallation {
+          activeSubscriptions {
+            name
+            status
+          }
+        }
+      }
+    `);
+    const json = await response.json();
+    const activeSub = (json?.data?.currentAppInstallation?.activeSubscriptions || [])
+      .find((sub) => String(sub?.status || "").toUpperCase() === "ACTIVE");
+    if (!activeSub?.name) return "monthly";
+
+    const { getBillingCycleForPlanName } = await import("../config/billing.js");
+    return getBillingCycleForPlanName(activeSub.name);
+  } catch {
+    return "monthly";
+  }
+}
 
 export const loader = async ({ request }) => {
   if (request.method === "OPTIONS") {
@@ -29,17 +71,21 @@ export const loader = async ({ request }) => {
     getSettings(shop),
   ]);
 
-  // Check monthly order limit using shared plan-limit resolver (ENV-driven).
-  const { getOrderLimit } = await import("../models/subscription.server.js");
-  const orderLimit = await getOrderLimit(shop);
+  // Check order limits by billing cycle:
+  // monthly plans => count current month, yearly plans => count current year.
+  const { getSubscription } = await import("../models/subscription.server.js");
+  const { getOrderLimitForPlan } = await import("../config/billing.js");
+  const subscription = await getSubscription(shop);
+  const billingCycle = await getActiveBillingCycleForShop(shop);
+  const orderLimit = getOrderLimitForPlan(subscription?.plan || "FREE", billingCycle);
   let orderLimitReached = false;
   if (Number.isFinite(orderLimit)) {
     const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthlyOrderCount = await db.bundleOrder.count({
-      where: { shop, orderDate: { gte: monthStart, lte: now } },
+    const orderLimitWindow = getOrderLimitWindow(billingCycle, now);
+    const periodOrderCount = await db.bundleOrder.count({
+      where: { shop, orderDate: { gte: orderLimitWindow.start, lte: now } },
     });
-    orderLimitReached = monthlyOrderCount >= orderLimit;
+    orderLimitReached = periodOrderCount >= orderLimit;
   }
 
   // Fetch step images for all boxes that have a specific combo config

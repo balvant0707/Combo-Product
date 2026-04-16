@@ -198,9 +198,7 @@ const PLAN_UI = [
     priceLabel: "Forever free",
     paymentMethod: "No payment required",
     highlight: false,
-    orderLimit: ORDER_LIMITS.FREE,
     features: [
-      `${ORDER_LIMITS.FREE} orders/month`,
       "Unlimited Simple Box",
       "Unlimited Specific Box",
       "Basic email support",
@@ -216,9 +214,7 @@ const PLAN_UI = [
     priceLabel: "/month",
     paymentMethod: "Shopify Billing (card on file)",
     highlight: false,
-    orderLimit: ORDER_LIMITS.BASIC,
     features: [
-      `${ORDER_LIMITS.BASIC} orders/month`,
       "Unlimited Simple Box",
       "Unlimited Specific Box",
       "Email & live support",
@@ -234,9 +230,7 @@ const PLAN_UI = [
     priceLabel: "/month",
     paymentMethod: "Shopify Billing (card on file)",
     highlight: true,
-    orderLimit: ORDER_LIMITS.ADVANCE,
     features: [
-      `${ORDER_LIMITS.ADVANCE} orders/month`,
       "Unlimited Simple Box",
       "Unlimited Specific Box",
       "Priority & developer support",
@@ -252,9 +246,7 @@ const PLAN_UI = [
     priceLabel: "/month",
     paymentMethod: "Shopify Billing (card on file)",
     highlight: false,
-    orderLimit: ORDER_LIMITS.PLUS,
     features: [
-      "Unlimited orders",
       "Unlimited Simple Box",
       "Unlimited Specific Box",
       "Setup support",
@@ -310,7 +302,7 @@ function PlanCard({
     displayOrderLimit === Infinity
       ? "Unlimited orders"
       : `${displayOrderLimit} orders/${isYearly ? "year" : "month"}`,
-    ...plan.features.slice(1),
+    ...plan.features,
   ];
 
   const disabledBtnStyle = {

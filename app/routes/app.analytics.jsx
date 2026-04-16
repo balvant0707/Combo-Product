@@ -603,11 +603,11 @@ function ComboTypeFilter({ value = "all" }) {
         htmlFor="combo-type-filter"
         style={{ fontSize: "12px", color: "#4b5563", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}
       >
-        Bundle Type Filter
+        Type Filter
       </label>
       <select
         id="combo-type-filter"
-        aria-label="Filter analytics by Bundle type"
+        aria-label="Filter analytics by type"
         value={value}
         onChange={(e) => handleChange(e.target.value)}
         style={{
@@ -1167,7 +1167,7 @@ function RecentOrdersTable({ data, currencyCode, onOpenItemsPopup }) {
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
         <thead>
           <tr>
-            {["Order ID", "Bundle Product", "Type", "Bundle Items", "Order Revenue", "Date"].map((h) => (
+            {["Order ID", "Name", "Type", "Products", "Revenue", "Date"].map((h) => (
               <th
                 key={h}
                 style={{
@@ -1347,7 +1347,7 @@ function SyncOrdersButton() {
         ) : (
           <>
             <AdminIcon type="refresh" size="small" />
-            Sync Bundle Orders
+            Sync Orders
           </>
         )}
       </button>
@@ -1402,12 +1402,12 @@ export default function AnalyticsPage() {
     ? "Simple"
     : comboType === "specific"
       ? "Specific"
-      : "Bundle";
+      : "All";
   const analyticsScopePluralLabel = comboType === "simple"
     ? "Simple"
     : comboType === "specific"
       ? "Specific"
-      : "Bundles";
+      : "All";
 
   const revData = (dailyTrend || []).map((d) => ({ date: d.date, value: d.revenue }));
   const prevRevData = (prevDailyTrend || []).map((d) => ({ date: d.date, value: d.revenue }));
@@ -1428,15 +1428,14 @@ export default function AnalyticsPage() {
     const items = parseOrderSelectedProducts(order?.selectedProducts);
     setItemsPopup({
       open: true,
-      boxTitle: order?.boxTitle || "Bundle",
+      boxTitle: order?.boxTitle || "Order",
       items,
     });
   }
 
   return (
     <Page
-      title="Bundle Analytics Dashboard"
-      subtitle={`${analyticsScopeLabel} sales and revenue overview`}
+      title="Analytics"
     >
       <style>{`
         .Polaris-InlineGrid {
@@ -1575,7 +1574,7 @@ export default function AnalyticsPage() {
       <Modal
         open={itemsPopup.open}
         onClose={() => setItemsPopup({ open: false, boxTitle: "", items: [] })}
-        title={`All Bundle Items — ${itemsPopup.boxTitle}`}
+        title={`All Items ï¿½ ${itemsPopup.boxTitle}`}
         primaryAction={{
           content: "Close",
           onAction: () => setItemsPopup({ open: false, boxTitle: "", items: [] }),

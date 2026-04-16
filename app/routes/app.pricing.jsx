@@ -319,7 +319,7 @@ function PlanCard({
               width: "100%", padding: "14px", borderRadius: "0", border: "none",
               fontSize: "14px", fontWeight: "700", textAlign: "center",
               cursor: busy ? "wait" : "pointer", background: "#111827",
-              color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",position:"absolute",bottom:"16px",
+              color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",position:"absolute",bottom:"0",
             }}
           >
             {busy ? "Starting…" : plan.cta}
@@ -343,7 +343,7 @@ function PlanCard({
             fontSize: "14px", fontWeight: "700", textAlign: "center",
             cursor: busy ? "wait" : "pointer",
             background: plan.highlight ? "#2A7A4F" : "#111827",
-            color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",position:"absolute",bottom:"16px",
+            color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",position:"absolute",bottom:"0",
           }}
         >
           {busy ? "Preparing billing..." : `${plan.cta}${isYearly ? " (Yearly)" : ""}`}
@@ -355,7 +355,7 @@ function PlanCard({
   return (
     <div className="cb-plan-card">
       <Card background={plan.highlight ? "bg-surface-active" : undefined}>
-        <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", paddingBottom: "72px" }}>
           <BlockStack gap="400">
         <BlockStack gap="200">
           <InlineStack align="space-between" blockAlign="center">
@@ -474,7 +474,10 @@ export default function PricingPage() {
           height: 100%;
         }
         .cb-plan-cta {
-          margin-top: auto;
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
           margin-left: -16px;
           margin-right: -16px;
           margin-bottom: -16px;

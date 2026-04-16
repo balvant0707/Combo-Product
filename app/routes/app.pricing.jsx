@@ -180,8 +180,8 @@ const PLAN_UI = [
     orderLimit: ORDER_LIMITS.FREE,
     features: [
       `${ORDER_LIMITS.FREE} orders/month`,
-      "Unlimited Simple Bundle",
-      "Unlimited Specific Bundle",
+      "Unlimited Simple Box",
+      "Unlimited Specific Box",
       "Basic email support",
     ],
     cta: "Start free",
@@ -198,8 +198,8 @@ const PLAN_UI = [
     orderLimit: ORDER_LIMITS.BASIC,
     features: [
       `${ORDER_LIMITS.BASIC} orders/month`,
-      "Unlimited Simple Bundle",
-      "Unlimited Specific Bundle",
+      "Unlimited Simple Box",
+      "Unlimited Specific Box",
       "Email & live support",
     ],
     cta: "Start Basic",
@@ -216,8 +216,8 @@ const PLAN_UI = [
     orderLimit: ORDER_LIMITS.ADVANCE,
     features: [
       `${ORDER_LIMITS.ADVANCE} orders/month`,
-      "Unlimited Simple Bundle",
-      "Unlimited Specific Bundle",
+      "Unlimited Simple Box",
+      "Unlimited Specific Box",
       "Priority & developer support",
     ],
     cta: "Start Advance",
@@ -234,8 +234,8 @@ const PLAN_UI = [
     orderLimit: ORDER_LIMITS.PLUS,
     features: [
       "Unlimited orders",
-      "Unlimited Simple Bundle",
-      "Unlimited Specific Bundle",
+      "Unlimited Simple Box",
+      "Unlimited Specific Box",
       "Setup support",
       "Highest priority support",
     ],

@@ -45,7 +45,7 @@ export function installedEmailHtml({ ownerName, shopName, shopDomain }) {
                          text-shadow:0 1px 3px rgba(0,0,0,0.2);">
                 Welcome to ${APP_NAME}!
               </h1>
-              <p style="margin:0;color:rgba(255,255,255,0.88);font-size:15px;line-height:1.5;">
+              <p style="margin:0;font-size:15px;line-height:1.5;">
                 Your app has been successfully installed 🎉
               </p>
             </td>

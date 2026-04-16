@@ -393,14 +393,16 @@ function buildAdminProductLink(shopDomain, itemLabel) {
   const shop = String(shopDomain || "").trim();
   const label = String(itemLabel || "").trim();
   if (!shop || !label) return null;
+  const storeHandle = shop.replace(/\.myshopify\.com$/i, "");
+  if (!storeHandle) return null;
 
   const gidMatch = label.match(/gid:\/\/shopify\/Product\/(\d+)/i);
   if (gidMatch?.[1]) {
-    return `https://${shop}/admin/products/${gidMatch[1]}`;
+    return `https://admin.shopify.com/store/${storeHandle}/products/${gidMatch[1]}`;
   }
 
   if (/^\d{8,}$/.test(label)) {
-    return `https://${shop}/admin/products/${label}`;
+    return `https://admin.shopify.com/store/${storeHandle}/products/${label}`;
   }
 
   const normalizedQuery = label
@@ -408,7 +410,7 @@ function buildAdminProductLink(shopDomain, itemLabel) {
     .replace(/\s{2,}/g, " ")
     .trim();
 
-  return `https://${shop}/admin/products?query=${encodeURIComponent(normalizedQuery || label)}`;
+  return `https://admin.shopify.com/store/${storeHandle}/products?query=${encodeURIComponent(normalizedQuery || label)}`;
 }
 
 export default function DashboardPage() {

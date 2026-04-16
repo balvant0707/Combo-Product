@@ -3708,21 +3708,14 @@
       });
     }
 
-    function findExistingComboLine(cart, comboBoxId, targetVariantId) {
+    function findExistingComboLine(cart, targetVariantId) {
       if (!cart || !Array.isArray(cart.items)) return null;
-      var targetBoxId = String(comboBoxId);
       var normalizedTargetVariantId = normalizeVariantId(targetVariantId);
 
       for (var i = 0; i < cart.items.length; i++) {
         var item = cart.items[i] || {};
-        var props = item.properties || {};
-        var bundleFlag = String(props._bundle_price_item || '').toLowerCase();
-        var itemBoxId = String(props._combo_box_id || '');
         var itemVariantId = normalizeVariantId(item && (item.id != null ? item.id : item.variant_id));
-        if (
-          ((bundleFlag === 'true' || bundleFlag === '1') && itemBoxId === targetBoxId) ||
-          (normalizedTargetVariantId && itemVariantId && normalizedTargetVariantId === itemVariantId)
-        ) {
+        if (normalizedTargetVariantId && itemVariantId && normalizedTargetVariantId === itemVariantId) {
           return { line: i + 1, item: item };
         }
       }
@@ -3737,7 +3730,7 @@
 
     function upsertComboLine(item) {
       return fetchCartState().then(function (cart) {
-        var existing = findExistingComboLine(cart, box.id, item && item.id);
+        var existing = findExistingComboLine(cart, item && item.id);
         if (!existing) {
           return postCartItems([item]);
         }

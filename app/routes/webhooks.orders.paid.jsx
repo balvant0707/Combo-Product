@@ -88,7 +88,7 @@ async function addMixBundleOrderTag(shop, payload) {
         }
       `,
       {
-        variables: { id: orderGid, tags: ["mix-bundle"] },
+        variables: { id: orderGid, tags: ["Mix Bundle"] },
       },
     );
     const json = await resp.json();
@@ -97,7 +97,7 @@ async function addMixBundleOrderTag(shop, payload) {
       console.warn("[webhooks.orders.paid] tagsAdd userErrors", userErrors);
     }
   } catch (error) {
-    console.error("[webhooks.orders.paid] failed to add mix-bundle tag", error);
+    console.error("[webhooks.orders.paid] failed to add Mix Bundle tag", error);
   }
 }
 

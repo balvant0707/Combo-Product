@@ -198,11 +198,15 @@ export const loader = async ({ request }) => {
   const { getSubscription } = await import("../models/subscription.server.js");
   const { PLANS } = await import("../models/subscription.server.js");
   const { getActiveShopifySubscription } = await import("../models/billing.server.js");
+  const { getBillingCycleForPlanName, getOrderLimitForPlan } = await import("../config/billing.js");
   const subscription = await getSubscription(shop);
   const currentPlan = PLANS[subscription?.plan] ?? PLANS.FREE;
   const activeShopifySubscription = await getActiveShopifySubscription(billing).catch(() => null);
   const currentPlanDisplayName = activeShopifySubscription?.name || currentPlan.name;
-  const orderLimit = currentPlan.orderLimit;
+  const currentBillingCycle = activeShopifySubscription?.name
+    ? getBillingCycleForPlanName(activeShopifySubscription.name)
+    : "monthly";
+  const orderLimit = getOrderLimitForPlan(subscription?.plan || "FREE", currentBillingCycle);
 
   // Count orders in the current calendar month
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);

@@ -29,7 +29,7 @@ export const TRIAL_DAYS = 0;
 export const BILLING_CURRENCY_CODE = "USD";
 export const BILLING_IS_TEST = process.env.BILLING_TEST !== "false";
 
-const DEFAULT_ORDER_LIMITS = {
+const DEFAULT_ORDER_LIMITS_MONTHLY = {
   FREE: 10,
   BASIC: 50,
   ADVANCE: 100,
@@ -49,11 +49,26 @@ function parseOrderLimit(value, fallback) {
 }
 
 export const ORDER_LIMITS = {
-  FREE: parseOrderLimit(process.env.ORDER_LIMIT_FREE, DEFAULT_ORDER_LIMITS.FREE),
-  BASIC: parseOrderLimit(process.env.ORDER_LIMIT_BASIC, DEFAULT_ORDER_LIMITS.BASIC),
-  ADVANCE: parseOrderLimit(process.env.ORDER_LIMIT_ADVANCE, DEFAULT_ORDER_LIMITS.ADVANCE),
-  PLUS: parseOrderLimit(process.env.ORDER_LIMIT_PLUS, DEFAULT_ORDER_LIMITS.PLUS),
+  FREE: parseOrderLimit(process.env.ORDER_LIMIT_FREE, DEFAULT_ORDER_LIMITS_MONTHLY.FREE),
+  BASIC: parseOrderLimit(process.env.ORDER_LIMIT_BASIC, DEFAULT_ORDER_LIMITS_MONTHLY.BASIC),
+  ADVANCE: parseOrderLimit(process.env.ORDER_LIMIT_ADVANCE, DEFAULT_ORDER_LIMITS_MONTHLY.ADVANCE),
+  PLUS: parseOrderLimit(process.env.ORDER_LIMIT_PLUS, DEFAULT_ORDER_LIMITS_MONTHLY.PLUS),
 };
+
+export const ORDER_LIMITS_YEARLY = {
+  FREE: ORDER_LIMITS.FREE,
+  BASIC: parseOrderLimit(process.env.ORDER_LIMIT_BASIC_YEARLY, ORDER_LIMITS.BASIC),
+  ADVANCE: parseOrderLimit(process.env.ORDER_LIMIT_ADVANCE_YEARLY, ORDER_LIMITS.ADVANCE),
+  PLUS: parseOrderLimit(process.env.ORDER_LIMIT_PLUS_YEARLY, ORDER_LIMITS.PLUS),
+};
+
+export function getOrderLimitForPlan(planKey = "FREE", billingCycle = "monthly") {
+  const normalizedPlanRaw = String(planKey || "FREE").trim().toUpperCase();
+  const normalizedPlan = normalizedPlanRaw === "PRO" ? "PLUS" : normalizedPlanRaw;
+  const normalizedCycle = String(billingCycle || "monthly").trim().toLowerCase();
+  const source = normalizedCycle === "yearly" ? ORDER_LIMITS_YEARLY : ORDER_LIMITS;
+  return source[normalizedPlan] ?? source.FREE;
+}
 
 export const BILLING_PLANS = {
   [BASIC_PLAN]: {

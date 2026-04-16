@@ -42,6 +42,7 @@ import {
   BASIC_YEARLY_PRICE,
   ADVANCE_YEARLY_PRICE,
   PLUS_YEARLY_PRICE,
+  getOrderLimitForPlan,
   getBillingCycleForPlanName,
   ORDER_LIMITS,
 } from "../config/billing";
@@ -51,6 +52,10 @@ import {
 export const loader = async ({ request }) => {
   const { billing, session } = await authenticate.admin(request);
   const shop = session.shop;
+  const storeHandle = String(shop || "").replace(/\.myshopify\.com$/i, "");
+  const billingSettingsUrl = storeHandle
+    ? `https://admin.shopify.com/store/${storeHandle}/settings/billing`
+    : null;
   const url = new URL(request.url);
 
   const { syncSubscription, getActiveShopifySubscription } = await import("../models/billing.server.js");
@@ -90,6 +95,7 @@ export const loader = async ({ request }) => {
     monthlyOrderCount,
     freePlanLimitReached,
     activeBillingCycle,
+    billingSettingsUrl,
     subscribed: url.searchParams.get("subscribed") === "1",
     cancelled: url.searchParams.get("cancelled") === "1",
   };
@@ -287,6 +293,7 @@ function PlanCard({
   freePlanLimitReached,
   billingCycle,
 }) {
+  const displayOrderLimit = getOrderLimitForPlan(plan.key, billingCycle);
   const isActive = plan.key === "FREE"
     ? activePlanKey === plan.key
     : activePlanKey === plan.key && activeBillingCycle === billingCycle;
@@ -298,7 +305,7 @@ function PlanCard({
   const disabledBtnStyle = {
     width: "100%", padding: "14px", border: "none",
     fontSize: "14px", fontWeight: "700", textAlign: "center", cursor: "default",
-    background: "#e5e7eb", color: "#9ca3af", opacity: 0.85,position:"absolute", bottom: "0",
+    borderRadius: "8px", background: "#e5e7eb", color: "#9ca3af", opacity: 0.85,
   };
 
   let btn;
@@ -327,7 +334,7 @@ function PlanCard({
             disabled={busy}
             aria-label="Start free plan"
             style={{
-              width: "100%", padding: "14px", borderRadius: "0", border: "none",
+              width: "100%", padding: "14px", borderRadius: "8px", border: "none",
               fontSize: "14px", fontWeight: "700", textAlign: "center",
               cursor: busy ? "wait" : "pointer", background: "#111827",
               color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",
@@ -350,7 +357,7 @@ function PlanCard({
           disabled={busy}
           aria-label={`Subscribe to ${plan.name} plan at $${displayPrice}/${isYearly ? "year" : "month"}`}
           style={{
-            width: "100%", padding: "14px", borderRadius: "0", border: "none",
+            width: "100%", padding: "14px", borderRadius: "8px", border: "none",
             fontSize: "14px", fontWeight: "700", textAlign: "center",
             cursor: busy ? "wait" : "pointer",
             background: plan.highlight ? "#2A7A4F" : "#111827",
@@ -366,7 +373,7 @@ function PlanCard({
   return (
     <div className="cb-plan-card">
       <Card background={plan.highlight ? "bg-surface-active" : undefined}>
-        <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative" }}>
+        <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
           <BlockStack gap="400">
         <BlockStack gap="200">
           <InlineStack align="space-between" blockAlign="center">
@@ -390,9 +397,12 @@ function PlanCard({
           )}
 
           <Text as="p" tone="subdued" fontWeight="semibold">
-            {plan.orderLimit === Infinity
+            {displayOrderLimit === Infinity
               ? "Unlimited orders"
-              : `Up to ${plan.orderLimit} orders/month`}
+              : `Up to ${displayOrderLimit} orders/${isYearly ? "year" : "month"}`}
+          </Text>
+          <Text as="p" tone="subdued" variant="bodySm">
+            {plan.paymentMethod}
           </Text>
         </BlockStack>
 
@@ -427,6 +437,7 @@ export default function PricingPage() {
     monthlyOrderCount,
     freePlanLimitReached,
     activeBillingCycle,
+    billingSettingsUrl,
     subscribed,
     cancelled,
   } = useLoaderData();
@@ -491,11 +502,14 @@ export default function PricingPage() {
           height: 100%;
         }
         .cb-plan-cta {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          margin-bottom: -40px;
+          margin-top: auto;
+          padding-top: 16px;
+        }
+        .cb-plan-cta form {
+          width: 100%;
+        }
+        .cb-plan-cta button {
+          min-height: 46px;
         }
       `}</style>
       <BlockStack gap="500">
@@ -528,6 +542,18 @@ export default function PricingPage() {
               to enable paid plans. During development, add <code>SKIP_BILLING=true</code> to
               your <code>.env</code>.
             </p>
+          </Banner>
+        )}
+        {!billingUnavailable && !isDevMode && billingSettingsUrl && (
+          <Banner tone="warning" title="Payment method needed for paid plans">
+            <InlineStack align="space-between" blockAlign="center" wrap>
+              <Text as="p">
+                If Shopify shows "You don't have any payment methods on file", add one and retry.
+              </Text>
+              <Button url={billingSettingsUrl} target="_blank" variant="secondary">
+                Go to billing settings
+              </Button>
+            </InlineStack>
           </Banner>
         )}
         {subscription && activePlanKey && (
@@ -658,12 +684,14 @@ export default function PricingPage() {
                 <tbody>
                   {[
                     {
-                      label: "Monthly order limit",
+                      label: billingCycle === "yearly" ? "Yearly order limit" : "Monthly order limit",
                       values: [
-                        `${ORDER_LIMITS.FREE}`,
-                        `${ORDER_LIMITS.BASIC}`,
-                        `${ORDER_LIMITS.ADVANCE}`,
-                        ORDER_LIMITS.PLUS === Infinity ? "Unlimited" : `${ORDER_LIMITS.PLUS}`,
+                        `${getOrderLimitForPlan("FREE", billingCycle)}`,
+                        `${getOrderLimitForPlan("BASIC", billingCycle)}`,
+                        `${getOrderLimitForPlan("ADVANCE", billingCycle)}`,
+                        getOrderLimitForPlan("PLUS", billingCycle) === Infinity
+                          ? "Unlimited"
+                          : `${getOrderLimitForPlan("PLUS", billingCycle)}`,
                       ],
                     },
                     {

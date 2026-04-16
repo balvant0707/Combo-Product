@@ -313,7 +313,7 @@ function StatCard({ label, value, sub }) {
   );
 }
 
-function EyeIcon({ size = 16, color = "#1f6feb" }) {
+function EyeIcon({ size = 16, color = "#1f6feb", fill = "#ffffff" }) {
   return (
     <svg
       width={`${size}px`}
@@ -330,7 +330,7 @@ function EyeIcon({ size = 16, color = "#1f6feb" }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <circle cx="12" cy="12" r="3.25" stroke={color} strokeWidth="2" />
+      <circle cx="12" cy="12" r="3.25" fill={fill} stroke={color} strokeWidth="2" />
     </svg>
   );
 }
@@ -342,7 +342,7 @@ function formatRecentOrderItems(selectedProducts) {
   if (items.length === 0) return "—";
   if (items.length === 1) return items[0];
   if (items.length === 2) return `${items[0]}, ${items[1]}`;
-  return `${items[0]}, ${items[1]} +${items.length - 2} more`;
+  return `${items[0]}, ${items[1]}`;
 }
 
 function buildAdminProductLink(shopDomain, itemLabel) {
@@ -817,7 +817,7 @@ export default function DashboardPage() {
                           url={productUrl}
                           target="_blank"
                           variant="plain"
-                          icon={<EyeIcon size={16} color="#0b5cab" />}
+                          icon={<EyeIcon size={16} color="#0b5cab" fill="#ffffff" />}
                           accessibilityLabel={`Open ${item} product`}
                         />
                       ) : (

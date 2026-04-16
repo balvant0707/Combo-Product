@@ -9,9 +9,11 @@ import { withEmbeddedAppParams } from "../utils/embedded-app";
 import { formatCurrencyAmount } from "../utils/currency";
 import {
   BlockStack,
+  Button,
   Card,
   InlineGrid,
   InlineStack,
+  Modal,
   Page,
   Text,
 } from "@shopify/polaris";
@@ -44,6 +46,7 @@ export const loader = async ({ request }) => {
   return {
     analytics,
     currencyCode,
+    shopDomain: session.shop,
     period: customFrom ? "custom" : period,
     fromDate,
     toDate,
@@ -77,6 +80,70 @@ function fmtShortDate(isoStr) {
 
 function fmtDate(isoStr) {
   return new Date(isoStr).toLocaleDateString(undefined, { day: "2-digit", month: "short" });
+}
+
+function parseOrderSelectedProducts(value) {
+  if (Array.isArray(value)) {
+    return value.map((entry) => String(entry || "").trim()).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed.map((entry) => String(entry || "").trim()).filter(Boolean);
+      }
+    } catch {
+      return [trimmed];
+    }
+    return [trimmed];
+  }
+  return [];
+}
+
+function buildAdminProductLink(shopDomain, itemLabel) {
+  const shop = String(shopDomain || "").trim();
+  const label = String(itemLabel || "").trim();
+  if (!shop || !label) return null;
+
+  const gidMatch = label.match(/gid:\/\/shopify\/Product\/(\d+)/i);
+  if (gidMatch?.[1]) {
+    return `https://${shop}/admin/products/${gidMatch[1]}`;
+  }
+
+  if (/^\d{8,}$/.test(label)) {
+    return `https://${shop}/admin/products/${label}`;
+  }
+
+  const normalizedQuery = label
+    .replace(/\s*\([^)]*\)\s*$/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  return `https://${shop}/admin/products?query=${encodeURIComponent(normalizedQuery || label)}`;
+}
+
+function EyeIcon({ size = 16, color = "#0b5cab", fill = "#ffffff" }) {
+  return (
+    <svg
+      width={`${size}px`}
+      height={`${size}px`}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M1.5 12s3.75-6.75 10.5-6.75S22.5 12 22.5 12s-3.75 6.75-10.5 6.75S1.5 12 1.5 12Z"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="3.25" fill={fill} stroke={color} strokeWidth="2" />
+    </svg>
+  );
 }
 
 // â”€â”€â”€ Date Range Picker â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -1085,7 +1152,7 @@ function BoxPerformanceChart({ data, currencyCode }) {
   );
 }
 
-function RecentOrdersTable({ data, currencyCode }) {
+function RecentOrdersTable({ data, currencyCode, onOpenItemsPopup }) {
   if (!data || data.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "40px 0", color: "#9ca3af", fontSize: "13px" }}>
@@ -1122,10 +1189,11 @@ function RecentOrdersTable({ data, currencyCode }) {
         </thead>
         <tbody>
           {data.map((order, index) => {
-            const selected = Array.isArray(order.selectedProducts) ? order.selectedProducts : [];
+            const selected = parseOrderSelectedProducts(order.selectedProducts);
             const detailsText = selected.length > 0
-              ? `${selected.slice(0, 2).join(", ")}${selected.length > 2 ? ` +${selected.length - 2} more` : ""}`
+              ? selected.slice(0, 2).join(", ")
               : `${order.itemCount || 0} step${Number(order.itemCount || 0) === 1 ? "" : "s"}`;
+            const moreCount = Math.max(0, selected.length - 2);
             return (
               <tr
                 key={order.id || `${order.orderId}-${index}`}
@@ -1168,7 +1236,14 @@ function RecentOrdersTable({ data, currencyCode }) {
                   }}
                   title={selected.join(", ")}
                 >
-                  {detailsText}
+                  <InlineStack gap="100" blockAlign="center">
+                    <span>{detailsText}</span>
+                    {moreCount > 0 && (
+                      <Button variant="plain" onClick={() => onOpenItemsPopup?.(order)}>
+                        +{moreCount} more
+                      </Button>
+                    )}
+                  </InlineStack>
                 </td>
                 <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6" }}>
                   <span style={{ fontWeight: "800", color: "#2A7A4F", background: "#f0fdf4", padding: "2px 8px", borderRadius: "5px" }}>
@@ -1300,6 +1375,7 @@ export default function AnalyticsPage() {
     toDate,
     comboType,
     currencyCode,
+    shopDomain,
   } = useLoaderData();
   const {
     totalOrders,
@@ -1342,6 +1418,20 @@ export default function AnalyticsPage() {
     prevTotalOrders > 0 && prevTotalRevenue > 0
       ? ((avgBundleValue - prevTotalRevenue / prevTotalOrders) / (prevTotalRevenue / prevTotalOrders)) * 100
       : null;
+  const [itemsPopup, setItemsPopup] = useState({
+    open: false,
+    boxTitle: "",
+    items: [],
+  });
+
+  function openItemsPopup(order) {
+    const items = parseOrderSelectedProducts(order?.selectedProducts);
+    setItemsPopup({
+      open: true,
+      boxTitle: order?.boxTitle || "Bundle",
+      items,
+    });
+  }
 
   return (
     <Page
@@ -1477,10 +1567,54 @@ export default function AnalyticsPage() {
         <Card>
           <BlockStack gap="300">
             <Text as="h2" variant="headingMd">Recent {analyticsScopeLabel} Orders</Text>
-            <RecentOrdersTable data={recentOrders} currencyCode={currencyCode} />
+            <RecentOrdersTable data={recentOrders} currencyCode={currencyCode} onOpenItemsPopup={openItemsPopup} />
           </BlockStack>
         </Card>
       </BlockStack>
+
+      <Modal
+        open={itemsPopup.open}
+        onClose={() => setItemsPopup({ open: false, boxTitle: "", items: [] })}
+        title={`All Bundle Items — ${itemsPopup.boxTitle}`}
+        primaryAction={{
+          content: "Close",
+          onAction: () => setItemsPopup({ open: false, boxTitle: "", items: [] }),
+        }}
+      >
+        <Modal.Section>
+          <BlockStack gap="200">
+            <Text as="p" variant="bodySm" tone="subdued">
+              {itemsPopup.items.length} item{itemsPopup.items.length === 1 ? "" : "s"} in this order
+            </Text>
+            {itemsPopup.items.length === 0 ? (
+              <Text as="p" variant="bodySm" tone="subdued">No items found for this order.</Text>
+            ) : (
+              <BlockStack gap="100">
+                {itemsPopup.items.map((item, idx) => {
+                  const productUrl = buildAdminProductLink(shopDomain, item);
+                  return (
+                    <InlineStack key={`${item}-${idx}`} align="space-between" blockAlign="center" wrap={false}>
+                      <Text as="span" variant="bodySm">{item}</Text>
+                      {productUrl ? (
+                        <Button
+                          size="slim"
+                          url={productUrl}
+                          target="_blank"
+                          variant="plain"
+                          icon={<EyeIcon size={16} color="#0b5cab" fill="#ffffff" />}
+                          accessibilityLabel={`Open ${item} product`}
+                        />
+                      ) : (
+                        <Text as="span" variant="bodySm" tone="subdued">No link</Text>
+                      )}
+                    </InlineStack>
+                  );
+                })}
+              </BlockStack>
+            )}
+          </BlockStack>
+        </Modal.Section>
+      </Modal>
     </Page>
   );
 }

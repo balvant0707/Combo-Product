@@ -621,9 +621,9 @@ function ComboTypeFilter({ value = "all" }) {
           cursor: "pointer",
         }}
       >
-        <option value="all">All Bundle Products</option>
-        <option value="simple">Simple Bundle</option>
-        <option value="specific">Specific Bundle</option>
+        <option value="all">All Box</option>
+        <option value="simple">Simple</option>
+        <option value="specific">Specific</option>
       </select>
     </div>
   );
@@ -1399,14 +1399,14 @@ export default function AnalyticsPage() {
   const prevPeriodLabel = prevPeriod ? `${fmtDate(prevPeriod.from)} - ${fmtDate(prevPeriod.to)}` : "Previous";
 
   const analyticsScopeLabel = comboType === "simple"
-    ? "Simple Bundle"
+    ? "Simple"
     : comboType === "specific"
-      ? "Specific Bundle"
+      ? "Specific"
       : "Bundle";
   const analyticsScopePluralLabel = comboType === "simple"
-    ? "Simple Bundles"
+    ? "Simple"
     : comboType === "specific"
-      ? "Specific Bundles"
+      ? "Specific"
       : "Bundles";
 
   const revData = (dailyTrend || []).map((d) => ({ date: d.date, value: d.revenue }));

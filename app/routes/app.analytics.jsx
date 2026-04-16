@@ -7,6 +7,7 @@ import { getAnalytics } from "../models/orders.server";
 import { getShopCurrencyCode } from "../models/shop.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 import { formatCurrencyAmount } from "../utils/currency";
+import { fetchOrderLabelsByOrderIds } from "../utils/shopify-orders.server";
 import {
   BlockStack,
   Button,
@@ -19,7 +20,7 @@ import {
 } from "@shopify/polaris";
 
 export const loader = async ({ request }) => {
-  const { session } = await authenticate.admin(request);
+  const { session, admin } = await authenticate.admin(request);
   const url = new URL(request.url);
   const period = url.searchParams.get("period") || "30";
   const customFrom = url.searchParams.get("from") || null;
@@ -43,8 +44,26 @@ export const loader = async ({ request }) => {
     getAnalytics(session.shop, fromDate, toDate, { comboTypeFilter: comboType }),
     getShopCurrencyCode(session.shop),
   ]);
+
+  const orderLabelsFromAdmin = await fetchOrderLabelsByOrderIds(
+    admin,
+    (analytics?.recentOrders || []).map((order) => order.orderId),
+  );
+  const hydratedRecentOrders = (analytics?.recentOrders || []).map((order) => {
+    const normalizedOrderId = String(order.orderId || "").replace(/\D/g, "");
+    const adminLabel = orderLabelsFromAdmin.get(normalizedOrderId);
+    return {
+      ...order,
+      orderName: order.orderName || adminLabel?.orderName || null,
+      orderNumber: order.orderNumber ?? adminLabel?.orderNumber ?? null,
+    };
+  });
+
   return {
-    analytics,
+    analytics: {
+      ...analytics,
+      recentOrders: hydratedRecentOrders,
+    },
     currencyCode,
     shopDomain: session.shop,
     period: customFrom ? "custom" : period,

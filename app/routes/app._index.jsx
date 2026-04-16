@@ -34,6 +34,7 @@ import {
 } from "../utils/theme-editor.server";
 import { withEmbeddedAppParams } from "../utils/embedded-app";
 import { formatCurrencyAmount } from "../utils/currency";
+import { fetchOrderLabelsByOrderIds } from "../utils/shopify-orders.server";
 
 function parseOrderSelectedProducts(value) {
   if (Array.isArray(value)) {
@@ -225,6 +226,11 @@ export const loader = async ({ request }) => {
       ? (bundlesSold / totalStoreOrdersLast30Days) * 100
       : 0;
 
+  const orderLabelsFromAdmin = await fetchOrderLabelsByOrderIds(
+    admin,
+    recentOrders.map((order) => order.orderId),
+  );
+
   return {
     activeBoxCount,
     bundlesSold,
@@ -247,11 +253,20 @@ export const loader = async ({ request }) => {
     bundleConversionRate,
     storeOwnerName,
     shopDomain: shop,
-    recentOrders: recentOrders.map((order) => ({
+    recentOrders: recentOrders.map((order) => {
+      const normalizedOrderId = String(order.orderId || "").replace(/\D/g, "");
+      const adminLabel = orderLabelsFromAdmin.get(normalizedOrderId);
+      return {
       id: order.id,
       orderId: order.orderId,
-      orderName: order.orderName || null,
-      orderNumber: order.orderNumber ?? null,
+      orderName:
+        order.orderName ||
+        adminLabel?.orderName ||
+        null,
+      orderNumber:
+        order.orderNumber ??
+        adminLabel?.orderNumber ??
+        null,
       boxTitle: order.box?.displayTitle || "Unknown Box",
       itemCount: order.box?.itemCount || 0,
       comboType: isSpecificComboFromBox(order.box) ? "specific" : "simple",
@@ -259,7 +274,8 @@ export const loader = async ({ request }) => {
       selectedProducts: parseOrderSelectedProducts(order.selectedProducts),
       bundlePrice: parseFloat(order.bundlePrice),
       orderDate: order.orderDate.toISOString(),
-    })),
+    };
+    }),
   };
 };
 

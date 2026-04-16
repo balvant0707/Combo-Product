@@ -231,8 +231,8 @@ export const action = async ({ request, params }) => {
     scopeItems,
   };
   if (!data.displayTitle?.trim()) errors.displayTitle = "Display title is required";
-  if (!data.itemCount || parseInt(data.itemCount, 10) < 1 || parseInt(data.itemCount, 10) > 8) {
-    errors.itemCount = "Item count must be between 1 and 8";
+  if (!data.itemCount || parseInt(data.itemCount, 10) < 2 || parseInt(data.itemCount, 10) > 8) {
+    errors.itemCount = "Item count must be between 2 and 8";
   }
   if (data.giftMessageEnabled && !data.isGiftBox) errors.giftMessageEnabled = "Enable Gift Box Mode to use Gift Message Field.";
 
@@ -350,7 +350,7 @@ export default function BoxSettingsPage() {
     setRemoveBannerImage(false);
   }, []);
 
-  const numItemCount = Math.min(8, Math.max(1, parseInt(itemCount, 10) || 1));
+  const numItemCount = Math.min(8, Math.max(2, parseInt(itemCount, 10) || 2));
   const dynamicPrice = 0;
   const bundlePrice = priceMode === "manual" ? parseFloat(manualPrice) || 0 : dynamicPrice;
 
@@ -384,7 +384,7 @@ export default function BoxSettingsPage() {
     const titleVal = titleEl ? titleEl.value.trim() : (box.displayTitle || "").trim();
     if (!titleVal) errs.displayTitle = "Bundle title is required";
     const ic = parseInt(itemCount);
-    if (!itemCount || isNaN(ic) || ic < 1 || ic > 8) errs.itemCount = "Item count must be between 1 and 8";
+    if (!itemCount || isNaN(ic) || ic < 2 || ic > 8) errs.itemCount = "Item count must be between 2 and 8";
     if (priceMode === "manual" && (!manualPrice || parseFloat(manualPrice) <= 0)) errs.bundlePrice = "Bundle price is required";
     if ((scope === "specific_collections" || scope === "specific_products") && scopeItems.length === 0) {
       errs.scopeItems = "Please select at least one " + (scope === "specific_collections" ? "collection" : "product");
@@ -663,7 +663,7 @@ export default function BoxSettingsPage() {
                         } else {
                           const parsed = parseInt(raw, 10);
                           if (Number.isNaN(parsed)) return;
-                          setItemCount(String(Math.min(8, Math.max(1, parsed))));
+                          setItemCount(String(Math.min(8, Math.max(2, parsed))));
                         }
                         if (clientErrors.itemCount) setClientErrors((p) => ({ ...p, itemCount: "" }));
                       }}
@@ -672,6 +672,7 @@ export default function BoxSettingsPage() {
                     {(clientErrors.itemCount || errors.itemCount) && (
                       <Text tone="critical" variant="bodySm">{clientErrors.itemCount || errors.itemCount}</Text>
                     )}
+                    <Text variant="bodySm" tone="subdued">Min: 2, Max: 8</Text>
                   </BlockStack>
 
                   {/* Bundle Price */}

@@ -158,8 +158,8 @@ export const action = async ({ request }) => {
   };
 
   if (!data.displayTitle?.trim()) errors.displayTitle = "Display title is required";
-  if (!data.itemCount || parseInt(data.itemCount, 10) < 1 || parseInt(data.itemCount, 10) > 8)
-    errors.itemCount = "Item count must be between 1 and 8";
+  if (!data.itemCount || parseInt(data.itemCount, 10) < 2 || parseInt(data.itemCount, 10) > 8)
+    errors.itemCount = "Item count must be between 2 and 8";
   if (data.giftMessageEnabled && !data.isGiftBox) {
     errors.giftMessageEnabled = "Enable Gift Box Mode to use Gift Message Field.";
   }
@@ -272,7 +272,7 @@ export default function CreateBoxPage() {
 
   const errors = actionData?.errors || {};
 
-  const numItemCount = Math.min(8, Math.max(1, parseInt(itemCount, 10) || 1));
+  const numItemCount = Math.min(8, Math.max(2, parseInt(itemCount, 10) || 2));
   const estimatedTotal = 0;
   const dynamicPrice = (() => {
     if (estimatedTotal <= 0) return 0;
@@ -315,7 +315,7 @@ export default function CreateBoxPage() {
     const errs = {};
     if (!displayTitleValue.trim()) errs.displayTitle = "Bundle title is required";
     const ic = parseInt(itemCount);
-    if (!itemCount || isNaN(ic) || ic < 1 || ic > 8) errs.itemCount = "Item count must be between 1 and 8";
+    if (!itemCount || isNaN(ic) || ic < 2 || ic > 8) errs.itemCount = "Item count must be between 2 and 8";
     if (priceMode === "manual" && (!manualPrice || parseFloat(manualPrice) <= 0)) errs.bundlePrice = "Bundle price is required";
     if ((scope === "specific_collections" || scope === "specific_products") && scopeItems.length === 0) errs.scopeItems = "Please select at least one " + (scope === "specific_collections" ? "collection" : "product");
     setClientErrors(errs);
@@ -479,7 +479,7 @@ export default function CreateBoxPage() {
                     {/* Display Title */}
                     <BlockStack gap="100">
                       <label htmlFor="new-displayTitle" style={{ fontSize: "13px", fontWeight: "600", color: "#111827" }}>
-                        Bundle Title <span aria-hidden="true">*</span>
+                        Title <span aria-hidden="true">*</span>
                       </label>
                       <input
                         id="new-displayTitle"
@@ -555,7 +555,7 @@ export default function CreateBoxPage() {
                           } else {
                             const parsed = parseInt(raw, 10);
                             if (Number.isNaN(parsed)) return;
-                            setItemCount(String(Math.min(8, Math.max(1, parsed))));
+                            setItemCount(String(Math.min(8, Math.max(2, parsed))));
                           }
                           if (clientErrors.itemCount) setClientErrors((p) => ({ ...p, itemCount: "" }));
                         }}
@@ -567,6 +567,7 @@ export default function CreateBoxPage() {
                       {(clientErrors.itemCount || errors.itemCount) && (
                         <Text tone="critical" variant="bodySm" role="alert">{clientErrors.itemCount || errors.itemCount}</Text>
                       )}
+                      <Text variant="bodySm" tone="subdued">Min: 2, Max: 8</Text>
                     </BlockStack>
 
                     {/* Bundle Price */}

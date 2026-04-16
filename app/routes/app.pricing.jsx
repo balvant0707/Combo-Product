@@ -23,7 +23,6 @@ import {
   Badge,
   Banner,
   BlockStack,
-  Box,
   Button,
   Card,
   Divider,
@@ -388,16 +387,18 @@ function PlanCard({
 
         <Divider />
 
-        <BlockStack gap="200">
-          {plan.features.map((f) => (
-            <InlineStack key={f} gap="200" blockAlign="center">
-              <Text as="span" tone="success">✓</Text>
-              <Text as="p">{f}</Text>
-            </InlineStack>
-          ))}
-        </BlockStack>
+        <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+          <BlockStack gap="200">
+            {plan.features.map((f) => (
+              <InlineStack key={f} gap="200" blockAlign="center">
+                <Text as="span" tone="success">✓</Text>
+                <Text as="p">{f}</Text>
+              </InlineStack>
+            ))}
+          </BlockStack>
 
-            <Box paddingBlockStart="200" style={{ marginTop: "auto" }}>{btn}</Box>
+          <div className="cb-plan-cta">{btn}</div>
+        </div>
           </BlockStack>
         </div>
       </Card>
@@ -469,9 +470,15 @@ export default function PricingPage() {
         .cb-plan-card {
           height: 100%;
         }
-        .cb-plan-card .Polaris-ShadowBevel,
-        .cb-plan-card .Polaris-Box {
+        .cb-plan-card .Polaris-ShadowBevel {
           height: 100%;
+        }
+        .cb-plan-cta {
+          margin-top: auto;
+          margin-left: -16px;
+          margin-right: -16px;
+          margin-bottom: -16px;
+          padding-top: 16px;
         }
       `}</style>
       <BlockStack gap="500">

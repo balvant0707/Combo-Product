@@ -313,6 +313,28 @@ function StatCard({ label, value, sub }) {
   );
 }
 
+function EyeIcon({ size = 16, color = "#1f6feb" }) {
+  return (
+    <svg
+      width={`${size}px`}
+      height={`${size}px`}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M1.5 12s3.75-6.75 10.5-6.75S22.5 12 22.5 12s-3.75 6.75-10.5 6.75S1.5 12 1.5 12Z"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="3.25" stroke={color} strokeWidth="2" />
+    </svg>
+  );
+}
+
 function formatRecentOrderItems(selectedProducts) {
   const items = Array.isArray(selectedProducts)
     ? selectedProducts.map((entry) => String(entry || "").trim()).filter(Boolean)
@@ -337,7 +359,12 @@ function buildAdminProductLink(shopDomain, itemLabel) {
     return `https://${shop}/admin/products/${label}`;
   }
 
-  return `https://${shop}/admin/products?query=${encodeURIComponent(label)}`;
+  const normalizedQuery = label
+    .replace(/\s*\([^)]*\)\s*$/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  return `https://${shop}/admin/products?query=${encodeURIComponent(normalizedQuery || label)}`;
 }
 
 export default function DashboardPage() {
@@ -785,9 +812,14 @@ export default function DashboardPage() {
                     <InlineStack key={`${item}-${idx}`} align="space-between" blockAlign="center" wrap={false}>
                       <Text as="span" variant="bodySm">{item}</Text>
                       {productUrl ? (
-                        <Button url={productUrl} target="_blank" variant="plain">
-                          Open product
-                        </Button>
+                        <Button
+                          size="slim"
+                          url={productUrl}
+                          target="_blank"
+                          variant="plain"
+                          icon={<EyeIcon size={16} color="#0b5cab" />}
+                          accessibilityLabel={`Open ${item} product`}
+                        />
                       ) : (
                         <Text as="span" variant="bodySm" tone="subdued">No link</Text>
                       )}

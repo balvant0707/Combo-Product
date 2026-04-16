@@ -111,11 +111,7 @@ function formatOrderPrefixLabel(orderName, orderNumber, orderId) {
     return `#${parsedOrderNumber}`;
   }
 
-  const raw = String(orderId || "").trim();
-  if (!raw) return "-";
-  const digits = raw.replace(/\D/g, "");
-  const suffix = (digits || raw).slice(-6);
-  return `#${suffix}`;
+  return "-";
 }
 
 function buildAdminOrderLink(shopDomain, orderId) {

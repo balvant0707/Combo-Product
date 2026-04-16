@@ -48,25 +48,44 @@ function parseOrderLimit(value, fallback) {
   return Math.floor(numeric);
 }
 
+function getMonthlyOrderLimits() {
+  return {
+    FREE: parseOrderLimit(process.env.ORDER_LIMIT_FREE, DEFAULT_ORDER_LIMITS_MONTHLY.FREE),
+    BASIC: parseOrderLimit(process.env.ORDER_LIMIT_BASIC, DEFAULT_ORDER_LIMITS_MONTHLY.BASIC),
+    ADVANCE: parseOrderLimit(process.env.ORDER_LIMIT_ADVANCE, DEFAULT_ORDER_LIMITS_MONTHLY.ADVANCE),
+    PLUS: parseOrderLimit(process.env.ORDER_LIMIT_PLUS, DEFAULT_ORDER_LIMITS_MONTHLY.PLUS),
+  };
+}
+
+function getYearlyOrderLimits() {
+  const monthly = getMonthlyOrderLimits();
+  return {
+    FREE: monthly.FREE,
+    BASIC: parseOrderLimit(process.env.ORDER_LIMIT_BASIC_YEARLY, monthly.BASIC),
+    ADVANCE: parseOrderLimit(process.env.ORDER_LIMIT_ADVANCE_YEARLY, monthly.ADVANCE),
+    PLUS: parseOrderLimit(process.env.ORDER_LIMIT_PLUS_YEARLY, monthly.PLUS),
+  };
+}
+
 export const ORDER_LIMITS = {
-  FREE: parseOrderLimit(process.env.ORDER_LIMIT_FREE, DEFAULT_ORDER_LIMITS_MONTHLY.FREE),
-  BASIC: parseOrderLimit(process.env.ORDER_LIMIT_BASIC, DEFAULT_ORDER_LIMITS_MONTHLY.BASIC),
-  ADVANCE: parseOrderLimit(process.env.ORDER_LIMIT_ADVANCE, DEFAULT_ORDER_LIMITS_MONTHLY.ADVANCE),
-  PLUS: parseOrderLimit(process.env.ORDER_LIMIT_PLUS, DEFAULT_ORDER_LIMITS_MONTHLY.PLUS),
+  get FREE() { return getMonthlyOrderLimits().FREE; },
+  get BASIC() { return getMonthlyOrderLimits().BASIC; },
+  get ADVANCE() { return getMonthlyOrderLimits().ADVANCE; },
+  get PLUS() { return getMonthlyOrderLimits().PLUS; },
 };
 
 export const ORDER_LIMITS_YEARLY = {
-  FREE: ORDER_LIMITS.FREE,
-  BASIC: parseOrderLimit(process.env.ORDER_LIMIT_BASIC_YEARLY, ORDER_LIMITS.BASIC),
-  ADVANCE: parseOrderLimit(process.env.ORDER_LIMIT_ADVANCE_YEARLY, ORDER_LIMITS.ADVANCE),
-  PLUS: parseOrderLimit(process.env.ORDER_LIMIT_PLUS_YEARLY, ORDER_LIMITS.PLUS),
+  get FREE() { return getYearlyOrderLimits().FREE; },
+  get BASIC() { return getYearlyOrderLimits().BASIC; },
+  get ADVANCE() { return getYearlyOrderLimits().ADVANCE; },
+  get PLUS() { return getYearlyOrderLimits().PLUS; },
 };
 
 export function getOrderLimitForPlan(planKey = "FREE", billingCycle = "monthly") {
   const normalizedPlanRaw = String(planKey || "FREE").trim().toUpperCase();
   const normalizedPlan = normalizedPlanRaw === "PRO" ? "PLUS" : normalizedPlanRaw;
   const normalizedCycle = String(billingCycle || "monthly").trim().toLowerCase();
-  const source = normalizedCycle === "yearly" ? ORDER_LIMITS_YEARLY : ORDER_LIMITS;
+  const source = normalizedCycle === "yearly" ? getYearlyOrderLimits() : getMonthlyOrderLimits();
   return source[normalizedPlan] ?? source.FREE;
 }
 

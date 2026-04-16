@@ -23,14 +23,14 @@ export const PLANS = {
     price:    0,
     interval: null,
     trialDays: 0,
-    orderLimit: ORDER_LIMITS.FREE,
+    get orderLimit() { return ORDER_LIMITS.FREE; },
     boxLimit: Infinity,
-    features: [
+    get features() { return [
       `${ORDER_LIMITS.FREE} orders/month`,
       "Unlimited Simple Box",
       "Unlimited Specific Box",
       "Basic email support",
-    ],
+    ]; },
   },
   BASIC: {
     key:      "BASIC",
@@ -39,14 +39,14 @@ export const PLANS = {
     currencyCode: BILLING_CURRENCY_CODE,
     interval: "EVERY_30_DAYS",
     trialDays: TRIAL_DAYS,
-    orderLimit: ORDER_LIMITS.BASIC,
+    get orderLimit() { return ORDER_LIMITS.BASIC; },
     boxLimit: Infinity,
-    features: [
+    get features() { return [
       `${ORDER_LIMITS.BASIC} orders/month`,
       "Unlimited Simple Box",
       "Unlimited Specific Box",
       "Email & live support",
-    ],
+    ]; },
   },
   ADVANCE: {
     key:      "ADVANCE",
@@ -55,14 +55,14 @@ export const PLANS = {
     currencyCode: BILLING_CURRENCY_CODE,
     interval: "EVERY_30_DAYS",
     trialDays: TRIAL_DAYS,
-    orderLimit: ORDER_LIMITS.ADVANCE,
+    get orderLimit() { return ORDER_LIMITS.ADVANCE; },
     boxLimit: Infinity,
-    features: [
+    get features() { return [
       `${ORDER_LIMITS.ADVANCE} orders/month`,
       "Unlimited Simple Box",
       "Unlimited Specific Box",
       "Priority & developer support",
-    ],
+    ]; },
   },
   PLUS: {
     key:      "PLUS",
@@ -71,15 +71,15 @@ export const PLANS = {
     currencyCode: BILLING_CURRENCY_CODE,
     interval: "EVERY_30_DAYS",
     trialDays: TRIAL_DAYS,
-    orderLimit: ORDER_LIMITS.PLUS,
+    get orderLimit() { return ORDER_LIMITS.PLUS; },
     boxLimit: Infinity,
-    features: [
+    get features() { return [
       ORDER_LIMITS.PLUS === Infinity ? "Unlimited orders" : `${ORDER_LIMITS.PLUS} orders/month`,
       "Unlimited Simple Box",
       "Unlimited Specific Box",
         "Setup Support",
       "Highest-priority support",
-    ],
+    ]; },
   },
   // Legacy alias — maps old PRO subs to PLUS
   PRO: {
@@ -89,15 +89,15 @@ export const PLANS = {
     currencyCode: BILLING_CURRENCY_CODE,
     interval: "EVERY_30_DAYS",
     trialDays: TRIAL_DAYS,
-    orderLimit: ORDER_LIMITS.PLUS,
+    get orderLimit() { return ORDER_LIMITS.PLUS; },
     boxLimit: Infinity,
-    features: [
+    get features() { return [
       ORDER_LIMITS.PLUS === Infinity ? "Unlimited orders" : `${ORDER_LIMITS.PLUS} orders/month`,
       "Unlimited Simple Box",
       "Unlimited Specific Box",
       "Setup Support",
       "Highest Priority support",
-    ],
+    ]; },
   },
 };
 

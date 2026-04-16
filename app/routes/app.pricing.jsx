@@ -287,7 +287,7 @@ function PlanCard({
   const disabledBtnStyle = {
     width: "100%", padding: "14px", border: "none",
     fontSize: "14px", fontWeight: "700", textAlign: "center", cursor: "default",
-    background: "#e5e7eb", color: "#9ca3af", opacity: 0.85,
+    background: "#e5e7eb", color: "#9ca3af", opacity: 0.85,position:"absolute", bottom: "0",
   };
 
   let btn;
@@ -319,7 +319,7 @@ function PlanCard({
               width: "100%", padding: "14px", borderRadius: "0", border: "none",
               fontSize: "14px", fontWeight: "700", textAlign: "center",
               cursor: busy ? "wait" : "pointer", background: "#111827",
-              color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",position:"absolute", top: "0",
+              color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",position:"absolute", bottom: "0",
             }}
           >
             {busy ? "Starting…" : plan.cta}
@@ -343,7 +343,7 @@ function PlanCard({
             fontSize: "14px", fontWeight: "700", textAlign: "center",
             cursor: busy ? "wait" : "pointer",
             background: plan.highlight ? "#2A7A4F" : "#111827",
-            color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",position:"absolute", top: "0",
+            color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",position:"absolute", bottom: "0",
           }}
         >
           {busy ? "Preparing billing..." : `${plan.cta}${isYearly ? " (Yearly)" : ""}`}

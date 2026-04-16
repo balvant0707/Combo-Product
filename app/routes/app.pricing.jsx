@@ -52,10 +52,6 @@ import {
 export const loader = async ({ request }) => {
   const { billing, session } = await authenticate.admin(request);
   const shop = session.shop;
-  const storeHandle = String(shop || "").replace(/\.myshopify\.com$/i, "");
-  const billingSettingsUrl = storeHandle
-    ? `https://admin.shopify.com/store/${storeHandle}/settings/billing`
-    : null;
   const url = new URL(request.url);
 
   const { syncSubscription, getActiveShopifySubscription } = await import("../models/billing.server.js");
@@ -95,7 +91,6 @@ export const loader = async ({ request }) => {
     monthlyOrderCount,
     freePlanLimitReached,
     activeBillingCycle,
-    billingSettingsUrl,
     subscribed: url.searchParams.get("subscribed") === "1",
     cancelled: url.searchParams.get("cancelled") === "1",
   };
@@ -302,6 +297,12 @@ function PlanCard({
   const isYearly = billingCycle === "yearly";
   const displayPrice = isYearly && !isFree ? plan.yearlyPrice : plan.price;
   const displayPriceLabel = isYearly && !isFree ? "/year (2 months free)" : plan.priceLabel;
+  const displayFeatures = [
+    displayOrderLimit === Infinity
+      ? "Unlimited orders"
+      : `${displayOrderLimit} orders/${isYearly ? "year" : "month"}`,
+    ...plan.features.slice(1),
+  ];
 
   const disabledBtnStyle = {
     width: "100%", padding: "14px", border: "none",
@@ -411,12 +412,13 @@ function PlanCard({
 
         <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
           <BlockStack gap="200">
-            {plan.features.map((f) => (
+            {displayFeatures.map((f) => (
               <InlineStack key={f} gap="200" blockAlign="center">
-                <Text as="span" tone="success">✓</Text>
+                <Text as="span" tone="success">?</Text>
                 <Text as="p">{f}</Text>
               </InlineStack>
-            ))}            {Array.from({ length: Math.max(0, maxFeatureCount - plan.features.length) }).map((_, idx) => (
+            ))}
+            {Array.from({ length: Math.max(0, maxFeatureCount - displayFeatures.length) }).map((_, idx) => (
               <InlineStack key={`spacer-${plan.key}-${idx}`} gap="200" blockAlign="center">
                 <Text as="span" tone="subdued" visuallyHidden>placeholder</Text>
                 <Text as="p" tone="subdued" visuallyHidden>placeholder</Text>
@@ -443,7 +445,6 @@ export default function PricingPage() {
     monthlyOrderCount,
     freePlanLimitReached,
     activeBillingCycle,
-    billingSettingsUrl,
     subscribed,
     cancelled,
   } = useLoaderData();
@@ -550,18 +551,6 @@ export default function PricingPage() {
               to enable paid plans. During development, add <code>SKIP_BILLING=true</code> to
               your <code>.env</code>.
             </p>
-          </Banner>
-        )}
-        {!billingUnavailable && !isDevMode && billingSettingsUrl && (
-          <Banner tone="warning" title="Payment method needed for paid plans">
-            <InlineStack align="space-between" blockAlign="center" wrap>
-              <Text as="p">
-                If Shopify shows "You don't have any payment methods on file", add one and retry.
-              </Text>
-              <Button url={billingSettingsUrl} target="_blank" variant="secondary">
-                Go to billing settings
-              </Button>
-            </InlineStack>
           </Banner>
         )}
         {subscription && activePlanKey && (
@@ -758,5 +747,6 @@ export function ErrorBoundary() {
 }
 
 export const headers = (h) => boundary.headers(h);
+
 
 

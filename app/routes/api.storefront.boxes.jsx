@@ -24,16 +24,14 @@ export const loader = async ({ request }) => {
     return Response.json({ error: "shop parameter required" }, { status: 400, headers: CORS_HEADERS });
   }
 
-  const [boxes, settings, subscription] = await Promise.all([
+  const [boxes, settings] = await Promise.all([
     listBoxes(shop, true, false),
     getSettings(shop),
-    db.subscription.findUnique({ where: { shop }, select: { plan: true } }),
   ]);
 
-  // Check monthly order limit for this shop's plan
-  const { PLANS } = await import("../models/subscription.server.js");
-  const currentPlan = PLANS[subscription?.plan] ?? PLANS.FREE;
-  const orderLimit = currentPlan.orderLimit;
+  // Check monthly order limit using shared plan-limit resolver (ENV-driven).
+  const { getOrderLimit } = await import("../models/subscription.server.js");
+  const orderLimit = await getOrderLimit(shop);
   let orderLimitReached = false;
   if (Number.isFinite(orderLimit)) {
     const now = new Date();

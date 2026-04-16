@@ -5,8 +5,12 @@
 
 import db from "../db.server";
 import {
+  ADVANCE_PRICE,
   BILLING_CURRENCY_CODE,
+  BASIC_PRICE,
   MONTHLY_PRICE,
+  ORDER_LIMITS,
+  PLUS_PRICE,
   TRIAL_DAYS,
 } from "../config/billing";
 
@@ -19,10 +23,10 @@ export const PLANS = {
     price:    0,
     interval: null,
     trialDays: 0,
-    orderLimit: 10,
+    orderLimit: ORDER_LIMITS.FREE,
     boxLimit: Infinity,
     features: [
-      "10 orders/month",
+      `${ORDER_LIMITS.FREE} orders/month`,
       "Unlimited Simple Box",
       "Unlimited Specific Box",
       "Basic email support",
@@ -31,14 +35,14 @@ export const PLANS = {
   BASIC: {
     key:      "BASIC",
     name:     "Basic",
-    price:    7.9,
+    price:    BASIC_PRICE,
     currencyCode: BILLING_CURRENCY_CODE,
     interval: "EVERY_30_DAYS",
     trialDays: TRIAL_DAYS,
-    orderLimit: 50,
+    orderLimit: ORDER_LIMITS.BASIC,
     boxLimit: Infinity,
     features: [
-      "50 orders/month",
+      `${ORDER_LIMITS.BASIC} orders/month`,
       "Unlimited Simple Box",
       "Unlimited Specific Box",
       "Email & live support",
@@ -47,14 +51,14 @@ export const PLANS = {
   ADVANCE: {
     key:      "ADVANCE",
     name:     "Advance",
-    price:    12.9,
+    price:    ADVANCE_PRICE,
     currencyCode: BILLING_CURRENCY_CODE,
     interval: "EVERY_30_DAYS",
     trialDays: TRIAL_DAYS,
-    orderLimit: 100,
+    orderLimit: ORDER_LIMITS.ADVANCE,
     boxLimit: Infinity,
     features: [
-      "100 orders/month",
+      `${ORDER_LIMITS.ADVANCE} orders/month`,
       "Unlimited Simple Box",
       "Unlimited Specific Box",
       "Priority & developer support",
@@ -63,14 +67,14 @@ export const PLANS = {
   PLUS: {
     key:      "PLUS",
     name:     "Plus",
-    price:    24.9,
+    price:    PLUS_PRICE,
     currencyCode: BILLING_CURRENCY_CODE,
     interval: "EVERY_30_DAYS",
     trialDays: TRIAL_DAYS,
-    orderLimit: Infinity,
+    orderLimit: ORDER_LIMITS.PLUS,
     boxLimit: Infinity,
     features: [
-      "Unlimited orders",
+      ORDER_LIMITS.PLUS === Infinity ? "Unlimited orders" : `${ORDER_LIMITS.PLUS} orders/month`,
       "Unlimited Simple Box",
       "Unlimited Specific Box",
         "Setup Support",
@@ -81,14 +85,14 @@ export const PLANS = {
   PRO: {
     key:      "PLUS",
     name:     "Plus",
-    price:    24.9,
+    price:    PLUS_PRICE,
     currencyCode: BILLING_CURRENCY_CODE,
     interval: "EVERY_30_DAYS",
     trialDays: TRIAL_DAYS,
-    orderLimit: Infinity,
+    orderLimit: ORDER_LIMITS.PLUS,
     boxLimit: Infinity,
     features: [
-      "Unlimited orders",
+      ORDER_LIMITS.PLUS === Infinity ? "Unlimited orders" : `${ORDER_LIMITS.PLUS} orders/month`,
       "Unlimited Simple Box",
       "Unlimited Specific Box",
       "Setup Support",

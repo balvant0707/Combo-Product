@@ -29,11 +29,30 @@ export const TRIAL_DAYS = 0;
 export const BILLING_CURRENCY_CODE = "USD";
 export const BILLING_IS_TEST = process.env.BILLING_TEST !== "false";
 
-export const ORDER_LIMITS = {
-  FREE:    10,
-  BASIC:   50,
+const DEFAULT_ORDER_LIMITS = {
+  FREE: 10,
+  BASIC: 50,
   ADVANCE: 100,
-  PLUS:    Infinity,
+  PLUS: Infinity,
+};
+
+function parseOrderLimit(value, fallback) {
+  if (value == null || value === "") return fallback;
+  const normalized = String(value).trim().toLowerCase();
+  if (normalized === "infinity" || normalized === "unlimited" || normalized === "-1") {
+    return Infinity;
+  }
+
+  const numeric = Number(normalized);
+  if (!Number.isFinite(numeric) || numeric < 0) return fallback;
+  return Math.floor(numeric);
+}
+
+export const ORDER_LIMITS = {
+  FREE: parseOrderLimit(process.env.ORDER_LIMIT_FREE, DEFAULT_ORDER_LIMITS.FREE),
+  BASIC: parseOrderLimit(process.env.ORDER_LIMIT_BASIC, DEFAULT_ORDER_LIMITS.BASIC),
+  ADVANCE: parseOrderLimit(process.env.ORDER_LIMIT_ADVANCE, DEFAULT_ORDER_LIMITS.ADVANCE),
+  PLUS: parseOrderLimit(process.env.ORDER_LIMIT_PLUS, DEFAULT_ORDER_LIMITS.PLUS),
 };
 
 export const BILLING_PLANS = {

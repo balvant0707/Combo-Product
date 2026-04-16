@@ -663,7 +663,7 @@ export default function PricingPage() {
                         `${ORDER_LIMITS.FREE}`,
                         `${ORDER_LIMITS.BASIC}`,
                         `${ORDER_LIMITS.ADVANCE}`,
-                        "Unlimited",
+                        ORDER_LIMITS.PLUS === Infinity ? "Unlimited" : `${ORDER_LIMITS.PLUS}`,
                       ],
                     },
                     {

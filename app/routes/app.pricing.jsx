@@ -321,6 +321,7 @@ function PlanCard({
               fontSize: "14px", fontWeight: "700", textAlign: "center",
               cursor: busy ? "wait" : "pointer", background: "#111827",
               color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",
+              position: "absolute", left: 0, top: 0, right: 0, bottom: 0,
             }}
           >
             {busy ? "Starting…" : plan.cta}

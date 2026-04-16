@@ -250,6 +250,8 @@ export const loader = async ({ request }) => {
     recentOrders: recentOrders.map((order) => ({
       id: order.id,
       orderId: order.orderId,
+      orderName: order.orderName || null,
+      orderNumber: order.orderNumber ?? null,
       boxTitle: order.box?.displayTitle || "Unknown Box",
       itemCount: order.box?.itemCount || 0,
       comboType: isSpecificComboFromBox(order.box) ? "specific" : "simple",
@@ -350,7 +352,15 @@ function formatRecentOrderItems(selectedProducts) {
   return items[0];
 }
 
-function formatOrderPrefixLabel(orderId) {
+function formatOrderPrefixLabel(orderName, orderNumber, orderId) {
+  const name = String(orderName || "").trim();
+  if (/^#\d+/.test(name)) return name;
+
+  const parsedOrderNumber = Number.parseInt(String(orderNumber), 10);
+  if (Number.isFinite(parsedOrderNumber) && parsedOrderNumber > 0) {
+    return `#${parsedOrderNumber}`;
+  }
+
   const raw = String(orderId || "").trim();
   if (!raw) return "-";
   const digits = raw.replace(/\D/g, "");
@@ -484,7 +494,7 @@ export default function DashboardPage() {
   const orderTableRows = recentOrders.map((order) => [
     (() => {
       const orderUrl = buildAdminOrderLink(shopDomain, order.orderId);
-      const label = formatOrderPrefixLabel(order.orderId);
+      const label = formatOrderPrefixLabel(order.orderName, order.orderNumber, order.orderId);
       if (!orderUrl) return label;
       return (
         <a

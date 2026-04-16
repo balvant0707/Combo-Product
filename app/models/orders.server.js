@@ -114,7 +114,17 @@ function parseSelectedProducts(value) {
 }
 
 export async function trackBundleOrder(shop, orderData) {
-  const { orderId, boxId, selectedProducts, bundlePrice, giftMessage, orderDate, customerId } = orderData;
+  const {
+    orderId,
+    orderName,
+    orderNumber,
+    boxId,
+    selectedProducts,
+    bundlePrice,
+    giftMessage,
+    orderDate,
+    customerId,
+  } = orderData;
   const parsedBoxId = Number.parseInt(String(boxId), 10);
   if (!Number.isFinite(parsedBoxId) || parsedBoxId <= 0) {
     console.warn(`[trackBundleOrder] Invalid boxId received: ${boxId}`);
@@ -134,7 +144,27 @@ export async function trackBundleOrder(shop, orderData) {
   const existing = await db.bundleOrder.findFirst({
     where: { orderId: String(orderId), shop, boxId: parsedBoxId },
   });
-  if (existing) return existing;
+  if (existing) {
+    const normalizedOrderName = typeof orderName === "string" ? orderName.trim() : "";
+    const parsedOrderNumber = Number.parseInt(String(orderNumber), 10);
+    const shouldUpdateOrderName = normalizedOrderName && existing.orderName !== normalizedOrderName;
+    const shouldUpdateOrderNumber =
+      Number.isFinite(parsedOrderNumber) &&
+      parsedOrderNumber > 0 &&
+      existing.orderNumber !== parsedOrderNumber;
+
+    if (shouldUpdateOrderName || shouldUpdateOrderNumber) {
+      return db.bundleOrder.update({
+        where: { id: existing.id },
+        data: {
+          ...(shouldUpdateOrderName ? { orderName: normalizedOrderName } : {}),
+          ...(shouldUpdateOrderNumber ? { orderNumber: parsedOrderNumber } : {}),
+        },
+      });
+    }
+
+    return existing;
+  }
 
   const parsedBundlePrice = Number.parseFloat(String(bundlePrice));
   const safeBundlePrice = Number.isFinite(parsedBundlePrice) ? parsedBundlePrice : 0;
@@ -143,6 +173,11 @@ export async function trackBundleOrder(shop, orderData) {
     data: {
       shop,
       orderId: String(orderId),
+      orderName: typeof orderName === "string" && orderName.trim() ? orderName.trim() : null,
+      orderNumber: (() => {
+        const parsed = Number.parseInt(String(orderNumber), 10);
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+      })(),
       boxId: parsedBoxId,
       selectedProducts: serializeSelectedProducts(selectedProducts),
       bundlePrice: safeBundlePrice,
@@ -305,6 +340,8 @@ export async function getAnalytics(shop, from, to, options = {}) {
       return {
         id: order.id,
         orderId: order.orderId,
+        orderName: order.orderName || null,
+        orderNumber: order.orderNumber ?? null,
         boxId: order.boxId,
         boxTitle: order.box?.displayTitle || "Unknown Box",
         comboType: isSpecificComboBoxRecord(order.box) ? "specific" : "simple",

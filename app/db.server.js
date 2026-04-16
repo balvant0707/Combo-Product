@@ -198,6 +198,8 @@ CREATE TABLE IF NOT EXISTS \`bundle_order\` (
   \`id\` INTEGER NOT NULL AUTO_INCREMENT,
   \`shop\` VARCHAR(191) NOT NULL,
   \`orderId\` VARCHAR(255) NOT NULL,
+  \`orderName\` VARCHAR(64) NULL,
+  \`orderNumber\` INTEGER NULL,
   \`boxId\` INTEGER NOT NULL,
   \`selectedProducts\` JSON NOT NULL,
   \`bundlePrice\` DECIMAL(10,2) NOT NULL,
@@ -210,6 +212,11 @@ CREATE TABLE IF NOT EXISTS \`bundle_order\` (
   INDEX \`bundle_order_boxId_idx\` (\`boxId\`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 `;
+
+const ENSURE_BUNDLE_ORDER_COLUMNS_SQL = [
+  "ALTER TABLE `bundle_order` ADD COLUMN IF NOT EXISTS `orderName` VARCHAR(64) NULL;",
+  "ALTER TABLE `bundle_order` ADD COLUMN IF NOT EXISTS `orderNumber` INTEGER NULL;",
+];
 
 const ENSURE_APP_SETTINGS_TABLE_SQL = `
 CREATE TABLE IF NOT EXISTS \`app_settings\` (
@@ -340,6 +347,9 @@ export function ensureAppTables() {
         await prisma.$executeRawUnsafe(sql);
       }
       for (const sql of ENSURE_COMBO_BOX_COLUMNS_SQL) {
+        await prisma.$executeRawUnsafe(sql);
+      }
+      for (const sql of ENSURE_BUNDLE_ORDER_COLUMNS_SQL) {
         await prisma.$executeRawUnsafe(sql);
       }
     })().catch((err) => {

@@ -170,6 +170,8 @@ model BundleOrder {
   id               Int      @id @default(autoincrement())
   shop             String
   orderId          String   @db.VarChar(255)
+  orderName        String?  @db.VarChar(64)
+  orderNumber      Int?
   boxId            Int
   selectedProducts String   @db.LongText
   bundlePrice      Decimal  @db.Decimal(10, 2)

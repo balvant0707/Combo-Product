@@ -102,7 +102,15 @@ function parseOrderSelectedProducts(value) {
   return [];
 }
 
-function formatOrderPrefixLabel(orderId) {
+function formatOrderPrefixLabel(orderName, orderNumber, orderId) {
+  const name = String(orderName || "").trim();
+  if (/^#\d+/.test(name)) return name;
+
+  const parsedOrderNumber = Number.parseInt(String(orderNumber), 10);
+  if (Number.isFinite(parsedOrderNumber) && parsedOrderNumber > 0) {
+    return `#${parsedOrderNumber}`;
+  }
+
   const raw = String(orderId || "").trim();
   if (!raw) return "-";
   const digits = raw.replace(/\D/g, "");
@@ -1222,7 +1230,7 @@ function RecentOrdersTable({ data, currencyCode, onOpenItemsPopup, shopDomain })
                 <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6" }}>
                   {(() => {
                     const orderUrl = buildAdminOrderLink(shopDomain, order.orderId);
-                    const label = formatOrderPrefixLabel(order.orderId);
+                    const label = formatOrderPrefixLabel(order.orderName, order.orderNumber, order.orderId);
                     if (!orderUrl) return label;
                     return (
                       <a

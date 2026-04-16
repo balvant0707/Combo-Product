@@ -3708,16 +3708,21 @@
       });
     }
 
-    function findExistingComboLine(cart, comboBoxId) {
+    function findExistingComboLine(cart, comboBoxId, targetVariantId) {
       if (!cart || !Array.isArray(cart.items)) return null;
       var targetBoxId = String(comboBoxId);
+      var normalizedTargetVariantId = normalizeVariantId(targetVariantId);
 
       for (var i = 0; i < cart.items.length; i++) {
         var item = cart.items[i] || {};
         var props = item.properties || {};
         var bundleFlag = String(props._bundle_price_item || '').toLowerCase();
         var itemBoxId = String(props._combo_box_id || '');
-        if ((bundleFlag === 'true' || bundleFlag === '1') && itemBoxId === targetBoxId) {
+        var itemVariantId = normalizeVariantId(item && (item.id != null ? item.id : item.variant_id));
+        if (
+          ((bundleFlag === 'true' || bundleFlag === '1') && itemBoxId === targetBoxId) ||
+          (normalizedTargetVariantId && itemVariantId && normalizedTargetVariantId === itemVariantId)
+        ) {
           return { line: i + 1, item: item };
         }
       }
@@ -3732,7 +3737,7 @@
 
     function upsertComboLine(item) {
       return fetchCartState().then(function (cart) {
-        var existing = findExistingComboLine(cart, box.id);
+        var existing = findExistingComboLine(cart, box.id, item && item.id);
         if (!existing) {
           return postCartItems([item]);
         }
@@ -3876,19 +3881,7 @@
       var dynamicBreakdown = getComboDiscountBreakdown(totalMrp, box.comboConfig, slots);
       var effectivePrice = isDynamic ? dynamicBreakdown.discountedTotal : (parseFloat(box.bundlePrice) || 0);
 
-      var bundleProps = {
-        '_bundle_price_item': 'true',
-        '_combo_session_id': sessionId,
-        '_combo_box_id': String(box.id),
-        '_combo_shopify_variant_id': String(box.shopifyVariantId),
-        '_combo_bundle_name': box.displayTitle,
-        '_combo_price_type': isDynamic ? 'dynamic' : 'manual',
-      };
-      if (box.shopifyProductId) {
-        bundleProps['_combo_shopify_product_id'] = String(box.shopifyProductId);
-      }
-      var bundleImageSrc = getBoxCardBannerSrc(box, { apiBase: apiBase });
-      if (bundleImageSrc) bundleProps['_combo_box_image'] = bundleImageSrc;
+      var bundleProps = {};
 
       slots.forEach(function (p, idx) {
         if (p) {
@@ -3898,30 +3891,6 @@
         }
       });
 
-      if (totalMrp > 0) {
-        bundleProps['_combo_selected_total'] = totalMrp.toFixed(2);
-        bundleProps['_combo_bundle_price'] = effectivePrice.toFixed(2);
-      }
-
-      // Show savings for both manual and dynamic modes when there's a discount
-      if (totalMrp > effectivePrice && totalMrp > 0) {
-        var savingsAmt = totalMrp - effectivePrice;
-        var savingsPct = Math.round((savingsAmt / totalMrp) * 100);
-        bundleProps['_combo_savings_amount'] = savingsAmt.toFixed(2);
-        bundleProps['_combo_discount_pct'] = String(savingsPct);
-      }
-
-      if (isDynamic && dynamicBreakdown.discountAmount > 0) {
-        // Product discount and order discount are the same monetary impact in this
-        // bundle model, but we persist both keys for storefront/cart presentation.
-        bundleProps['_combo_product_discount'] = dynamicBreakdown.discountAmount.toFixed(2);
-        bundleProps['_combo_order_discount'] = dynamicBreakdown.discountAmount.toFixed(2);
-        if (dynamicBreakdown.freeUnits > 0) {
-          bundleProps['_combo_free_items'] = String(dynamicBreakdown.freeUnits);
-        }
-      }
-
-      if (normalizedGiftMessage) bundleProps['Gift Message'] = normalizedGiftMessage;
       items.push({ id: box.shopifyVariantId, quantity: 1, properties: bundleProps });
     } else {
       hidePageLoader(true);
@@ -3969,9 +3938,6 @@
         .then(function (variantId) {
           console.log('[ComboBuilder] resolveBundleVariantId resolved:', variantId);
           items[0].id = variantId;
-          if (items[0].properties) {
-            items[0].properties['_combo_shopify_variant_id'] = String(variantId);
-          }
         })
         .catch(function (e) {
           console.warn('[ComboBuilder] resolveBundleVariantId failed (using stored id):', e && e.message, '| stored shopifyVariantId:', box.shopifyVariantId, '| box.shopifyProductId:', box.shopifyProductId);
@@ -3991,9 +3957,6 @@
         // Repair: fetch fresh variant ID (endpoint also re-activates + re-publishes product)
         return resolveBundleVariantId().then(function (variantId) {
           items[0].id = variantId;
-          if (items[0].properties) {
-            items[0].properties['_combo_shopify_variant_id'] = String(variantId);
-          }
           // 1500ms delay so Shopify can propagate the publication change
           return new Promise(function (resolve) { setTimeout(resolve, 1500); })
             .then(function () {

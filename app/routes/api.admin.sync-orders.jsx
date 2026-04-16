@@ -125,6 +125,8 @@ export const action = async ({ request }) => {
 
         const result = await trackBundleOrder(shop, {
           orderId,
+          orderName: typeof order.name === "string" ? order.name : null,
+          orderNumber: Number.parseInt(String(order.name || "").replace(/\D/g, ""), 10) || null,
           boxId: comboBoxId,
           selectedProducts,
           bundlePrice: Number.isFinite(bundlePrice) ? bundlePrice : 0,

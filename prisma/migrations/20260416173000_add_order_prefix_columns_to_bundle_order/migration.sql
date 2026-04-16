@@ -1,0 +1,2 @@
+ALTER TABLE `bundle_order` ADD COLUMN IF NOT EXISTS `orderName` VARCHAR(64) NULL;
+ALTER TABLE `bundle_order` ADD COLUMN IF NOT EXISTS `orderNumber` INTEGER NULL;

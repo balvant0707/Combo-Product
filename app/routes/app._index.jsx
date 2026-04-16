@@ -208,7 +208,9 @@ export const loader = async ({ request }) => {
   const currentBillingCycle = activeShopifySubscription?.name
     ? getBillingCycleForPlanName(activeShopifySubscription.name)
     : "monthly";
-  const orderLimit = getOrderLimitForPlan(subscription?.plan || "FREE", currentBillingCycle);
+  const currentPlanKey = String(subscription?.plan || "FREE").trim().toUpperCase();
+  const orderLimit = getOrderLimitForPlan(currentPlanKey, currentBillingCycle);
+  const nextPlanLabel = getNextPlanLabel(currentPlanKey);
 
   // Count orders for the active billing window:
   // monthly plans => current month, yearly plans => current year.
@@ -253,6 +255,7 @@ export const loader = async ({ request }) => {
     orderLimit: isFinite(orderLimit) ? orderLimit : null,
     periodOrderCount,
     orderLimitPeriodLabel: orderLimitWindow.label,
+    nextPlanLabel,
     orderLimitReached,
     orderLimitWarning,
     currencyCode,
@@ -395,6 +398,14 @@ function getOrderLimitWindow(billingCycle, now = new Date()) {
   };
 }
 
+function getNextPlanLabel(planKey) {
+  const normalized = String(planKey || "FREE").trim().toUpperCase();
+  if (normalized === "FREE") return "Basic";
+  if (normalized === "BASIC") return "Advance";
+  if (normalized === "ADVANCE") return "Plus";
+  return null;
+}
+
 function formatOrderPrefixLabel(orderName, orderNumber, orderId) {
   const name = String(orderName || "").trim();
   if (/^#\d+/.test(name)) return name;
@@ -442,6 +453,7 @@ export default function DashboardPage() {
     orderLimit,
     periodOrderCount,
     orderLimitPeriodLabel,
+    nextPlanLabel,
     orderLimitReached,
     orderLimitWarning,
     currencyCode,
@@ -676,6 +688,9 @@ export default function DashboardPage() {
           >
             <p>
               Your store has reached the {orderLimitPeriodLabel}ly order limit for the <strong>{currentPlanName}</strong> plan.
+              {nextPlanLabel
+                ? <> Upgrade to <strong>{nextPlanLabel}</strong> plan. </>
+                : " Upgrade to a higher plan. "}
               New bundle orders may not be tracked until you upgrade.
             </p>
           </Banner>
@@ -688,7 +703,11 @@ export default function DashboardPage() {
           >
             <p>
               You have used <strong>{periodOrderCount}</strong> of your <strong>{orderLimit}</strong> {orderLimitPeriodLabel}ly
-              orders on the <strong>{currentPlanName}</strong> plan. Upgrade to avoid interruption.
+              orders on the <strong>{currentPlanName}</strong> plan.
+              {nextPlanLabel
+                ? <> Recommended next plan: <strong>{nextPlanLabel}</strong>. </>
+                : " Recommended: upgrade to a higher plan. "}
+              Upgrade to avoid interruption.
             </p>
           </Banner>
         )}

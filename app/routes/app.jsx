@@ -36,6 +36,14 @@ function getOrderLimitWindow(billingCycle, now = new Date()) {
   };
 }
 
+function getNextPlanLabel(planKey) {
+  const normalized = String(planKey || "FREE").trim().toUpperCase();
+  if (normalized === "FREE") return "Basic";
+  if (normalized === "BASIC") return "Advance";
+  if (normalized === "ADVANCE") return "Plus";
+  return null;
+}
+
 export const loader = async ({ request }) => {
   const { session, admin, billing } = await authenticate.admin(request);
   const url = new URL(request.url);
@@ -95,7 +103,9 @@ export const loader = async ({ request }) => {
   const activeBillingCycle = activeShopifySubscription?.name
     ? getBillingCycleForPlanName(activeShopifySubscription.name)
     : "monthly";
-  const orderLimit = getOrderLimitForPlan(subscription?.plan || "FREE", activeBillingCycle);
+  const currentPlanKey = String(subscription?.plan || "FREE").trim().toUpperCase();
+  const orderLimit = getOrderLimitForPlan(currentPlanKey, activeBillingCycle);
+  const nextPlanLabel = getNextPlanLabel(currentPlanKey);
 
   const now = new Date();
   const orderLimitWindow = getOrderLimitWindow(activeBillingCycle, now);
@@ -106,6 +116,7 @@ export const loader = async ({ request }) => {
     },
   });
   const orderLimitReached = Number.isFinite(orderLimit) && periodOrderCount >= orderLimit;
+  const orderLimitWarning = Number.isFinite(orderLimit) && !orderLimitReached && periodOrderCount >= orderLimit * 0.8;
 
   const [embedBlockUrl, embedBlockEnabled] = await Promise.all([
     buildEmbedBlockUrl({ shop: session.shop, admin }),
@@ -122,9 +133,11 @@ export const loader = async ({ request }) => {
     embedBlockUrl,
     embedBlockEnabled,
     orderLimitReached,
+    orderLimitWarning,
     orderLimit: Number.isFinite(orderLimit) ? orderLimit : null,
     periodOrderCount,
     orderLimitPeriodLabel: orderLimitWindow.label,
+    nextPlanLabel,
   };
 };
 
@@ -184,9 +197,11 @@ export default function App() {
     embedBlockUrl,
     embedBlockEnabled,
     orderLimitReached,
+    orderLimitWarning,
     orderLimit,
     periodOrderCount,
     orderLimitPeriodLabel,
+    nextPlanLabel,
   } = useLoaderData();
   const location = useLocation();
   const navigate = useNavigate();
@@ -362,7 +377,25 @@ export default function App() {
           >
             <p>
               Your store has reached the {orderLimitPeriodLabel}ly order limit for the current plan.
-              Upgrade to continue tracking new bundle orders.
+              {nextPlanLabel
+                ? ` Upgrade to ${nextPlanLabel} plan to continue tracking new bundle orders.`
+                : " Upgrade to a higher plan to continue tracking new bundle orders."}
+            </p>
+          </Banner>
+        </Page>
+      )}
+      {orderLimitWarning && !orderLimitReached && (
+        <Page>
+          <Banner
+            tone="warning"
+            title={`Order limit warning (${periodOrderCount}/${orderLimit} orders this ${orderLimitPeriodLabel})`}
+            action={{ content: "Upgrade plan", url: withEmbeddedAppParams("/app/pricing", location.search) }}
+          >
+            <p>
+              Your current plan order limit is about to expire.
+              {nextPlanLabel
+                ? ` Recommended next plan: ${nextPlanLabel}.`
+                : " Recommended: upgrade to a higher plan."}
             </p>
           </Banner>
         </Page>

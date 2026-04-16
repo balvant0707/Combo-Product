@@ -621,7 +621,7 @@ export default function PricingPage() {
         )}
 
         {/* ── Order limit info ── */}
-        <Banner tone="info" title="How order limits work">
+        <Banner tone="info" title="How order limits work" style={{ display: "none" }}>
           <p>
             When your store reaches the monthly order limit for your plan, an upgrade prompt
             appears automatically. Upgrade anytime to increase your limit.

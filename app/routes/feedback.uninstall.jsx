@@ -41,6 +41,7 @@ export const loader = async ({ request }) => {
 
 export const action = async ({ request }) => {
   const formData = await request.formData();
+  const rowId = Number.parseInt(String(formData.get("rowId") || ""), 10);
   const token = String(formData.get("token") || "").trim();
   const feedbackText = normalizeFeedbackText(formData.get("feedbackText"));
 
@@ -53,21 +54,38 @@ export const action = async ({ request }) => {
   }
 
   try {
-    const existing = await db.uninstallfeedback.findUnique({
-      where: { feedbackToken: token },
-      select: { id: true },
-    });
-    if (!existing?.id) {
-      return { ok: false, submitted: false, error: "This feedback link is invalid or expired." };
+    let updatedCount = 0;
+
+    // Primary update path: match both row id and token.
+    if (Number.isFinite(rowId) && rowId > 0) {
+      const updatedById = await db.uninstallfeedback.updateMany({
+        where: {
+          id: rowId,
+          feedbackToken: token,
+        },
+        data: {
+          feedbackText,
+          feedbackSubmittedAt: new Date(),
+        },
+      });
+      updatedCount += updatedById.count;
     }
 
-    await db.uninstallfeedback.update({
-      where: { id: existing.id },
-      data: {
-        feedbackText,
-        feedbackSubmittedAt: new Date(),
-      },
-    });
+    // Fallback path: token-only update (for old links/forms without rowId).
+    if (updatedCount === 0) {
+      const updatedByToken = await db.uninstallfeedback.updateMany({
+        where: { feedbackToken: token },
+        data: {
+          feedbackText,
+          feedbackSubmittedAt: new Date(),
+        },
+      });
+      updatedCount += updatedByToken.count;
+    }
+
+    if (updatedCount === 0) {
+      return { ok: false, submitted: false, error: "This feedback link is invalid or expired." };
+    }
   } catch (error) {
     console.error("[feedback.uninstall] failed to save feedback", error);
     return { ok: false, submitted: false, error: "Unable to save feedback. Please try again." };
@@ -143,6 +161,7 @@ export default function UninstallFeedbackPage() {
           </div>
         ) : loaderData?.ok ? (
           <Form method="post">
+            <input type="hidden" name="rowId" value={loaderData?.rowId || ""} />
             <input type="hidden" name="token" value={token} />
             <label htmlFor="feedbackText" style={{ display: "block", marginBottom: "8px", fontWeight: 600, color: "#111827" }}>
               What made you uninstall the app?

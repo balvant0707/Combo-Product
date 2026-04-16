@@ -44,7 +44,6 @@ import {
   PLUS_YEARLY_PRICE,
   getOrderLimitForPlan,
   getBillingCycleForPlanName,
-  ORDER_LIMITS,
 } from "../config/billing";
 
 /* ── Loader ─────────────────────────────────────────────────────── */
@@ -91,7 +90,24 @@ export const loader = async ({ request }) => {
     now.toISOString().slice(0, 10),
   );
   const monthlyOrderCount = monthlyAnalytics.totalOrders || 0;
-  const freePlanLimitReached = monthlyOrderCount >= ORDER_LIMITS.FREE;
+  const toClientLimit = (limitValue) => (Number.isFinite(limitValue) ? limitValue : null);
+  const orderLimitsByCycle = {
+    monthly: {
+      FREE: toClientLimit(getOrderLimitForPlan("FREE", "monthly")),
+      BASIC: toClientLimit(getOrderLimitForPlan("BASIC", "monthly")),
+      ADVANCE: toClientLimit(getOrderLimitForPlan("ADVANCE", "monthly")),
+      PLUS: toClientLimit(getOrderLimitForPlan("PLUS", "monthly")),
+    },
+    yearly: {
+      FREE: toClientLimit(getOrderLimitForPlan("FREE", "yearly")),
+      BASIC: toClientLimit(getOrderLimitForPlan("BASIC", "yearly")),
+      ADVANCE: toClientLimit(getOrderLimitForPlan("ADVANCE", "yearly")),
+      PLUS: toClientLimit(getOrderLimitForPlan("PLUS", "yearly")),
+    },
+  };
+  const freeMonthlyLimit = orderLimitsByCycle.monthly.FREE;
+  const freePlanLimitReached =
+    Number.isFinite(freeMonthlyLimit) && monthlyOrderCount >= freeMonthlyLimit;
 
   return {
     subscription,
@@ -99,6 +115,7 @@ export const loader = async ({ request }) => {
     isDevMode,
     monthlyOrderCount,
     freePlanLimitReached,
+    orderLimitsByCycle,
     activeBillingCycle,
     subscribed: url.searchParams.get("subscribed") === "1",
     cancelled: url.searchParams.get("cancelled") === "1",
@@ -127,8 +144,9 @@ export const action = async ({ request }) => {
       now.toISOString().slice(0, 10),
     );
     const monthlyOrderCount = monthlyAnalytics.totalOrders || 0;
-    if (monthlyOrderCount >= ORDER_LIMITS.FREE) {
-      return { error: `Free plan is not available after ${ORDER_LIMITS.FREE} orders/month. Please upgrade your plan.` };
+    const freeMonthlyLimit = getOrderLimitForPlan("FREE", "monthly");
+    if (Number.isFinite(freeMonthlyLimit) && monthlyOrderCount >= freeMonthlyLimit) {
+      return { error: `Free plan is not available after ${freeMonthlyLimit} orders/month. Please upgrade your plan.` };
     }
     await activateFreePlan(shop);
     await setShopPlanStatus(shop, "free");
@@ -278,6 +296,10 @@ function currentPlanKey(subscription) {
   return null;
 }
 
+function getPlanLimit(orderLimitsByCycle, planKey, billingCycle) {
+  return orderLimitsByCycle?.[billingCycle]?.[planKey] ?? null;
+}
+
 /* ── Plan Card ───────────────────────────────────────────────────── */
 
 function PlanCard({
@@ -289,8 +311,9 @@ function PlanCard({
   freePlanLimitReached,
   billingCycle,
   maxFeatureCount,
+  orderLimitsByCycle,
 }) {
-  const displayOrderLimit = getOrderLimitForPlan(plan.key, billingCycle);
+  const displayOrderLimit = getPlanLimit(orderLimitsByCycle, plan.key, billingCycle);
   const isActive = plan.key === "FREE"
     ? activePlanKey === plan.key
     : activePlanKey === plan.key && activeBillingCycle === billingCycle;
@@ -299,7 +322,7 @@ function PlanCard({
   const displayPrice = isYearly && !isFree ? plan.yearlyPrice : plan.price;
   const displayPriceLabel = isYearly && !isFree ? "/year (2 months free)" : plan.priceLabel;
   const displayFeatures = [
-    displayOrderLimit === Infinity
+    displayOrderLimit == null
       ? "Unlimited orders"
       : `${displayOrderLimit} orders/${isYearly ? "year" : "month"}`,
     ...plan.features,
@@ -401,7 +424,7 @@ function PlanCard({
           )}
 
           <Text as="p" tone="subdued" fontWeight="semibold">
-            {displayOrderLimit === Infinity
+            {displayOrderLimit == null
               ? "Unlimited orders"
               : `Up to ${displayOrderLimit} orders/${isYearly ? "year" : "month"}`}
           </Text>
@@ -448,6 +471,7 @@ export default function PricingPage() {
     isDevMode,
     monthlyOrderCount,
     freePlanLimitReached,
+    orderLimitsByCycle,
     activeBillingCycle,
     subscribed,
     cancelled,
@@ -468,6 +492,7 @@ export default function PricingPage() {
     ? PLAN_UI.filter((plan) => plan.key !== "FREE")
     : PLAN_UI;
   const maxFeatureCount = Math.max(...visiblePlans.map((plan) => plan.features.length));
+  const freeMonthlyLimit = getPlanLimit(orderLimitsByCycle, "FREE", "monthly");
 
   useEffect(() => {
     if (actionData?.confirmationUrl) {
@@ -605,9 +630,11 @@ export default function PricingPage() {
         {!isPaid && (
           <Banner tone={freePlanLimitReached ? "warning" : "info"} title="Free plan status">
             <p>
-              {freePlanLimitReached
-                ? `Free plan limit reached (${monthlyOrderCount}/${ORDER_LIMITS.FREE} orders this month).`
-                : `Free plan selected (${monthlyOrderCount}/${ORDER_LIMITS.FREE} orders this month).`}
+              {Number.isFinite(freeMonthlyLimit)
+                ? (freePlanLimitReached
+                  ? `Free plan limit reached (${monthlyOrderCount}/${freeMonthlyLimit} orders this month).`
+                  : `Free plan selected (${monthlyOrderCount}/${freeMonthlyLimit} orders this month).`)
+                : `Free plan selected (${monthlyOrderCount} orders this month).`}
             </p>
           </Banner>
         )}
@@ -645,6 +672,7 @@ export default function PricingPage() {
               freePlanLimitReached={freePlanLimitReached}
               billingCycle={billingCycle}
               maxFeatureCount={maxFeatureCount}
+              orderLimitsByCycle={orderLimitsByCycle}
             />
           ))}
         </InlineGrid>
@@ -688,12 +716,18 @@ export default function PricingPage() {
                     {
                       label: billingCycle === "yearly" ? "Yearly order limit" : "Monthly order limit",
                       values: [
-                        `${getOrderLimitForPlan("FREE", billingCycle)}`,
-                        `${getOrderLimitForPlan("BASIC", billingCycle)}`,
-                        `${getOrderLimitForPlan("ADVANCE", billingCycle)}`,
-                        getOrderLimitForPlan("PLUS", billingCycle) === Infinity
+                        getPlanLimit(orderLimitsByCycle, "FREE", billingCycle) == null
                           ? "Unlimited"
-                          : `${getOrderLimitForPlan("PLUS", billingCycle)}`,
+                          : `${getPlanLimit(orderLimitsByCycle, "FREE", billingCycle)}`,
+                        getPlanLimit(orderLimitsByCycle, "BASIC", billingCycle) == null
+                          ? "Unlimited"
+                          : `${getPlanLimit(orderLimitsByCycle, "BASIC", billingCycle)}`,
+                        getPlanLimit(orderLimitsByCycle, "ADVANCE", billingCycle) == null
+                          ? "Unlimited"
+                          : `${getPlanLimit(orderLimitsByCycle, "ADVANCE", billingCycle)}`,
+                        getPlanLimit(orderLimitsByCycle, "PLUS", billingCycle) == null
+                          ? "Unlimited"
+                          : `${getPlanLimit(orderLimitsByCycle, "PLUS", billingCycle)}`,
                       ],
                     },
                     {

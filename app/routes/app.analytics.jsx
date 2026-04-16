@@ -102,6 +102,23 @@ function parseOrderSelectedProducts(value) {
   return [];
 }
 
+function formatOrderPrefixLabel(orderId) {
+  const raw = String(orderId || "").trim();
+  if (!raw) return "-";
+  const digits = raw.replace(/\D/g, "");
+  const suffix = (digits || raw).slice(-6);
+  return `#${suffix}`;
+}
+
+function buildAdminOrderLink(shopDomain, orderId) {
+  const shop = String(shopDomain || "").trim();
+  const rawOrderId = String(orderId || "").trim();
+  if (!shop || !rawOrderId) return null;
+  const storeHandle = shop.replace(/\.myshopify\.com$/i, "");
+  if (!storeHandle) return null;
+  return `https://admin.shopify.com/store/${storeHandle}/orders/${rawOrderId}`;
+}
+
 function buildAdminProductLink(shopDomain, itemLabel) {
   const shop = String(shopDomain || "").trim();
   const label = String(itemLabel || "").trim();
@@ -1152,7 +1169,7 @@ function BoxPerformanceChart({ data, currencyCode }) {
   );
 }
 
-function RecentOrdersTable({ data, currencyCode, onOpenItemsPopup }) {
+function RecentOrdersTable({ data, currencyCode, onOpenItemsPopup, shopDomain }) {
   if (!data || data.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "40px 0", color: "#9ca3af", fontSize: "13px" }}>
@@ -1203,12 +1220,44 @@ function RecentOrdersTable({ data, currencyCode, onOpenItemsPopup }) {
                 style={{ background: index % 2 === 0 ? "#fff" : "#fafafa" }}
               >
                 <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6" }}>
-                  <span style={{ fontWeight: "700", color: "#111827", background: "#f3f4f6", padding: "2px 8px", borderRadius: "5px" }}>
-                    {order.orderId ? `#${order.orderId}` : "-"}
-                  </span>
+                  {(() => {
+                    const orderUrl = buildAdminOrderLink(shopDomain, order.orderId);
+                    const label = formatOrderPrefixLabel(order.orderId);
+                    if (!orderUrl) return label;
+                    return (
+                      <a
+                        href={orderUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontWeight: "700",
+                          color: "#111827",
+                          background: "#f3f4f6",
+                          padding: "2px 8px",
+                          borderRadius: "5px",
+                          textDecoration: "none",
+                        }}
+                      >
+                        {label}
+                      </a>
+                    );
+                  })()}
                 </td>
                 <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6", color: "#374151", fontWeight: "600" }}>
-                  {order.boxTitle}
+                  {(() => {
+                    const orderUrl = buildAdminOrderLink(shopDomain, order.orderId);
+                    if (!orderUrl) return order.boxTitle;
+                    return (
+                      <a
+                        href={orderUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: "#111827", fontWeight: 600, textDecoration: "none" }}
+                      >
+                        {order.boxTitle}
+                      </a>
+                    );
+                  })()}
                 </td>
                 <td style={{ padding: "12px 14px", borderBottom: "1px solid #f3f4f6" }}>
                   <span
@@ -1569,7 +1618,12 @@ export default function AnalyticsPage() {
         <Card>
           <BlockStack gap="300">
             <Text as="h2" variant="headingMd">Recent {analyticsScopeLabel} Orders</Text>
-            <RecentOrdersTable data={recentOrders} currencyCode={currencyCode} onOpenItemsPopup={openItemsPopup} />
+            <RecentOrdersTable
+              data={recentOrders}
+              currencyCode={currencyCode}
+              onOpenItemsPopup={openItemsPopup}
+              shopDomain={shopDomain}
+            />
           </BlockStack>
         </Card>
       </BlockStack>

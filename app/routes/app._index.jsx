@@ -350,6 +350,23 @@ function formatRecentOrderItems(selectedProducts) {
   return items[0];
 }
 
+function formatOrderPrefixLabel(orderId) {
+  const raw = String(orderId || "").trim();
+  if (!raw) return "-";
+  const digits = raw.replace(/\D/g, "");
+  const suffix = (digits || raw).slice(-6);
+  return `#${suffix}`;
+}
+
+function buildAdminOrderLink(shopDomain, orderId) {
+  const shop = String(shopDomain || "").trim();
+  const rawOrderId = String(orderId || "").trim();
+  if (!shop || !rawOrderId) return null;
+  const storeHandle = shop.replace(/\.myshopify\.com$/i, "");
+  if (!storeHandle) return null;
+  return `https://admin.shopify.com/store/${storeHandle}/orders/${rawOrderId}`;
+}
+
 function buildAdminProductLink(shopDomain, itemLabel) {
   const shop = String(shopDomain || "").trim();
   const label = String(itemLabel || "").trim();
@@ -465,23 +482,47 @@ export default function DashboardPage() {
   ];
 
   const orderTableRows = recentOrders.map((order) => [
-    <span
-      style={{
-        display: "inline-block",
-        minWidth: "72px",
-        height: "26px",
-        borderRadius: "8px",
-        textAlign: "center",
-        lineHeight: "26px",
-        background: "#f3f4f6",
-        color: "#111827",
-        fontSize: "12px",
-        fontWeight: 700,
-      }}
-    >
-      {order.orderId ? `#${order.orderId}` : "-"}
-    </span>,
-    order.boxTitle,
+    (() => {
+      const orderUrl = buildAdminOrderLink(shopDomain, order.orderId);
+      const label = formatOrderPrefixLabel(order.orderId);
+      if (!orderUrl) return label;
+      return (
+        <a
+          href={orderUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "inline-block",
+            minWidth: "72px",
+            height: "26px",
+            borderRadius: "8px",
+            textAlign: "center",
+            lineHeight: "26px",
+            background: "#f3f4f6",
+            color: "#111827",
+            fontSize: "12px",
+            fontWeight: 700,
+            textDecoration: "none",
+          }}
+        >
+          {label}
+        </a>
+      );
+    })(),
+    (() => {
+      const orderUrl = buildAdminOrderLink(shopDomain, order.orderId);
+      if (!orderUrl) return order.boxTitle;
+      return (
+        <a
+          href={orderUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "#111827", fontWeight: 600, textDecoration: "none" }}
+        >
+          {order.boxTitle}
+        </a>
+      );
+    })(),
     (() => {
       const isSpecific = order.comboType === "specific";
       return (
@@ -576,8 +617,11 @@ export default function DashboardPage() {
       <BlockStack gap="500">
         {/* ── Banners ── */}
         {justSubscribed && (
-          <Banner tone="success" title="Plan activated">
-            <p>All features for your new plan are now unlocked.</p>
+          <Banner tone="success" title={`Plan activated: ${currentPlanName || "Plan"}`}>
+            <InlineStack gap="200" blockAlign="center">
+              <p>All features for your new plan are now unlocked.</p>
+              <Badge tone="success">{currentPlanName || "Plan"}</Badge>
+            </InlineStack>
           </Banner>
         )}
 

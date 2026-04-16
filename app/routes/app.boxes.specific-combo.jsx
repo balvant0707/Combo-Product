@@ -749,7 +749,7 @@ export default function CreateSpecificComboBoxPage() {
               <InlineStack gap="200" blockAlign="start">
                 <ToggleSwitch checked={comboConfig.isActive} onChange={() => updateComboField("isActive", !comboConfig.isActive)} showStateText={false} />
                 <BlockStack gap="100">
-                  <Text as="p" variant="bodySm" fontWeight="semibold">Publish on Storefront</Text>
+                  <Text as="p" variant="bodySm" fontWeight="semibold">Status</Text>
                   <Text as="p" variant="bodySm" tone="subdued">Uncheck to hide this box from customers</Text>
                 </BlockStack>
               </InlineStack>

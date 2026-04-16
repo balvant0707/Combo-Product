@@ -3,9 +3,9 @@ const APP_LOGO = "cid:mixbox-logo";
 
 /**
  * Generates the HTML for the app-uninstalled goodbye email.
- * @param {{ ownerName: string, shopName: string, shopDomain: string }} data
+ * @param {{ ownerName: string, shopName: string, shopDomain: string, feedbackUrl?: string | null }} data
  */
-export function uninstalledEmailHtml({ ownerName, shopName, shopDomain }) {
+export function uninstalledEmailHtml({ ownerName, shopName, shopDomain, feedbackUrl }) {
   const firstName = ownerName ? ownerName.split(" ")[0] : "there";
   const storeUrl = `https://${shopDomain}/admin/apps`;
   const ownerCompany = process.env.APP_OWNER_NAME || "Pryxo Tech Private Limited";
@@ -133,8 +133,10 @@ export function uninstalledEmailHtml({ ownerName, shopName, shopDomain }) {
                 </tr>
               </table>
 
-              <p style="margin:0;font-size:13px;color:#9ca3af;line-height:1.6;text-align:center;">
-                Have feedback? Simply reply to this email — we read every message.
+                            <p style="margin:0;font-size:13px;color:#9ca3af;line-height:1.6;text-align:center;">
+                Have feedback? ${feedbackUrl
+      ? `<a href="${feedbackUrl}" style="color:#2A7A4F;font-weight:600;text-decoration:none;">Share feedback here</a>`
+      : "Simply reply to this email"} — we read every message.
               </p>
 
             </td>
@@ -166,3 +168,5 @@ export function uninstalledEmailHtml({ ownerName, shopName, shopDomain }) {
 </body>
 </html>`;
 }
+
+

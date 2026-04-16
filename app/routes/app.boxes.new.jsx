@@ -463,7 +463,7 @@ export default function CreateBoxPage() {
                 <InlineStack gap="200" blockAlign="start">
                   <ToggleSwitch checked={options.isActive} onChange={() => toggleOption("isActive")} showStateText={false} />
                   <BlockStack gap="100">
-                    <Text as="p" variant="bodySm" fontWeight="semibold">Publish on Storefront</Text>
+                    <Text as="p" variant="bodySm" fontWeight="semibold">Status</Text>
                     <Text as="p" variant="bodySm" tone="subdued">Uncheck to hide this box from customers</Text>
                   </BlockStack>
                 </InlineStack>

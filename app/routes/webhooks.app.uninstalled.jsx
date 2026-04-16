@@ -8,6 +8,7 @@ import { ownerUninstallNotifyHtml } from "../emails/owner-notify";
 
 export const action = async ({ request }) => {
   const { shop, topic } = await authenticate.webhook(request);
+  const appOrigin = new URL(request.url).origin;
 
   console.log(`Received ${topic} webhook for ${shop}`);
 
@@ -25,8 +26,9 @@ export const action = async ({ request }) => {
   });
 
   // Keep a feedback row for each uninstall event so merchant response can be captured later.
+  let feedbackToken = null;
   try {
-    await db.uninstallfeedback.create({
+    const uninstallFeedback = await db.uninstallfeedback.create({
       data: {
         shop,
         ownerName: shopRecord?.ownerName || null,
@@ -35,6 +37,7 @@ export const action = async ({ request }) => {
         feedbackToken: randomUUID().replace(/-/g, ""),
       },
     });
+    feedbackToken = uninstallFeedback.feedbackToken || null;
   } catch (error) {
     console.error("[uninstall webhook] failed to create uninstallfeedback row", error);
   }
@@ -52,6 +55,9 @@ export const action = async ({ request }) => {
     email:      shopRecord?.contactEmail || shopRecord?.email,
     plan:       shopRecord?.plan,
     country:    shopRecord?.country,
+    feedbackUrl: feedbackToken
+      ? `${appOrigin}/feedback/uninstall?token=${encodeURIComponent(feedbackToken)}`
+      : null,
   };
 
   // Send both emails and await them — fire-and-forget gets killed by Vercel before sending

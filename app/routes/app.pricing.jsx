@@ -376,7 +376,8 @@ function PlanCard({
     <div className="cb-plan-card">
       <Card background={plan.highlight ? "bg-surface-active" : undefined}>
         <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-          <BlockStack gap="400">
+          <div className="cb-plan-content" style={{ flex: 1 }}>
+            <BlockStack gap="400">
         <BlockStack gap="200">
           <InlineStack align="space-between" blockAlign="center">
             <Text as="h2" variant="headingLg">{plan.name}</Text>
@@ -425,10 +426,10 @@ function PlanCard({
               </InlineStack>
             ))}
           </BlockStack>
-
-          <div className="cb-plan-cta">{btn}</div>
         </div>
-          </BlockStack>
+            </BlockStack>
+          </div>
+          <div className="cb-plan-cta">{btn}</div>
         </div>
       </Card>
     </div>
@@ -747,6 +748,7 @@ export function ErrorBoundary() {
 }
 
 export const headers = (h) => boundary.headers(h);
+
 
 
 

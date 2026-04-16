@@ -340,9 +340,7 @@ function formatRecentOrderItems(selectedProducts) {
     ? selectedProducts.map((entry) => String(entry || "").trim()).filter(Boolean)
     : [];
   if (items.length === 0) return "—";
-  if (items.length === 1) return items[0];
-  if (items.length === 2) return `${items[0]}, ${items[1]}`;
-  return `${items[0]}, ${items[1]}`;
+  return items[0];
 }
 
 function buildAdminProductLink(shopDomain, itemLabel) {
@@ -503,7 +501,7 @@ export default function DashboardPage() {
         ? order.selectedProducts.map((entry) => String(entry || "").trim()).filter(Boolean)
         : [];
       const previewText = formatRecentOrderItems(items);
-      const moreCount = Math.max(0, items.length - 2);
+      const moreCount = Math.max(0, items.length - 1);
 
       return (
         <InlineStack gap="100" blockAlign="center">
@@ -912,3 +910,4 @@ export default function DashboardPage() {
 export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
+

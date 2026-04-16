@@ -355,7 +355,7 @@ function PlanCard({
   return (
     <div className="cb-plan-card">
       <Card background={plan.highlight ? "bg-surface-active" : undefined}>
-        <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", paddingBottom: "72px" }}>
+        <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative", paddingBottom: "45px" }}>
           <BlockStack gap="400">
         <BlockStack gap="200">
           <InlineStack align="space-between" blockAlign="center">

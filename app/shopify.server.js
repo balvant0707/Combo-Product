@@ -23,8 +23,8 @@ if (shouldEnsureAppTables) {
   });
 }
 
-const sessionDbRetries = Number.parseInt(process.env.SESSION_DB_RETRIES || "2", 10) || 2;
-const sessionDbRetryDelayMs = Number.parseInt(process.env.SESSION_DB_RETRY_DELAY_MS || "800", 10) || 800;
+const sessionDbRetries = Number.parseInt(process.env.SESSION_DB_RETRIES || "5", 10) || 5;
+const sessionDbRetryDelayMs = Number.parseInt(process.env.SESSION_DB_RETRY_DELAY_MS || "200", 10) || 200;
 const sessionReadyProbeCooldownMs =
   Number.parseInt(process.env.SESSION_READY_PROBE_COOLDOWN_MS || "15000", 10) || 15000;
 

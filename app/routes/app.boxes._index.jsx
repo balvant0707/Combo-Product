@@ -61,6 +61,16 @@ async function getBundlePreviewUrlByProductId(admin, shop, productIds = []) {
     const response = await admin.graphql(BUNDLE_PREVIEW_PRODUCTS_QUERY, {
       variables: { ids: uniqueIds },
     });
+    if (!response?.ok) {
+      if (response?.status === 401 || response?.status === 403) {
+        console.warn(
+          "[app.boxes._index] Skipping preview URL lookup due to unauthorized admin response",
+          { status: response.status },
+        );
+        return new Map();
+      }
+      throw new Error(`Shopify admin graphql failed (${response?.status || "unknown"})`);
+    }
     const json = await response.json();
     const nodes = Array.isArray(json?.data?.nodes) ? json.data.nodes : [];
 
@@ -72,6 +82,16 @@ async function getBundlePreviewUrlByProductId(admin, shop, productIds = []) {
     }
     return map;
   } catch (error) {
+    if (
+      (error instanceof Response && (error.status === 401 || error.status === 403)) ||
+      ((error?.status === 401 || error?.status === 403) && typeof error?.status !== "undefined")
+    ) {
+      console.warn(
+        "[app.boxes._index] Skipping preview URL lookup due to unauthorized admin error",
+        { status: error?.status ?? null },
+      );
+      return new Map();
+    }
     console.error("[app.boxes._index] Failed to resolve bundle preview URLs", error);
     return new Map();
   }

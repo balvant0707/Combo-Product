@@ -1,4 +1,4 @@
-import db from "../db.server";
+import db, { withDbRetry } from "../db.server";
 
 const SHOP_DETAILS_QUERY = `#graphql
   query AppShopDetails {
@@ -54,46 +54,45 @@ export async function upsertSessionFromAuth(session) {
 
   const associatedUser = session.onlineAccessInfo?.associated_user;
 
-  await db.session.upsert({
-    where: { id: session.id },
-    create: {
-      id: session.id,
-      shop: session.shop,
-      state: session.state ?? "",
-      isOnline: session.isOnline,
-      scope: normalizeScope(session.scope),
-      expires: session.expires ?? null,
-      accessToken: session.accessToken ?? "",
-      userId: toBigIntOrNull(associatedUser?.id),
-      firstName: associatedUser?.first_name ?? null,
-      lastName: associatedUser?.last_name ?? null,
-      email: associatedUser?.email ?? null,
-      accountOwner: associatedUser?.account_owner ?? false,
-      locale: associatedUser?.locale ?? null,
-      collaborator: associatedUser?.collaborator ?? false,
-      emailVerified: associatedUser?.email_verified ?? false,
-      refreshToken: session.refreshToken ?? null,
-      refreshTokenExpires: session.refreshTokenExpires ?? null,
-    },
-    update: {
-      shop: session.shop,
-      state: session.state ?? "",
-      isOnline: session.isOnline,
-      scope: normalizeScope(session.scope),
-      expires: session.expires ?? null,
-      accessToken: session.accessToken ?? "",
-      userId: toBigIntOrNull(associatedUser?.id),
-      firstName: associatedUser?.first_name ?? null,
-      lastName: associatedUser?.last_name ?? null,
-      email: associatedUser?.email ?? null,
-      accountOwner: associatedUser?.account_owner ?? false,
-      locale: associatedUser?.locale ?? null,
-      collaborator: associatedUser?.collaborator ?? false,
-      emailVerified: associatedUser?.email_verified ?? false,
-      refreshToken: session.refreshToken ?? null,
-      refreshTokenExpires: session.refreshTokenExpires ?? null,
-    },
-  });
+  const sessionPayload = {
+    shop: session.shop,
+    state: session.state ?? "",
+    isOnline: session.isOnline,
+    scope: normalizeScope(session.scope),
+    expires: session.expires ?? null,
+    accessToken: session.accessToken ?? "",
+    userId: toBigIntOrNull(associatedUser?.id),
+    firstName: associatedUser?.first_name ?? null,
+    lastName: associatedUser?.last_name ?? null,
+    email: associatedUser?.email ?? null,
+    accountOwner: associatedUser?.account_owner ?? false,
+    locale: associatedUser?.locale ?? null,
+    collaborator: associatedUser?.collaborator ?? false,
+    emailVerified: associatedUser?.email_verified ?? false,
+    refreshToken: session.refreshToken ?? null,
+    refreshTokenExpires: session.refreshTokenExpires ?? null,
+  };
+
+  await withDbRetry(async () => {
+    const updateResult = await db.session.updateMany({
+      where: { id: session.id },
+      data: sessionPayload,
+    });
+    if (updateResult.count > 0) return;
+
+    try {
+      await db.session.create({
+        data: { id: session.id, ...sessionPayload },
+      });
+    } catch (err) {
+      // Another concurrent request created the row between updateMany and create.
+      if (err?.code !== "P2002") throw err;
+      await db.session.update({
+        where: { id: session.id },
+        data: sessionPayload,
+      });
+    }
+  }, { retries: 5, delayMs: 200 });
 }
 
 export async function upsertShopFromAdmin(session, admin) {

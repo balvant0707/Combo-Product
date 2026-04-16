@@ -33,6 +33,9 @@ export const loader = async ({ request }) => {
   if (customFrom && customTo) {
     fromDate = customFrom;
     toDate = customTo;
+  } else if (period === "all") {
+    fromDate = "1970-01-01";
+    toDate = new Date().toISOString().slice(0, 10);
   } else {
     const days = parseInt(period) || 30;
     const toD = new Date();
@@ -42,7 +45,10 @@ export const loader = async ({ request }) => {
   }
 
   const [analytics, currencyCode] = await Promise.all([
-    getAnalytics(session.shop, fromDate, toDate, { comboTypeFilter: comboType }),
+    getAnalytics(session.shop, fromDate, toDate, {
+      comboTypeFilter: comboType,
+      recentOrdersLimit: null, // show full order list for selected period
+    }),
     getShopCurrencyCode(session.shop),
   ]);
 
@@ -297,6 +303,7 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
     { key: "7", label: "Last 7 days" },
     { key: "30", label: "Last 30 Days" },
     { key: "90", label: "Last 90 days" },
+    { key: "all", label: "All time" },
     { key: "custom", label: "Custom range" },
   ];
 
@@ -366,9 +373,10 @@ function DateRangePicker({ period, fromDate: initFrom, toDate: initTo }) {
     setSelectedPreset(key);
     setPickingEnd(false);
     if (key !== "custom") {
-      const days = parseInt(key);
       const to = todayStr;
-      const from = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+      const from = key === "all"
+        ? "1970-01-01"
+        : new Date(Date.now() - (parseInt(key) || 30) * 86400000).toISOString().slice(0, 10);
       setFromDate(from);
       setToDate(to);
       const d = new Date(from + "T00:00:00");

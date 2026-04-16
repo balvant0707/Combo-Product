@@ -211,6 +211,14 @@ export async function getOrders(shop, { page = 1, limit = 20, boxId = null } = {
 
 export async function getAnalytics(shop, from, to, options = {}) {
   const comboTypeFilter = normalizeAnalyticsComboTypeFilter(options.comboTypeFilter);
+  const hasRecentOrdersLimit = Object.prototype.hasOwnProperty.call(options, "recentOrdersLimit");
+  const recentOrdersLimit = (() => {
+    if (!hasRecentOrdersLimit) return 10;
+    if (options.recentOrdersLimit === null) return null;
+    const parsed = Number(options.recentOrdersLimit);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+    return 10;
+  })();
   const fromDate = from ? new Date(from) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const toDate = to ? new Date(to) : new Date();
 
@@ -332,9 +340,11 @@ export async function getAnalytics(shop, from, to, options = {}) {
   }
   const boxPerformance = Object.values(boxPerf).sort((a, b) => b.revenue - a.revenue);
 
-  const recentOrders = [...orders]
-    .sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime())
-    .slice(0, 10)
+  const orderedRecentOrders = [...orders]
+    .sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
+  const recentOrders = (recentOrdersLimit != null && recentOrdersLimit > 0
+    ? orderedRecentOrders.slice(0, recentOrdersLimit)
+    : orderedRecentOrders)
     .map((order) => {
       const selected = parseSelectedProducts(order.selectedProducts);
       return {

@@ -5,6 +5,7 @@ import {
   getSubscription,
   saveSubscription,
 } from "../models/subscription.server";
+import { getPlanKeyFromName } from "../config/billing";
 import { setShopPlanStatus } from "../models/shop.server";
 
 function toDateOrNull(value) {
@@ -24,6 +25,11 @@ export const action = async ({ request }) => {
     appSubscription.admin_graphql_api_id ||
     appSubscription.id ||
     null;
+  const subscriptionName =
+    appSubscription.name ||
+    appSubscription.plan_name ||
+    appSubscription.planName ||
+    "";
 
   const existing = await getSubscription(shop);
   const currentPeriodEnd =
@@ -40,7 +46,7 @@ export const action = async ({ request }) => {
   switch (status) {
     case "ACTIVE":
       await saveSubscription(shop, {
-        plan: "PRO",
+        plan: getPlanKeyFromName(subscriptionName) || existing?.plan || "PLUS",
         status: "ACTIVE",
         subscriptionId: subscriptionId || existing?.subscriptionId || null,
         trialEndsAt: existing?.trialEndsAt || null,

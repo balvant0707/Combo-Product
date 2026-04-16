@@ -962,6 +962,11 @@
         }
       }
     } catch (_) {}
+    // Apply preview hiding immediately to avoid a brief flash of theme product info
+    // while combo data is still loading from the API.
+    if (previewBoxToken) {
+      applyProductPagePreviewMode(root);
+    }
 
     var boxIdsFilter = null;
     var rawBoxIds = root.dataset.boxIds || config.boxIds || null;
@@ -1085,9 +1090,6 @@
         boxes = [previewBox];
       }
       var isPreviewMode = !!(previewBox && previewBoxToken);
-      if (isPreviewMode) {
-        applyProductPagePreviewMode(root);
-      }
 
       var resolvedHeading = root.dataset.heading || config.heading || (settings && settings.widgetHeadingText) || 'Build Your Own Box!';
       if (settings && settings.presetTheme) applyPresetTheme(root, settings.presetTheme);

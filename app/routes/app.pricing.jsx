@@ -64,11 +64,20 @@ export const loader = async ({ request }) => {
     : "monthly";
   const isDevMode = process.env.SKIP_BILLING === "true";
 
-  if (url.searchParams.get("subscribed") === "1" && subscription?.subscriptionId) {
+  if (
+    url.searchParams.get("subscribed") === "1" &&
+    (
+      (subscription?.plan && String(subscription.plan).toUpperCase() !== "FREE") ||
+      subscription?.subscriptionId ||
+      activeShopifySubscription?.id
+    )
+  ) {
     await activatePaidPlan(shop, {
-      plan: subscription.plan || "PLUS",
-      subscriptionId: subscription.subscriptionId,
-      currentPeriodEnd: subscription.currentPeriodEnd,
+      plan: (subscription?.plan && String(subscription.plan).toUpperCase() !== "FREE")
+        ? subscription.plan
+        : "PLUS",
+      subscriptionId: subscription?.subscriptionId || activeShopifySubscription?.id || null,
+      currentPeriodEnd: subscription?.currentPeriodEnd || activeShopifySubscription?.currentPeriodEnd || null,
     }).catch(() => {});
     return rrRedirect(withEmbeddedAppParamsFromRequest("/app?subscribed=1", request));
   }
@@ -158,7 +167,7 @@ export const action = async ({ request }) => {
       ) {
         return { confirmationUrl: billingRequest.confirmationUrl };
       }
-      return null;
+      return { error: "Unable to start Shopify billing. Please retry." };
     } catch (e) {
       if (e instanceof Response) throw e;
       return { error: e.message, billingUnavailable: !!e.isBillingUnavailable };

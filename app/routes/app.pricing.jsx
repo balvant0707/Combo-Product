@@ -354,9 +354,10 @@ function PlanCard({
   }
 
   return (
-    <Card background={plan.highlight ? "bg-surface-active" : undefined}>
-      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <BlockStack gap="400">
+    <div className="cb-plan-card">
+      <Card background={plan.highlight ? "bg-surface-active" : undefined}>
+        <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+          <BlockStack gap="400">
         <BlockStack gap="200">
           <InlineStack align="space-between" blockAlign="center">
             <Text as="h2" variant="headingLg">{plan.name}</Text>
@@ -396,10 +397,11 @@ function PlanCard({
           ))}
         </BlockStack>
 
-        <Box paddingBlockStart="200" style={{ marginTop: "auto" }}>{btn}</Box>
-      </BlockStack>
-      </div>
-    </Card>
+            <Box paddingBlockStart="200" style={{ marginTop: "auto" }}>{btn}</Box>
+          </BlockStack>
+        </div>
+      </Card>
+    </div>
   );
 }
 
@@ -457,6 +459,21 @@ export default function PricingPage() {
       subtitle="Choose the plan that fits your store's growth"
       fullWidth
     >
+      <style>{`
+        .cb-plan-grid .Polaris-InlineGrid {
+          align-items: stretch;
+        }
+        .cb-plan-grid .Polaris-InlineGrid > * {
+          height: 100%;
+        }
+        .cb-plan-card {
+          height: 100%;
+        }
+        .cb-plan-card .Polaris-ShadowBevel,
+        .cb-plan-card .Polaris-Box {
+          height: 100%;
+        }
+      `}</style>
       <BlockStack gap="500">
 
         {/* ── Banners ── */}
@@ -564,6 +581,7 @@ export default function PricingPage() {
           </InlineStack>
         </Card>
         {/* ── Plan cards ── */}
+        <div className="cb-plan-grid">
         <InlineGrid columns={{ xs: 1, sm: 2, md: 4, lg: 4 }} gap="400">
           {visiblePlans.map((plan) => (
             <PlanCard
@@ -578,6 +596,7 @@ export default function PricingPage() {
             />
           ))}
         </InlineGrid>
+        </div>
 
         {/* ── Feature comparison table ── */}
         <Card>

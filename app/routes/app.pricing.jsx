@@ -420,15 +420,12 @@ function PlanCard({
                   </InlineStack>
                 ))}
                 {Array.from({ length: Math.max(0, maxFeatureCount - displayFeatures.length) }).map((_, idx) => (
-                  <InlineStack
-                    key={`spacer-${plan.key}-${idx}`}
-                    gap="200"
-                    blockAlign="center"
-                    style={{ visibility: "hidden" }}
-                  >
-                    <Text as="span" tone="success">✓</Text>
-                    <Text as="p">placeholder</Text>
-                  </InlineStack>
+                  <div key={`spacer-${plan.key}-${idx}`} style={{ visibility: "hidden" }} aria-hidden="true">
+                    <InlineStack gap="200" blockAlign="center">
+                      <Text as="span" tone="success">✓</Text>
+                      <Text as="p">spacer</Text>
+                    </InlineStack>
+                  </div>
                 ))}
               </BlockStack>
         </div>

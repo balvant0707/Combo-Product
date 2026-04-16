@@ -14,9 +14,9 @@ export const PLUS_YEARLY_PLAN = "Plus Yearly";
 export const MONTHLY_PLAN = PLUS_PLAN;
 export const YEARLY_PLAN  = PLUS_YEARLY_PLAN;
 
-export const BASIC_PRICE   = 7.99;
-export const ADVANCE_PRICE = 12.99;
-export const PLUS_PRICE    = 24.99;
+export const BASIC_PRICE   = 7.9;
+export const ADVANCE_PRICE = 12.9;
+export const PLUS_PRICE    = 24.9;
 export const BASIC_YEARLY_PRICE = Number((BASIC_PRICE * 10).toFixed(2));
 export const ADVANCE_YEARLY_PRICE = Number((ADVANCE_PRICE * 10).toFixed(2));
 export const PLUS_YEARLY_PRICE = Number((PLUS_PRICE * 10).toFixed(2));

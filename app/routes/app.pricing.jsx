@@ -270,7 +270,7 @@ function PlanCard({ plan, activePlanKey, isSubmitting, submittingPlan, freePlanL
   const displayPriceLabel = isYearly && !isFree ? "/year (2 months free)" : plan.priceLabel;
 
   const disabledBtnStyle = {
-    width: "100%", padding: "14px", borderRadius: "10px", border: "none",
+    width: "100%", padding: "14px", border: "none",
     fontSize: "14px", fontWeight: "700", textAlign: "center", cursor: "default",
     background: "#e5e7eb", color: "#9ca3af", opacity: 0.85,
   };

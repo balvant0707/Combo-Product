@@ -31,7 +31,7 @@ export const PLANS = {
   BASIC: {
     key:      "BASIC",
     name:     "Basic",
-    price:    7.99,
+    price:    7.9,
     currencyCode: BILLING_CURRENCY_CODE,
     interval: "EVERY_30_DAYS",
     trialDays: TRIAL_DAYS,
@@ -47,7 +47,7 @@ export const PLANS = {
   ADVANCE: {
     key:      "ADVANCE",
     name:     "Advance",
-    price:    12.99,
+    price:    12.9,
     currencyCode: BILLING_CURRENCY_CODE,
     interval: "EVERY_30_DAYS",
     trialDays: TRIAL_DAYS,
@@ -63,7 +63,7 @@ export const PLANS = {
   PLUS: {
     key:      "PLUS",
     name:     "Plus",
-    price:    24.99,
+    price:    24.9,
     currencyCode: BILLING_CURRENCY_CODE,
     interval: "EVERY_30_DAYS",
     trialDays: TRIAL_DAYS,
@@ -81,7 +81,7 @@ export const PLANS = {
   PRO: {
     key:      "PLUS",
     name:     "Plus",
-    price:    24.99,
+    price:    24.9,
     currencyCode: BILLING_CURRENCY_CODE,
     interval: "EVERY_30_DAYS",
     trialDays: TRIAL_DAYS,

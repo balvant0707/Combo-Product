@@ -413,19 +413,24 @@ function PlanCard({
 
         <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
           <BlockStack gap="200">
-            {displayFeatures.map((f) => (
-              <InlineStack key={f} gap="200" blockAlign="center">
-                <Text as="span" tone="success">?</Text>
-                <Text as="p">{f}</Text>
-              </InlineStack>
-            ))}
-            {Array.from({ length: Math.max(0, maxFeatureCount - displayFeatures.length) }).map((_, idx) => (
-              <InlineStack key={`spacer-${plan.key}-${idx}`} gap="200" blockAlign="center">
-                <Text as="span" tone="subdued" visuallyHidden>placeholder</Text>
-                <Text as="p" tone="subdued" visuallyHidden>placeholder</Text>
-              </InlineStack>
-            ))}
-          </BlockStack>
+                {displayFeatures.map((f) => (
+                  <InlineStack key={f} gap="200" blockAlign="center">
+                    <Text as="span" tone="success">✓</Text>
+                    <Text as="p">{f}</Text>
+                  </InlineStack>
+                ))}
+                {Array.from({ length: Math.max(0, maxFeatureCount - displayFeatures.length) }).map((_, idx) => (
+                  <InlineStack
+                    key={`spacer-${plan.key}-${idx}`}
+                    gap="200"
+                    blockAlign="center"
+                    style={{ visibility: "hidden" }}
+                  >
+                    <Text as="span" tone="success">✓</Text>
+                    <Text as="p">placeholder</Text>
+                  </InlineStack>
+                ))}
+              </BlockStack>
         </div>
             </BlockStack>
           </div>

@@ -313,7 +313,7 @@ function StatCard({ label, value, sub }) {
   );
 }
 
-function EyeIcon({ size = 16, color = "#1f6feb", fill = "#ffffff" }) {
+function EyeIcon({ size = 16, color = "#000000", fill = "#ffffff" }) {
   return (
     <svg
       width={`${size}px`}
@@ -817,7 +817,7 @@ export default function DashboardPage() {
                           url={productUrl}
                           target="_blank"
                           variant="plain"
-                          icon={<EyeIcon size={16} color="#0b5cab" fill="#ffffff" />}
+                          icon={<EyeIcon size={16} color="#000000" fill="#ffffff" />}
                           accessibilityLabel={`Open ${item} product`}
                         />
                       ) : (

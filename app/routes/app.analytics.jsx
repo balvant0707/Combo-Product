@@ -124,7 +124,7 @@ function buildAdminProductLink(shopDomain, itemLabel) {
   return `https://${shop}/admin/products?query=${encodeURIComponent(normalizedQuery || label)}`;
 }
 
-function EyeIcon({ size = 16, color = "#0b5cab", fill = "#ffffff" }) {
+function EyeIcon({ size = 16, color = "#000000", fill = "#ffffff" }) {
   return (
     <svg
       width={`${size}px`}
@@ -1601,7 +1601,7 @@ export default function AnalyticsPage() {
                           url={productUrl}
                           target="_blank"
                           variant="plain"
-                          icon={<EyeIcon size={16} color="#0b5cab" fill="#ffffff" />}
+                          icon={<EyeIcon size={16} color="#000000" fill="#ffffff" />}
                           accessibilityLabel={`Open ${item} product`}
                         />
                       ) : (

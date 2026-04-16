@@ -659,7 +659,7 @@ export default function CreateSpecificComboBoxPage() {
 
   return (
     <Page
-      title="Create Specific Bundle"
+      title="Create Specific"
       backAction={{ content: "Boxes", onAction: handleBackAction }}
       primaryAction={{
         content: isSaving ? "Saving..." : "Save & Publish",
@@ -743,7 +743,7 @@ export default function CreateSpecificComboBoxPage() {
           <Card>
             <InlineGrid columns={{ xs: "1fr", sm: "1fr auto" }} gap="400">
               <BlockStack gap="050">
-                <Text as="h2" variant="headingMd">Specific Bundle</Text>
+                <Text as="h2" variant="headingMd">Specific Box</Text>
                 <Text as="p" variant="bodySm" tone="subdued">Create and configure your Specific Bundle experience</Text>
               </BlockStack>
               <InlineStack gap="200" blockAlign="start">

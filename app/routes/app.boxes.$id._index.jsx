@@ -672,7 +672,7 @@ export default function BoxSettingsPage() {
                     {(clientErrors.itemCount || errors.itemCount) && (
                       <Text tone="critical" variant="bodySm">{clientErrors.itemCount || errors.itemCount}</Text>
                     )}
-                    <Text variant="bodySm" tone="subdued">Min: 2, Max: 8</Text>
+                    <Text variant="bodySm" tone="subdued">2 selections required (2–8)</Text>
                   </BlockStack>
 
                   {/* Bundle Price */}

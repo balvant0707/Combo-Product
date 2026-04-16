@@ -820,7 +820,7 @@ export default function SpecificComboBoxPage() {
   /* ─────────────── Render ─────────────── */
   return (
     <Page
-      title={`Edit: Specific Bundle Configuration`}
+      title={`Edit: Specific Configuration`}
       backAction={{ content: "Boxes", onAction: handleBackAction }}
       primaryAction={{
         content: isSaving ? "Saving..." : "Save & Publish",

@@ -48,6 +48,13 @@ function toMoney(value) {
 }
 
 function computeLineRevenue(item, properties) {
+  const bundlePriceProp =
+    toMoney(getProperty(properties, "_combo_bundle_price")) ??
+    toMoney(getProperty(properties, "_combo_selected_total"));
+  if (bundlePriceProp != null && bundlePriceProp > 0) {
+    return bundlePriceProp;
+  }
+
   const quantity = Math.max(1, Number.parseInt(String(item?.quantity ?? 1), 10) || 1);
   const unitPrice =
     toMoney(item?.price) ??
@@ -159,6 +166,11 @@ export const action = async ({ request }) => {
       hasBundleOrder = true;
 
       const selectedProducts = extractSelectedProducts(properties);
+      const fallbackLineItemTitle = String(item?.title || item?.name || "").trim();
+      const safeSelectedProducts =
+        selectedProducts.length > 0
+          ? selectedProducts
+          : (fallbackLineItemTitle ? [fallbackLineItemTitle] : []);
 
       const bundlePrice = computeLineRevenue(item, properties);
 
@@ -167,7 +179,7 @@ export const action = async ({ request }) => {
         orderName: typeof payload.name === "string" ? payload.name : null,
         orderNumber: Number.parseInt(String(payload.order_number), 10) || null,
         boxId: resolvedBoxId,
-        selectedProducts,
+        selectedProducts: safeSelectedProducts,
         bundlePrice,
         giftMessage: null,
         orderDate: new Date(payload.created_at),

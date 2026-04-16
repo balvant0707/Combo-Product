@@ -72,6 +72,12 @@ model uninstallfeedback {
   @@index([shop], map: "UninstallFeedback_shop_idx")
 }
 
+model feedbackmsg {
+  id           Int      @id @default(autoincrement())
+  feedbackText String   @db.Text
+  createdAt    DateTime @default(now())
+}
+
 model ComboBox {
   id                      Int               @id @default(autoincrement())
   shop                    String

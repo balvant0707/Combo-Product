@@ -8,7 +8,9 @@ import { ownerUninstallNotifyHtml } from "../emails/owner-notify";
 
 export const action = async ({ request }) => {
   const { shop, topic } = await authenticate.webhook(request);
-  const appOrigin = new URL(request.url).origin;
+  const appBaseUrl = String(process.env.SHOPIFY_APP_URL || new URL(request.url).origin || "")
+    .trim()
+    .replace(/\/+$/, "");
 
   console.log(`Received ${topic} webhook for ${shop}`);
 
@@ -56,28 +58,32 @@ export const action = async ({ request }) => {
     plan:       shopRecord?.plan,
     country:    shopRecord?.country,
     feedbackUrl: feedbackToken
-      ? `${appOrigin}/feedback/uninstall?token=${encodeURIComponent(feedbackToken)}`
+      ? `${appBaseUrl}/feedback/uninstall?token=${encodeURIComponent(feedbackToken)}`
       : null,
   };
 
   // Send both emails and await them — fire-and-forget gets killed by Vercel before sending
   const mailJobs = [];
 
-  mailJobs.push(
-    sendMail(
-      emailData.email,
-      "We're sad to see you go 😢 — MixBox – Box & Bundle Builder",
-      uninstalledEmailHtml(emailData),
-    ).catch((err) => console.error("[uninstall webhook] merchant email failed", err)),
-  );
+  if (emailData.email) {
+    mailJobs.push(
+      sendMail(
+        emailData.email,
+        "We're sad to see you go 😢 — MixBox – Box & Bundle Builder",
+        uninstalledEmailHtml(emailData),
+      ).catch((err) => console.error("[uninstall webhook] merchant email failed", err)),
+    );
+  }
 
-  mailJobs.push(
-    sendMail(
-      process.env.APP_OWNER_EMAIL,
-      `⚠️ App Uninstalled: ${shopRecord?.name || shop}`,
-      ownerUninstallNotifyHtml(emailData),
-    ).catch((err) => console.error("[uninstall webhook] owner notification failed", err)),
-  );
+  if (process.env.APP_OWNER_EMAIL) {
+    mailJobs.push(
+      sendMail(
+        process.env.APP_OWNER_EMAIL,
+        `⚠️ App Uninstalled: ${shopRecord?.name || shop}`,
+        ownerUninstallNotifyHtml(emailData),
+      ).catch((err) => console.error("[uninstall webhook] owner notification failed", err)),
+    );
+  }
 
   await Promise.all(mailJobs);
 

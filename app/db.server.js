@@ -150,6 +150,15 @@ CREATE TABLE IF NOT EXISTS \`uninstallfeedback\` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 `;
 
+const ENSURE_FEEDBACK_MSG_TABLE_SQL = `
+CREATE TABLE IF NOT EXISTS \`feedbackmsg\` (
+  \`id\` INTEGER NOT NULL AUTO_INCREMENT,
+  \`feedbackText\` TEXT NOT NULL,
+  \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (\`id\`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+`;
+
 const ENSURE_COMBO_BOX_TABLE_SQL = `
 CREATE TABLE IF NOT EXISTS \`combo_box\` (
   \`id\` INTEGER NOT NULL AUTO_INCREMENT,
@@ -336,6 +345,7 @@ export function ensureAppTables() {
       await prisma.$executeRawUnsafe(ENSURE_SESSION_TABLE_SQL);
       await prisma.$executeRawUnsafe(ENSURE_SHOP_TABLE_SQL);
       await prisma.$executeRawUnsafe(ENSURE_UNINSTALL_FEEDBACK_TABLE_SQL);
+      await prisma.$executeRawUnsafe(ENSURE_FEEDBACK_MSG_TABLE_SQL);
       await prisma.$executeRawUnsafe(ENSURE_COMBO_BOX_TABLE_SQL);
       await prisma.$executeRawUnsafe(ENSURE_COMBO_BOX_PRODUCT_TABLE_SQL);
       await prisma.$executeRawUnsafe(ENSURE_BUNDLE_ORDER_TABLE_SQL);

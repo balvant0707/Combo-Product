@@ -18,6 +18,7 @@ export const loader = async ({ request }) => {
   const row = await db.uninstallfeedback.findUnique({
     where: { feedbackToken: normalizedToken },
     select: {
+      id: true,
       shop: true,
       feedbackText: true,
       feedbackSubmittedAt: true,
@@ -30,6 +31,7 @@ export const loader = async ({ request }) => {
 
   return {
     ok: true,
+    rowId: row.id,
     token: normalizedToken,
     shop: row.shop,
     submitted: Boolean(row.feedbackSubmittedAt),
@@ -50,16 +52,25 @@ export const action = async ({ request }) => {
     return { ok: false, submitted: false, error: "Please enter your feedback before submitting." };
   }
 
-  const updated = await db.uninstallfeedback.updateMany({
-    where: { feedbackToken: token },
-    data: {
-      feedbackText,
-      feedbackSubmittedAt: new Date(),
-    },
-  });
+  try {
+    const existing = await db.uninstallfeedback.findUnique({
+      where: { feedbackToken: token },
+      select: { id: true },
+    });
+    if (!existing?.id) {
+      return { ok: false, submitted: false, error: "This feedback link is invalid or expired." };
+    }
 
-  if (updated.count === 0) {
-    return { ok: false, submitted: false, error: "This feedback link is invalid or expired." };
+    await db.uninstallfeedback.update({
+      where: { id: existing.id },
+      data: {
+        feedbackText,
+        feedbackSubmittedAt: new Date(),
+      },
+    });
+  } catch (error) {
+    console.error("[feedback.uninstall] failed to save feedback", error);
+    return { ok: false, submitted: false, error: "Unable to save feedback. Please try again." };
   }
 
   return { ok: true, submitted: true };

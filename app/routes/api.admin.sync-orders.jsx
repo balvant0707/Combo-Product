@@ -14,6 +14,7 @@ const SYNC_ORDERS_QUERY = `#graphql
         createdAt
         lineItems(first: 50) {
           nodes {
+            name
             quantity
             originalUnitPriceSet {
               shopMoney {
@@ -121,6 +122,11 @@ export const action = async ({ request }) => {
             : parseFloat(item.discountedTotalSet?.shopMoney?.amount ?? 0);
 
         const selectedProducts = extractSelectedProducts(attrs);
+        const fallbackLineItemTitle = String(item?.name || "").trim();
+        const safeSelectedProducts =
+          selectedProducts.length > 0
+            ? selectedProducts
+            : (fallbackLineItemTitle ? [fallbackLineItemTitle] : []);
         const giftMessage = getAttr(attrs, "Gift Message");
 
         const result = await trackBundleOrder(shop, {
@@ -128,7 +134,7 @@ export const action = async ({ request }) => {
           orderName: typeof order.name === "string" ? order.name : null,
           orderNumber: Number.parseInt(String(order.name || "").replace(/\D/g, ""), 10) || null,
           boxId: comboBoxId,
-          selectedProducts,
+          selectedProducts: safeSelectedProducts,
           bundlePrice: Number.isFinite(bundlePrice) ? bundlePrice : 0,
           giftMessage,
           orderDate,

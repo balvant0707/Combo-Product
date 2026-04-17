@@ -97,7 +97,7 @@ const from    = `"${process.env.MAIL_FROM_NAME || "MixBox – Box & Bundle Build
 const replyTo = process.env.MAIL_FROM_ADDRESS || undefined;
 
 // Inline logo
-const LOGO_PATH = resolve(__dir, "../public/images/Bluk Bundle products 1.jpg");
+const LOGO_PATH = resolve(__dir, "../public/images/mix-bundle.jpg");
 let attachments = [];
 try {
   const logoBuffer = readFileSync(LOGO_PATH);

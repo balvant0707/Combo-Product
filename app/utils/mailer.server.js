@@ -7,8 +7,8 @@ const __dir = dirname(fileURLToPath(import.meta.url));
 
 // Try multiple candidate paths so it works locally, on Vercel, and in any build output layout
 const LOGO_CANDIDATES = [
-  resolve(__dir, "../../public/images/Bluk Bundle products 1.jpg"), // local dev
-  resolve(process.cwd(), "public/images/Bluk Bundle products 1.jpg"), // Vercel / build root
+  resolve(__dir, "../../public/images/mix-bundle.jpg"), // local dev
+  resolve(process.cwd(), "public/images/mix-bundle.jpg"), // Vercel / build root
 ];
 const LOGO_PATH = LOGO_CANDIDATES.find(existsSync) ?? LOGO_CANDIDATES[0];
 

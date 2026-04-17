@@ -409,7 +409,7 @@ export default function App() {
                     flexShrink: 0,
                   }}
                 >
-                  <image src="/images/Bluk Bundle products 1.jpg" alt="Star icon" width="24" height="24" />
+                  <image src="/public/images/mix-bundle.jpg" alt="Star icon" width="24" height="24" />
                 </Box>
                 <BlockStack gap="100">
                   <Text as="p" variant="headingMd" fontWeight="semibold">

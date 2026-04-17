@@ -225,6 +225,7 @@ model Subscription {
   trialEndsAt      DateTime?
   currentPeriodEnd DateTime?
   freeActivatedAt  DateTime?
+  planStartedAt    DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 

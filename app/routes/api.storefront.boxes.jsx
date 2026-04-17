@@ -2,7 +2,7 @@ import { Buffer } from "node:buffer";
 import { listBoxes, getComboStepImages } from "../models/boxes.server";
 import { getSettings } from "../models/settings.server";
 import { unauthenticated } from "../shopify.server";
-import db from "../db.server";
+import { getOrderCreditStatus } from "../models/order-credit.server";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -12,22 +12,6 @@ const CORS_HEADERS = {
   Pragma: "no-cache",
   Expires: "0",
 };
-
-function getOrderLimitWindow(billingCycle, now = new Date()) {
-  const cycle = String(billingCycle || "monthly").toLowerCase() === "yearly" ? "yearly" : "monthly";
-  if (cycle === "yearly") {
-    return {
-      cycle,
-      label: "year",
-      start: new Date(now.getFullYear(), 0, 1),
-    };
-  }
-  return {
-    cycle: "monthly",
-    label: "month",
-    start: new Date(now.getFullYear(), now.getMonth(), 1),
-  };
-}
 
 async function getActiveBillingCycleForShop(shop) {
   try {
@@ -74,19 +58,15 @@ export const loader = async ({ request }) => {
   // Check order limits by billing cycle:
   // monthly plans => count current month, yearly plans => count current year.
   const { getSubscription } = await import("../models/subscription.server.js");
-  const { getOrderLimitForPlan } = await import("../config/billing.js");
   const subscription = await getSubscription(shop);
   const billingCycle = await getActiveBillingCycleForShop(shop);
-  const orderLimit = getOrderLimitForPlan(subscription?.plan || "FREE", billingCycle);
-  let orderLimitReached = false;
-  if (Number.isFinite(orderLimit)) {
-    const now = new Date();
-    const orderLimitWindow = getOrderLimitWindow(billingCycle, now);
-    const periodOrderCount = await db.bundleOrder.count({
-      where: { shop, orderDate: { gte: orderLimitWindow.start, lte: now } },
-    });
-    orderLimitReached = periodOrderCount >= orderLimit;
-  }
+  const orderCredit = await getOrderCreditStatus({
+    shop,
+    subscription,
+    billingCycle,
+    now: new Date(),
+  });
+  const orderLimitReached = orderCredit.orderLimitReached;
 
   // Fetch step images for all boxes that have a specific combo config
   const stepImagesByBox = {};

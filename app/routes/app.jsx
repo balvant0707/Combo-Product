@@ -20,21 +20,7 @@ import { sendMail } from "../utils/mailer.server";
 import { installedEmailHtml } from "../emails/app-installed";
 import { ownerInstallNotifyHtml } from "../emails/owner-notify";
 import { buildEmbedBlockUrl, getEmbedBlockStatus } from "../utils/theme-editor.server";
-import db from "../db.server";
-
-function getOrderLimitWindow(billingCycle, now = new Date()) {
-  const cycle = String(billingCycle || "monthly").toLowerCase() === "yearly" ? "yearly" : "monthly";
-  if (cycle === "yearly") {
-    return {
-      label: "year",
-      start: new Date(now.getFullYear(), 0, 1),
-    };
-  }
-  return {
-    label: "month",
-    start: new Date(now.getFullYear(), now.getMonth(), 1),
-  };
-}
+import { getOrderCreditStatus } from "../models/order-credit.server";
 
 function getNextPlanLabel(planKey) {
   const normalized = String(planKey || "FREE").trim().toUpperCase();
@@ -98,25 +84,21 @@ export const loader = async ({ request }) => {
 
   const reviewPrompt = await getShopReviewPromptState(session.shop);
   const { getActiveShopifySubscription } = await import("../models/billing.server.js");
-  const { getBillingCycleForPlanName, getOrderLimitForPlan } = await import("../config/billing.js");
+  const { getBillingCycleForPlanName } = await import("../config/billing.js");
   const activeShopifySubscription = await getActiveShopifySubscription(billing).catch(() => null);
   const activeBillingCycle = activeShopifySubscription?.name
     ? getBillingCycleForPlanName(activeShopifySubscription.name)
     : "monthly";
   const currentPlanKey = String(subscription?.plan || "FREE").trim().toUpperCase();
-  const orderLimit = getOrderLimitForPlan(currentPlanKey, activeBillingCycle);
   const nextPlanLabel = getNextPlanLabel(currentPlanKey);
 
   const now = new Date();
-  const orderLimitWindow = getOrderLimitWindow(activeBillingCycle, now);
-  const periodOrderCount = await db.bundleOrder.count({
-    where: {
-      shop: session.shop,
-      orderDate: { gte: orderLimitWindow.start, lte: now },
-    },
+  const orderCredit = await getOrderCreditStatus({
+    shop: session.shop,
+    subscription,
+    billingCycle: activeBillingCycle,
+    now,
   });
-  const orderLimitReached = Number.isFinite(orderLimit) && periodOrderCount >= orderLimit;
-  const orderLimitWarning = Number.isFinite(orderLimit) && !orderLimitReached && periodOrderCount >= orderLimit * 0.8;
 
   const [embedBlockUrl, embedBlockEnabled] = await Promise.all([
     buildEmbedBlockUrl({ shop: session.shop, admin }),
@@ -132,11 +114,11 @@ export const loader = async ({ request }) => {
     reviewLink: process.env.REVIEW_LINK || process.env.APP_REVIEW_URL || null,
     embedBlockUrl,
     embedBlockEnabled,
-    orderLimitReached,
-    orderLimitWarning,
-    orderLimit: Number.isFinite(orderLimit) ? orderLimit : null,
-    periodOrderCount,
-    orderLimitPeriodLabel: orderLimitWindow.label,
+    orderLimitReached: orderCredit.orderLimitReached,
+    orderLimitWarning: orderCredit.orderLimitWarning,
+    orderLimit: orderCredit.orderLimit,
+    periodOrderCount: orderCredit.usedOrders,
+    orderLimitPeriodLabel: orderCredit.periodLabel,
     nextPlanLabel,
   };
 };
@@ -376,7 +358,7 @@ export default function App() {
             action={{ content: "Upgrade plan", url: withEmbeddedAppParams("/app/pricing", location.search) }}
           >
             <p>
-              Your store has reached the {orderLimitPeriodLabel}ly order limit for the current plan.
+              Your store has reached the order limit for the current {orderLimitPeriodLabel}.
               {nextPlanLabel
                 ? ` Upgrade to ${nextPlanLabel} plan to continue tracking new bundle orders.`
                 : " Upgrade to a higher plan to continue tracking new bundle orders."}

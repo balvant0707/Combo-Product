@@ -27,6 +27,7 @@ import {
   getBundleRevenue,
   getRecentOrders,
 } from "../models/orders.server";
+import { getOrderCreditStatus } from "../models/order-credit.server";
 import {
   buildThemeEditorUrl,
   buildEmbedBlockUrl,
@@ -200,7 +201,7 @@ export const loader = async ({ request }) => {
   const { getSubscription } = await import("../models/subscription.server.js");
   const { PLANS } = await import("../models/subscription.server.js");
   const { getActiveShopifySubscription } = await import("../models/billing.server.js");
-  const { getBillingCycleForPlanName, getOrderLimitForPlan } = await import("../config/billing.js");
+  const { getBillingCycleForPlanName } = await import("../config/billing.js");
   const subscription = await getSubscription(shop);
   const currentPlan = PLANS[subscription?.plan] ?? PLANS.FREE;
   const activeShopifySubscription = await getActiveShopifySubscription(billing).catch(() => null);
@@ -209,21 +210,14 @@ export const loader = async ({ request }) => {
     ? getBillingCycleForPlanName(activeShopifySubscription.name)
     : "monthly";
   const currentPlanKey = String(subscription?.plan || "FREE").trim().toUpperCase();
-  const orderLimit = getOrderLimitForPlan(currentPlanKey, currentBillingCycle);
   const nextPlanLabel = getNextPlanLabel(currentPlanKey);
 
-  // Count orders for the active billing window:
-  // monthly plans => current month, yearly plans => current year.
-  const orderLimitWindow = getOrderLimitWindow(currentBillingCycle, now);
-  const { getAnalytics } = await import("../models/orders.server.js");
-  const limitWindowAnalytics = await getAnalytics(
+  const orderCredit = await getOrderCreditStatus({
     shop,
-    orderLimitWindow.start.toISOString().slice(0, 10),
-    now.toISOString().slice(0, 10),
-  );
-  const periodOrderCount = limitWindowAnalytics.totalOrders;
-  const orderLimitReached = isFinite(orderLimit) && periodOrderCount >= orderLimit;
-  const orderLimitWarning = isFinite(orderLimit) && !orderLimitReached && periodOrderCount >= orderLimit * 0.8;
+    subscription,
+    billingCycle: currentBillingCycle,
+    now,
+  });
   const bundleConversionRate = totalStoreOrdersLast30Days == null
     ? null
     : totalStoreOrdersLast30Days > 0
@@ -252,12 +246,13 @@ export const loader = async ({ request }) => {
     reviewLink,
     reportIssueLink,
     currentPlanName: currentPlanDisplayName,
-    orderLimit: isFinite(orderLimit) ? orderLimit : null,
-    periodOrderCount,
-    orderLimitPeriodLabel: orderLimitWindow.label,
+    orderLimit: orderCredit.orderLimit,
+    periodOrderCount: orderCredit.usedOrders,
+    orderCreditLeft: orderCredit.remainingOrderCredit,
+    orderLimitPeriodLabel: orderCredit.periodLabel,
     nextPlanLabel,
-    orderLimitReached,
-    orderLimitWarning,
+    orderLimitReached: orderCredit.orderLimitReached,
+    orderLimitWarning: orderCredit.orderLimitWarning,
     currencyCode,
     totalStoreOrdersLast30Days,
     bundleConversionRate,
@@ -382,22 +377,6 @@ function formatRecentOrderItems(selectedProducts) {
   return items[0];
 }
 
-function getOrderLimitWindow(billingCycle, now = new Date()) {
-  const cycle = String(billingCycle || "monthly").toLowerCase() === "yearly" ? "yearly" : "monthly";
-  if (cycle === "yearly") {
-    return {
-      cycle,
-      label: "year",
-      start: new Date(now.getFullYear(), 0, 1),
-    };
-  }
-  return {
-    cycle: "monthly",
-    label: "month",
-    start: new Date(now.getFullYear(), now.getMonth(), 1),
-  };
-}
-
 function getNextPlanLabel(planKey) {
   const normalized = String(planKey || "FREE").trim().toUpperCase();
   if (normalized === "FREE") return "Basic";
@@ -441,6 +420,9 @@ export default function DashboardPage() {
     activeBoxCount,
     bundlesSold,
     bundleRevenue,
+    orderLimit,
+    periodOrderCount,
+    orderCreditLeft,
     themeEditorUrl,
     embedBlockUrl,
     embedBlockEnabled,
@@ -514,6 +496,11 @@ export default function DashboardPage() {
 
   const stats = [
     { label: "Live", value: activeBoxCount, sub: "" },
+    {
+      label: "Order Credit Left",
+      value: orderLimit == null ? "Unlimited" : `${orderCreditLeft}`,
+      sub: orderLimit == null ? "Current billing cycle" : `${periodOrderCount}/${orderLimit} used`,
+    },
     { label: "Orders", value: bundlesSold, sub: "Last 30 days" },
     {
       label: "Total Revenue",
@@ -674,7 +661,7 @@ export default function DashboardPage() {
         )}
 
         {/* ── Stats row ── */}
-        <InlineGrid columns={{ xs: 2, md: 4 }} gap="400">
+        <InlineGrid columns={{ xs: 2, md: 5 }} gap="400">
           {stats.map((stat) => (
             <StatCard key={stat.label} {...stat} />
           ))}

@@ -109,6 +109,10 @@ function toDateOrNull(value) {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+function normalizePlan(plan) {
+  return String(plan || "FREE").trim().toUpperCase();
+}
+
 /* ─── Status values ─────────────────────────────────────────────────── */
 // NONE    — not yet selected any plan (redirect to pricing)
 // ACTIVE  — paid plan active (or free plan chosen)
@@ -132,10 +136,28 @@ export async function deleteSubscription(shop) {
 
 /** Upsert a subscription record */
 export async function saveSubscription(shop, data) {
+  const existing = await db.subscription.findUnique({ where: { shop } });
+  const nextPlan = normalizePlan(data?.plan ?? existing?.plan ?? "FREE");
+  const currentPlan = normalizePlan(existing?.plan ?? "FREE");
+  const planChanged = !!existing && currentPlan !== nextPlan;
+  const hasExplicitPlanStartedAt = Object.prototype.hasOwnProperty.call(data || {}, "planStartedAt");
+  const explicitPlanStartedAt = toDateOrNull(data?.planStartedAt);
+  const planStartedAt = hasExplicitPlanStartedAt
+    ? explicitPlanStartedAt
+    : (planChanged
+      ? new Date()
+      : (toDateOrNull(existing?.planStartedAt) || new Date()));
+
+  const payload = {
+    ...data,
+    plan: nextPlan,
+    planStartedAt,
+  };
+
   return db.subscription.upsert({
     where:  { shop },
-    create: { shop, ...data },
-    update: data,
+    create: { shop, ...payload },
+    update: payload,
   });
 }
 
@@ -144,21 +166,50 @@ export async function saveSubscription(shop, data) {
 export async function activateFreePlan(shop) {
   const existing = await db.subscription.findUnique({ where: { shop } });
   const freeActivatedAt = existing?.freeActivatedAt ?? new Date();
+  const planStartedAt = normalizePlan(existing?.plan) === "FREE"
+    ? (existing?.planStartedAt ?? freeActivatedAt)
+    : new Date();
   return db.subscription.upsert({
     where:  { shop },
-    create: { shop, plan: "FREE", status: "ACTIVE", subscriptionId: null, trialEndsAt: null, currentPeriodEnd: null, freeActivatedAt },
-    update: {       plan: "FREE", status: "ACTIVE", subscriptionId: null, trialEndsAt: null, currentPeriodEnd: null, freeActivatedAt },
+    create: {
+      shop,
+      plan: "FREE",
+      status: "ACTIVE",
+      subscriptionId: null,
+      trialEndsAt: null,
+      currentPeriodEnd: null,
+      freeActivatedAt,
+      planStartedAt,
+    },
+    update: {
+      plan: "FREE",
+      status: "ACTIVE",
+      subscriptionId: null,
+      trialEndsAt: null,
+      currentPeriodEnd: null,
+      freeActivatedAt,
+      planStartedAt,
+    },
   });
 }
 
 /** Save an ACTIVE paid subscription after Shopify billing is confirmed */
 export async function activatePaidPlan(shop, { plan, subscriptionId, trialEndsAt, currentPeriodEnd }) {
+  const existing = await db.subscription.findUnique({ where: { shop } });
+  const normalizedPlan = normalizePlan(plan);
+  const planChanged = normalizePlan(existing?.plan) !== normalizedPlan;
+  const subscriptionChanged = !!subscriptionId && subscriptionId !== existing?.subscriptionId;
+  const planStartedAt = (planChanged || subscriptionChanged)
+    ? new Date()
+    : (toDateOrNull(existing?.planStartedAt) || new Date());
+
   return saveSubscription(shop, {
-    plan,
+    plan: normalizedPlan,
     status:          "ACTIVE",
     subscriptionId,
     trialEndsAt:     trialEndsAt     ? new Date(trialEndsAt)     : null,
     currentPeriodEnd: currentPeriodEnd ? new Date(currentPeriodEnd) : null,
+    planStartedAt,
   });
 }
 

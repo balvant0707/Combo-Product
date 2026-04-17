@@ -135,19 +135,6 @@ export const action = async ({ request }) => {
   const { setShopPlanStatus } = await import("../models/shop.server.js");
 
   if (intent === "free") {
-    const { getAnalytics } = await import("../models/orders.server.js");
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthlyAnalytics = await getAnalytics(
-      shop,
-      monthStart.toISOString().slice(0, 10),
-      now.toISOString().slice(0, 10),
-    );
-    const monthlyOrderCount = monthlyAnalytics.totalOrders || 0;
-    const freeMonthlyLimit = getOrderLimitForPlan("FREE", "monthly");
-    if (Number.isFinite(freeMonthlyLimit) && monthlyOrderCount >= freeMonthlyLimit) {
-      return { error: `Free plan is not available after ${freeMonthlyLimit} orders/month. Please upgrade your plan.` };
-    }
     await activateFreePlan(shop);
     await setShopPlanStatus(shop, "free");
     return rrRedirect(withEmbeddedAppParamsFromRequest("/app", request));
@@ -308,7 +295,6 @@ function PlanCard({
   activeBillingCycle,
   isSubmitting,
   submittingPlan,
-  freePlanLimitReached,
   billingCycle,
   maxFeatureCount,
   orderLimitsByCycle,
@@ -343,34 +329,25 @@ function PlanCard({
       </button>
     );
   } else if (isFree) {
-    // Free plan button availability is based on monthly free limit only
-    if (freePlanLimitReached) {
-      btn = (
-        <button disabled aria-label="Free plan not available after limit reached" style={{ ...disabledBtnStyle }}>
-          Not available
+    const busy = isSubmitting && submittingPlan === "free";
+    btn = (
+      <form method="post" aria-label="Select Free plan">
+        <input type="hidden" name="intent" value="free" />
+        <button
+          type="submit"
+          disabled={busy}
+          aria-label="Start free plan"
+          style={{
+            width: "100%", padding: "14px", borderRadius: "0", border: "none",
+            fontSize: "14px", fontWeight: "700", textAlign: "center",
+            cursor: busy ? "wait" : "pointer", background: "#111827",
+            color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",
+          }}
+        >
+          {busy ? "Starting…" : plan.cta}
         </button>
-      );
-    } else {
-      const busy = isSubmitting && submittingPlan === "free";
-      btn = (
-        <form method="post" aria-label="Select Free plan">
-          <input type="hidden" name="intent" value="free" />
-          <button
-            type="submit"
-            disabled={busy}
-            aria-label="Start free plan"
-            style={{
-              width: "100%", padding: "14px", borderRadius: "0", border: "none",
-              fontSize: "14px", fontWeight: "700", textAlign: "center",
-              cursor: busy ? "wait" : "pointer", background: "#111827",
-              color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",
-            }}
-          >
-            {busy ? "Starting…" : plan.cta}
-          </button>
-        </form>
-      );
-    }
+      </form>
+    );
   } else {
     const busy = isSubmitting && submittingPlan === plan.key;
     btn = (
@@ -670,7 +647,6 @@ export default function PricingPage() {
               activeBillingCycle={activeBillingCycle}
               isSubmitting={isSubmitting}
               submittingPlan={submittingPlan}
-              freePlanLimitReached={freePlanLimitReached}
               billingCycle={billingCycle}
               maxFeatureCount={maxFeatureCount}
               orderLimitsByCycle={orderLimitsByCycle}

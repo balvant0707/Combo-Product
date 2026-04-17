@@ -204,9 +204,17 @@ export async function upsertShopFromAdmin(session, admin) {
  * Called from the plan selection page action / billing return URL.
  */
 export async function setShopPlanStatus(shop, status) {
-  await db.shop.update({
+  await db.shop.upsert({
     where: { shop },
-    data:  { status },
+    create: {
+      shop,
+      status,
+      installed: true,
+    },
+    update: {
+      status,
+      installed: true,
+    },
   });
 }
 

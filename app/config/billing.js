@@ -145,7 +145,7 @@ export const BILLING_PLANS = {
       },
     ],
   },
-  [YEARLY_PLAN]: {
+  [PLUS_YEARLY_PLAN]: {
     trialDays: TRIAL_DAYS,
     replacementBehavior: BillingReplacementBehavior.Standard,
     lineItems: [
@@ -164,7 +164,7 @@ export const BILLING_PLAN_KEYS = [
   PLUS_PLAN,
   BASIC_YEARLY_PLAN,
   ADVANCE_YEARLY_PLAN,
-  YEARLY_PLAN,
+  PLUS_YEARLY_PLAN,
 ];
 
 export function getPlanNameForBillingCycle(billingCycle = "monthly", planKey = "PLUS") {

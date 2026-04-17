@@ -33,6 +33,7 @@ import {
   Spinner,
   Text,
   TextField,
+  Tooltip,
 } from "@shopify/polaris";
 
 const BUNDLE_PREVIEW_PRODUCTS_QUERY = `#graphql
@@ -329,28 +330,29 @@ function CopyCodeBtn({ code }) {
       >
         {code}
       </span>
-      <button
-        type="button"
-        title={copied ? "Copied!" : "Copy code"}
-        onClick={handleCopy}
-        style={{
-          width: "24px",
-          height: "24px",
-          borderRadius: "5px",
-          border: `1px solid ${copied ? "#86efac" : "#e5e7eb"}`,
-          background: copied ? "#dcfce7" : "#fff",
-          cursor: "pointer",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: copied ? "#16a34a" : "#9ca3af",
-          fontSize: "12px",
-          transition: "all 0.13s",
-          flexShrink: 0,
-        }}
-      >
-        <CopyCodeIcon size={16} />
-      </button>
+      <Tooltip content={copied ? "Copied" : "Copy code"}>
+        <button
+          type="button"
+          onClick={handleCopy}
+          style={{
+            width: "24px",
+            height: "24px",
+            borderRadius: "5px",
+            border: `1px solid ${copied ? "#86efac" : "#e5e7eb"}`,
+            background: copied ? "#dcfce7" : "#fff",
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: copied ? "#16a34a" : "#9ca3af",
+            fontSize: "12px",
+            transition: "all 0.13s",
+            flexShrink: 0,
+          }}
+        >
+          <CopyCodeIcon size={16} />
+        </button>
+      </Tooltip>
     </InlineStack>
   );
 }
@@ -678,22 +680,23 @@ export default function ManageBoxesPage() {
                             <InlineStack gap="150" blockAlign="center">
                               <Text variant="bodySm" fontWeight="semibold" as="span">{box.boxName}</Text>
                               {box.isGiftBox && (
-                                <span
-                                  title="Gift bundle"
-                                  aria-label="Gift bundle"
-                                  style={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    width: "22px",
-                                    height: "22px",
-                                    borderRadius: "6px",
-                                    background: "#f59e0b",
-                                    border: "1px solid #d97706",
-                                  }}
-                                >
-                                  <GiftIcon size={12} fill="#FFFFFF" />
-                                </span>
+                                <Tooltip content="Gift bundle">
+                                  <span
+                                    aria-label="Gift bundle"
+                                    style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      width: "22px",
+                                      height: "22px",
+                                      borderRadius: "6px",
+                                      background: "#f59e0b",
+                                      border: "1px solid #d97706",
+                                    }}
+                                  >
+                                    <GiftIcon size={12} fill="#FFFFFF" />
+                                  </span>
+                                </Tooltip>
                               )}
                             </InlineStack>
                           </BlockStack>
@@ -812,30 +815,35 @@ export default function ManageBoxesPage() {
                       {/* Actions */}
                       <IndexTable.Cell>
                         <InlineStack gap="100" align="center" blockAlign="center" className="cb-action-buttons">
-                          <Button
-                            size="slim"
-                            url={box.previewUrl || undefined}
-                            target="_blank"
-                            disabled={!box.previewUrl}
-                            icon={<EyeIcon size={16} color="#FFFFFF" />}
-                            accessibilityLabel="Preview on storefront"
-                            tooltipContent={box.previewUrl ? "Preview on storefront" : "Preview unavailable"}
-                          >
-                          </Button>
-                          <Button
-                            size="slim"
-                            onClick={() => navigateTo(box.comboConfig ? `/app/boxes/${box.id}/combo` : `/app/boxes/${box.id}`)}
-                            icon={<AdminIcon type="edit" size="small" />}
-                          >
-                          </Button>
-                          {box.orderCount === 0 && (
+                          <Tooltip content={box.previewUrl ? "Preview on storefront" : "Preview unavailable"}>
                             <Button
                               size="slim"
-                              tone="critical"
-                              onClick={() => handleDelete(box.id, box.boxName)}
-                              icon={<AdminIcon type="delete" size="small" />}
+                              url={box.previewUrl || undefined}
+                              target="_blank"
+                              disabled={!box.previewUrl}
+                              icon={<EyeIcon size={16} color="#FFFFFF" />}
+                              accessibilityLabel="Preview on storefront"
                             >
                             </Button>
+                          </Tooltip>
+                          <Tooltip content="Edit box">
+                            <Button
+                              size="slim"
+                              onClick={() => navigateTo(box.comboConfig ? `/app/boxes/${box.id}/combo` : `/app/boxes/${box.id}`)}
+                              icon={<AdminIcon type="edit" size="small" />}
+                            >
+                            </Button>
+                          </Tooltip>
+                          {box.orderCount === 0 && (
+                            <Tooltip content="Delete box">
+                              <Button
+                                size="slim"
+                                tone="critical"
+                                onClick={() => handleDelete(box.id, box.boxName)}
+                                icon={<AdminIcon type="delete" size="small" />}
+                              >
+                              </Button>
+                            </Tooltip>
                           )}
                         </InlineStack>
                       </IndexTable.Cell>

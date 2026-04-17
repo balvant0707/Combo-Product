@@ -16,6 +16,7 @@ import {
   Page,
   Spinner,
   Text,
+  Tooltip,
 } from "@shopify/polaris";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -873,14 +874,16 @@ export default function DashboardPage() {
                     <InlineStack key={`${itemLabel}-${idx}`} align="space-between" blockAlign="center" wrap={false}>
                       <Text as="span" variant="bodySm">{itemLabel}</Text>
                       {productUrl ? (
-                        <Button
-                          size="slim"
-                          url={productUrl}
-                          target="_blank"
-                          variant="plain"
-                          icon={<EyeIcon size={16} color="#000000" fill="#ffffff" />}
-                          accessibilityLabel={`Open ${itemLabel} product`}
-                        />
+                        <Tooltip content={`Open ${itemLabel} product`}>
+                          <Button
+                            size="slim"
+                            url={productUrl}
+                            target="_blank"
+                            variant="plain"
+                            icon={<EyeIcon size={16} color="#000000" fill="#ffffff" />}
+                            accessibilityLabel={`Open ${itemLabel} product`}
+                          />
+                        </Tooltip>
                       ) : (
                         <Text as="span" variant="bodySm" tone="subdued">No link</Text>
                       )}

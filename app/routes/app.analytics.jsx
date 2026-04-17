@@ -18,6 +18,7 @@ import {
   Modal,
   Page,
   Text,
+  Tooltip,
 } from "@shopify/polaris";
 
 export const loader = async ({ request }) => {
@@ -1694,14 +1695,16 @@ export default function AnalyticsPage() {
                     <InlineStack key={`${itemLabel}-${idx}`} align="space-between" blockAlign="center" wrap={false}>
                       <Text as="span" variant="bodySm">{itemLabel}</Text>
                       {productUrl ? (
-                        <Button
-                          size="slim"
-                          url={productUrl}
-                          target="_blank"
-                          variant="plain"
-                          icon={<EyeIcon size={16} color="#000000" fill="#ffffff" />}
-                          accessibilityLabel={`Open ${itemLabel} product`}
-                        />
+                        <Tooltip content={`Open ${itemLabel} product`}>
+                          <Button
+                            size="slim"
+                            url={productUrl}
+                            target="_blank"
+                            variant="plain"
+                            icon={<EyeIcon size={16} color="#000000" fill="#ffffff" />}
+                            accessibilityLabel={`Open ${itemLabel} product`}
+                          />
+                        </Tooltip>
                       ) : (
                         <Text as="span" variant="bodySm" tone="subdued">No link</Text>
                       )}

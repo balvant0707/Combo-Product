@@ -1034,20 +1034,19 @@
           'padding:20px 24px',
           'text-align:center',
           'border:1px solid #fcd34d',
-          'border-radius:8px',
+          'border-radius:4px',
           'background:#fffbeb',
           'font-family:inherit',
           'margin:8px 0',
+          'max-width:600px',
+          'width:100%',
+          'margin:10px auto',
         ].join(';');
         limitBanner.innerHTML =
           '<p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#92400e;">' +
-          'MixBox – Box & Bundle Builder Order Limit Reached</p>' +
+          'MixBox – Box & Bundle Builder App Disabled</p>' +
           '<p style="margin:0;font-size:13px;color:#78350f;">' +
-          'Your current plan limit has been reached. ' +
-          'Please upgrade your plan to continue using MixBox – Box & Bundle Builder.</p>' +
-          '<a href="' + upgradePlanUrl + '" target="_blank" ' +
-          'style="display:inline-block;margin-top:12px;padding:10px 16px;background:#f59e0b;color:#fff;text-decoration:none;border-radius:4px;font-size:14px;">' +
-          'Upgrade Plan</a>';
+          'Please upgrade your plan to continue using App.</p>';
         root.appendChild(limitBanner);
         return;
       }

@@ -16,6 +16,7 @@ import {
   InlineGrid,
   InlineStack,
   Modal,
+  Pagination,
   Page,
   Text,
   Tooltip,
@@ -1509,6 +1510,18 @@ export default function AnalyticsPage() {
     boxTitle: "",
     items: [],
   });
+  const RECENT_ORDERS_PAGE_SIZE = 10;
+  const [recentOrdersPage, setRecentOrdersPage] = useState(1);
+  const recentOrdersTotalPages = Math.max(1, Math.ceil((recentOrders?.length || 0) / RECENT_ORDERS_PAGE_SIZE));
+  const safeRecentOrdersPage = Math.min(recentOrdersPage, recentOrdersTotalPages);
+  const paginatedRecentOrders = (recentOrders || []).slice(
+    (safeRecentOrdersPage - 1) * RECENT_ORDERS_PAGE_SIZE,
+    safeRecentOrdersPage * RECENT_ORDERS_PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    setRecentOrdersPage(1);
+  }, [period, fromDate, toDate, comboType]);
 
   function openItemsPopup(order) {
     const items = Array.isArray(order?.selectedProductEntries)
@@ -1670,11 +1683,24 @@ export default function AnalyticsPage() {
           <BlockStack gap="300">
             <Text as="h2" variant="headingMd">Recent {analyticsScopeLabel} Orders</Text>
             <RecentOrdersTable
-              data={recentOrders}
+              data={paginatedRecentOrders}
               currencyCode={currencyCode}
               onOpenItemsPopup={openItemsPopup}
               shopDomain={shopDomain}
             />
+            {recentOrdersTotalPages > 1 && (
+              <InlineStack align="space-between" blockAlign="center" wrap>
+                <Text as="p" variant="bodySm" tone="subdued">
+                  Showing {(safeRecentOrdersPage - 1) * RECENT_ORDERS_PAGE_SIZE + 1}–{Math.min(safeRecentOrdersPage * RECENT_ORDERS_PAGE_SIZE, recentOrders.length)} of {recentOrders.length} orders
+                </Text>
+                <Pagination
+                  hasPrevious={safeRecentOrdersPage > 1}
+                  hasNext={safeRecentOrdersPage < recentOrdersTotalPages}
+                  onPrevious={() => setRecentOrdersPage((page) => Math.max(1, page - 1))}
+                  onNext={() => setRecentOrdersPage((page) => Math.min(recentOrdersTotalPages, page + 1))}
+                />
+              </InlineStack>
+            )}
           </BlockStack>
         </Card>
       </BlockStack>

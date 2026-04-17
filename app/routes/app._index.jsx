@@ -13,6 +13,7 @@ import {
   InlineGrid,
   InlineStack,
   Modal,
+  Pagination,
   Page,
   Spinner,
   Text,
@@ -454,6 +455,7 @@ export default function DashboardPage() {
 
   const justSubscribed = new URLSearchParams(location.search).get("subscribed") === "1";
   const isPageLoading = navigation.state !== "idle";
+  const RECENT_ORDERS_PAGE_SIZE = 10;
 
   function navigateTo(path) {
     if (navInFlightRef.current || navigation.state !== "idle") return;
@@ -631,6 +633,13 @@ export default function DashboardPage() {
       year: "numeric",
     }),
   ]);
+  const recentOrdersTotalPages = Math.max(1, Math.ceil(orderTableRows.length / RECENT_ORDERS_PAGE_SIZE));
+  const [recentOrdersPage, setRecentOrdersPage] = useState(1);
+  const safeRecentOrdersPage = Math.min(recentOrdersPage, recentOrdersTotalPages);
+  const paginatedOrderTableRows = orderTableRows.slice(
+    (safeRecentOrdersPage - 1) * RECENT_ORDERS_PAGE_SIZE,
+    safeRecentOrdersPage * RECENT_ORDERS_PAGE_SIZE,
+  );
 
   const supportLinks = [
     whatsappLink && { label: "WhatsApp", url: whatsappLink },
@@ -780,10 +789,25 @@ export default function DashboardPage() {
                   <DataTable
                     columnContentTypes={["text", "text", "text", "text", "text", "text"]}
                     headings={["Order ID", "Name", "Type", "Products", "Revenue", "Date"]}
-                    rows={orderTableRows}
+                    rows={paginatedOrderTableRows}
                     hoverable
                   />
                 </div>
+                {recentOrdersTotalPages > 1 && (
+                  <Box paddingBlockStart="300">
+                    <InlineStack align="space-between" blockAlign="center" wrap>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        Showing {(safeRecentOrdersPage - 1) * RECENT_ORDERS_PAGE_SIZE + 1}–{Math.min(safeRecentOrdersPage * RECENT_ORDERS_PAGE_SIZE, orderTableRows.length)} of {orderTableRows.length} orders
+                      </Text>
+                      <Pagination
+                        hasPrevious={safeRecentOrdersPage > 1}
+                        hasNext={safeRecentOrdersPage < recentOrdersTotalPages}
+                        onPrevious={() => setRecentOrdersPage((page) => Math.max(1, page - 1))}
+                        onNext={() => setRecentOrdersPage((page) => Math.min(recentOrdersTotalPages, page + 1))}
+                      />
+                    </InlineStack>
+                  </Box>
+                )}
               </>
             )}
           </BlockStack>

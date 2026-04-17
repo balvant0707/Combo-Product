@@ -270,34 +270,43 @@ export async function updateShopScope(shop, scope) {
 }
 
 export async function getShopReviewPromptState(shopDomain) {
-  const rows = await db.$queryRaw`
-    SELECT
-      createdAt,
-      reviewPromptDelayDays,
-      reviewPopupDismissedAt,
-      reviewSubmittedAt
-    FROM shop
-    WHERE shop = ${shopDomain}
-    LIMIT 1
-  `;
+  const [row, comboBoxCount] = await Promise.all([
+    db.shop.findUnique({
+      where: { shop: shopDomain },
+      select: {
+        createdAt: true,
+        reviewPromptDelayDays: true,
+        reviewPopupDismissedAt: true,
+        reviewSubmittedAt: true,
+      },
+    }),
+    db.comboBox.count({
+      where: {
+        shop: shopDomain,
+        deletedAt: null,
+      },
+    }),
+  ]);
 
-  const row = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
   const now = new Date();
 
   const createdAt = row?.createdAt ? new Date(row.createdAt) : null;
   const delayDays = normalizePositiveInt(row?.reviewPromptDelayDays, REVIEW_PROMPT_DEFAULT_DELAY_DAYS);
   const daysSinceInstall = createdAt ? Math.floor((now.getTime() - createdAt.getTime()) / DAY_MS) : 0;
-  const isDelayOver = createdAt ? now.getTime() >= createdAt.getTime() + delayDays * DAY_MS : false;
 
   const dismissedAt = row?.reviewPopupDismissedAt ? new Date(row.reviewPopupDismissedAt) : null;
   const snoozeUntil = dismissedAt ? new Date(dismissedAt.getTime() + REVIEW_PROMPT_SNOOZE_DAYS * DAY_MS) : null;
   const isSnoozed = snoozeUntil ? now.getTime() < snoozeUntil.getTime() : false;
 
   const hasSubmittedReview = Boolean(row?.reviewSubmittedAt);
-  const shouldShow = Boolean(createdAt && isDelayOver && !isSnoozed && !hasSubmittedReview);
+  const milestoneComboCount = 5;
+  const milestoneReached = comboBoxCount >= milestoneComboCount;
+  const shouldShow = Boolean(createdAt && milestoneReached && !isSnoozed && !hasSubmittedReview);
 
   return {
     shouldShow,
+    comboBoxCount,
+    milestoneComboCount,
     daysSinceInstall: Math.max(0, daysSinceInstall),
     delayDays,
     snoozeDays: REVIEW_PROMPT_SNOOZE_DAYS,

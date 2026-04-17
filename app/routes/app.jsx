@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Outlet, redirect, useFetcher, useLoaderData, useLocation, useNavigate, useRevalidator, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider as ShopifyAppProvider } from "@shopify/shopify-app-react-router/react";
@@ -128,6 +128,11 @@ export const action = async ({ request }) => {
   const formData = await request.formData();
   const intent = formData.get("_action");
 
+  if (intent === "mark_review_popup_seen") {
+    await dismissShopReviewPrompt(session.shop);
+    return { ok: true, seen: true };
+  }
+
   if (intent === "dismiss_review_popup") {
     await dismissShopReviewPrompt(session.shop);
     return { ok: true, dismissed: true };
@@ -189,8 +194,10 @@ export default function App() {
   const navigate = useNavigate();
   const revalidator = useRevalidator();
   const reviewFetcher = useFetcher();
+  const reviewSeenFetcher = useFetcher();
   const supportFetcher = useFetcher();
   const reviewActionUrl = withEmbeddedAppParams("/app", location.search);
+  const hasMarkedReviewPopupSeenRef = useRef(false);
 
   const [showReviewPopup, setShowReviewPopup] = useState(() => Boolean(reviewPrompt?.shouldShow));
   const [showSupportPopup, setShowSupportPopup] = useState(false);
@@ -219,8 +226,15 @@ export default function App() {
   useEffect(() => {
     if (reviewPrompt?.shouldShow) {
       setShowReviewPopup(true);
+      if (!hasMarkedReviewPopupSeenRef.current) {
+        hasMarkedReviewPopupSeenRef.current = true;
+        reviewSeenFetcher.submit(
+          { _action: "mark_review_popup_seen" },
+          { method: "post", action: reviewActionUrl },
+        );
+      }
     }
-  }, [reviewPrompt?.shouldShow]);
+  }, [reviewPrompt?.shouldShow, reviewSeenFetcher, reviewActionUrl]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -408,7 +422,7 @@ export default function App() {
                     flexShrink: 0,
                   }}
                 >
-                  <image src="/images/mix-bundle.jpg" alt="Star icon" width="24" height="24" />
+                  <image src="https://combo-product-ten.vercel.app/images/mix-bundle.jpg" alt="Star icon" width="50" height="50" />
                 </Box>
                 <BlockStack gap="100">
                   <Text as="p" variant="headingMd" fontWeight="semibold">

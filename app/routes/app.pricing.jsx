@@ -491,7 +491,8 @@ export default function PricingPage() {
   const visiblePlans = billingCycle === "yearly"
     ? PLAN_UI.filter((plan) => plan.key !== "FREE")
     : PLAN_UI;
-  const maxFeatureCount = Math.max(...visiblePlans.map((plan) => plan.features.length));
+  // +1 because each card prepends the order-limit line to displayFeatures.
+  const maxFeatureCount = Math.max(...visiblePlans.map((plan) => plan.features.length + 1));
   const freeMonthlyLimit = getPlanLimit(orderLimitsByCycle, "FREE", "monthly");
 
   useEffect(() => {

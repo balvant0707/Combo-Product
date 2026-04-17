@@ -3933,24 +3933,14 @@
       });
 
       var shouldIncludeGiftDetails = !!(box && box.isGiftBox && box.giftMessageEnabled);
-      var giftReferrer = '';
-      if (shouldIncludeGiftDetails) {
-        try {
-          giftReferrer = String(document.referrer || window.location.href || '').trim();
-        } catch (_err) {
-          giftReferrer = '';
-        }
-      }
 
       items.push({ id: box.shopifyVariantId, quantity: 1, properties: bundleProps });
 
-      additionalSettingAttributes = {
-        'Gift Wrapper': shouldIncludeGiftDetails ? 'Enabled' : 'Disabled',
-      };
+      additionalSettingAttributes = {};
       if (shouldIncludeGiftDetails) {
-        if (giftReferrer) additionalSettingAttributes['Gift Repar'] = giftReferrer;
+        additionalSettingAttributes['Gift Wrapper'] = 'Gift Packing';
         if (normalizedGiftMessage) additionalSettingAttributes['Gift Message'] = normalizedGiftMessage;
-        if (comboProductId) additionalSettingAttributes['Combo Product ID'] = comboProductId;
+        additionalSettingAttributes['Build Box'] = 'MixBox – Box & Bundle Builder';
       }
     } else {
       hidePageLoader(true);

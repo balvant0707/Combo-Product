@@ -163,14 +163,22 @@ function extractGiftDetailValue(rawValue, comboProductId) {
   return value;
 }
 
+function normalizeGiftReparValue(value) {
+  const normalized = String(value || "").trim();
+  if (!normalized) return "";
+  if (/^https?:\/\//i.test(normalized)) return "Gift Packing";
+  return normalized;
+}
+
 function buildAdditionalSettingSection(entries) {
   if (!Array.isArray(entries) || entries.length === 0) return "";
   const lines = ["Additional Setting:"];
 
   entries.forEach((entry, index) => {
     const prefix = entries.length > 1 ? `${index + 1}. ` : "";
-    lines.push(`${prefix}Gift Repar (Combo Product ID: ${entry.comboProductId}): ${entry.giftReferrer || "N/A"}`);
-    lines.push(`${prefix}Gift Message (Combo Product ID: ${entry.comboProductId}): ${entry.giftMessage || "N/A"}`);
+    lines.push(`${prefix}Build Box :- MixBox – Box & Bundle Builder`);
+    lines.push(`${prefix}Gift Wrapper: ${entry.giftWrapper || "N/A"}`);
+    lines.push(`${prefix}Gift Message: ${entry.giftMessage || "N/A"}`);
   });
 
   lines.push("End Additional Setting");
@@ -281,9 +289,8 @@ export const action = async ({ request }) => {
     let hasBundleOrder = false;
     const additionalSettingEntries = [];
     const orderAttributes = normalizeOrderAttributes(payload?.note_attributes);
-    const orderGiftRepar = getOrderAttributeAny(orderAttributes, ["Gift Repar", "Gift Referrer"]);
+    const orderGiftWrapper = getOrderAttributeAny(orderAttributes, ["Gift Wrapper", "Gift Repar", "Gift Referrer"]);
     const orderGiftMessage = getOrderAttributeAny(orderAttributes, ["Gift Message"]);
-    const orderComboProductId = getOrderAttributeAny(orderAttributes, ["Combo Product ID"]);
 
     for (const item of payload.line_items || []) {
       const properties = normalizeProperties(item?.properties);
@@ -302,25 +309,22 @@ export const action = async ({ request }) => {
       const bundlePrice = computeLineRevenue(item, properties);
       const comboProductId =
         toNumericId(getPropertyAny(properties, ["_cb_combo_product_id"])) ||
-        toNumericId(orderComboProductId) ||
         toNumericId(item?.product_id) ||
         toNumericId(resolvedBox.shopifyProductId) ||
         String(resolvedBox.id);
-      const rawGiftReferrer = getPropertyAny(properties, ["_cb_gift_referrer", "Gift Referrer"]) || orderGiftRepar;
+      const rawGiftReferrer = getPropertyAny(properties, ["_cb_gift_referrer", "Gift Wrapper", "Gift Repar", "Gift Referrer"]) || orderGiftWrapper;
       const rawGiftMessage = getPropertyAny(properties, ["_cb_gift_message", "Gift Message"]) || orderGiftMessage;
-      const giftReferrer = extractGiftDetailValue(rawGiftReferrer, comboProductId);
+      const giftWrapper = normalizeGiftReparValue(extractGiftDetailValue(rawGiftReferrer, comboProductId));
       const giftMessage = extractGiftDetailValue(rawGiftMessage, comboProductId);
 
-      if (resolvedBox.isGiftBox === true && resolvedBox.giftMessageEnabled === true && (giftReferrer || giftMessage)) {
+      if (resolvedBox.isGiftBox === true && resolvedBox.giftMessageEnabled === true && (giftWrapper || giftMessage)) {
         const duplicate = additionalSettingEntries.some((entry) =>
-          entry.comboProductId === comboProductId &&
-          entry.giftReferrer === giftReferrer &&
+          entry.giftWrapper === giftWrapper &&
           entry.giftMessage === giftMessage
         );
         if (!duplicate) {
           additionalSettingEntries.push({
-            comboProductId,
-            giftReferrer,
+            giftWrapper,
             giftMessage,
           });
         }

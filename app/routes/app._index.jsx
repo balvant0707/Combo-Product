@@ -450,12 +450,6 @@ export default function DashboardPage() {
     reviewLink,
     recentOrders,
     currentPlanName,
-    orderLimit,
-    periodOrderCount,
-    orderLimitPeriodLabel,
-    nextPlanLabel,
-    orderLimitReached,
-    orderLimitWarning,
     currencyCode,
     totalStoreOrdersLast30Days,
     bundleConversionRate,
@@ -678,40 +672,6 @@ export default function DashboardPage() {
             </InlineStack>
           </Banner>
         )}
-
-        {/* ── Order limit upgrade prompt ── */}
-        {orderLimitReached && (
-          <Banner
-            tone="critical"
-            title={`${currentPlanName} plan order limit reached (${periodOrderCount}/${orderLimit} orders this ${orderLimitPeriodLabel})`}
-            action={{ content: "Upgrade plan", url: withEmbeddedAppParams("/app/pricing", location.search) }}
-          >
-            <p>
-              Your store has reached the {orderLimitPeriodLabel}ly order limit for the <strong>{currentPlanName}</strong> plan.
-              {nextPlanLabel
-                ? <> Upgrade to <strong>{nextPlanLabel}</strong> plan. </>
-                : " Upgrade to a higher plan. "}
-              New bundle orders may not be tracked until you upgrade.
-            </p>
-          </Banner>
-        )}
-        {orderLimitWarning && !orderLimitReached && (
-          <Banner
-            tone="warning"
-            title={`Approaching ${currentPlanName} plan order limit (${periodOrderCount}/${orderLimit} orders this ${orderLimitPeriodLabel})`}
-            action={{ content: "View plans", url: withEmbeddedAppParams("/app/pricing", location.search) }}
-          >
-            <p>
-              You have used <strong>{periodOrderCount}</strong> of your <strong>{orderLimit}</strong> {orderLimitPeriodLabel}ly
-              orders on the <strong>{currentPlanName}</strong> plan.
-              {nextPlanLabel
-                ? <> Recommended next plan: <strong>{nextPlanLabel}</strong>. </>
-                : " Recommended: upgrade to a higher plan. "}
-              Upgrade to avoid interruption.
-            </p>
-          </Banner>
-        )}
-
 
         {/* ── Stats row ── */}
         <InlineGrid columns={{ xs: 2, md: 4 }} gap="400">
@@ -1026,4 +986,3 @@ export default function DashboardPage() {
 export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
-

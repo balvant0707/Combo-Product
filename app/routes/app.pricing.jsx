@@ -278,13 +278,7 @@ function currentPlanKey(subscription) {
   if (!subscription) return null;
   const plan = String(subscription.plan || "").toUpperCase();
   const status = String(subscription.status || "").toUpperCase();
-  const isActiveStatus = status === "ACTIVE";
-  const isCancelledWithAccess =
-    status === "CANCELLED" &&
-    subscription.currentPeriodEnd &&
-    new Date(subscription.currentPeriodEnd).getTime() > Date.now();
-
-  if (!isActiveStatus && !isCancelledWithAccess) return null;
+  if (status !== "ACTIVE") return null;
   if (plan === "FREE")    return "FREE";
   if (plan === "BASIC")   return "BASIC";
   if (plan === "ADVANCE") return "ADVANCE";

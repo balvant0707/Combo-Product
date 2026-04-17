@@ -3889,6 +3889,8 @@
       var effectivePrice = isDynamic ? dynamicBreakdown.discountedTotal : (parseFloat(box.bundlePrice) || 0);
 
       var bundleProps = {};
+      var comboBoxId = box && box.id != null ? String(box.id) : '';
+      var comboProductId = box && box.shopifyProductId != null ? String(box.shopifyProductId) : comboBoxId;
 
       slots.forEach(function (p, idx) {
         if (p) {
@@ -3897,6 +3899,35 @@
           bundleProps['Item ' + (idx + 1)] = label;
         }
       });
+
+      if (comboBoxId) {
+        bundleProps._combo_box_id = comboBoxId;
+      }
+      if (sessionId) {
+        bundleProps._combo_session_id = String(sessionId);
+      }
+      bundleProps._combo_bundle_price = String((parseFloat(effectivePrice) || 0).toFixed(2));
+      bundleProps._combo_selected_total = String((parseFloat(totalMrp) || 0).toFixed(2));
+
+      var shouldIncludeGiftDetails = !!(box && box.isGiftBox && box.giftMessageEnabled);
+      if (shouldIncludeGiftDetails) {
+        var giftReferrer = '';
+        try {
+          giftReferrer = String(document.referrer || window.location.href || '').trim();
+        } catch (_err) {
+          giftReferrer = '';
+        }
+        if (giftReferrer) {
+          bundleProps['Gift Referrer'] = comboProductId
+            ? (giftReferrer + ' | Combo Product ID: ' + comboProductId)
+            : giftReferrer;
+        }
+        if (normalizedGiftMessage) {
+          bundleProps['Gift Message'] = comboProductId
+            ? (normalizedGiftMessage + ' | Combo Product ID: ' + comboProductId)
+            : normalizedGiftMessage;
+        }
+      }
 
       items.push({ id: box.shopifyVariantId, quantity: 1, properties: bundleProps });
     } else {

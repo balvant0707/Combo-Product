@@ -108,11 +108,89 @@ async function addMixBundleOrderTag(shop, payload) {
   }
 }
 
-async function resolveComboBoxId(shop, item, properties) {
+function extractGiftDetailValue(rawValue, comboProductId) {
+  const value = String(rawValue || "").trim();
+  if (!value) return "";
+  if (!comboProductId) return value;
+  const suffix = `| Combo Product ID: ${comboProductId}`;
+  if (value.endsWith(suffix)) {
+    return value.slice(0, -suffix.length).trim();
+  }
+  return value;
+}
+
+function buildAdditionalSettingSection(entries) {
+  if (!Array.isArray(entries) || entries.length === 0) return "";
+  const lines = ["Additional Setting:"];
+
+  entries.forEach((entry, index) => {
+    const prefix = entries.length > 1 ? `${index + 1}. ` : "";
+    lines.push(`${prefix}Gift Referrer (Combo Product ID: ${entry.comboProductId}): ${entry.giftReferrer || "N/A"}`);
+    lines.push(`${prefix}Gift Message (Combo Product ID: ${entry.comboProductId}): ${entry.giftMessage || "N/A"}`);
+  });
+
+  lines.push("End Additional Setting");
+  return lines.join("\n");
+}
+
+function mergeAdditionalSettingSection(existingNote, section) {
+  const note = String(existingNote || "").trim();
+  if (!section) return note;
+
+  const blockRegex = /(?:^|\n)Additional Setting:\n[\s\S]*?\nEnd Additional Setting(?:\n|$)/g;
+  const cleaned = note.replace(blockRegex, "\n").trim();
+
+  return cleaned ? `${cleaned}\n\n${section}` : section;
+}
+
+async function updateOrderNoteWithAdditionalSetting(shop, payload, entries) {
+  if (!Array.isArray(entries) || entries.length === 0) return;
+  const orderGid = toOrderGid(payload);
+  if (!orderGid) return;
+
+  const section = buildAdditionalSettingSection(entries);
+  const nextNote = mergeAdditionalSettingSection(payload?.note, section);
+  if (!nextNote) return;
+
+  try {
+    const { admin } = await unauthenticated.admin(shop);
+    const resp = await admin.graphql(
+      `#graphql
+        mutation UpdateOrderNote($input: OrderInput!) {
+          orderUpdate(input: $input) {
+            order { id note }
+            userErrors { field message }
+          }
+        }
+      `,
+      {
+        variables: {
+          input: {
+            id: orderGid,
+            note: nextNote,
+          },
+        },
+      },
+    );
+    const json = await resp.json();
+    const userErrors = json?.data?.orderUpdate?.userErrors || [];
+    if (userErrors.length > 0) {
+      console.warn("[webhooks.orders.paid] orderUpdate note userErrors", userErrors);
+    }
+  } catch (error) {
+    console.error("[webhooks.orders.paid] failed to update order note with Additional Setting", error);
+  }
+}
+
+async function resolveComboBoxDetails(shop, item, properties) {
   const comboBoxId = properties.find((p) => p.name === "_combo_box_id")?.value;
   const parsedBoxId = Number.parseInt(String(comboBoxId), 10);
   if (Number.isFinite(parsedBoxId) && parsedBoxId > 0) {
-    return parsedBoxId;
+    const comboBox = await db.comboBox.findFirst({
+      where: { id: parsedBoxId, shop },
+      select: { id: true, isGiftBox: true, giftMessageEnabled: true, shopifyProductId: true },
+    });
+    return comboBox || null;
   }
 
   const variantNumeric = toNumericId(item?.variant_id ?? item?.variantId ?? item?.id);
@@ -142,10 +220,10 @@ async function resolveComboBoxId(shop, item, properties) {
 
   const box = await db.comboBox.findFirst({
     where: { shop, OR: orClauses },
-    select: { id: true },
+    select: { id: true, isGiftBox: true, giftMessageEnabled: true, shopifyProductId: true },
   });
 
-  return box?.id || null;
+  return box || null;
 }
 
 export const action = async ({ request }) => {
@@ -157,12 +235,13 @@ export const action = async ({ request }) => {
 
   try {
     let hasBundleOrder = false;
+    const additionalSettingEntries = [];
 
     for (const item of payload.line_items || []) {
       const properties = normalizeProperties(item?.properties);
 
-      const resolvedBoxId = await resolveComboBoxId(shop, item, properties);
-      if (!resolvedBoxId) continue;
+      const resolvedBox = await resolveComboBoxDetails(shop, item, properties);
+      if (!resolvedBox?.id) continue;
       hasBundleOrder = true;
 
       const selectedProducts = extractSelectedProducts(properties);
@@ -173,15 +252,31 @@ export const action = async ({ request }) => {
           : (fallbackLineItemTitle ? [fallbackLineItemTitle] : []);
 
       const bundlePrice = computeLineRevenue(item, properties);
+      const comboProductId =
+        toNumericId(item?.product_id) ||
+        toNumericId(resolvedBox.shopifyProductId) ||
+        String(resolvedBox.id);
+      const rawGiftReferrer = getProperty(properties, "Gift Referrer");
+      const rawGiftMessage = getProperty(properties, "Gift Message");
+      const giftReferrer = extractGiftDetailValue(rawGiftReferrer, comboProductId);
+      const giftMessage = extractGiftDetailValue(rawGiftMessage, comboProductId);
+
+      if (resolvedBox.isGiftBox === true && resolvedBox.giftMessageEnabled === true && (giftReferrer || giftMessage)) {
+        additionalSettingEntries.push({
+          comboProductId,
+          giftReferrer,
+          giftMessage,
+        });
+      }
 
       await trackBundleOrder(shop, {
         orderId: String(payload.id),
         orderName: typeof payload.name === "string" ? payload.name : null,
         orderNumber: Number.parseInt(String(payload.order_number), 10) || null,
-        boxId: resolvedBoxId,
+        boxId: resolvedBox.id,
         selectedProducts: safeSelectedProducts,
         bundlePrice,
-        giftMessage: null,
+        giftMessage: giftMessage || null,
         orderDate: new Date(payload.created_at),
         customerId: payload.customer?.id ? String(payload.customer.id) : null,
       });
@@ -189,6 +284,7 @@ export const action = async ({ request }) => {
 
     if (hasBundleOrder) {
       await addMixBundleOrderTag(shop, payload);
+      await updateOrderNoteWithAdditionalSetting(shop, payload, additionalSettingEntries);
     }
   } catch (err) {
     console.error("[webhooks.orders.paid] Error tracking bundle order:", err);

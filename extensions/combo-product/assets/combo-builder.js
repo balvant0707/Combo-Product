@@ -3722,6 +3722,37 @@
       });
     }
 
+    function postCartAttributes(attributes) {
+      return fetch('/cart/update.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          attributes: attributes || {},
+          sections: sectionIds,
+          sections_url: window.location.pathname + window.location.search,
+        }),
+      }).then(function (r) {
+        if (!r.ok) return r.json().then(function (d) {
+          throw new Error((d && (d.description || d.message || d.error)) || 'Cart update error');
+        });
+        return r.json();
+      });
+    }
+
+    function upsertAdditionalSettingAttributes(nextAttributes) {
+      return fetchCartState().then(function (cart) {
+        var current = (cart && cart.attributes && typeof cart.attributes === 'object') ? cart.attributes : {};
+        var merged = {};
+        Object.keys(current).forEach(function (key) {
+          merged[key] = current[key];
+        });
+        Object.keys(nextAttributes || {}).forEach(function (key) {
+          merged[key] = nextAttributes[key];
+        });
+        return postCartAttributes(merged);
+      });
+    }
+
     function findExistingComboLine(cart, targetVariantId) {
       if (!cart || !Array.isArray(cart.items)) return null;
       var normalizedTargetVariantId = normalizeVariantId(targetVariantId);
@@ -3873,6 +3904,7 @@
     }
 
     var items = [];
+    var additionalSettingAttributes = {};
     var isDynamic = String(box.bundlePriceType || 'manual') === 'dynamic';
 
     if (box.shopifyVariantId) {
@@ -3900,35 +3932,26 @@
         }
       });
 
-      if (comboBoxId) {
-        bundleProps._combo_box_id = comboBoxId;
-      }
-      if (sessionId) {
-        bundleProps._combo_session_id = String(sessionId);
-      }
-      if (comboProductId) {
-        bundleProps._cb_combo_product_id = comboProductId;
-      }
-      bundleProps._combo_bundle_price = String((parseFloat(effectivePrice) || 0).toFixed(2));
-      bundleProps._combo_selected_total = String((parseFloat(totalMrp) || 0).toFixed(2));
-
       var shouldIncludeGiftDetails = !!(box && box.isGiftBox && box.giftMessageEnabled);
+      var giftReferrer = '';
       if (shouldIncludeGiftDetails) {
-        var giftReferrer = '';
         try {
           giftReferrer = String(document.referrer || window.location.href || '').trim();
         } catch (_err) {
           giftReferrer = '';
         }
-        if (giftReferrer) {
-          bundleProps._cb_gift_referrer = giftReferrer;
-        }
-        if (normalizedGiftMessage) {
-          bundleProps._cb_gift_message = normalizedGiftMessage;
-        }
       }
 
       items.push({ id: box.shopifyVariantId, quantity: 1, properties: bundleProps });
+
+      additionalSettingAttributes = {
+        'Gift Wrapper': shouldIncludeGiftDetails ? 'Enabled' : 'Disabled',
+      };
+      if (shouldIncludeGiftDetails) {
+        if (giftReferrer) additionalSettingAttributes['Gift Repar'] = giftReferrer;
+        if (normalizedGiftMessage) additionalSettingAttributes['Gift Message'] = normalizedGiftMessage;
+        if (comboProductId) additionalSettingAttributes['Combo Product ID'] = comboProductId;
+      }
     } else {
       hidePageLoader(true);
       setBtns('error', 'MixBox – Box & Bundle Builder not linked');
@@ -3963,7 +3986,9 @@
         });
         return r.json();
       }).then(function () {
-        return upsertComboLine(items[0]);
+        return upsertAdditionalSettingAttributes(additionalSettingAttributes).then(function () {
+          return upsertComboLine(items[0]);
+        });
       });
     }
 
@@ -3981,7 +4006,11 @@
         })
         // Brief pause so Shopify can propagate the publish/activate from the variant endpoint
         .then(function () { return new Promise(function (r) { setTimeout(r, 800); }); })
-        .then(function () { return upsertComboLine(items[0]); });
+        .then(function () {
+          return upsertAdditionalSettingAttributes(additionalSettingAttributes).then(function () {
+            return upsertComboLine(items[0]);
+          });
+        });
     }
 
     var cartPromise = isDynamic ? updateDynamicPriceThenCart() : ensurePublishedThenCart();

@@ -20,6 +20,25 @@ function normalizeProperties(rawProperties) {
   return [];
 }
 
+function normalizeOrderAttributes(rawAttributes) {
+  if (Array.isArray(rawAttributes)) {
+    return rawAttributes
+      .map((entry) => ({
+        name: typeof entry?.name === "string"
+          ? entry.name
+          : (typeof entry?.key === "string" ? entry.key : ""),
+        value: entry?.value,
+      }))
+      .filter((entry) => entry.name);
+  }
+
+  if (rawAttributes && typeof rawAttributes === "object") {
+    return Object.entries(rawAttributes).map(([name, value]) => ({ name, value }));
+  }
+
+  return [];
+}
+
 function getProperty(properties, key) {
   const found = properties.find((entry) => entry.name === key);
   return found?.value;
@@ -28,6 +47,21 @@ function getProperty(properties, key) {
 function getPropertyAny(properties, keys) {
   for (const key of keys || []) {
     const value = getProperty(properties, key);
+    if (value != null && String(value).trim() !== "") {
+      return value;
+    }
+  }
+  return null;
+}
+
+function getOrderAttribute(orderAttributes, key) {
+  const found = (orderAttributes || []).find((entry) => entry.name === key);
+  return found?.value;
+}
+
+function getOrderAttributeAny(orderAttributes, keys) {
+  for (const key of keys || []) {
+    const value = getOrderAttribute(orderAttributes, key);
     if (value != null && String(value).trim() !== "") {
       return value;
     }
@@ -246,6 +280,10 @@ export const action = async ({ request }) => {
   try {
     let hasBundleOrder = false;
     const additionalSettingEntries = [];
+    const orderAttributes = normalizeOrderAttributes(payload?.note_attributes);
+    const orderGiftRepar = getOrderAttributeAny(orderAttributes, ["Gift Repar", "Gift Referrer"]);
+    const orderGiftMessage = getOrderAttributeAny(orderAttributes, ["Gift Message"]);
+    const orderComboProductId = getOrderAttributeAny(orderAttributes, ["Combo Product ID"]);
 
     for (const item of payload.line_items || []) {
       const properties = normalizeProperties(item?.properties);
@@ -264,20 +302,28 @@ export const action = async ({ request }) => {
       const bundlePrice = computeLineRevenue(item, properties);
       const comboProductId =
         toNumericId(getPropertyAny(properties, ["_cb_combo_product_id"])) ||
+        toNumericId(orderComboProductId) ||
         toNumericId(item?.product_id) ||
         toNumericId(resolvedBox.shopifyProductId) ||
         String(resolvedBox.id);
-      const rawGiftReferrer = getPropertyAny(properties, ["_cb_gift_referrer", "Gift Referrer"]);
-      const rawGiftMessage = getPropertyAny(properties, ["_cb_gift_message", "Gift Message"]);
+      const rawGiftReferrer = getPropertyAny(properties, ["_cb_gift_referrer", "Gift Referrer"]) || orderGiftRepar;
+      const rawGiftMessage = getPropertyAny(properties, ["_cb_gift_message", "Gift Message"]) || orderGiftMessage;
       const giftReferrer = extractGiftDetailValue(rawGiftReferrer, comboProductId);
       const giftMessage = extractGiftDetailValue(rawGiftMessage, comboProductId);
 
       if (resolvedBox.isGiftBox === true && resolvedBox.giftMessageEnabled === true && (giftReferrer || giftMessage)) {
-        additionalSettingEntries.push({
-          comboProductId,
-          giftReferrer,
-          giftMessage,
-        });
+        const duplicate = additionalSettingEntries.some((entry) =>
+          entry.comboProductId === comboProductId &&
+          entry.giftReferrer === giftReferrer &&
+          entry.giftMessage === giftMessage
+        );
+        if (!duplicate) {
+          additionalSettingEntries.push({
+            comboProductId,
+            giftReferrer,
+            giftMessage,
+          });
+        }
       }
 
       await trackBundleOrder(shop, {

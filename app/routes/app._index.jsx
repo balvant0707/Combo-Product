@@ -505,12 +505,15 @@ export default function DashboardPage() {
     { label: "Orders", value: bundlesSold, sub: "Last 30 days" },
     {
       label: "Total Revenue",
-      value: formatCurrencyAmount(Number(bundleRevenue || 0), currencyCode),
+      value: formatCurrencyAmount(Number(bundleRevenue || 0), currencyCode, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }),
       sub: "Last 30 days",
     },
     {
       label: "Conversion Rate",
-      value: bundleConversionRate == null ? "—" : `${Number(bundleConversionRate).toFixed(1)}%`,
+      value: bundleConversionRate == null ? "—" : `${Number(bundleConversionRate).toFixed(0)}%`,
       sub: totalStoreOrdersLast30Days == null
         ? "Unavailable (orders permission/query)"
         : "Last 30 days",

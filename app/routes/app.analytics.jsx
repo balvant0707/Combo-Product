@@ -103,7 +103,7 @@ function fmtCurrency(val, currencyCode) {
       style: "currency",
       currency: currencyCode || "USD",
       notation: "compact",
-      maximumFractionDigits: 1,
+      maximumFractionDigits: 0,
     }).format(numericValue);
   } catch {
     return formatCurrencyAmount(numericValue, currencyCode || "USD", {
@@ -735,7 +735,7 @@ function KpiCard({ label, value, subLabel, change, accentColor, iconType, subtit
               borderRadius: "5px",
             }}
           >
-            <AdminIcon type={isUp ? "arrow-up" : "arrow-down"} size="small" /> {Math.abs(change).toFixed(1)}%
+            <AdminIcon type={isUp ? "arrow-up" : "arrow-down"} size="small" /> {Math.abs(change).toFixed(0)}%
           </span>
         ) : null}
         {subLabel && (
@@ -875,7 +875,7 @@ function LineChart({
               borderRadius: "5px",
             }}
           >
-            <AdminIcon type={isUp ? "arrow-up" : "arrow-down"} size="small" /> {Math.abs(change).toFixed(1)}% vs prev period
+            <AdminIcon type={isUp ? "arrow-up" : "arrow-down"} size="small" /> {Math.abs(change).toFixed(0)}% vs prev period
           </div>
         ) : null}
       </div>
@@ -1562,8 +1562,14 @@ export default function AnalyticsPage() {
         <InlineGrid columns={{ xs: 2, md: 4 }} gap="400">
           <KpiCard
             label={`Total ${analyticsScopeLabel} Revenue`}
-            value={formatCurrencyAmount(totalRevenue, currencyCode)}
-            subLabel={prevTotalRevenue ? `prev ${formatCurrencyAmount(prevTotalRevenue || 0, currencyCode)}` : null}
+            value={formatCurrencyAmount(totalRevenue, currencyCode, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })}
+            subLabel={prevTotalRevenue ? `prev ${formatCurrencyAmount(prevTotalRevenue || 0, currencyCode, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })}` : null}
             change={revenueChange}
             accentColor="#3b82f6"
             iconType="money"
@@ -1578,7 +1584,10 @@ export default function AnalyticsPage() {
           />
           <KpiCard
             label={`Average ${analyticsScopeLabel} Order Value`}
-            value={formatCurrencyAmount(avgBundleValue, currencyCode)}
+            value={formatCurrencyAmount(avgBundleValue, currencyCode, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })}
             subLabel={null}
             change={avgChange}
             accentColor="#8b5cf6"
@@ -1619,7 +1628,10 @@ export default function AnalyticsPage() {
               <div style={{ height: "1px", background: "#e5e7eb", width: "100%" }} />
               <LineChart
                 title={`Total Revenue from ${analyticsScopePluralLabel}`}
-                totalValue={formatCurrencyAmount(totalRevenue, currencyCode)}
+                totalValue={formatCurrencyAmount(totalRevenue, currencyCode, {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                })}
                 change={revenueChange}
                 data={revData}
                 prevData={prevRevData}

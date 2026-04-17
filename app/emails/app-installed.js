@@ -125,7 +125,7 @@ export function installedEmailHtml({ ownerName, shopName, shopDomain }) {
               <!-- CTA -->
               <div style="text-align:center;margin:36px 0 30px;">
                 <a href="${appUrl}"
-                  style="display:inline-block;background:#2A7A4F;color:#000000;text-decoration:none;
+                  style="display:inline-block;background:#2A7A4F;color:#ffffff;text-decoration:none;
                          padding:15px 40px;border-radius:10px;font-size:15px;font-weight:700;
                          letter-spacing:0.2px;box-shadow:0 4px 16px rgba(42,122,79,0.4);">
                   Open ${APP_NAME} →

@@ -187,7 +187,7 @@ export const loader = async ({ request }) => {
       getActiveBoxCount(shop),
       getBundlesSoldCount(shop),
       getBundleRevenue(shop),
-      getRecentOrders(shop, 10),
+      getRecentOrders(shop, 100),
       getShopCurrencyCode(shop),
       getShopifyOrdersCount(admin, thirtyDaysAgo.toISOString(), now.toISOString()),
       getShopOwnerDisplayName(shop),

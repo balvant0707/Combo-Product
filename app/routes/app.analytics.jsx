@@ -1688,19 +1688,17 @@ export default function AnalyticsPage() {
               onOpenItemsPopup={openItemsPopup}
               shopDomain={shopDomain}
             />
-            {recentOrdersTotalPages > 1 && (
-              <InlineStack align="space-between" blockAlign="center" wrap>
-                <Text as="p" variant="bodySm" tone="subdued">
-                  Showing {(safeRecentOrdersPage - 1) * RECENT_ORDERS_PAGE_SIZE + 1}–{Math.min(safeRecentOrdersPage * RECENT_ORDERS_PAGE_SIZE, recentOrders.length)} of {recentOrders.length} orders
-                </Text>
-                <Pagination
-                  hasPrevious={safeRecentOrdersPage > 1}
-                  hasNext={safeRecentOrdersPage < recentOrdersTotalPages}
-                  onPrevious={() => setRecentOrdersPage((page) => Math.max(1, page - 1))}
-                  onNext={() => setRecentOrdersPage((page) => Math.min(recentOrdersTotalPages, page + 1))}
-                />
-              </InlineStack>
-            )}
+            <InlineStack align="space-between" blockAlign="center" wrap>
+              <Text as="p" variant="bodySm" tone="subdued">
+                Showing {recentOrders.length === 0 ? 0 : ((safeRecentOrdersPage - 1) * RECENT_ORDERS_PAGE_SIZE + 1)}–{Math.min(safeRecentOrdersPage * RECENT_ORDERS_PAGE_SIZE, recentOrders.length)} of {recentOrders.length} orders (Page {safeRecentOrdersPage} of {recentOrdersTotalPages})
+              </Text>
+              <Pagination
+                hasPrevious={safeRecentOrdersPage > 1}
+                hasNext={safeRecentOrdersPage < recentOrdersTotalPages}
+                onPrevious={() => setRecentOrdersPage((page) => Math.max(1, page - 1))}
+                onNext={() => setRecentOrdersPage((page) => Math.min(recentOrdersTotalPages, page + 1))}
+              />
+            </InlineStack>
           </BlockStack>
         </Card>
       </BlockStack>

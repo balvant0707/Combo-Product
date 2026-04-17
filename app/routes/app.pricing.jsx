@@ -318,6 +318,7 @@ function PlanCard({
       : `${displayOrderLimit} orders/${isYearly ? "year" : "month"}`,
     ...plan.features,
   ];
+  const statusBadgeLabel = isActive ? "Active" : plan.badge;
 
   const disabledBtnStyle = {
     width: "100%", padding: "14px", border: "none",
@@ -395,8 +396,7 @@ function PlanCard({
         <BlockStack gap="200">
           <InlineStack align="space-between" blockAlign="center">
             <Text as="h2" variant="headingLg">{plan.name}</Text>
-            {plan.badge && <Badge tone="success">{plan.badge}</Badge>}
-            {isActive && <Badge tone="info">Active</Badge>}
+            {statusBadgeLabel && <Badge tone="success">{statusBadgeLabel}</Badge>}
           </InlineStack>
 
           {isFree ? (
@@ -573,9 +573,9 @@ export default function PricingPage() {
             </p>
           </Banner>
         )}
-        {subscription && activePlanKey && (
+        {subscription && activePlanKey && isPaid && (
           <Banner
-            tone={isPaid ? "success" : "info"}
+            tone="success"
             title={`Active: ${PLAN_UI.find((p) => p.key === activePlanKey)?.name || activePlanKey} Plan`}
           >
             <InlineStack gap="400" blockAlign="center">
@@ -619,7 +619,7 @@ export default function PricingPage() {
           </p>
         </Banner>
         {!isPaid && (
-          <Banner tone={freePlanLimitReached ? "warning" : "info"} title="Free plan status">
+          <Banner tone="success" title="Free plan status">
             <p>
               {Number.isFinite(freeMonthlyLimit)
                 ? (freePlanLimitReached

@@ -545,7 +545,7 @@ export default function PricingPage() {
 
         {/* ── Banners ── */}
         {isDevMode && (
-          <Banner tone="info" title="Billing bypass active">
+          <Banner tone="success" title="Billing bypass active">
             <p><code>SKIP_BILLING=true</code> is set — subscriptions activate instantly.</p>
           </Banner>
         )}

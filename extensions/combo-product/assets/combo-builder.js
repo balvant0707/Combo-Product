@@ -3906,6 +3906,9 @@
       if (sessionId) {
         bundleProps._combo_session_id = String(sessionId);
       }
+      if (comboProductId) {
+        bundleProps._cb_combo_product_id = comboProductId;
+      }
       bundleProps._combo_bundle_price = String((parseFloat(effectivePrice) || 0).toFixed(2));
       bundleProps._combo_selected_total = String((parseFloat(totalMrp) || 0).toFixed(2));
 
@@ -3918,14 +3921,10 @@
           giftReferrer = '';
         }
         if (giftReferrer) {
-          bundleProps['Gift Referrer'] = comboProductId
-            ? (giftReferrer + ' | Combo Product ID: ' + comboProductId)
-            : giftReferrer;
+          bundleProps._cb_gift_referrer = giftReferrer;
         }
         if (normalizedGiftMessage) {
-          bundleProps['Gift Message'] = comboProductId
-            ? (normalizedGiftMessage + ' | Combo Product ID: ' + comboProductId)
-            : normalizedGiftMessage;
+          bundleProps._cb_gift_message = normalizedGiftMessage;
         }
       }
 

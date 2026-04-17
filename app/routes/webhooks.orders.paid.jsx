@@ -25,6 +25,16 @@ function getProperty(properties, key) {
   return found?.value;
 }
 
+function getPropertyAny(properties, keys) {
+  for (const key of keys || []) {
+    const value = getProperty(properties, key);
+    if (value != null && String(value).trim() !== "") {
+      return value;
+    }
+  }
+  return null;
+}
+
 function extractSelectedProducts(properties) {
   const indexed = properties
     .filter((entry) => /^_item_\d+$/i.test(entry.name) || /^Item\s+\d+$/i.test(entry.name))
@@ -125,7 +135,7 @@ function buildAdditionalSettingSection(entries) {
 
   entries.forEach((entry, index) => {
     const prefix = entries.length > 1 ? `${index + 1}. ` : "";
-    lines.push(`${prefix}Gift Referrer (Combo Product ID: ${entry.comboProductId}): ${entry.giftReferrer || "N/A"}`);
+    lines.push(`${prefix}Gift Repar (Combo Product ID: ${entry.comboProductId}): ${entry.giftReferrer || "N/A"}`);
     lines.push(`${prefix}Gift Message (Combo Product ID: ${entry.comboProductId}): ${entry.giftMessage || "N/A"}`);
   });
 
@@ -253,11 +263,12 @@ export const action = async ({ request }) => {
 
       const bundlePrice = computeLineRevenue(item, properties);
       const comboProductId =
+        toNumericId(getPropertyAny(properties, ["_cb_combo_product_id"])) ||
         toNumericId(item?.product_id) ||
         toNumericId(resolvedBox.shopifyProductId) ||
         String(resolvedBox.id);
-      const rawGiftReferrer = getProperty(properties, "Gift Referrer");
-      const rawGiftMessage = getProperty(properties, "Gift Message");
+      const rawGiftReferrer = getPropertyAny(properties, ["_cb_gift_referrer", "Gift Referrer"]);
+      const rawGiftMessage = getPropertyAny(properties, ["_cb_gift_message", "Gift Message"]);
       const giftReferrer = extractGiftDetailValue(rawGiftReferrer, comboProductId);
       const giftMessage = extractGiftDetailValue(rawGiftMessage, comboProductId);
 

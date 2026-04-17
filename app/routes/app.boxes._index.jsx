@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+﻿import { useState, useMemo, useEffect } from "react";
 import { useFetcher, useLoaderData, useLocation, useNavigate, useNavigation } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
@@ -116,7 +116,7 @@ function buildBundlePreviewUrl(shopDomain, previewToken, fallbackBaseUrl) {
 }
 
 function getDiscountSummary(box) {
-  // Always read from comboStepsConfig JSON — works for both regular and specific combo boxes
+  // Always read from comboStepsConfig JSON â€” works for both regular and specific combo boxes
   const src = box.comboStepsConfig;
   if (!src) return null;
   try {
@@ -135,7 +135,7 @@ function getComboConfigSummary(box) {
   if (box.config) {
     const comboType = box.config.comboType;
     if (!comboType || comboType < 2) return null;
-    // Require at least one step to be saved — prevents misidentifying regular boxes
+    // Require at least one step to be saved â€” prevents misidentifying regular boxes
     let hasSteps = false;
     try { hasSteps = JSON.parse(box.config.stepsJson || "[]").length > 0; } catch {}
     if (!hasSteps) return null;
@@ -470,6 +470,7 @@ export default function ManageBoxesPage() {
   const totalPages = Math.max(1, Math.ceil(filteredBoxes.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
   const displayBoxes = filteredBoxes.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const hasMultiplePages = totalPages > 1;
 
   // Reset to page 1 when filter/search changes
   useEffect(() => { setCurrentPage(1); }, [statusFilter, search]);
@@ -490,7 +491,7 @@ export default function ManageBoxesPage() {
       title="Manage Boxes"
       primaryAction={{ content: "+ Create Box", onAction: openCreateBoxModal }}
     >
-      {/* <ui-title-bar title="MixBox – Box & Bundle Builder">
+      {/* <ui-title-bar title="MixBox â€“ Box & Bundle Builder">
         <button variant="primary" onClick={openCreateBoxModal}>
           + Create Box
         </button>
@@ -575,7 +576,7 @@ export default function ManageBoxesPage() {
           </Box>
 
           {baseBoxes.length === 0 ? (
-            /* Empty state — no boxes at all */
+            /* Empty state â€” no boxes at all */
             <EmptyState
               heading="No Boxes yet"
               action={{ content: "Create Box", onAction: openCreateBoxModal }}
@@ -708,7 +709,7 @@ export default function ManageBoxesPage() {
                         {box.boxCode ? (
                           <CopyCodeBtn code={box.boxCode} />
                         ) : (
-                          <Text as="span" tone="disabled">—</Text>
+                          <Text as="span" tone="disabled">â€”</Text>
                         )}
                       </IndexTable.Cell>
 
@@ -853,21 +854,19 @@ export default function ManageBoxesPage() {
               </IndexTable>
 
               {/* Pagination */}
-              {totalPages > 1 && (
-                <Box padding="400" borderBlockStartWidth="025" borderColor="border-secondary">
-                  <InlineStack align="space-between" blockAlign="center" wrap>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filteredBoxes.length)} of {filteredBoxes.length} boxes
-                    </Text>
-                    <Pagination
-                      hasPrevious={safePage > 1}
-                      hasNext={safePage < totalPages}
-                      onPrevious={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      onNext={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    />
-                  </InlineStack>
-                </Box>
-              )}
+              <Box padding="400" borderBlockStartWidth="025" borderColor="border-secondary">
+                <InlineStack align="space-between" blockAlign="center" wrap>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    Showing {filteredBoxes.length === 0 ? 0 : ((safePage - 1) * PAGE_SIZE + 1)}–{Math.min(safePage * PAGE_SIZE, filteredBoxes.length)} of {filteredBoxes.length} boxes (Page {safePage} of {totalPages})
+                  </Text>
+                  <Pagination
+                    hasPrevious={hasMultiplePages ? safePage > 1 : true}
+                    hasNext={hasMultiplePages ? safePage < totalPages : true}
+                    onPrevious={() => { if (!hasMultiplePages) return; setCurrentPage((p) => Math.max(1, p - 1)); }}
+                    onNext={() => { if (!hasMultiplePages) return; setCurrentPage((p) => Math.min(totalPages, p + 1)); }}
+                  />
+                </InlineStack>
+              </Box>
             </>
           )}
         </Card>
@@ -997,3 +996,5 @@ export default function ManageBoxesPage() {
 export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
+
+

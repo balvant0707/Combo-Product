@@ -46,6 +46,18 @@ import {
   getBillingCycleForPlanName,
 } from "../config/billing";
 
+async function getFreePlanUsageCount(shop, freeActivatedAt) {
+  const parsedDate = freeActivatedAt ? new Date(freeActivatedAt) : null;
+  if (!parsedDate || Number.isNaN(parsedDate.getTime())) return 0;
+  const { default: db } = await import("../db.server.js");
+  return db.bundleOrder.count({
+    where: {
+      shop,
+      orderDate: { gte: parsedDate },
+    },
+  });
+}
+
 /* ── Loader ─────────────────────────────────────────────────────── */
 
 export const loader = async ({ request }) => {
@@ -81,15 +93,7 @@ export const loader = async ({ request }) => {
     return rrRedirect(withEmbeddedAppParamsFromRequest("/app?subscribed=1", request));
   }
 
-  const { getAnalytics } = await import("../models/orders.server.js");
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const monthlyAnalytics = await getAnalytics(
-    shop,
-    monthStart.toISOString().slice(0, 10),
-    now.toISOString().slice(0, 10),
-  );
-  const monthlyOrderCount = monthlyAnalytics.totalOrders || 0;
+  const freePlanOrderCount = await getFreePlanUsageCount(shop, subscription?.freeActivatedAt);
   const toClientLimit = (limitValue) => (Number.isFinite(limitValue) ? limitValue : null);
   const orderLimitsByCycle = {
     monthly: {
@@ -107,13 +111,13 @@ export const loader = async ({ request }) => {
   };
   const freeMonthlyLimit = orderLimitsByCycle.monthly.FREE;
   const freePlanLimitReached =
-    Number.isFinite(freeMonthlyLimit) && monthlyOrderCount >= freeMonthlyLimit;
+    Number.isFinite(freeMonthlyLimit) && freePlanOrderCount >= freeMonthlyLimit;
 
   return {
     subscription,
     billingUnavailable: !isDevMode && billingUnavailable,
     isDevMode,
-    monthlyOrderCount,
+    freePlanOrderCount,
     freePlanLimitReached,
     orderLimitsByCycle,
     activeBillingCycle,
@@ -131,10 +135,16 @@ export const action = async ({ request }) => {
   const intent = formData.get("intent");
 
   const { createSubscription, cancelSubscription } = await import("../models/billing.server.js");
-  const { activateFreePlan, activatePaidPlan } = await import("../models/subscription.server.js");
+  const { activateFreePlan, activatePaidPlan, getSubscription } = await import("../models/subscription.server.js");
   const { setShopPlanStatus } = await import("../models/shop.server.js");
 
   if (intent === "free") {
+    const existingSubscription = await getSubscription(shop);
+    const freeMonthlyLimit = getOrderLimitForPlan("FREE", "monthly");
+    const freePlanOrderCount = await getFreePlanUsageCount(shop, existingSubscription?.freeActivatedAt);
+    if (Number.isFinite(freeMonthlyLimit) && freePlanOrderCount >= freeMonthlyLimit) {
+      return { error: "Free plan order limit has already been used. Please choose a paid plan." };
+    }
     await activateFreePlan(shop);
     await setShopPlanStatus(shop, "free");
     return rrRedirect(withEmbeddedAppParamsFromRequest("/app", request));
@@ -295,6 +305,7 @@ function PlanCard({
   activeBillingCycle,
   isSubmitting,
   submittingPlan,
+  freePlanLimitReached,
   billingCycle,
   maxFeatureCount,
   orderLimitsByCycle,
@@ -329,25 +340,33 @@ function PlanCard({
       </button>
     );
   } else if (isFree) {
-    const busy = isSubmitting && submittingPlan === "free";
-    btn = (
-      <form method="post" aria-label="Select Free plan">
-        <input type="hidden" name="intent" value="free" />
-        <button
-          type="submit"
-          disabled={busy}
-          aria-label="Start free plan"
-          style={{
-            width: "100%", padding: "14px", borderRadius: "0", border: "none",
-            fontSize: "14px", fontWeight: "700", textAlign: "center",
-            cursor: busy ? "wait" : "pointer", background: "#111827",
-            color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",
-          }}
-        >
-          {busy ? "Starting…" : plan.cta}
+    if (freePlanLimitReached) {
+      btn = (
+        <button disabled aria-label="Free plan not available after limit reached" style={{ ...disabledBtnStyle }}>
+          Not available
         </button>
-      </form>
-    );
+      );
+    } else {
+      const busy = isSubmitting && submittingPlan === "free";
+      btn = (
+        <form method="post" aria-label="Select Free plan">
+          <input type="hidden" name="intent" value="free" />
+          <button
+            type="submit"
+            disabled={busy}
+            aria-label="Start free plan"
+            style={{
+              width: "100%", padding: "14px", borderRadius: "0", border: "none",
+              fontSize: "14px", fontWeight: "700", textAlign: "center",
+              cursor: busy ? "wait" : "pointer", background: "#111827",
+              color: "#fff", opacity: busy ? 0.8 : 1, transition: "opacity 0.2s",
+            }}
+          >
+            {busy ? "Starting…" : plan.cta}
+          </button>
+        </form>
+      );
+    }
   } else {
     const busy = isSubmitting && submittingPlan === plan.key;
     btn = (
@@ -446,7 +465,7 @@ export default function PricingPage() {
     subscription,
     billingUnavailable,
     isDevMode,
-    monthlyOrderCount,
+    freePlanOrderCount,
     freePlanLimitReached,
     orderLimitsByCycle,
     activeBillingCycle,
@@ -610,9 +629,9 @@ export default function PricingPage() {
             <p>
               {Number.isFinite(freeMonthlyLimit)
                 ? (freePlanLimitReached
-                  ? `Free plan limit reached (${monthlyOrderCount}/${freeMonthlyLimit} orders this month).`
-                  : `Free plan selected (${monthlyOrderCount}/${freeMonthlyLimit} orders this month).`)
-                : `Free plan selected (${monthlyOrderCount} orders this month).`}
+                  ? `Free plan lifetime limit reached (${freePlanOrderCount}/${freeMonthlyLimit} orders used).`
+                  : `Free plan usage (${freePlanOrderCount}/${freeMonthlyLimit} orders used).`)
+                : `Free plan usage (${freePlanOrderCount} orders used).`}
             </p>
           </Banner>
         )}
@@ -647,6 +666,7 @@ export default function PricingPage() {
               activeBillingCycle={activeBillingCycle}
               isSubmitting={isSubmitting}
               submittingPlan={submittingPlan}
+              freePlanLimitReached={freePlanLimitReached}
               billingCycle={billingCycle}
               maxFeatureCount={maxFeatureCount}
               orderLimitsByCycle={orderLimitsByCycle}

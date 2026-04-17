@@ -955,7 +955,7 @@ export default function ManageBoxesPage() {
                     maxWidth: "100%",
                     border: "1px solid #111827",
                     borderRadius: 0,
-                    background: "#111827",
+                    background: "#000000",
                     color: "#ffffff",
                     padding: "9px 12px",
                     fontSize: "14px",

@@ -932,7 +932,6 @@ export default function ManageBoxesPage() {
                     minHeight: "40px",
                   }}
                 >
-                  {pendingCreateRoute === "/app/boxes/new" && <Spinner accessibilityLabel="Loading" size="small" />}
                   Create Box
                 </button>
               </BlockStack>
@@ -969,7 +968,6 @@ export default function ManageBoxesPage() {
                     minHeight: "40px",
                   }}
                 >
-                  {pendingCreateRoute === "/app/boxes/specific-combo" && <Spinner accessibilityLabel="Loading" size="small" />}
                   Create Box
                 </button>
               </BlockStack>

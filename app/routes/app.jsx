@@ -400,7 +400,6 @@ export default function App() {
                     width: "52px",
                     height: "52px",
                     borderRadius: "10px",
-                    background: "linear-gradient(135deg, #f97316 0%, #fb7185 100%)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -409,7 +408,7 @@ export default function App() {
                     flexShrink: 0,
                   }}
                 >
-                  <image src="/public/images/mix-bundle.jpg" alt="Star icon" width="24" height="24" />
+                  <image src="/images/mix-bundle.jpg" alt="Star icon" width="24" height="24" />
                 </Box>
                 <BlockStack gap="100">
                   <Text as="p" variant="headingMd" fontWeight="semibold">

@@ -904,7 +904,7 @@ export default function ManageBoxesPage() {
               <BlockStack gap="200">
                 <InlineStack gap="200" blockAlign="center">
                   <AdminIcon type="package" size="base" />
-                  <Text as="h3" variant="headingSm">Create Simple</Text>
+                  <Text as="h3" variant="headingSm">Create Simple Box</Text>
                 </InlineStack>
                 <Text as="p" tone="subdued" variant="bodySm">
                   Preconfigured Shopify product bundle to increase average order value faster.
@@ -940,7 +940,7 @@ export default function ManageBoxesPage() {
               <BlockStack gap="200">
                 <InlineStack gap="200" blockAlign="center">
                   <AdminIcon type="target" size="base" />
-                  <Text as="h3" variant="headingSm">Create Build-Your-Own Box</Text>
+                  <Text as="h3" variant="headingSm">Create Specific Box</Text>
                 </InlineStack>
                 <Text as="p" tone="subdued" variant="bodySm">
                   Step-by-step bundle builder that lets shoppers create a personalized product box.

@@ -1480,7 +1480,7 @@
     padding: 12px 0 20px;
   }
   .cb-slot-steps {
-    padding: 6px 10px 2px;
+    padding: 6px 0px 2px;
     min-width: max-content;
   }
 
@@ -2121,18 +2121,20 @@
 
   /* Slot steps row — scrollable internally; side padding here instead of wrapper */
   .cb-slot-steps {
+    min-width: 0 !important;     /* override base min-width:max-content so the element can be bounded */
+    width: 100%;
     overflow-x: auto;
-    padding: 4px 12px 2px;       /* 12px side padding kept inside the scrollable row */
+    padding: 4px 0px 2px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    justify-content: center;
+    justify-content: center; /* left-align so scroll starts from step 1 */
   }
   .cb-slot-steps::-webkit-scrollbar { display: none; }
 
   /* Smaller slot boxes on mobile */
   .cb-slot-steps::before { top: 28px; left: 28px; right: 28px; }
-  .cb-slot-step { width: 58px; min-width: 52px; padding: 0 3px; gap: 5px; }
-  .cb-slot-step-num { width: 52px; height: 52px; font-size: 20px; }
+  .cb-slot-step { width: 58px; min-width: 52px; flex-shrink: 0; padding: 0 3px; gap: 5px; }
+  .cb-slot-step-num { width: 100%; height: 52px; font-size: 20px; }
   .cb-slot-step-label { font-size: 9px; }
   .cb-slot-step-small { font-size: 9px; }
   .cb-slot-step-item  { font-size: 9px; }
@@ -2156,6 +2158,10 @@
   .cb-slot-mobile-btns .cb-mobile-add-btn:only-child {
     flex: 1 1 100%;
   }
+
+  /* Steps mode: hide step3CartSection inside sticky bar on mobile.
+     The sticky-bar mobile buttons (Add to Cart + Checkout) handle both Grid and Steps layouts. */
+  .cb-slot-wrapper .cb-step3-cart { display: none !important; }
 
   /* Hide sticky footer on mobile since buttons are now in sticky slot bar */
   .cb-sticky-footer { display: none !important; }

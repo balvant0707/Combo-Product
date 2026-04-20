@@ -936,16 +936,8 @@
 .cb-product-meta-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 8px;
-}
-
-.cb-product-meta-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex: 1;
-  min-width: 0;
 }
 
 .cb-product-price {
@@ -1354,11 +1346,11 @@
 .cb-variant-cancel-btn:hover { color: var(--cb-error); }
 
 /* ── Inline Variant Select ────────────────────────────── */
+/* Variant select — own row below price (no longer flex-sibling of price) */
 .cb-variant-select-wrap {
-  flex: 1 1 55%;
-  min-width: 96px;
-  max-width: 160px;
-  margin-left: auto;
+  display: block;
+  width: 100%;
+  margin-top: 5px;
   padding: 0;
 }
 
@@ -2055,4 +2047,104 @@
     min-width: unset;
     justify-content: center;
   }
+}
+
+/* ── Mobile slot sticky bar + buttons (≤750px) ──────── */
+
+/* Mobile Add To Cart button — hidden on desktop */
+.cb-slot-mobile-btns {
+  display: none;
+}
+
+.cb-mobile-add-btn,
+.cb-mobile-checkout-btn {
+  flex: 1;
+  padding: 11px 8px;
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background var(--cb-transition), opacity var(--cb-transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.cb-mobile-add-btn {
+  background: var(--cb-product-btn-bg, var(--cb-primary));
+  color: var(--cb-product-btn-text, #fff);
+  opacity: 0.55;
+}
+
+.cb-mobile-add-btn--ready {
+  opacity: 1;
+}
+
+.cb-mobile-add-btn:disabled { opacity: 0.55; cursor: default; }
+
+.cb-mobile-checkout-btn {
+  background: transparent;
+  color: var(--cb-product-btn-bg, var(--cb-primary));
+  border: 1.5px solid var(--cb-product-btn-bg, var(--cb-primary));
+  opacity: 0.55;
+}
+
+.cb-mobile-checkout-btn:disabled { opacity: 0.55; cursor: default; }
+
+.cb-mobile-checkout-btn:not(:disabled) { opacity: 1; }
+
+.cb-mobile-add-btn--loading,
+.cb-mobile-checkout-btn--loading {
+  opacity: 0.75;
+  cursor: wait;
+}
+
+@media (max-width: 750px) {
+  /* Make slot wrapper sticky at top */
+  .cb-slot-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 90;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 10px 12px 10px;
+    border-bottom: 1px solid var(--cb-border);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    background: rgba(255,255,255,0.98);
+    gap: 0;
+    overflow-x: visible;
+  }
+
+  /* Slot steps row — horizontally scrollable within sticky bar */
+  .cb-slot-steps {
+    overflow-x: auto;
+    padding: 4px 0 2px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .cb-slot-steps::-webkit-scrollbar { display: none; }
+
+  /* Smaller slot boxes on mobile */
+  .cb-slot-steps::before { top: 28px; left: 28px; right: 28px; }
+  .cb-slot-step { width: 58px; min-width: 52px; padding: 0 3px; gap: 5px; }
+  .cb-slot-step-num { width: 52px; height: 52px; font-size: 20px; }
+  .cb-slot-step-label { font-size: 9px; }
+  .cb-slot-step-small { font-size: 9px; }
+  .cb-slot-step-item  { font-size: 9px; }
+
+  /* Hide desktop inline cart button */
+  .cb-inline-cart-btn { display: none !important; }
+
+  /* Show mobile Add to Cart + Checkout below step boxes */
+  .cb-slot-mobile-btns {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  /* Hide sticky footer on mobile since buttons are now in sticky slot bar */
+  .cb-sticky-footer { display: none !important; }
 }

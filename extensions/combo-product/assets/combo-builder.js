@@ -1822,6 +1822,24 @@
       inlineCartBtn.style.display = 'none';
     }
     slotWrapper.appendChild(inlineCartBtn);
+
+    // Mobile cart buttons (≤750px sticky bar — shown via CSS media query)
+    var mobileCartBtns = document.createElement('div');
+    mobileCartBtns.className = 'cb-slot-mobile-btns';
+    var mobileAddBtn = document.createElement('button');
+    mobileAddBtn.className = 'cb-mobile-add-btn';
+    mobileAddBtn.type = 'button';
+    mobileAddBtn.disabled = true;
+    mobileAddBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
+    var mobileCheckoutBtn = document.createElement('button');
+    mobileCheckoutBtn.className = 'cb-mobile-checkout-btn';
+    mobileCheckoutBtn.type = 'button';
+    mobileCheckoutBtn.disabled = true;
+    mobileCheckoutBtn.textContent = ctx.checkoutBtnLabel || 'Checkout';
+    mobileCartBtns.appendChild(mobileAddBtn);
+    mobileCartBtns.appendChild(mobileCheckoutBtn);
+    slotWrapper.appendChild(mobileCartBtns);
+
     container.appendChild(slotWrapper);
     requestAnimationFrame(function () {
       slotWrapper.scrollLeft = 0;
@@ -1920,6 +1938,17 @@
         inlineCartBtn.classList.remove('cb-inline-cart-btn--ready');
         inlineCartBtn.textContent = addLabel;
       }
+
+      // Mobile cart buttons (sticky slot bar on ≤750px)
+      mobileAddBtn.disabled = !allFilled;
+      if (allFilled) {
+        mobileAddBtn.classList.add('cb-mobile-add-btn--ready');
+        mobileAddBtn.textContent = addLabel;
+      } else {
+        mobileAddBtn.classList.remove('cb-mobile-add-btn--ready');
+        mobileAddBtn.textContent = addLabel;
+      }
+      mobileCheckoutBtn.disabled = !allFilled;
 
       // Sticky footer button
       if (_stickyBtn) {
@@ -2162,10 +2191,6 @@
         if (ctx.settings && ctx.settings.showProductPrices === false) priceWrap.style.display = 'none';
         metaRow.appendChild(priceWrap);
 
-        var metaActions = document.createElement('div');
-        metaActions.className = 'cb-product-meta-actions';
-        metaRow.appendChild(metaActions);
-
         function renderPriceWrap(price, compareAt) {
           priceWrap.innerHTML = '';
           var sp = price != null ? parseFloat(price) : null;
@@ -2188,7 +2213,7 @@
         infoEl.appendChild(metaRow);
         card.appendChild(infoEl);
 
-        // ── Inline variant select (shown directly on card, no popup) ──
+        // ── Inline variant select — rendered as own row below price ──
         if (!product.isCollection && product.productHandle) {
           var selectWrap = document.createElement('div');
           selectWrap.className = 'cb-variant-select-wrap';
@@ -2214,7 +2239,7 @@
           });
 
           selectWrap.appendChild(variantSelect);
-          metaActions.appendChild(selectWrap);
+          infoEl.appendChild(selectWrap); // placed as own row below metaRow
 
           // Load variants and populate select asynchronously
           ;(function (sel, wrap, blockedForLoad) {
@@ -2435,10 +2460,16 @@
       }
 
       // Immediately show loading state on buttons before async resolve
-      [inlineCartBtn, _stickyBtn].forEach(function (btn) {
+      [inlineCartBtn, _stickyBtn, mobileAddBtn].forEach(function (btn) {
         if (!btn) return;
         btn.disabled = true;
-        btn.className = btn === _stickyBtn ? 'cb-sticky-btn cb-sticky-btn--loading' : 'cb-inline-cart-btn cb-inline-cart-btn--loading';
+        if (btn === _stickyBtn) {
+          btn.className = 'cb-sticky-btn cb-sticky-btn--loading';
+        } else if (btn === mobileAddBtn) {
+          btn.className = 'cb-mobile-add-btn cb-mobile-add-btn--loading';
+        } else {
+          btn.className = 'cb-inline-cart-btn cb-inline-cart-btn--loading';
+        }
         btn.innerHTML = '<span class="cb-btn-spinner" aria-hidden="true"></span><span class="cb-btn-label">Adding\u2026</span>';
       });
       showPageLoader('Adding products to cart\u2026');
@@ -2508,6 +2539,8 @@
     }
 
     inlineCartBtn.addEventListener('click', doAddToCart);
+    mobileAddBtn.addEventListener('click', doAddToCart);
+    mobileCheckoutBtn.addEventListener('click', doCheckout);
 
     // Steps mode: wire step3 buttons with immediate spinner
     if (ctx.layoutMode === 'steps') {
@@ -2749,6 +2782,24 @@
       inlineCartBtn.style.display = 'none';
     }
     slotWrapper.appendChild(inlineCartBtn);
+
+    // Mobile cart buttons (≤750px sticky slot bar — shown via CSS)
+    var mobileCartBtns = document.createElement('div');
+    mobileCartBtns.className = 'cb-slot-mobile-btns';
+    var mobileAddBtn = document.createElement('button');
+    mobileAddBtn.className = 'cb-mobile-add-btn';
+    mobileAddBtn.type = 'button';
+    mobileAddBtn.disabled = true;
+    mobileAddBtn.textContent = resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel);
+    var mobileCheckoutBtn = document.createElement('button');
+    mobileCheckoutBtn.className = 'cb-mobile-checkout-btn';
+    mobileCheckoutBtn.type = 'button';
+    mobileCheckoutBtn.disabled = true;
+    mobileCheckoutBtn.textContent = ctx.checkoutBtnLabel || 'Checkout';
+    mobileCartBtns.appendChild(mobileAddBtn);
+    mobileCartBtns.appendChild(mobileCheckoutBtn);
+    slotWrapper.appendChild(mobileCartBtns);
+
     container.appendChild(slotWrapper);
     requestAnimationFrame(function () {
       slotWrapper.scrollLeft = 0;
@@ -2869,6 +2920,12 @@
       if (cartReady) inlineCartBtn.classList.add('cb-inline-cart-btn--ready');
       else inlineCartBtn.classList.remove('cb-inline-cart-btn--ready');
       inlineCartBtn.textContent = addLabel;
+
+      // Mobile cart buttons
+      mobileAddBtn.disabled = !cartReady;
+      if (cartReady) { mobileAddBtn.classList.add('cb-mobile-add-btn--ready'); mobileAddBtn.textContent = addLabel; }
+      else { mobileAddBtn.classList.remove('cb-mobile-add-btn--ready'); mobileAddBtn.textContent = addLabel; }
+      mobileCheckoutBtn.disabled = !cartReady;
 
       if (_stickyBtn) {
         _stickyBtn.disabled = !cartReady;
@@ -3158,10 +3215,6 @@
         if (ctx.settings && ctx.settings.showProductPrices === false) priceWrap.style.display = 'none';
         metaRow.appendChild(priceWrap);
 
-        var metaActions = document.createElement('div');
-        metaActions.className = 'cb-product-meta-actions';
-        metaRow.appendChild(metaActions);
-
         function renderPriceWrap(price, compareAt) {
           priceWrap.innerHTML = '';
           var sp = price != null ? parseFloat(price) : null;
@@ -3183,7 +3236,7 @@
         infoEl.appendChild(metaRow);
         card.appendChild(infoEl);
 
-        // Variant select (inline on card)
+        // Variant select — own row below price
         if (!product.isCollection && product.productHandle) {
           var selectWrap = document.createElement('div');
           selectWrap.className = 'cb-variant-select-wrap';
@@ -3206,7 +3259,7 @@
             }
           });
           selectWrap.appendChild(variantSelect);
-          metaActions.appendChild(selectWrap);
+          infoEl.appendChild(selectWrap); // own row below metaRow
 
           ;(function (sel, wrap) {
             fetchVariants(product.productHandle, product.variantIds, function (err, variants) {
@@ -3414,19 +3467,47 @@
         return;
       }
       // Show spinner on cart buttons immediately
-      [inlineCartBtn, _stickyBtn].forEach(function (btn) {
+      [inlineCartBtn, _stickyBtn, mobileAddBtn].forEach(function (btn) {
         if (!btn) return;
         btn.disabled = true;
-        btn.className = btn === _stickyBtn
-          ? 'cb-sticky-btn cb-sticky-btn--loading'
-          : 'cb-inline-cart-btn cb-inline-cart-btn--loading';
+        if (btn === _stickyBtn) {
+          btn.className = 'cb-sticky-btn cb-sticky-btn--loading';
+        } else if (btn === mobileAddBtn) {
+          btn.className = 'cb-mobile-add-btn cb-mobile-add-btn--loading';
+        } else {
+          btn.className = 'cb-inline-cart-btn cb-inline-cart-btn--loading';
+        }
         btn.innerHTML = '<span class="cb-btn-spinner" aria-hidden="true"></span><span class="cb-btn-label">Adding\u2026</span>';
       });
       showPageLoader('Adding products to cart\u2026');
       addToCart(box, slots, sessionId, giftInput ? giftInput.value : null, inlineCartBtn, _stickyBtn, resolveAddToCartLabel(ctx.settings, ctx.cartBtnLabel), ctx.currencySymbol, ctx.apiBase, ctx.shop, resetSpecificCombo);
     }
 
+    function doMobileCheckout() {
+      if (!areRequiredStepsFilled()) { updateCartButton(); return; }
+      mobileCheckoutBtn.disabled = true;
+      mobileCheckoutBtn.innerHTML = '<span class="cb-btn-spinner" aria-hidden="true"></span><span class="cb-btn-label">Processing\u2026</span>';
+      showPageLoader('Processing\u2026');
+      var rp = slots.map(function (p) {
+        if (!p || (p.variantIds && p.variantIds.length > 0)) return Promise.resolve();
+        if (!p.productHandle) return Promise.resolve();
+        return new Promise(function (resolve) {
+          fetchProductData(p.productHandle, function (err, productData) {
+            if (!err && productData && productData.variants && productData.variants.length > 0) {
+              p.variantIds = [String(productData.variants[0].id)];
+            }
+            resolve();
+          });
+        });
+      });
+      Promise.all(rp).then(function () {
+        addToCart(box, slots, sessionId, giftInput ? giftInput.value : null, mobileCheckoutBtn, null, 'Checkout \u2192', ctx.currencySymbol, ctx.apiBase, ctx.shop, null, '/checkout');
+      });
+    }
+
     inlineCartBtn.addEventListener('click', doCart);
+    mobileAddBtn.addEventListener('click', doCart);
+    mobileCheckoutBtn.addEventListener('click', doMobileCheckout);
     if (ctx.layoutMode === 'steps') {
       if (step3CartBtn) {
         step3CartBtn.addEventListener('click', function () {

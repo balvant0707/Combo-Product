@@ -9,7 +9,8 @@
       "Bash(node \"c:/shopify apps/combo-product/patch_wizard.cjs\")",
       "Bash(python -c \"import docx; print\\('available'\\)\")",
       "Bash(pip install *)",
-      "Bash(python generate_kb.py)"
+      "Bash(python generate_kb.py)",
+      "Bash(node --check 'c:\\\\shopify apps\\\\combo-product\\\\extensions\\\\combo-product\\\\assets\\\\combo-builder.js')"
     ]
   }
 }

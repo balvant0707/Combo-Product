@@ -6,7 +6,10 @@
       "Read(//tmp/**)",
       "Read(//c/Users/BALVANT/AppData/Local/Temp/**)",
       "Bash(node \"c:/shopify apps/combo-product/patch_wizard.js\")",
-      "Bash(node \"c:/shopify apps/combo-product/patch_wizard.cjs\")"
+      "Bash(node \"c:/shopify apps/combo-product/patch_wizard.cjs\")",
+      "Bash(python -c \"import docx; print\\('available'\\)\")",
+      "Bash(pip install *)",
+      "Bash(python generate_kb.py)"
     ]
   }
 }

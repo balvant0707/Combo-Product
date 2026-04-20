@@ -1835,6 +1835,7 @@
     mobileCheckoutBtn.className = 'cb-mobile-checkout-btn';
     mobileCheckoutBtn.type = 'button';
     mobileCheckoutBtn.disabled = true;
+    mobileCheckoutBtn.style.display = 'none'; // hidden until all slots filled
     mobileCheckoutBtn.textContent = ctx.checkoutBtnLabel || 'Checkout';
     mobileCartBtns.appendChild(mobileAddBtn);
     mobileCartBtns.appendChild(mobileCheckoutBtn);
@@ -1948,7 +1949,9 @@
         mobileAddBtn.classList.remove('cb-mobile-add-btn--ready');
         mobileAddBtn.textContent = addLabel;
       }
+      // Checkout only visible when all slots are ready
       mobileCheckoutBtn.disabled = !allFilled;
+      mobileCheckoutBtn.style.display = allFilled ? '' : 'none';
 
       // Sticky footer button
       if (_stickyBtn) {
@@ -2795,6 +2798,7 @@
     mobileCheckoutBtn.className = 'cb-mobile-checkout-btn';
     mobileCheckoutBtn.type = 'button';
     mobileCheckoutBtn.disabled = true;
+    mobileCheckoutBtn.style.display = 'none'; // hidden until all slots filled
     mobileCheckoutBtn.textContent = ctx.checkoutBtnLabel || 'Checkout';
     mobileCartBtns.appendChild(mobileAddBtn);
     mobileCartBtns.appendChild(mobileCheckoutBtn);
@@ -2926,6 +2930,7 @@
       if (cartReady) { mobileAddBtn.classList.add('cb-mobile-add-btn--ready'); mobileAddBtn.textContent = addLabel; }
       else { mobileAddBtn.classList.remove('cb-mobile-add-btn--ready'); mobileAddBtn.textContent = addLabel; }
       mobileCheckoutBtn.disabled = !cartReady;
+      mobileCheckoutBtn.style.display = cartReady ? '' : 'none';
 
       if (_stickyBtn) {
         _stickyBtn.disabled = !cartReady;

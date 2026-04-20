@@ -1485,8 +1485,8 @@
   }
 
   .cb-wrapper {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: 2px;
+    padding-right: 2px;
     padding-top: 18px;
     padding-bottom: 18px;
   }
@@ -2125,6 +2125,7 @@
     padding: 4px 12px 2px;       /* 12px side padding kept inside the scrollable row */
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    justify-content: center;
   }
   .cb-slot-steps::-webkit-scrollbar { display: none; }
 
@@ -2145,6 +2146,9 @@
     gap: 8px;
     margin-top: 8px;
     padding: 0 12px;   /* match step row side padding */
+            width: 100%;
+        max-width: 300px;
+        margin: 10px auto;
   }
 
   /* When checkout is hidden, Add to Cart fills full width */

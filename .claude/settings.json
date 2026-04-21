@@ -2,7 +2,21 @@
   "permissions": {
     "allow": [
       "Bash(node -:*)",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Read(//c/Windows/Fonts/**)",
+      "Bash(python gen_screenshots.py)",
+      "Bash(python -c \"import sys; sys.stdout.reconfigure\\(encoding='utf-8'\\)\")",
+      "Bash(python -c \"import os; os.environ['PYTHONIOENCODING']='utf-8'\")",
+      "Bash(PYTHONIOENCODING=utf-8 python gen_screenshots.py)",
+      "Bash(PYTHONIOENCODING=utf-8 python gen_docs.py)",
+      "Bash(python -c \"import docx; print\\('docx ok'\\)\")",
+      "Bash(python -c \"import PIL; print\\('PIL ok'\\)\")",
+      "Bash(PYTHONIOENCODING=utf-8 python gen_new_screenshots.py)",
+      "Bash(PYTHONIOENCODING=utf-8 python gen_new_docs.py)",
+      "Bash(PYTHONIOENCODING=utf-8 python generate_all.py)"
+    ],
+    "additionalDirectories": [
+      "c:\\shopify apps\\combo-product\\knowledge-base\\screenshots"
     ]
   }
 }
